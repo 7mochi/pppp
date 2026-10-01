@@ -24,7 +24,5 @@ endif()
 
 if(CLANG_TIDY)
   add_custom_target(check-tidy
-    COMMAND ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --quiet
-      -header-filter=^${CMAKE_CURRENT_SOURCE_DIR}/(include|src|tests)/
-      ${PPPP_CODESTYLE_SOURCES})
+    COMMAND ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --quiet ${PPPP_CODESTYLE_SOURCES})
 endif()

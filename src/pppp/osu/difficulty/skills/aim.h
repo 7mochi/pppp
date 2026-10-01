@@ -19,7 +19,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
     public:
         bool include_sliders;
 
-        Aim(const pppp::mods::Mod* mods, size_t mod_count, bool include_sliders);
+        Aim(const pppp::mods::Mod* mods_in, size_t mod_count_in, bool include_sliders_in);
 
         double strain_value_at(const DifficultyHitObject& base_current);
         double calculate_initial_strain(double time, const DifficultyHitObject& base_current);

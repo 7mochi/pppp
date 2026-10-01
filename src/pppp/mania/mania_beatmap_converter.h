@@ -31,8 +31,8 @@ namespace pppp { namespace mania {
         /// Whether the beatmap instantiated with is for the mania ruleset.
         bool is_for_current_ruleset;
 
-        ManiaBeatmapConverter(const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
-                              size_t mod_count);
+        ManiaBeatmapConverter(const pppp::beatmaps::Beatmap& beatmap_in, const pppp::mods::Mod* mods_in,
+                              size_t mod_count_in);
 
         /// The total number of columns.
         int total_columns() const { return target_columns * (dual ? 2 : 1); }

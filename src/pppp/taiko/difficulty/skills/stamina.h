@@ -19,10 +19,10 @@ namespace pppp { namespace taiko { namespace difficulty { namespace skills {
         bool is_convert;
 
         /// Creates a Stamina skill.
-        /// @param mods Mods for use in skill calculations.
+        /// @param mods_in Mods for use in skill calculations.
         /// @param single_colour Reads when Stamina is from a single coloured pattern.
         /// @param convert Determines if the currently evaluated beatmap is converted.
-        Stamina(const pppp::mods::Mod* mods, size_t mod_count, bool single_colour, bool convert);
+        Stamina(const pppp::mods::Mod* mods_in, size_t mod_count_in, bool single_colour, bool convert);
 
         double strain_value_at(const pppp::common::preprocessing::DifficultyHitObject& base_current);
         double calculate_initial_strain(double time,

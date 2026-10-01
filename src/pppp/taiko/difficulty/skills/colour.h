@@ -12,7 +12,7 @@ namespace pppp { namespace taiko { namespace difficulty { namespace skills {
     /// Calculates the colour coefficient of taiko difficulty.
     class Colour : public StrainDecaySkill {
     public:
-        Colour(const pppp::mods::Mod* mods, size_t mod_count);
+        Colour(const pppp::mods::Mod* mods_in, size_t mod_count_in);
 
         double strain_value_of(const pppp::common::preprocessing::DifficultyHitObject& base_current);
     };

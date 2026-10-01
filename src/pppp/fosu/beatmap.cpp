@@ -44,9 +44,9 @@ namespace pppp { namespace beatmaps {
             ::fosu::Arena* result_arena;
             ::fosu::Arena* scratch_arena;
 
-            SliderPathOpsContext(const ::fosu::Beatmap* m, ::fosu::Parser* p)
-                : map(m),
-                  parser(p),
+            SliderPathOpsContext(const ::fosu::Beatmap* map_in, ::fosu::Parser* parser_in)
+                : map(map_in),
+                  parser(parser_in),
                   result_arena(0),
                   scratch_arena(0) {}
             ~SliderPathOpsContext() {

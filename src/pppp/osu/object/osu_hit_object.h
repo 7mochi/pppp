@@ -40,8 +40,8 @@ namespace pppp { namespace osu { namespace object {
         double time_fade_in;
         int slider;
 
-        static bool is_slider_type(unsigned type) { return (type & 2) != 0; }
-        static bool is_spinner_type(unsigned type) { return (type & 8) != 0; }
+        static bool is_slider_type(unsigned type_in) { return (type_in & 2) != 0; }
+        static bool is_spinner_type(unsigned type_in) { return (type_in & 8) != 0; }
 
         static double time_preempt_for_ar(double ar);
         static double time_fade_in_for_preempt(double preempt);

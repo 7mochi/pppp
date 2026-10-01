@@ -17,7 +17,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
     public:
         int total_objects;
 
-        Flashlight(const pppp::mods::Mod* mods, size_t mod_count, int total_objects);
+        Flashlight(const pppp::mods::Mod* mods_in, size_t mod_count_in, int total_objects_in);
 
         double strain_value_at(const DifficultyHitObject& base_current);
         double calculate_initial_strain(double time, const DifficultyHitObject& base_current);

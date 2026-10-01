@@ -100,16 +100,16 @@ namespace pppp { namespace mania {
         }
     } // namespace
 
-    ManiaBeatmapConverter::ManiaBeatmapConverter(const pppp::beatmaps::Beatmap& beatmap,
-                                                 const pppp::mods::Mod* mods, size_t mod_count)
-        : beatmap(beatmap),
-          target_columns(get_column_count(beatmap)),
+    ManiaBeatmapConverter::ManiaBeatmapConverter(const pppp::beatmaps::Beatmap& beatmap_in,
+                                                 const pppp::mods::Mod* mods_in, size_t mod_count_in)
+        : beatmap(beatmap_in),
+          target_columns(get_column_count(beatmap_in)),
           dual(false),
-          is_for_current_ruleset(beatmap.mode == 3),
-          random(random_seed_of(beatmap)),
+          is_for_current_ruleset(beatmap_in.mode == 3),
+          random(random_seed_of(beatmap_in)),
           object_converted(),
-          mods(mods),
-          mod_count(mod_count),
+          mods(mods_in),
+          mod_count(mod_count_in),
           density(2147483647.0),
           last_time(0.0),
           last_stair(patterns::PATTERN_STAIR) {

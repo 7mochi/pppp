@@ -11,11 +11,12 @@ namespace pppp { namespace mania { namespace patterns {
     /// Converter for legacy "Spinner" hit objects.
     class SpinnerPatternGenerator : public LegacyPatternGenerator {
     public:
-        SpinnerPatternGenerator(const pppp::beatmaps::control_points::ControlPointInfo& info,
-                                const pppp::beatmaps::Beatmap& beatmap, const SourceObject& hit_object,
-                                const Pattern& previous_pattern, int total_columns,
-                                pppp::utils::LegacyRandom& random)
-            : LegacyPatternGenerator(info, beatmap, hit_object, previous_pattern, total_columns, random) {}
+        SpinnerPatternGenerator(const pppp::beatmaps::control_points::ControlPointInfo& info_in,
+                                const pppp::beatmaps::Beatmap& beatmap_in, const SourceObject& hit_object_in,
+                                const Pattern& previous_pattern_in, int total_columns_in,
+                                pppp::utils::LegacyRandom& random_in)
+            : LegacyPatternGenerator(info_in, beatmap_in, hit_object_in, previous_pattern_in, total_columns_in,
+                                     random_in) {}
 
         void generate(std::vector<Pattern>& out);
 

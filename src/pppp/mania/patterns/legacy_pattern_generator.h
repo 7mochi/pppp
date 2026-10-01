@@ -31,10 +31,10 @@ namespace pppp { namespace mania { namespace patterns {
         /// A difficulty factor used for various conversion methods from osu!stable.
         double conversion_difficulty;
 
-        LegacyPatternGenerator(const pppp::beatmaps::control_points::ControlPointInfo& info,
-                               const pppp::beatmaps::Beatmap& beatmap, const SourceObject& hit_object,
-                               const Pattern& previous_pattern, int total_columns,
-                               pppp::utils::LegacyRandom& random);
+        LegacyPatternGenerator(const pppp::beatmaps::control_points::ControlPointInfo& info_in,
+                               const pppp::beatmaps::Beatmap& beatmap_in, const SourceObject& hit_object_in,
+                               const Pattern& previous_pattern_in, int total_columns_in,
+                               pppp::utils::LegacyRandom& random_in);
 
         /// Converts an x-position into a column.
         /// @param position The x-position.

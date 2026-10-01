@@ -9,9 +9,10 @@
 
 namespace pppp { namespace taiko { namespace difficulty { namespace preprocessing { namespace rhythm {
     data::SameRhythmHitObjectGrouping::SameRhythmHitObjectGrouping(
-        SameRhythmHitObjectGrouping* previous, const std::vector<TaikoDifficultyHitObject*>& hit_objects)
-        : hit_objects(hit_objects),
-          previous(previous),
+        SameRhythmHitObjectGrouping* previous_in,
+        const std::vector<TaikoDifficultyHitObject*>& hit_objects_in)
+        : hit_objects(hit_objects_in),
+          previous(previous_in),
           hit_object_interval_ratio(1.0),
           interval(std::numeric_limits<double>::infinity()) {
         std::vector<double> delta_times;

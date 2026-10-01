@@ -11,10 +11,10 @@ namespace pppp { namespace mania { namespace patterns {
     /// Converter for legacy "Slider" hit objects.
     class SliderPatternGenerator : public LegacyPatternGenerator {
     public:
-        SliderPatternGenerator(const pppp::beatmaps::control_points::ControlPointInfo& info,
-                               const pppp::beatmaps::Beatmap& beatmap, const SourceObject& hit_object,
-                               const Pattern& previous_pattern, int total_columns,
-                               pppp::utils::LegacyRandom& random);
+        SliderPatternGenerator(const pppp::beatmaps::control_points::ControlPointInfo& info_in,
+                               const pppp::beatmaps::Beatmap& beatmap_in, const SourceObject& hit_object_in,
+                               const Pattern& previous_pattern_in, int total_columns_in,
+                               pppp::utils::LegacyRandom& random_in);
 
         int span_count;
         int segment_duration;
@@ -26,7 +26,7 @@ namespace pppp { namespace mania { namespace patterns {
     private:
         int convert_type;
 
-        void add_to_pattern(Pattern& pattern, int column, int time, int end_time) const;
+        void add_to_pattern(Pattern& pattern, int column, int time, int note_end) const;
 
         /// Retrieves the sample at a point in time.
         /// @param time The time to retrieve the sample from.

@@ -95,14 +95,14 @@ namespace pppp { namespace mania { namespace patterns {
 
         int total_columns;
 
-        PatternGenerator(const pppp::beatmaps::control_points::ControlPointInfo& info,
-                         const pppp::beatmaps::Beatmap& beatmap, const SourceObject& hit_object,
-                         const Pattern& previous_pattern, int total_columns)
-            : hit_object(hit_object),
-              beatmap(beatmap),
-              info(info),
-              previous_pattern(previous_pattern),
-              total_columns(total_columns) {}
+        PatternGenerator(const pppp::beatmaps::control_points::ControlPointInfo& info_in,
+                         const pppp::beatmaps::Beatmap& beatmap_in, const SourceObject& hit_object_in,
+                         const Pattern& previous_pattern_in, int total_columns_in)
+            : hit_object(hit_object_in),
+              beatmap(beatmap_in),
+              info(info_in),
+              previous_pattern(previous_pattern_in),
+              total_columns(total_columns_in) {}
 
         virtual ~PatternGenerator() {}
 

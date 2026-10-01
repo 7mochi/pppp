@@ -14,7 +14,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
 
     class Reading : public HarmonicSkill {
     public:
-        Reading(const pppp::mods::Mod* mods, size_t mod_count);
+        Reading(const pppp::mods::Mod* mods_in, size_t mod_count_in);
 
         double object_difficulty_of(const DifficultyHitObject& base_current);
 

@@ -29,8 +29,8 @@ namespace pppp { namespace taiko { namespace difficulty { namespace preprocessin
             /// The interval between the first hit object of this grouping and the previous one's.
             double interval;
 
-            SameRhythmHitObjectGrouping(SameRhythmHitObjectGrouping* previous,
-                                        const std::vector<TaikoDifficultyHitObject*>& hit_objects);
+            SameRhythmHitObjectGrouping(SameRhythmHitObjectGrouping* previous_in,
+                                        const std::vector<TaikoDifficultyHitObject*>& hit_objects_in);
 
             TaikoDifficultyHitObject* first_hit_object() const { return hit_objects[0]; }
 

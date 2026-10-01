@@ -12,7 +12,7 @@ namespace pppp { namespace taiko { namespace difficulty { namespace skills {
     /// Calculates the rhythm coefficient of taiko difficulty.
     class Rhythm : public StrainDecaySkill {
     public:
-        Rhythm(const pppp::mods::Mod* mods, size_t mod_count);
+        Rhythm(const pppp::mods::Mod* mods_in, size_t mod_count_in);
 
         double strain_value_of(const pppp::common::preprocessing::DifficultyHitObject& base_current);
     };

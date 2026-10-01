@@ -11,7 +11,7 @@ namespace pppp { namespace fruits { namespace difficulty { namespace skills {
 
     class Movement : public StrainDecaySkill {
     public:
-        Movement(const pppp::mods::Mod* mods, size_t mod_count);
+        Movement(const pppp::mods::Mod* mods_in, size_t mod_count_in);
 
         double strain_value_of(const pppp::common::preprocessing::DifficultyHitObject& base_current);
     };

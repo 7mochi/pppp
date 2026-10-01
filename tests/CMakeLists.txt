@@ -1,10 +1,15 @@
 include(FetchContent)
 
+if(APPLE)
+  set(PPPP_DOCTEST_PATCH
+    PATCH_COMMAND patch -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patches/doctest-arm64.patch)
+endif()
+
 FetchContent_Declare(doctest
   URL https://github.com/doctest/doctest/archive/cd1d7474374c8cebed5c609564cdaa2f5184be25.tar.gz
   URL_HASH SHA256=cd9d23bba8247dfb47b132d7fb16414db72c451b1c51dd15d332dd064424250f
   SOURCE_SUBDIR doctest
-  PATCH_COMMAND patch -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patches/doctest-arm64.patch)
+  ${PPPP_DOCTEST_PATCH})
 FetchContent_MakeAvailable(doctest)
 
 add_library(pppp_doctest INTERFACE)

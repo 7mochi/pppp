@@ -1,0 +1,7 @@
+{
+  "cmake.buildDirectory": "${workspaceFolder}/build",
+  "cmake.cmakePath": "cmake",
+  "cmake.generator": "Ninja",
+  
+  "files.associations": { "*.h": "cpp" }
+}

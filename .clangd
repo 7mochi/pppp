@@ -1,0 +1,25 @@
+CompileFlags:
+  CompilationDatabase: build
+
+Style:
+  AngledHeaders: ['^(fosu|nonstd)/|^doctest\.h$']
+
+InlayHints:
+  BlockEnd: true
+  DefaultArguments: true
+
+---
+If:
+  PathMatch: third_party/.*
+
+Diagnostics:
+  Suppress: "*"
+
+---
+If:
+  PathMatch: src/pppp/bindings/.*
+
+Diagnostics:
+  Includes:
+    IgnoreHeader:
+      - 'python3\.[0-9]+/.*'

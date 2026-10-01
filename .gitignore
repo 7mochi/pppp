@@ -1,0 +1,15 @@
+build/
+build_*/
+build-py/
+compile_commands.json
+
+.cache/
+.direnv
+
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+
+dist/
+*.egg-info/

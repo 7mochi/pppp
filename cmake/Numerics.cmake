@@ -1,0 +1,13 @@
+add_library(pppp_numerics INTERFACE)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  target_compile_options(pppp_numerics INTERFACE -ffp-contract=off)
+  if(CMAKE_SIZEOF_VOID_P EQUAL 4 AND CMAKE_SYSTEM_PROCESSOR MATCHES "i[3-6]86|x86")
+    target_compile_options(pppp_numerics INTERFACE -msse2 -mfpmath=sse)
+  endif()
+elseif(MSVC)
+  target_compile_options(pppp_numerics INTERFACE /fp:precise)
+  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    target_compile_options(pppp_numerics INTERFACE /arch:SSE2)
+  endif()
+endif()

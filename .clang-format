@@ -1,0 +1,33 @@
+BasedOnStyle: LLVM
+Standard: Cpp03
+IndentWidth: 4
+ColumnLimit: 110
+AccessModifierOffset: -4
+SortIncludes: true
+IncludeBlocks: Preserve
+IncludeCategories:
+  - Regex:           '^"pppp/'
+    Priority:        1
+  - Regex:           '^<'
+    Priority:        2
+PointerAlignment: Left
+DerivePointerAlignment: false
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortLoopsOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: All
+BreakConstructorInitializers: BeforeColon
+PackConstructorInitializers: Never
+ConstructorInitializerIndentWidth: 4
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+AlignTrailingComments: false
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+NamespaceIndentation: All
+CompactNamespaces: true
+InsertBraces: true
+InsertNewlineAtEOF: true
+RemoveSemicolon: true
+BreakTemplateDeclarations: Yes

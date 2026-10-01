@@ -1,0 +1,37 @@
+Checks: >
+    -*,
+    clang-diagnostic-*,
+    bugprone-incorrect-roundings,
+    bugprone-integer-division,
+    bugprone-macro-parentheses,
+    bugprone-narrowing-conversions,
+    bugprone-signed-char-misuse,
+    bugprone-sizeof-expression,
+    bugprone-suspicious-include,
+    bugprone-swapped-arguments,
+    cert-flp30-c,
+    clang-analyzer-*,
+    -clang-analyzer-optin.performance.Padding,
+    -clang-analyzer-security.FloatLoopCounter,
+    -clang-analyzer-unix.*,
+    misc-include-cleaner,
+    readability-identifier-naming
+HeaderFilterRegex: '.*/pppp/(include|src|tests)/.*'
+FormatStyle: file
+
+CheckOptions:
+    - { key: misc-include-cleaner.MissingIncludes, value: false }
+    - { key: readability-identifier-naming.NamespaceCase,         value: lower_case }
+    - { key: readability-identifier-naming.ClassCase,             value: CamelCase }
+    - { key: readability-identifier-naming.StructCase,            value: CamelCase }
+    - { key: readability-identifier-naming.EnumCase,              value: CamelCase }
+    - { key: readability-identifier-naming.TypeAliasCase,         value: CamelCase }
+    - { key: readability-identifier-naming.FunctionCase,          value: lower_case }
+    - { key: readability-identifier-naming.FunctionIgnoredRegexp, value: '.*_' }
+    - { key: readability-identifier-naming.VariableCase,          value: lower_case }
+    - { key: readability-identifier-naming.VariableIgnoredRegexp, value: '^[A-Z][A-Z0-9_]*$' }
+    - { key: readability-identifier-naming.ParameterCase,         value: lower_case }
+    - { key: readability-identifier-naming.MemberCase,            value: lower_case }
+    - { key: readability-identifier-naming.PrivateMemberCase,     value: lower_case }
+    - { key: readability-identifier-naming.EnumConstantCase,       value: lower_case }
+    - { key: readability-identifier-naming.EnumConstantIgnoredRegexp, value: '^[A-Z][A-Z0-9_]*$' }

@@ -9,6 +9,7 @@
 /// the comparison cannot be a single equality and the tolerance must stay the caller's choice.
 namespace pppp { namespace utils {
     const double PI_D = 3.14159265358979323846;
+    const double E_D = 2.7182818284590452354;
     const float PI_F = 3.14159274f;
 
     const double SQRT2 = 1.4142135623730950;

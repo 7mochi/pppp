@@ -34,7 +34,7 @@ namespace pppp { namespace utils {
     }
 
     double bell_curve(double x, double mean, double width, double multiplier) {
-        return multiplier * std::exp(M_E * -(pow(x - mean, 2) / pow(width, 2)));
+        return multiplier * std::exp(E_D * -(pow(x - mean, 2) / pow(width, 2)));
     }
 
     double smoothstep_bell_curve(double x, double mean, double width) {

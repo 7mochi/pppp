@@ -129,7 +129,8 @@ namespace pppp { namespace osu { namespace mods {
             if (i == 0) {
                 infos[i].distance_from_previous =
                     static_cast<float>(st.rng.next_double() * object::PLAYFIELD_HEIGHT / 2);
-                infos[i].relative_angle = static_cast<float>(st.rng.next_double() * 2 * M_PI - M_PI);
+                infos[i].relative_angle =
+                    static_cast<float>(st.rng.next_double() * 2 * utils::PI_D - utils::PI_D);
             } else {
                 // Offsets only the angle of the current hit object if a flow change occurs.
                 float flow_change_offset = 0;

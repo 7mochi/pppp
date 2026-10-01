@@ -293,7 +293,7 @@ namespace pppp { namespace osu { namespace object {
     float random_gaussian(utils::DotNetRandom& rng, float mean, float std_dev) {
         double x1 = 1 - rng.next_double();
         double x2 = 1 - rng.next_double();
-        double std_normal = std::sqrt(-2 * std::log(x1)) * std::sin(2 * M_PI * x2);
+        double std_normal = std::sqrt(-2 * std::log(x1)) * std::sin(2 * utils::PI_D * x2);
         return mean + std_dev * static_cast<float>(std_normal);
     }
 

@@ -24,12 +24,14 @@
                 gcc
                 clang-tools
                 gnumake
-                python3
-                python3Packages.pytest
-                python3Packages.mypy
-                python3Packages.build
-                python3Packages.scikit-build-core
-                python3Packages.typing-extensions
+                (python3.withPackages (ps: with ps; [
+                  pytest
+                  mypy
+                  build
+                  scikit-build-core
+                  typing-extensions
+                  pip
+                ]))
               ])
               ++ (pkgs.lib.optionals pkgs.stdenv.isDarwin [
                 pkgs.bash
@@ -39,7 +41,7 @@
             shellHook = ''
               echo "pp++"
               echo "  make test"
-              echo "  make check"
+              echo "  make format-check"
             '';
           };
         }

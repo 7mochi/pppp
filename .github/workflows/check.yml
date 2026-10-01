@@ -1,0 +1,43 @@
+name: Check pppp
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  all-succeeded:
+    name: All Succeeded
+    if: always()
+    runs-on: ubuntu-latest
+    needs: [check]
+    steps:
+      - uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}
+
+  check:
+    name: Check on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: nixbuild/nix-quick-install-action@v35
+      - uses: nix-community/cache-nix-action@v7
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
+      - name: Format
+        run: nix develop -c make format-check
+      - name: Build and test
+        run: nix develop -c make test
+      - name: Test the bindings
+        run: |
+          nix develop -c python3 -m venv --system-site-packages "$RUNNER_TEMP/venv"
+          nix develop -c "$RUNNER_TEMP/venv/bin/python" -m pip install --no-build-isolation --no-deps .
+          nix develop -c "$RUNNER_TEMP/venv/bin/python" -m pytest python/tests
+      - name: Check the types
+        run: nix develop -c mypy

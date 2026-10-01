@@ -5,7 +5,11 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     -fno-exceptions -fno-rtti
     -ffunction-sections -fdata-sections
     -pipe)
-  target_link_options(pppp_performance INTERFACE -Wl,--gc-sections)
+  if(APPLE)
+    target_link_options(pppp_performance INTERFACE -Wl,-dead_strip)
+  else()
+    target_link_options(pppp_performance INTERFACE -Wl,--gc-sections)
+  endif()
   include(CheckIPOSupported)
   check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
   if(ipo_supported)

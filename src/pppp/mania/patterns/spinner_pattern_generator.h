@@ -15,8 +15,8 @@ namespace pppp { namespace mania { namespace patterns {
                                 const pppp::beatmaps::Beatmap& beatmap_in, const SourceObject& hit_object_in,
                                 const Pattern& previous_pattern_in, int total_columns_in,
                                 pppp::utils::LegacyRandom& random_in)
-            : LegacyPatternGenerator(info_in, beatmap_in, hit_object_in, previous_pattern_in, total_columns_in,
-                                     random_in) {}
+            : LegacyPatternGenerator(info_in, beatmap_in, hit_object_in, previous_pattern_in,
+                                     total_columns_in, random_in) {}
 
         void generate(std::vector<Pattern>& out);
 

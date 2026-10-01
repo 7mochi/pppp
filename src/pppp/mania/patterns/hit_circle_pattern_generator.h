@@ -13,10 +13,11 @@ namespace pppp { namespace mania { namespace patterns {
     class HitCirclePatternGenerator : public LegacyPatternGenerator {
     public:
         HitCirclePatternGenerator(const pppp::beatmaps::control_points::ControlPointInfo& info_in,
-                                  const pppp::beatmaps::Beatmap& beatmap_in, const SourceObject& hit_object_in,
-                                  const Pattern& previous_pattern_in, int total_columns_in,
-                                  pppp::utils::LegacyRandom& random_in, double previous_time,
-                                  pppp::utils::Vector2 previous_position, double density, int last_stair);
+                                  const pppp::beatmaps::Beatmap& beatmap_in,
+                                  const SourceObject& hit_object_in, const Pattern& previous_pattern_in,
+                                  int total_columns_in, pppp::utils::LegacyRandom& random_in,
+                                  double previous_time, pppp::utils::Vector2 previous_position,
+                                  double density, int last_stair);
 
         int stair_type;
 

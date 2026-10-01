@@ -7,15 +7,9 @@ endif()
 find_package(Python REQUIRED COMPONENTS Interpreter Development.SABIModule)
 
 if(WIN32)
-  get_filename_component(_python_library_directory "${Python_SABI_LIBRARY_RELEASE}" DIRECTORY)
-  set(_python_sabi_library "${_python_library_directory}/python3.lib")
-  if(NOT EXISTS "${_python_sabi_library}")
-    message(FATAL_ERROR "python3.lib was not found beside the Windows Python installation")
-  endif()
   set_target_properties(Python::SABIModule PROPERTIES
-    IMPORTED_IMPLIB "${_python_sabi_library}"
-    IMPORTED_IMPLIB_RELEASE "${_python_sabi_library}"
-    IMPORTED_IMPLIB_DEBUG "${_python_sabi_library}")
+    IMPORTED_IMPLIB "${Python_SABI_LIBRARY_RELEASE}"
+    IMPORTED_IMPLIB_DEBUG "${Python_SABI_LIBRARY_RELEASE}")
 endif()
 
 Python_add_library(_core MODULE USE_SABI 3.10 WITH_SOABI

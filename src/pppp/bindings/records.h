@@ -6,8 +6,7 @@
 
 namespace {
 
-    // A record holds one own reference per field; the fields are eager Python values, so attribute reads
-    // never allocate and the cycle collector can see through them.
+    // Object-valued slots hold eager Python values, not C numbers boxed on read.
     struct RecordObject {
         PyObject_HEAD Py_ssize_t field_count;
     };

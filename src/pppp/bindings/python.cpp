@@ -1,5 +1,4 @@
-// The Python extension: a thin core against CPython's stable ABI. The value types are declared in
-// `python/pppp/_model.py` and bound by name at import time.
+// Construct detached Python values using the CPython stable ABI.
 #include <pppp/beatmap.h>
 #include <pppp/config.h>
 #include <pppp/pppp.h>
@@ -13,8 +12,6 @@
 
 namespace {
 
-    // Owns a reference; no exceptions, so failures are reported by returning null with the Python error
-    // set.
     class PyRef {
     public:
         explicit PyRef(PyObject* value)
@@ -41,7 +38,6 @@ namespace {
         PyObject* object;
     };
 
-    // Building a value tree runs the collector on half-built records otherwise.
     class PauseGC {
     public:
         PauseGC()
@@ -65,19 +61,31 @@ namespace {
 
     PyObject* py_boolean(bool value) { return PyBool_FromLong(value ? 1 : 0); }
 
-    // A beatmap's lists are far below what a Py_ssize_t can hold.
     // NOLINTNEXTLINE(bugprone-narrowing-conversions)
     Py_ssize_t py_count(size_t count) { return static_cast<Py_ssize_t>(count); }
 
-    // The C API hands function pointers to CPython as `void*`. This is the one place that conversion is
-    // written, so it is the one place it is silenced.
+    // Cast a function to `void*` to use it in a `PyType_Slot`.
+    //
+    // This is needed to prevent compiler warnings: the standard does not allow a conversion
+    // between function and object pointers, and `-Wpedantic` reports it.
     template <class T>
     void* slot(T* function) {
-        // NOLINTNEXTLINE(clang-diagnostic-pedantic)
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpedantic"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
         return reinterpret_cast<void*>(function);
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
     }
 
-    // Every field any record may declare, so that the conversion code can name one at compile time.
+    // Per-module ownership of the model keeps this compatible with subinterpreters.
     enum Field {
         f_x,
         f_y,
@@ -298,8 +306,6 @@ namespace {
         PyObject* beatmap_type;
     };
 
-    // The beatmap the extension owns: the model is destroyed together with the parser its slider paths
-    // read from, which `Beatmap::clear` releases through the ops it was built with.
     struct BeatmapObject {
         PyObject_HEAD pppp::beatmaps::Beatmap* map;
         PyObject* difficulty;
@@ -332,7 +338,6 @@ namespace {
         PyObject* value;
     };
 
-    // Builds records and lists out of the library's model.
     class Builder {
     public:
         explicit Builder(State* module_state)
@@ -529,8 +534,6 @@ namespace {
             PyErr_SetString(PyExc_TypeError, "fields must be a tuple");
             return NULL;
         }
-        // The type list covers the records the extension builds itself; one that `_model.py` declares for
-        // its own use is created the same way and simply has no slot map here.
         const int kind = index_of_type(name);
         char qualified[128];
         if (kind < 0) {
@@ -601,11 +604,11 @@ namespace {
                                     {Py_tp_clear, slot(record_clear)},
                                     {Py_tp_members, members},
                                     {0, NULL}};
-        // CPython copies the definitions; their names are the static strings above.
+        // CPython copies the definitions. Their names refer to static strings.
         const char* spec_name = kind < 0 ? qualified : qualified_names[kind];
         PyType_Spec spec = {spec_name, static_cast<int>(sizeof(RecordObject) + count * sizeof(PyObject*)), 0,
                             Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC, type_slots};
-        PyObject* type = PyType_FromSpec(&spec);
+        PyObject* type = PyType_FromModuleAndSpec(module, &spec, NULL);
         if (!type) {
             return NULL;
         }
@@ -620,7 +623,7 @@ namespace {
                 state->slots[kind][index_of_field(members[i].name)] = i;
             }
         }
-        return type;
+        return Py_NewRef(type);
     }
 
     PyObject* restore_record(PyObject* module, PyObject* type) {
@@ -630,7 +633,6 @@ namespace {
                 return allocate_record(reinterpret_cast<PyTypeObject*>(type), state->sizes[kind]);
             }
         }
-        // A record the extension does not build itself still knows its fields.
         const PyMemberDef* members = record_members(reinterpret_cast<PyTypeObject*>(type));
         if (members) {
             return allocate_record(reinterpret_cast<PyTypeObject*>(type), record_member_count(members));
@@ -726,7 +728,6 @@ namespace {
                                     {"breaks", beatmap_get_breaks, NULL, NULL, NULL},
                                     {NULL, NULL, NULL, NULL, NULL}};
 
-    // Reads the path as the filesystem encoding, like an open() would.
     PyObject* from_file(PyObject* module, PyObject* argument) {
         State* state = static_cast<State*>(PyModule_GetState(module));
         PyRef path(PyOS_FSPath(argument));
@@ -754,6 +755,7 @@ namespace {
             return PyErr_NoMemory();
         }
         pppp::Result::Value status;
+        // Both native entry points are noexcept, including allocation and I/O failures.
         PyThreadState* thread = PyEval_SaveThread();
         status = pppp::beatmaps::from_file(*map, bytes);
         PyEval_RestoreThread(thread);
@@ -790,8 +792,6 @@ namespace {
         return object;
     }
 
-    // The calculators take the beatmap and the mod spec, and hand the attributes back as nested
-    // dictionaries; `_model.py` turns them into records, so their field names live in exactly one place.
     void dict_number(PyObject* dict, const char* name, double value) {
         PyObject* number = py_number(value);
         if (number) {
@@ -910,8 +910,6 @@ namespace {
         return finish_dict(dict);
     }
 
-    // osu!'s own mod specification: comma-separated specs, with settings after a colon. The library
-    // caps a list at 64 pieces, which is the size used here.
     const int MAX_MODS = 64;
 
     int read_mods(PyObject* object, pppp::mods::Mod* mods, size_t* count) {
@@ -1087,7 +1085,6 @@ namespace {
         return finish_dict(dict);
     }
 
-    // Reads an optional integer argument; `NULL` and `Py_None` both mean "not given".
     int read_optional_long(PyObject* object, long* out, bool* present) {
         *present = object != Py_None;
         if (!*present) {
@@ -1113,7 +1110,6 @@ namespace {
         return 0;
     }
 
-    // Copies a ScoreInfo record into the library's own score state.
     int read_score(State* state, PyObject* object, pppp::common::ScoreInfo* score) {
         PyObject** fields = record_fields(object);
         const Py_ssize_t* slots = state->slots[t_score_info];
@@ -1219,15 +1215,9 @@ namespace {
         if (!version.get()) {
             return -1;
         }
-        if (PyModule_AddObject(module, "version", version.get()) < 0) {
-            return -1;
-        }
-        version.release();
-        return 0;
+        return PyModule_AddObjectRef(module, "version", version.get());
     }
 
-    // The record types are created by `_model.py` while this module is being imported, so they are all
-    // here already; the check catches a class list that drifted from the one above.
     int bind_types(PyObject* module) {
         PyRef package(PyObject_GetAttrString(module, "__package__"));
         if (!package.get()) {
@@ -1260,15 +1250,11 @@ namespace {
         PyType_Spec spec = {"pppp.Beatmap", static_cast<int>(sizeof(BeatmapObject)), 0,
                             Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC, beatmap_slots};
         State* state = static_cast<State*>(PyModule_GetState(module));
-        state->beatmap_type = PyType_FromSpec(&spec);
+        state->beatmap_type = PyType_FromModuleAndSpec(module, &spec, NULL);
         if (!state->beatmap_type) {
             return -1;
         }
-        if (PyModule_AddObject(module, "Beatmap", state->beatmap_type) < 0) {
-            return -1;
-        }
-        Py_INCREF(state->beatmap_type);
-        return 0;
+        return PyModule_AddType(module, reinterpret_cast<PyTypeObject*>(state->beatmap_type));
     }
 
     PyMethodDef methods[] = {{"_record", make_record, METH_VARARGS, NULL},
@@ -1279,6 +1265,33 @@ namespace {
                              {"calculate_performance", calculate_performance, METH_VARARGS,
                               "Calculate the performance attributes of a play on a beatmap."},
                              {NULL, NULL, 0, NULL}};
+
+    int traverse(PyObject* module, visitproc visit, void* arg) {
+        State* state = static_cast<State*>(PyModule_GetState(module));
+        if (!state) {
+            return 0;
+        }
+        for (int kind = 0; kind < type_count; kind++) {
+            Py_VISIT(state->types[kind]);
+        }
+        Py_VISIT(state->beatmap_type);
+        return 0;
+    }
+
+    int clear(PyObject* module) {
+        State* state = static_cast<State*>(PyModule_GetState(module));
+        if (!state) {
+            return 0;
+        }
+        for (int kind = 0; kind < type_count; kind++) {
+            Py_CLEAR(state->types[kind]);
+        }
+        Py_CLEAR(state->beatmap_type);
+        return 0;
+    }
+
+    // Allow exec_module to omit calling clear on error.
+    void free_module(void* module) { clear(static_cast<PyObject*>(module)); }
 
     int exec_module(PyObject* module) {
         if (add_version(module) < 0) {
@@ -1292,7 +1305,8 @@ namespace {
 
     PyModuleDef_Slot slots[] = {{Py_mod_exec, slot(exec_module)}, {0, NULL}};
 
-    PyModuleDef definition = {PyModuleDef_HEAD_INIT, "_core", 0, sizeof(State), methods, slots, 0, 0, 0};
+    PyModuleDef definition = {
+        PyModuleDef_HEAD_INIT, "_core", 0, sizeof(State), methods, slots, traverse, clear, free_module};
 
 } // namespace
 

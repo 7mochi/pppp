@@ -16,12 +16,13 @@ _T = TypeVar("_T")
 
 
 def _restore(cls: type[_T]) -> _T:
+    # Pickle/deepcopy memoize the empty record before restoring cyclic fields.
     return cast(_T, _core._restore_record(cls))
 
 
 @dataclass_transform(frozen_default=True)
 def _record(cls: type[_T]) -> type[_T]:
-    """Keep the declaration here; give its eager fields native storage."""
+    """Keep the domain declaration here; give its eager fields native storage."""
     annotations: dict[str, object] = {}
     for base in reversed(cls.__mro__[:-1]):
         annotations.update(base.__annotations__)
@@ -177,7 +178,6 @@ class DifficultyAttributes:
 
 
 def _difficulty_attributes(values: object) -> DifficultyAttributes:
-    """Turn the extension's dictionaries into the tagged attribute records."""
     assert isinstance(values, dict)
     return DifficultyAttributes(
         ruleset=values["ruleset"],
@@ -236,7 +236,6 @@ class PerformanceAttributes:
 
 
 def _performance_attributes(values: object) -> PerformanceAttributes:
-    """Turn the extension's dictionaries into the tagged attribute records."""
     assert isinstance(values, dict)
     return PerformanceAttributes(
         ruleset=values["ruleset"],

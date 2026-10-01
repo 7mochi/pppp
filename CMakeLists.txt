@@ -31,6 +31,7 @@ include(GNUInstallDirs)
 include(cmake/Warnings.cmake)
 include(cmake/Numerics.cmake)
 include(cmake/Performance.cmake)
+include(cmake/Checks.cmake)
 
 add_library(pppp_options INTERFACE)
 target_compile_features(pppp_options INTERFACE cxx_std_98)

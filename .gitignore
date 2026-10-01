@@ -2,6 +2,7 @@ build/
 build_*/
 build-py/
 compile_commands.json
+CMakeUserPresets.json
 
 .cache/
 .direnv

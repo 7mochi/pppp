@@ -5,6 +5,8 @@
 #include <algorithm>
 
 namespace pppp { namespace taiko { namespace difficulty { namespace preprocessing { namespace colour {
+    const int data::RepeatingHitPatterns::MAX_REPETITION_INTERVAL;
+
     nonstd::optional<object::HitType> data::MonoStreak::hit_type() const {
         const TaikoDifficultyHitObject* first = hit_objects[0];
         if (!first->is_hit()) {

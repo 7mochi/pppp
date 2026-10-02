@@ -1,13 +1,33 @@
 {
-  "name": "pppp",
+  "name": "@7mochi/pppp",
   "version": "0.0.1",
   "description": "osu! difficulty and performance calculation for all four gamemodes",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/7mochi/pppp.git"
+  },
   "main": "./node/index.js",
   "types": "./node/module.d.ts",
+  "binary": {
+    "napi_versions": [8]
+  },
   "scripts": {
-    "install": "cmake-js compile --out node/build",
+    "install": "cd node && pkg-prebuilds-verify ./binding-options.js || cmake-js compile -d .. --out build",
     "test": "jest"
   },
+  "files": [
+    "/node/index.js",
+    "/node/module.d.ts",
+    "/node/binding-options.js",
+    "/node/prebuilds",
+    "/src",
+    "/include",
+    "/cmake",
+    "/third_party",
+    "/CMakeLists.txt",
+    "/LICENCE",
+    "/README.md"
+  ],
   "dependencies": {
     "cmake-js": "^8.0.0",
     "pkg-prebuilds": "^1.0.0"

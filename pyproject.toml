@@ -3,7 +3,7 @@ requires = ["scikit-build-core>=0.10"]
 build-backend = "scikit_build_core.build"
 
 [project]
-name = "pppp"
+name = "pppp-py"
 version = "0.0.1"
 description = "osu! difficulty and performance calculation for all four gamemodes in C++98"
 readme = "README.md"

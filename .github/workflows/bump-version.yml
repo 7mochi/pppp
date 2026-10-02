@@ -1,0 +1,51 @@
+name: Bump the version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    name: Bump
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set Git author
+        run: |
+          git config user.name "7mochi"
+          git config user.email "flyingcatdm@gmail.com"
+
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.14"
+
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24.x
+
+      - name: Install dependencies
+        run: pip install --upgrade bump-my-version
+
+      - name: Bump version
+        run: bump-my-version bump ${{ github.event.inputs.version }} --allow-dirty --tag-name "v{new_version}"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.PAT }}
+          tags: true

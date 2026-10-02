@@ -11,6 +11,7 @@ endif()
 if(DEFINED CMAKE_JS_VERSION)
   set(PPPP_BUILD_NODE ON)
   set(PPPP_INSTALL OFF)
+  set(PPPP_BUILD_TESTS OFF)
 endif()
 
 option(PPPP_WITH_FOSU "Build the .osu parser" ON)

@@ -8,12 +8,18 @@ if(DEFINED SKBUILD)
   set(PPPP_INSTALL OFF)
 endif()
 
+if(DEFINED CMAKE_JS_VERSION)
+  set(PPPP_BUILD_NODE ON)
+  set(PPPP_INSTALL OFF)
+endif()
+
 option(PPPP_WITH_FOSU "Build the .osu parser" ON)
 option(PPPP_BUILD_TESTS "Build the test suites" ${PROJECT_IS_TOP_LEVEL})
 option(PPPP_INSTALL "Generate install rules" ${PROJECT_IS_TOP_LEVEL})
 option(PPPP_BUILD_PYTHON "Build the Python extension module" OFF)
+option(PPPP_BUILD_NODE "Build the Node bindings" OFF)
 
-if(PPPP_BUILD_PYTHON)
+if(PPPP_BUILD_PYTHON OR PPPP_BUILD_NODE)
   # The library is static and the extension is a shared object.
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
   # Nothing links LTO objects across the extension boundary.
@@ -381,6 +387,10 @@ target_link_libraries(pppp_internal INTERFACE pppp)
 
 if(PPPP_BUILD_PYTHON)
   include(cmake/Python.cmake)
+endif()
+
+if(PPPP_BUILD_NODE)
+  include(cmake/Node.cmake)
 endif()
 
 if(PPPP_BUILD_TESTS)

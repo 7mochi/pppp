@@ -7,6 +7,7 @@ Calculate osu! difficulty and performance attributes for all four gamemodes in I
 [fosu](https://github.com/cmyui/fast-osu-beatmap-parser)
 `de01f188f2be7831f619ca09882cf2f55b0c9720` for the parser.
 - Python bindings written against CPython's stable ABI, so one `cp310-abi3` wheel serves every CPython from 3.10.
+- Node bindings written against Node-API, so one build runs on every Node.js that carries it.
 
 ## Install
 
@@ -54,6 +55,19 @@ performance = pppp.Performance(beatmap, combo=789, accuracy=0.992, misses=2).cal
 print(difficulty.star_rating, performance.total)
 ```
 
+## Node
+
+```js
+const pppp = require("pppp");
+
+const beatmap = pppp.fromFile("map.osu");
+
+const difficulty = new pppp.Difficulty(beatmap).mods("HD,DT").calculate();
+const performance = new pppp.Performance(beatmap, { combo: 789, accuracy: 0.992, misses: 2 }).calculate();
+
+console.log(difficulty.star_rating, performance.total);
+```
+
 ## Options
 
 | CMake option | Default | What it does |
@@ -61,6 +75,7 @@ print(difficulty.star_rating, performance.total)
 | `PPPP_WITH_FOSU` | ON | the parser adapter and the vendored parser |
 | `PPPP_BUILD_TESTS` | top-level only | the suites (fetches doctest) |
 | `PPPP_BUILD_PYTHON` | OFF | the Python extension module |
+| `PPPP_BUILD_NODE` | OFF | the Node extension module |
 | `PPPP_INSTALL` | top-level only | the `find_package(pppp CONFIG)` package |
 | `PPPP_WARNINGS_AS_ERRORS` | OFF | `-Werror` on the library's warnings |
 

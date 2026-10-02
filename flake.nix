@@ -1,5 +1,5 @@
 {
-  description = "pp++: the library and its Python bindings";
+  description = "pp++: the library and its bindings";
 
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
@@ -24,6 +24,7 @@
                 gcc
                 clang-tools
                 gnumake
+                nodejs
                 (python3.withPackages (ps: with ps; [
                   pytest
                   mypy
@@ -42,6 +43,7 @@
               echo "pp++"
               echo "  make test"
               echo "  make format-check"
+              echo "  npm install && npm test  # the node bindings"
             '';
           };
         }

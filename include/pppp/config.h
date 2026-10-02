@@ -8,7 +8,7 @@
 
 #define PPPP_VERSION_MAJOR 0
 #define PPPP_VERSION_MINOR 0
-#define PPPP_VERSION_PATCH 1
+#define PPPP_VERSION_PATCH 0
 
 #if defined(_MSC_VER) && _MSC_VER < 1310
 typedef __int64 pppp_int64;

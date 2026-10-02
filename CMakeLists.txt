@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 set(CMAKE_VERIFY_INTERFACE_HEADER_SETS ON)
-project(pppp VERSION 0.0.1 LANGUAGES CXX
+project(pppp VERSION 0.0.0 LANGUAGES CXX
         DESCRIPTION "PerformancePoints++")
 
 if(DEFINED SKBUILD)

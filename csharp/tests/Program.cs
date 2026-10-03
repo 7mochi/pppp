@@ -241,6 +241,19 @@ namespace Pppp.Tests {
             }
         }
 
+        private static void ThePerformanceFromAttributesMatchesTheMap() {
+            using (Beatmap beatmap = Beatmap.FromFile(MapPath("osu/2785319.osu"))) {
+                DifficultyAttributes difficulty = new Difficulty(beatmap).Calculate();
+                ScoreInfo score = Score(new[] {5, 16}, new[] {601, difficulty.osu.slider_count}, 909);
+                PerformanceAttributes fromMap = new Performance(beatmap).State(score).Calculate();
+                PerformanceAttributes fromAttributes =
+                    new Performance(beatmap).State(score).Attributes(difficulty).Calculate();
+                CheckClose(fromAttributes.total, fromMap.total, "the total from the attributes");
+                CheckClose(fromAttributes.osu.aim, fromMap.osu.aim, "the aim from the attributes");
+                CheckClose(fromAttributes.osu.speed, fromMap.osu.speed, "the speed from the attributes");
+            }
+        }
+
         private static int Main() {
             TheVersionIsAVersion();
             FromFileReadsTheModel();
@@ -256,6 +269,7 @@ namespace Pppp.Tests {
             ThePerformanceOfCatchMatchesThePinnedPp();
             ThePerformanceOfManiaMatchesThePinnedPp();
             ThePerformanceTakesTheComboAndMissesItIsGiven();
+            ThePerformanceFromAttributesMatchesTheMap();
 
             Console.WriteLine(checks + " checks, " + failures + " failures");
             return failures == 0 ? 0 : 1;

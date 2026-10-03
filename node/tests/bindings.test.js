@@ -158,3 +158,17 @@ test("the performance takes the combo and misses it is given", () => {
   const play = new pppp.Performance(beatmap, { combo: 909, accuracy: 1.0, misses: 0 }).calculate();
   expect(play.total).toBeGreaterThan(0.0);
 });
+
+test("the performance from attributes matches the map", () => {
+  const beatmap = beatmapOf("osu/2785319.osu");
+  const difficulty = new pppp.Difficulty(beatmap).calculate();
+  const score = scoreOf({ 5: 601, 16: difficulty.osu.slider_count }, 909);
+  const fromMap = new pppp.Performance(beatmap, { state: score }).calculate();
+  const fromAttributes = new pppp.Performance(beatmap, {
+    state: score,
+    attributes: difficulty,
+  }).calculate();
+  expect(fromAttributes.total).toBe(fromMap.total);
+  expect(fromAttributes.osu.aim).toBe(fromMap.osu.aim);
+  expect(fromAttributes).toEqual(fromMap);
+});

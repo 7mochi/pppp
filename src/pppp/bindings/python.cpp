@@ -61,6 +61,13 @@ namespace {
 
     PyObject* py_boolean(bool value) { return PyBool_FromLong(value ? 1 : 0); }
 
+    PyObject* py_optional_number(const nonstd::optional<double>& value) {
+        if (!value.has_value()) {
+            return Py_NewRef(Py_None);
+        }
+        return py_number(value.value());
+    }
+
     // NOLINTNEXTLINE(bugprone-narrowing-conversions)
     Py_ssize_t py_count(size_t count) { return static_cast<Py_ssize_t>(count); }
 
@@ -286,18 +293,58 @@ namespace {
         t_break_period,
         t_slider_event,
         t_score_info,
+        t_osu_difficulty_attributes,
+        t_taiko_difficulty_attributes,
+        t_catch_difficulty_attributes,
+        t_mania_difficulty_attributes,
+        t_difficulty_attributes,
+        t_osu_performance_attributes,
+        t_taiko_performance_attributes,
+        t_catch_performance_attributes,
+        t_mania_performance_attributes,
+        t_performance_attributes,
         type_count
     };
 
-    const char* type_names[] = {"Vector2",     "BeatmapDifficulty", "HitObject",   "Slider",
-                                "TimingPoint", "BreakPeriod",       "SliderEvent", "ScoreInfo"};
+    const char* type_names[] = {"Vector2",
+                                "BeatmapDifficulty",
+                                "HitObject",
+                                "Slider",
+                                "TimingPoint",
+                                "BreakPeriod",
+                                "SliderEvent",
+                                "ScoreInfo",
+                                "OsuDifficultyAttributes",
+                                "TaikoDifficultyAttributes",
+                                "CatchDifficultyAttributes",
+                                "ManiaDifficultyAttributes",
+                                "DifficultyAttributes",
+                                "OsuPerformanceAttributes",
+                                "TaikoPerformanceAttributes",
+                                "CatchPerformanceAttributes",
+                                "ManiaPerformanceAttributes",
+                                "PerformanceAttributes"};
 
     PPPP_STATIC_ASSERT(type_names_match_type_count, sizeof(type_names) / sizeof(type_names[0]) == type_count);
 
-    const char* qualified_names[] = {"pppp._model.Vector2",     "pppp._model.BeatmapDifficulty",
-                                     "pppp._model.HitObject",   "pppp._model.Slider",
-                                     "pppp._model.TimingPoint", "pppp._model.BreakPeriod",
-                                     "pppp._model.SliderEvent", "pppp._model.ScoreInfo"};
+    const char* qualified_names[] = {"pppp._model.Vector2",
+                                     "pppp._model.BeatmapDifficulty",
+                                     "pppp._model.HitObject",
+                                     "pppp._model.Slider",
+                                     "pppp._model.TimingPoint",
+                                     "pppp._model.BreakPeriod",
+                                     "pppp._model.SliderEvent",
+                                     "pppp._model.ScoreInfo",
+                                     "pppp._model.OsuDifficultyAttributes",
+                                     "pppp._model.TaikoDifficultyAttributes",
+                                     "pppp._model.CatchDifficultyAttributes",
+                                     "pppp._model.ManiaDifficultyAttributes",
+                                     "pppp._model.DifficultyAttributes",
+                                     "pppp._model.OsuPerformanceAttributes",
+                                     "pppp._model.TaikoPerformanceAttributes",
+                                     "pppp._model.CatchPerformanceAttributes",
+                                     "pppp._model.ManiaPerformanceAttributes",
+                                     "pppp._model.PerformanceAttributes"};
 
     struct State {
         PyObject* types[type_count];
@@ -408,6 +455,125 @@ namespace {
             FieldValue values[] = {{f_start_time, py_number(value.start_time)},
                                    {f_end_time, py_number(value.end_time)}};
             return build(t_break_period, values, 2);
+        }
+
+        PyObject*
+        osu_difficulty_attributes(const pppp::osu::difficulty::OsuDifficultyAttributes& value) const {
+            FieldValue values[] = {
+                {f_star_rating, py_number(value.star_rating)},
+                {f_max_combo, py_integer(value.max_combo)},
+                {f_aim_difficulty, py_number(value.aim_difficulty)},
+                {f_speed_difficulty, py_number(value.speed_difficulty)},
+                {f_reading_difficulty, py_number(value.reading_difficulty)},
+                {f_flashlight_difficulty, py_number(value.flashlight_difficulty)},
+                {f_slider_factor, py_number(value.slider_factor)},
+                {f_aim_difficult_strain_count, py_number(value.aim_difficult_strain_count)},
+                {f_speed_difficult_strain_count, py_number(value.speed_difficult_strain_count)},
+                {f_reading_difficult_note_count, py_number(value.reading_difficult_note_count)},
+                {f_aim_difficult_slider_count, py_number(value.aim_difficult_slider_count)},
+                {f_aim_top_weighted_slider_factor, py_number(value.aim_top_weighted_slider_factor)},
+                {f_speed_top_weighted_slider_factor, py_number(value.speed_top_weighted_slider_factor)},
+                {f_speed_note_count, py_number(value.speed_note_count)},
+                {f_hit_circle_count, py_integer(value.hit_circle_count)},
+                {f_slider_count, py_integer(value.slider_count)},
+                {f_large_tick_count, py_integer(value.large_tick_count)},
+                {f_spinner_count, py_integer(value.spinner_count)},
+                {f_nested_score_per_object, py_number(value.nested_score_per_object)},
+                {f_legacy_score_base_multiplier, py_number(value.legacy_score_base_multiplier)},
+                {f_maximum_legacy_combo_score, py_number(value.maximum_legacy_combo_score)}};
+            return build(t_osu_difficulty_attributes, values, 21);
+        }
+
+        PyObject*
+        taiko_difficulty_attributes(const pppp::taiko::difficulty::TaikoDifficultyAttributes& value) const {
+            FieldValue values[] = {{f_star_rating, py_number(value.star_rating)},
+                                   {f_max_combo, py_integer(value.max_combo)},
+                                   {f_mechanical_difficulty, py_number(value.mechanical_difficulty)},
+                                   {f_rhythm_difficulty, py_number(value.rhythm_difficulty)},
+                                   {f_reading_difficulty, py_number(value.reading_difficulty)},
+                                   {f_colour_difficulty, py_number(value.colour_difficulty)},
+                                   {f_stamina_difficulty, py_number(value.stamina_difficulty)},
+                                   {f_mono_stamina_factor, py_number(value.mono_stamina_factor)},
+                                   {f_consistency_factor, py_number(value.consistency_factor)},
+                                   {f_stamina_top_strains, py_number(value.stamina_top_strains)}};
+            return build(t_taiko_difficulty_attributes, values, 10);
+        }
+
+        PyObject*
+        catch_difficulty_attributes(const pppp::fruits::difficulty::CatchDifficultyAttributes& value) const {
+            FieldValue values[] = {{f_star_rating, py_number(value.star_rating)},
+                                   {f_max_combo, py_integer(value.max_combo)}};
+            return build(t_catch_difficulty_attributes, values, 2);
+        }
+
+        PyObject*
+        mania_difficulty_attributes(const pppp::mania::difficulty::ManiaDifficultyAttributes& value) const {
+            FieldValue values[] = {{f_star_rating, py_number(value.star_rating)},
+                                   {f_max_combo, py_integer(value.max_combo)}};
+            return build(t_mania_difficulty_attributes, values, 2);
+        }
+
+        PyObject* difficulty_attributes(const pppp::DifficultyAttributes& value) const {
+            FieldValue values[] = {{f_ruleset, py_integer(static_cast<int>(value.ruleset))},
+                                   {f_star_rating, py_number(value.star_rating())},
+                                   {f_max_combo, py_integer(value.max_combo())},
+                                   {f_osu, osu_difficulty_attributes(value.osu)},
+                                   {f_taiko, taiko_difficulty_attributes(value.taiko)},
+                                   {f_fruits, catch_difficulty_attributes(value.fruits)},
+                                   {f_mania, mania_difficulty_attributes(value.mania)}};
+            return build(t_difficulty_attributes, values, 7);
+        }
+
+        PyObject*
+        osu_performance_attributes(const pppp::osu::difficulty::OsuPerformanceAttributes& value) const {
+            FieldValue values[] = {
+                {f_total, py_number(value.total)},
+                {f_aim, py_number(value.aim)},
+                {f_speed, py_number(value.speed)},
+                {f_accuracy, py_number(value.accuracy)},
+                {f_flashlight, py_number(value.flashlight)},
+                {f_reading, py_number(value.reading)},
+                {f_effective_miss_count, py_number(value.effective_miss_count)},
+                {f_combo_based_estimated_miss_count, py_number(value.combo_based_estimated_miss_count)},
+                {f_score_based_estimated_miss_count,
+                 py_optional_number(value.score_based_estimated_miss_count)},
+                {f_aim_estimated_slider_breaks, py_number(value.aim_estimated_slider_breaks)},
+                {f_speed_estimated_slider_breaks, py_number(value.speed_estimated_slider_breaks)},
+                {f_speed_deviation, py_optional_number(value.speed_deviation)}};
+            return build(t_osu_performance_attributes, values, 12);
+        }
+
+        PyObject*
+        taiko_performance_attributes(const pppp::taiko::difficulty::TaikoPerformanceAttributes& value) const {
+            FieldValue values[] = {
+                {f_total, py_number(value.total)},
+                {f_difficulty, py_number(value.difficulty)},
+                {f_accuracy, py_number(value.accuracy)},
+                {f_estimated_unstable_rate, py_optional_number(value.estimated_unstable_rate)}};
+            return build(t_taiko_performance_attributes, values, 4);
+        }
+
+        PyObject* catch_performance_attributes(
+            const pppp::fruits::difficulty::CatchPerformanceAttributes& value) const {
+            FieldValue values[] = {{f_total, py_number(value.total)}};
+            return build(t_catch_performance_attributes, values, 1);
+        }
+
+        PyObject*
+        mania_performance_attributes(const pppp::mania::difficulty::ManiaPerformanceAttributes& value) const {
+            FieldValue values[] = {{f_total, py_number(value.total)},
+                                   {f_difficulty, py_number(value.difficulty)}};
+            return build(t_mania_performance_attributes, values, 2);
+        }
+
+        PyObject* performance_attributes(const pppp::PerformanceAttributes& value) const {
+            FieldValue values[] = {{f_ruleset, py_integer(static_cast<int>(value.ruleset))},
+                                   {f_total, py_number(value.total())},
+                                   {f_osu, osu_performance_attributes(value.osu)},
+                                   {f_taiko, taiko_performance_attributes(value.taiko)},
+                                   {f_fruits, catch_performance_attributes(value.fruits)},
+                                   {f_mania, mania_performance_attributes(value.mania)}};
+            return build(t_performance_attributes, values, 6);
         }
 
         template <class T>
@@ -792,124 +958,6 @@ namespace {
         return object;
     }
 
-    void dict_number(PyObject* dict, const char* name, double value) {
-        PyObject* number = py_number(value);
-        if (number) {
-            PyDict_SetItemString(dict, name, number);
-        }
-        Py_XDECREF(number);
-    }
-
-    void dict_integer(PyObject* dict, const char* name, int value) {
-        PyObject* number = py_integer(value);
-        if (number) {
-            PyDict_SetItemString(dict, name, number);
-        }
-        Py_XDECREF(number);
-    }
-
-    PyObject* finish_dict(PyObject* dict) {
-        if (PyErr_Occurred()) {
-            Py_DECREF(dict);
-            return NULL;
-        }
-        return dict;
-    }
-
-    PyObject* osu_attributes(const pppp::osu::difficulty::OsuDifficultyAttributes& attributes) {
-        PyObject* dict = PyDict_New();
-        if (!dict) {
-            return NULL;
-        }
-        dict_number(dict, "star_rating", attributes.star_rating);
-        dict_integer(dict, "max_combo", attributes.max_combo);
-        dict_number(dict, "aim_difficulty", attributes.aim_difficulty);
-        dict_number(dict, "speed_difficulty", attributes.speed_difficulty);
-        dict_number(dict, "reading_difficulty", attributes.reading_difficulty);
-        dict_number(dict, "flashlight_difficulty", attributes.flashlight_difficulty);
-        dict_number(dict, "slider_factor", attributes.slider_factor);
-        dict_number(dict, "aim_difficult_strain_count", attributes.aim_difficult_strain_count);
-        dict_number(dict, "speed_difficult_strain_count", attributes.speed_difficult_strain_count);
-        dict_number(dict, "reading_difficult_note_count", attributes.reading_difficult_note_count);
-        dict_number(dict, "aim_difficult_slider_count", attributes.aim_difficult_slider_count);
-        dict_number(dict, "aim_top_weighted_slider_factor", attributes.aim_top_weighted_slider_factor);
-        dict_number(dict, "speed_top_weighted_slider_factor", attributes.speed_top_weighted_slider_factor);
-        dict_number(dict, "speed_note_count", attributes.speed_note_count);
-        dict_integer(dict, "hit_circle_count", attributes.hit_circle_count);
-        dict_integer(dict, "slider_count", attributes.slider_count);
-        dict_integer(dict, "large_tick_count", attributes.large_tick_count);
-        dict_integer(dict, "spinner_count", attributes.spinner_count);
-        dict_number(dict, "nested_score_per_object", attributes.nested_score_per_object);
-        dict_number(dict, "legacy_score_base_multiplier", attributes.legacy_score_base_multiplier);
-        dict_number(dict, "maximum_legacy_combo_score", attributes.maximum_legacy_combo_score);
-        return finish_dict(dict);
-    }
-
-    PyObject* taiko_attributes(const pppp::taiko::difficulty::TaikoDifficultyAttributes& attributes) {
-        PyObject* dict = PyDict_New();
-        if (!dict) {
-            return NULL;
-        }
-        dict_number(dict, "star_rating", attributes.star_rating);
-        dict_integer(dict, "max_combo", attributes.max_combo);
-        dict_number(dict, "mechanical_difficulty", attributes.mechanical_difficulty);
-        dict_number(dict, "rhythm_difficulty", attributes.rhythm_difficulty);
-        dict_number(dict, "reading_difficulty", attributes.reading_difficulty);
-        dict_number(dict, "colour_difficulty", attributes.colour_difficulty);
-        dict_number(dict, "stamina_difficulty", attributes.stamina_difficulty);
-        dict_number(dict, "mono_stamina_factor", attributes.mono_stamina_factor);
-        dict_number(dict, "consistency_factor", attributes.consistency_factor);
-        dict_number(dict, "stamina_top_strains", attributes.stamina_top_strains);
-        return finish_dict(dict);
-    }
-
-    PyObject* catch_attributes(const pppp::fruits::difficulty::CatchDifficultyAttributes& attributes) {
-        PyObject* dict = PyDict_New();
-        if (!dict) {
-            return NULL;
-        }
-        dict_number(dict, "star_rating", attributes.star_rating);
-        dict_integer(dict, "max_combo", attributes.max_combo);
-        return finish_dict(dict);
-    }
-
-    PyObject* mania_attributes(const pppp::mania::difficulty::ManiaDifficultyAttributes& attributes) {
-        PyObject* dict = PyDict_New();
-        if (!dict) {
-            return NULL;
-        }
-        dict_number(dict, "star_rating", attributes.star_rating);
-        dict_integer(dict, "max_combo", attributes.max_combo);
-        return finish_dict(dict);
-    }
-
-    PyObject* difficulty_attributes(const pppp::DifficultyAttributes& attributes) {
-        PyObject* dict = PyDict_New();
-        if (!dict) {
-            return NULL;
-        }
-        dict_integer(dict, "ruleset", static_cast<int>(attributes.ruleset));
-        dict_number(dict, "star_rating", attributes.star_rating());
-        dict_integer(dict, "max_combo", attributes.max_combo());
-
-        const char* names[] = {"osu", "taiko", "fruits", "mania"};
-        PyObject* modes[] = {osu_attributes(attributes.osu), taiko_attributes(attributes.taiko),
-                             catch_attributes(attributes.fruits), mania_attributes(attributes.mania)};
-        for (int i = 0; i < 4; i++) {
-            if (!modes[i] || PyDict_SetItemString(dict, names[i], modes[i]) < 0) {
-                for (int j = i; j < 4; j++) {
-                    Py_XDECREF(modes[j]);
-                }
-                Py_DECREF(dict);
-                return NULL;
-            }
-        }
-        for (int i = 0; i < 4; i++) {
-            Py_DECREF(modes[i]);
-        }
-        return finish_dict(dict);
-    }
-
     const int MAX_MODS = 64;
 
     int read_mods(PyObject* object, pppp::mods::Mod* mods, size_t* count) {
@@ -991,98 +1039,8 @@ namespace {
         PyEval_RestoreThread(thread);
 
         const PauseGC pause;
-        return difficulty_attributes(attributes);
-    }
-
-    PyObject* py_none() {
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    void dict_optional_number(PyObject* dict, const char* name, const nonstd::optional<double>& value) {
-        PyObject* number = value.has_value() ? py_number(value.value()) : py_none();
-        if (number) {
-            PyDict_SetItemString(dict, name, number);
-        }
-        Py_XDECREF(number);
-    }
-
-    PyObject* osu_performance(const pppp::osu::difficulty::OsuPerformanceAttributes& attributes) {
-        PyObject* dict = PyDict_New();
-        if (!dict) {
-            return NULL;
-        }
-        dict_number(dict, "total", attributes.total);
-        dict_number(dict, "aim", attributes.aim);
-        dict_number(dict, "speed", attributes.speed);
-        dict_number(dict, "accuracy", attributes.accuracy);
-        dict_number(dict, "flashlight", attributes.flashlight);
-        dict_number(dict, "reading", attributes.reading);
-        dict_number(dict, "effective_miss_count", attributes.effective_miss_count);
-        dict_number(dict, "combo_based_estimated_miss_count", attributes.combo_based_estimated_miss_count);
-        dict_optional_number(dict, "score_based_estimated_miss_count",
-                             attributes.score_based_estimated_miss_count);
-        dict_number(dict, "aim_estimated_slider_breaks", attributes.aim_estimated_slider_breaks);
-        dict_number(dict, "speed_estimated_slider_breaks", attributes.speed_estimated_slider_breaks);
-        dict_optional_number(dict, "speed_deviation", attributes.speed_deviation);
-        return finish_dict(dict);
-    }
-
-    PyObject* taiko_performance(const pppp::taiko::difficulty::TaikoPerformanceAttributes& attributes) {
-        PyObject* dict = PyDict_New();
-        if (!dict) {
-            return NULL;
-        }
-        dict_number(dict, "total", attributes.total);
-        dict_number(dict, "difficulty", attributes.difficulty);
-        dict_number(dict, "accuracy", attributes.accuracy);
-        dict_optional_number(dict, "estimated_unstable_rate", attributes.estimated_unstable_rate);
-        return finish_dict(dict);
-    }
-
-    PyObject* catch_performance(const pppp::fruits::difficulty::CatchPerformanceAttributes& attributes) {
-        PyObject* dict = PyDict_New();
-        if (!dict) {
-            return NULL;
-        }
-        dict_number(dict, "total", attributes.total);
-        return finish_dict(dict);
-    }
-
-    PyObject* mania_performance(const pppp::mania::difficulty::ManiaPerformanceAttributes& attributes) {
-        PyObject* dict = PyDict_New();
-        if (!dict) {
-            return NULL;
-        }
-        dict_number(dict, "total", attributes.total);
-        dict_number(dict, "difficulty", attributes.difficulty);
-        return finish_dict(dict);
-    }
-
-    PyObject* performance_attributes(const pppp::PerformanceAttributes& attributes) {
-        PyObject* dict = PyDict_New();
-        if (!dict) {
-            return NULL;
-        }
-        dict_integer(dict, "ruleset", static_cast<int>(attributes.ruleset));
-        dict_number(dict, "total", attributes.total());
-
-        const char* names[] = {"osu", "taiko", "fruits", "mania"};
-        PyObject* modes[] = {osu_performance(attributes.osu), taiko_performance(attributes.taiko),
-                             catch_performance(attributes.fruits), mania_performance(attributes.mania)};
-        for (int i = 0; i < 4; i++) {
-            if (!modes[i] || PyDict_SetItemString(dict, names[i], modes[i]) < 0) {
-                for (int j = i; j < 4; j++) {
-                    Py_XDECREF(modes[j]);
-                }
-                Py_DECREF(dict);
-                return NULL;
-            }
-        }
-        for (int i = 0; i < 4; i++) {
-            Py_DECREF(modes[i]);
-        }
-        return finish_dict(dict);
+        const Builder builder(state);
+        return builder.difficulty_attributes(attributes);
     }
 
     int read_optional_long(PyObject* object, long* out, bool* present) {
@@ -1133,21 +1091,45 @@ namespace {
         return 0;
     }
 
-    PyObject* attribute_value(PyObject* source, const char* key) {
-        if (PyDict_Check(source)) {
-            PyObject* value = PyDict_GetItemString(source, key);
+    struct AttributeSource {
+        AttributeSource()
+            : object(NULL),
+              fields(NULL),
+              slots(NULL) {}
+
+        PyObject* object;
+        PyObject** fields;
+        const Py_ssize_t* slots;
+    };
+
+    AttributeSource attribute_source(State* state, PyObject* object, int kind) {
+        AttributeSource source;
+        if (object && PyObject_TypeCheck(object, reinterpret_cast<PyTypeObject*>(state->types[kind]))) {
+            source.object = object;
+            source.fields = record_fields(object);
+            source.slots = state->slots[kind];
+        }
+        return source;
+    }
+
+    PyObject* attribute_value(const AttributeSource& source, const char* key, int field) {
+        if (source.slots) {
+            return Py_NewRef(source.fields[source.slots[field]]);
+        }
+        if (PyDict_Check(source.object)) {
+            PyObject* value = PyDict_GetItemString(source.object, key);
             Py_XINCREF(value);
             return value;
         }
-        PyObject* value = PyObject_GetAttrString(source, key);
+        PyObject* value = PyObject_GetAttrString(source.object, key);
         if (!value) {
             PyErr_Clear();
         }
         return value;
     }
 
-    double attribute_number(PyObject* source, const char* key) {
-        const PyRef value(attribute_value(source, key));
+    double attribute_number(const AttributeSource& source, const char* key, int field) {
+        const PyRef value(attribute_value(source, key, field));
         if (!value.get()) {
             return 0.0;
         }
@@ -1159,8 +1141,8 @@ namespace {
         return out;
     }
 
-    int attribute_int(PyObject* source, const char* key) {
-        const PyRef value(attribute_value(source, key));
+    int attribute_int(const AttributeSource& source, const char* key, int field) {
+        const PyRef value(attribute_value(source, key, field));
         if (!value.get()) {
             return 0;
         }
@@ -1172,8 +1154,9 @@ namespace {
         return static_cast<int>(out);
     }
 
-    int read_attributes(PyObject* source, pppp::DifficultyAttributes& out) {
-        const PyRef ruleset(attribute_value(source, "ruleset"));
+    int read_attributes(State* state, PyObject* object, pppp::DifficultyAttributes& out) {
+        const AttributeSource source = attribute_source(state, object, t_difficulty_attributes);
+        const PyRef ruleset(attribute_value(source, "ruleset", f_ruleset));
         const long value = ruleset.get() ? PyLong_AsLong(ruleset.get()) : -1;
         if (PyErr_Occurred() || value < 0 || value > 3) {
             PyErr_Clear();
@@ -1182,60 +1165,82 @@ namespace {
         }
         out.ruleset = static_cast<pppp::Ruleset::Value>(value);
 
-        const PyRef osu(attribute_value(source, "osu"));
-        if (osu.get()) {
-            out.osu.star_rating = attribute_number(osu.get(), "star_rating");
-            out.osu.max_combo = attribute_int(osu.get(), "max_combo");
-            out.osu.aim_difficulty = attribute_number(osu.get(), "aim_difficulty");
-            out.osu.speed_difficulty = attribute_number(osu.get(), "speed_difficulty");
-            out.osu.reading_difficulty = attribute_number(osu.get(), "reading_difficulty");
-            out.osu.flashlight_difficulty = attribute_number(osu.get(), "flashlight_difficulty");
-            out.osu.slider_factor = attribute_number(osu.get(), "slider_factor");
-            out.osu.aim_difficult_strain_count = attribute_number(osu.get(), "aim_difficult_strain_count");
+        const PyRef osu_value(
+            out.ruleset == pppp::Ruleset::RULESET_OSU ? attribute_value(source, "osu", f_osu) : 0);
+        const AttributeSource osu(attribute_source(state, osu_value.get(), t_osu_difficulty_attributes));
+        if (osu.object) {
+            out.osu.star_rating = attribute_number(osu, "star_rating", f_star_rating);
+            out.osu.max_combo = attribute_int(osu, "max_combo", f_max_combo);
+            out.osu.aim_difficulty = attribute_number(osu, "aim_difficulty", f_aim_difficulty);
+            out.osu.speed_difficulty = attribute_number(osu, "speed_difficulty", f_speed_difficulty);
+            out.osu.reading_difficulty = attribute_number(osu, "reading_difficulty", f_reading_difficulty);
+            out.osu.flashlight_difficulty =
+                attribute_number(osu, "flashlight_difficulty", f_flashlight_difficulty);
+            out.osu.slider_factor = attribute_number(osu, "slider_factor", f_slider_factor);
+            out.osu.aim_difficult_strain_count =
+                attribute_number(osu, "aim_difficult_strain_count", f_aim_difficult_strain_count);
             out.osu.speed_difficult_strain_count =
-                attribute_number(osu.get(), "speed_difficult_strain_count");
+                attribute_number(osu, "speed_difficult_strain_count", f_speed_difficult_strain_count);
             out.osu.reading_difficult_note_count =
-                attribute_number(osu.get(), "reading_difficult_note_count");
-            out.osu.aim_difficult_slider_count = attribute_number(osu.get(), "aim_difficult_slider_count");
+                attribute_number(osu, "reading_difficult_note_count", f_reading_difficult_note_count);
+            out.osu.aim_difficult_slider_count =
+                attribute_number(osu, "aim_difficult_slider_count", f_aim_difficult_slider_count);
             out.osu.aim_top_weighted_slider_factor =
-                attribute_number(osu.get(), "aim_top_weighted_slider_factor");
+                attribute_number(osu, "aim_top_weighted_slider_factor", f_aim_top_weighted_slider_factor);
             out.osu.speed_top_weighted_slider_factor =
-                attribute_number(osu.get(), "speed_top_weighted_slider_factor");
-            out.osu.speed_note_count = attribute_number(osu.get(), "speed_note_count");
-            out.osu.hit_circle_count = attribute_int(osu.get(), "hit_circle_count");
-            out.osu.slider_count = attribute_int(osu.get(), "slider_count");
-            out.osu.large_tick_count = attribute_int(osu.get(), "large_tick_count");
-            out.osu.spinner_count = attribute_int(osu.get(), "spinner_count");
-            out.osu.nested_score_per_object = attribute_number(osu.get(), "nested_score_per_object");
+                attribute_number(osu, "speed_top_weighted_slider_factor", f_speed_top_weighted_slider_factor);
+            out.osu.speed_note_count = attribute_number(osu, "speed_note_count", f_speed_note_count);
+            out.osu.hit_circle_count = attribute_int(osu, "hit_circle_count", f_hit_circle_count);
+            out.osu.slider_count = attribute_int(osu, "slider_count", f_slider_count);
+            out.osu.large_tick_count = attribute_int(osu, "large_tick_count", f_large_tick_count);
+            out.osu.spinner_count = attribute_int(osu, "spinner_count", f_spinner_count);
+            out.osu.nested_score_per_object =
+                attribute_number(osu, "nested_score_per_object", f_nested_score_per_object);
             out.osu.legacy_score_base_multiplier =
-                attribute_number(osu.get(), "legacy_score_base_multiplier");
-            out.osu.maximum_legacy_combo_score = attribute_number(osu.get(), "maximum_legacy_combo_score");
+                attribute_number(osu, "legacy_score_base_multiplier", f_legacy_score_base_multiplier);
+            out.osu.maximum_legacy_combo_score =
+                attribute_number(osu, "maximum_legacy_combo_score", f_maximum_legacy_combo_score);
         }
 
-        const PyRef taiko(attribute_value(source, "taiko"));
-        if (taiko.get()) {
-            out.taiko.star_rating = attribute_number(taiko.get(), "star_rating");
-            out.taiko.max_combo = attribute_int(taiko.get(), "max_combo");
-            out.taiko.mechanical_difficulty = attribute_number(taiko.get(), "mechanical_difficulty");
-            out.taiko.rhythm_difficulty = attribute_number(taiko.get(), "rhythm_difficulty");
-            out.taiko.reading_difficulty = attribute_number(taiko.get(), "reading_difficulty");
-            out.taiko.colour_difficulty = attribute_number(taiko.get(), "colour_difficulty");
-            out.taiko.stamina_difficulty = attribute_number(taiko.get(), "stamina_difficulty");
-            out.taiko.mono_stamina_factor = attribute_number(taiko.get(), "mono_stamina_factor");
-            out.taiko.consistency_factor = attribute_number(taiko.get(), "consistency_factor");
-            out.taiko.stamina_top_strains = attribute_number(taiko.get(), "stamina_top_strains");
+        const PyRef taiko_value(
+            out.ruleset == pppp::Ruleset::RULESET_TAIKO ? attribute_value(source, "taiko", f_taiko) : 0);
+        const AttributeSource taiko(
+            attribute_source(state, taiko_value.get(), t_taiko_difficulty_attributes));
+        if (taiko.object) {
+            out.taiko.star_rating = attribute_number(taiko, "star_rating", f_star_rating);
+            out.taiko.max_combo = attribute_int(taiko, "max_combo", f_max_combo);
+            out.taiko.mechanical_difficulty =
+                attribute_number(taiko, "mechanical_difficulty", f_mechanical_difficulty);
+            out.taiko.rhythm_difficulty = attribute_number(taiko, "rhythm_difficulty", f_rhythm_difficulty);
+            out.taiko.reading_difficulty =
+                attribute_number(taiko, "reading_difficulty", f_reading_difficulty);
+            out.taiko.colour_difficulty = attribute_number(taiko, "colour_difficulty", f_colour_difficulty);
+            out.taiko.stamina_difficulty =
+                attribute_number(taiko, "stamina_difficulty", f_stamina_difficulty);
+            out.taiko.mono_stamina_factor =
+                attribute_number(taiko, "mono_stamina_factor", f_mono_stamina_factor);
+            out.taiko.consistency_factor =
+                attribute_number(taiko, "consistency_factor", f_consistency_factor);
+            out.taiko.stamina_top_strains =
+                attribute_number(taiko, "stamina_top_strains", f_stamina_top_strains);
         }
 
-        const PyRef fruits(attribute_value(source, "fruits"));
-        if (fruits.get()) {
-            out.fruits.star_rating = attribute_number(fruits.get(), "star_rating");
-            out.fruits.max_combo = attribute_int(fruits.get(), "max_combo");
+        const PyRef fruits_value(
+            out.ruleset == pppp::Ruleset::RULESET_CATCH ? attribute_value(source, "fruits", f_fruits) : 0);
+        const AttributeSource fruits(
+            attribute_source(state, fruits_value.get(), t_catch_difficulty_attributes));
+        if (fruits.object) {
+            out.fruits.star_rating = attribute_number(fruits, "star_rating", f_star_rating);
+            out.fruits.max_combo = attribute_int(fruits, "max_combo", f_max_combo);
         }
 
-        const PyRef mania(attribute_value(source, "mania"));
-        if (mania.get()) {
-            out.mania.star_rating = attribute_number(mania.get(), "star_rating");
-            out.mania.max_combo = attribute_int(mania.get(), "max_combo");
+        const PyRef mania_value(
+            out.ruleset == pppp::Ruleset::RULESET_MANIA ? attribute_value(source, "mania", f_mania) : 0);
+        const AttributeSource mania(
+            attribute_source(state, mania_value.get(), t_mania_difficulty_attributes));
+        if (mania.object) {
+            out.mania.star_rating = attribute_number(mania, "star_rating", f_star_rating);
+            out.mania.max_combo = attribute_int(mania, "max_combo", f_max_combo);
         }
 
         return 0;
@@ -1298,7 +1303,7 @@ namespace {
         pppp::Performance performance(*beatmap->map);
         if (attributes_object != Py_None) {
             pppp::DifficultyAttributes provided;
-            if (read_attributes(attributes_object, provided) < 0) {
+            if (read_attributes(state, attributes_object, provided) < 0) {
                 return NULL;
             }
             performance.attributes(provided);
@@ -1323,7 +1328,8 @@ namespace {
         PyEval_RestoreThread(thread);
 
         const PauseGC pause;
-        return performance_attributes(attributes);
+        const Builder builder(state);
+        return builder.performance_attributes(attributes);
     }
 
     int add_version(PyObject* module) {

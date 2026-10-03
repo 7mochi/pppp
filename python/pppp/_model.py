@@ -177,19 +177,6 @@ class DifficultyAttributes:
     mania: ManiaDifficultyAttributes
 
 
-def _difficulty_attributes(values: object) -> DifficultyAttributes:
-    assert isinstance(values, dict)
-    return DifficultyAttributes(
-        ruleset=values["ruleset"],
-        star_rating=values["star_rating"],
-        max_combo=values["max_combo"],
-        osu=OsuDifficultyAttributes(**values["osu"]),
-        taiko=TaikoDifficultyAttributes(**values["taiko"]),
-        fruits=CatchDifficultyAttributes(**values["fruits"]),
-        mania=ManiaDifficultyAttributes(**values["mania"]),
-    )
-
-
 @_record
 class OsuPerformanceAttributes:
     total: float
@@ -233,15 +220,3 @@ class PerformanceAttributes:
     taiko: TaikoPerformanceAttributes
     fruits: CatchPerformanceAttributes
     mania: ManiaPerformanceAttributes
-
-
-def _performance_attributes(values: object) -> PerformanceAttributes:
-    assert isinstance(values, dict)
-    return PerformanceAttributes(
-        ruleset=values["ruleset"],
-        total=values["total"],
-        osu=OsuPerformanceAttributes(**values["osu"]),
-        taiko=TaikoPerformanceAttributes(**values["taiko"]),
-        fruits=CatchPerformanceAttributes(**values["fruits"]),
-        mania=ManiaPerformanceAttributes(**values["mania"]),
-    )

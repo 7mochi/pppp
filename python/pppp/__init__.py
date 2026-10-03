@@ -27,8 +27,6 @@ from ._model import (
     TaikoPerformanceAttributes,
     TimingPoint,
     Vector2,
-    _difficulty_attributes,
-    _performance_attributes,
 )
 
 
@@ -74,13 +72,11 @@ class Difficulty:
 
     def calculate(self) -> DifficultyAttributes:
         """Perform the difficulty calculation."""
-        return _difficulty_attributes(
-            _core.calculate_difficulty(
-                self._beatmap,
-                self._mods,
-                None if self._ruleset is None else int(self._ruleset),
-                self._clock_rate,
-            )
+        return _core.calculate_difficulty(
+            self._beatmap,
+            self._mods,
+            None if self._ruleset is None else int(self._ruleset),
+            self._clock_rate,
         )
 
 
@@ -136,33 +132,17 @@ class Performance:
         self._attributes = attributes
         return self
 
-    def _attributes_dict(self) -> dict | None:
-        if self._attributes is None:
-            return None
-        if isinstance(self._attributes, dict):
-            return self._attributes
-
-        def convert(value: object) -> object:
-            fields = getattr(value, "__dict__", None)
-            if not fields:
-                return value
-            return {key: convert(item) for key, item in fields.items()}
-
-        return convert(self._attributes)
-
     def calculate(self) -> PerformanceAttributes:
         """Perform the performance calculation, with the difficulty included unless attributes
         were given."""
-        return _performance_attributes(
-            _core.calculate_performance(
-                self._beatmap,
-                self._mods,
-                self._state,
-                self._combo,
-                self._accuracy,
-                self._misses,
-                self._attributes_dict(),
-            )
+        return _core.calculate_performance(
+            self._beatmap,
+            self._mods,
+            self._state,
+            self._combo,
+            self._accuracy,
+            self._misses,
+            self._attributes,
         )
 
 

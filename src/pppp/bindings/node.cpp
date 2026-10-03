@@ -717,7 +717,7 @@ namespace {
         }
         out.ruleset = static_cast<pppp::Ruleset::Value>(ruleset);
 
-        napi_value osu = attribute_value(env, value, "osu");
+        napi_value osu = ruleset == pppp::Ruleset::RULESET_OSU ? attribute_value(env, value, "osu") : NULL;
         if (osu) {
             out.osu.star_rating = attribute_number(env, osu, "star_rating");
             out.osu.max_combo = attribute_integer(env, osu, "max_combo");
@@ -744,7 +744,8 @@ namespace {
             out.osu.maximum_legacy_combo_score = attribute_number(env, osu, "maximum_legacy_combo_score");
         }
 
-        napi_value taiko = attribute_value(env, value, "taiko");
+        napi_value taiko =
+            ruleset == pppp::Ruleset::RULESET_TAIKO ? attribute_value(env, value, "taiko") : NULL;
         if (taiko) {
             out.taiko.star_rating = attribute_number(env, taiko, "star_rating");
             out.taiko.max_combo = attribute_integer(env, taiko, "max_combo");
@@ -758,13 +759,15 @@ namespace {
             out.taiko.stamina_top_strains = attribute_number(env, taiko, "stamina_top_strains");
         }
 
-        napi_value fruits = attribute_value(env, value, "fruits");
+        napi_value fruits =
+            ruleset == pppp::Ruleset::RULESET_CATCH ? attribute_value(env, value, "fruits") : NULL;
         if (fruits) {
             out.fruits.star_rating = attribute_number(env, fruits, "star_rating");
             out.fruits.max_combo = attribute_integer(env, fruits, "max_combo");
         }
 
-        napi_value mania = attribute_value(env, value, "mania");
+        napi_value mania =
+            ruleset == pppp::Ruleset::RULESET_MANIA ? attribute_value(env, value, "mania") : NULL;
         if (mania) {
             out.mania.star_rating = attribute_number(env, mania, "star_rating");
             out.mania.max_combo = attribute_integer(env, mania, "max_combo");

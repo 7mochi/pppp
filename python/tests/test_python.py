@@ -241,3 +241,14 @@ def test_performance_takes_the_combo_and_misses_it_is_given():
     beatmap = pppp.from_file(RESOURCES / "osu" / "2785319.osu")
     play = pppp.Performance(beatmap, combo=909, accuracy=1.0, misses=0).calculate()
     assert play.total > 0.0
+
+
+def test_performance_from_attributes_matches_the_map():
+    beatmap = pppp.from_file(RESOURCES / "osu" / "2785319.osu")
+    difficulty = pppp.Difficulty(beatmap).calculate()
+    score = score_of({5: 601, 16: difficulty.osu.slider_count}, 909)
+    from_map = pppp.Performance(beatmap, state=score).calculate()
+    from_attributes = pppp.Performance(beatmap, state=score, attributes=difficulty).calculate()
+    assert from_attributes.total == from_map.total
+    assert from_attributes.osu.aim == from_map.osu.aim
+    assert from_attributes == from_map

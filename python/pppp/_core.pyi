@@ -28,6 +28,7 @@ def calculate_performance(
     combo: int | None,
     accuracy: float | None,
     misses: int | None,
+    attributes: dict[str, Any] | None,
     /,
 ) -> dict[str, Any]: ...
 def _record(name: str, fields: tuple[str, ...], /) -> type: ...

@@ -188,6 +188,65 @@ namespace {
         out.difficulty = value.difficulty;
     }
 
+    void read_osu_difficulty(const pppp_osu_difficulty_attributes& in,
+                             pppp::osu::difficulty::OsuDifficultyAttributes& out) {
+        out.star_rating = in.star_rating;
+        out.max_combo = in.max_combo;
+        out.aim_difficulty = in.aim_difficulty;
+        out.speed_difficulty = in.speed_difficulty;
+        out.reading_difficulty = in.reading_difficulty;
+        out.flashlight_difficulty = in.flashlight_difficulty;
+        out.slider_factor = in.slider_factor;
+        out.aim_difficult_strain_count = in.aim_difficult_strain_count;
+        out.speed_difficult_strain_count = in.speed_difficult_strain_count;
+        out.reading_difficult_note_count = in.reading_difficult_note_count;
+        out.aim_difficult_slider_count = in.aim_difficult_slider_count;
+        out.aim_top_weighted_slider_factor = in.aim_top_weighted_slider_factor;
+        out.speed_top_weighted_slider_factor = in.speed_top_weighted_slider_factor;
+        out.speed_note_count = in.speed_note_count;
+        out.hit_circle_count = in.hit_circle_count;
+        out.slider_count = in.slider_count;
+        out.large_tick_count = in.large_tick_count;
+        out.spinner_count = in.spinner_count;
+        out.nested_score_per_object = in.nested_score_per_object;
+        out.legacy_score_base_multiplier = in.legacy_score_base_multiplier;
+        out.maximum_legacy_combo_score = in.maximum_legacy_combo_score;
+    }
+
+    void read_taiko_difficulty(const pppp_taiko_difficulty_attributes& in,
+                               pppp::taiko::difficulty::TaikoDifficultyAttributes& out) {
+        out.star_rating = in.star_rating;
+        out.max_combo = in.max_combo;
+        out.mechanical_difficulty = in.mechanical_difficulty;
+        out.rhythm_difficulty = in.rhythm_difficulty;
+        out.reading_difficulty = in.reading_difficulty;
+        out.colour_difficulty = in.colour_difficulty;
+        out.stamina_difficulty = in.stamina_difficulty;
+        out.mono_stamina_factor = in.mono_stamina_factor;
+        out.consistency_factor = in.consistency_factor;
+        out.stamina_top_strains = in.stamina_top_strains;
+    }
+
+    void read_catch_difficulty(const pppp_catch_difficulty_attributes& in,
+                               pppp::fruits::difficulty::CatchDifficultyAttributes& out) {
+        out.star_rating = in.star_rating;
+        out.max_combo = in.max_combo;
+    }
+
+    void read_mania_difficulty(const pppp_mania_difficulty_attributes& in,
+                               pppp::mania::difficulty::ManiaDifficultyAttributes& out) {
+        out.star_rating = in.star_rating;
+        out.max_combo = in.max_combo;
+    }
+
+    void read_difficulty(const pppp_difficulty_attributes& in, pppp::DifficultyAttributes& out) {
+        out.ruleset = static_cast<pppp::Ruleset::Value>(in.ruleset);
+        read_osu_difficulty(in.osu, out.osu);
+        read_taiko_difficulty(in.taiko, out.taiko);
+        read_catch_difficulty(in.fruits, out.fruits);
+        read_mania_difficulty(in.mania, out.mania);
+    }
+
     int read_mods(const char* specification, pppp::mods::Mod* mods, size_t* count) {
         *count = 0;
         if (!specification) {
@@ -456,6 +515,14 @@ pppp_result pppp_calculate_performance(const pppp_beatmap* map, const pppp_perfo
     }
 
     pppp::Performance performance(map->map);
+    if (options && options->has_difficulty) {
+        if (!options->difficulty || options->difficulty->ruleset < 0 || options->difficulty->ruleset > 3) {
+            return PPPP_INVALID_ARGUMENT;
+        }
+        pppp::DifficultyAttributes provided;
+        read_difficulty(*options->difficulty, provided);
+        performance.attributes(provided);
+    }
     performance.state(score);
     if (mod_count) {
         performance.mods(mods, mod_count);

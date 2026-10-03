@@ -297,6 +297,123 @@ TEST_SUITE("CapiTest") {
               (expected.taiko.estimated_unstable_rate.has_value() ? 1 : 0));
     }
 
+    TEST_CASE("performance from attributes skips the difficulty calculation") {
+        const char* path = PPPP_TEST_RESOURCES "/osu/2785319.osu";
+        pppp_beatmap* map = 0;
+        REQUIRE(pppp_beatmap_from_file(path, &map) == PPPP_OK);
+
+        pppp::beatmaps::Beatmap reference;
+        pppp_test::load(reference, path);
+
+        pppp::common::ScoreInfo score;
+        score.statistics[pppp::common::HIT_RESULT_GREAT] = 300;
+        score.statistics[pppp::common::HIT_RESULT_OK] = 20;
+        score.statistics[pppp::common::HIT_RESULT_MEH] = 3;
+        score.statistics[pppp::common::HIT_RESULT_MISS] = 1;
+        score.max_combo = 500;
+        score.accuracy = pppp_test::classic_accuracy(300, 20, 3, 1);
+
+        pppp_performance_options options;
+        std::memset(&options, 0, sizeof(options));
+        options.mods = "HD,DT";
+        options.has_score = 1;
+        for (int i = 0; i < PPPP_HIT_RESULT_COUNT; i++) {
+            options.score.statistics[i] = score.statistics[i];
+            options.score.maximum_statistics[i] = score.maximum_statistics[i];
+        }
+        options.score.max_combo = score.max_combo;
+        options.score.accuracy = score.accuracy;
+        options.has_combo = 1;
+        options.combo = 500;
+
+        pppp_performance_attributes from_map;
+        REQUIRE(pppp_calculate_performance(map, &options, &from_map) == PPPP_OK);
+
+        pppp_difficulty_attributes difficulty;
+        {
+            pppp_difficulty_options difficulty_options;
+            std::memset(&difficulty_options, 0, sizeof(difficulty_options));
+            difficulty_options.mods = "HD,DT";
+            REQUIRE(pppp_calculate_difficulty(map, &difficulty_options, &difficulty) == PPPP_OK);
+        }
+
+        pppp_performance_options with_attributes = options;
+        with_attributes.difficulty = &difficulty;
+        with_attributes.has_difficulty = 1;
+
+        pppp_performance_attributes from_attributes;
+        REQUIRE(pppp_calculate_performance(map, &with_attributes, &from_attributes) == PPPP_OK);
+
+        CHECK(from_attributes.ruleset == from_map.ruleset);
+        CHECK(from_attributes.total == from_map.total);
+        CHECK(from_attributes.osu.aim == from_map.osu.aim);
+        CHECK(from_attributes.osu.speed == from_map.osu.speed);
+        CHECK(from_attributes.osu.accuracy == from_map.osu.accuracy);
+        CHECK(from_attributes.osu.reading == from_map.osu.reading);
+        CHECK(from_attributes.osu.effective_miss_count == from_map.osu.effective_miss_count);
+        CHECK(from_attributes.osu.has_speed_deviation == from_map.osu.has_speed_deviation);
+        CHECK(from_attributes.osu.speed_deviation == from_map.osu.speed_deviation);
+
+        pppp_beatmap_free(map);
+    }
+
+    TEST_CASE("attributes from a converted map carry their ruleset") {
+        const char* path = PPPP_TEST_RESOURCES "/osu/2785319.osu";
+        pppp_beatmap* map = 0;
+        REQUIRE(pppp_beatmap_from_file(path, &map) == PPPP_OK);
+
+        pppp::beatmaps::Beatmap reference;
+        pppp_test::load(reference, path);
+
+        pppp_difficulty_options options;
+        std::memset(&options, 0, sizeof(options));
+        options.ruleset = PPPP_RULESET_TAIKO;
+        options.has_ruleset = 1;
+
+        pppp_difficulty_attributes difficulty;
+        REQUIRE(pppp_calculate_difficulty(map, &options, &difficulty) == PPPP_OK);
+        REQUIRE(difficulty.ruleset == PPPP_RULESET_TAIKO);
+
+        const pppp::DifficultyAttributes expected =
+            pppp::Difficulty().ruleset(pppp::Ruleset::RULESET_TAIKO).calculate(reference);
+        const pppp::PerformanceAttributes expected_performance =
+            pppp::Performance(reference, expected).calculate();
+
+        pppp_performance_options performance_options;
+        std::memset(&performance_options, 0, sizeof(performance_options));
+        performance_options.difficulty = &difficulty;
+        performance_options.has_difficulty = 1;
+
+        pppp_performance_attributes attributes;
+        REQUIRE(pppp_calculate_performance(map, &performance_options, &attributes) == PPPP_OK);
+
+        CHECK(attributes.ruleset == PPPP_RULESET_TAIKO);
+        CHECK(attributes.total == pppp_test::pp_approx(expected_performance.total()));
+        CHECK(attributes.taiko.difficulty == pppp_test::pp_approx(expected_performance.taiko.difficulty));
+
+        pppp_beatmap_free(map);
+    }
+
+    TEST_CASE("provided attributes with an out-of-range ruleset are rejected") {
+        const char* path = PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu";
+        pppp_beatmap* map = 0;
+        REQUIRE(pppp_beatmap_from_file(path, &map) == PPPP_OK);
+
+        pppp_difficulty_attributes difficulty;
+        std::memset(&difficulty, 0, sizeof(difficulty));
+        difficulty.ruleset = 4;
+
+        pppp_performance_options options;
+        std::memset(&options, 0, sizeof(options));
+        options.difficulty = &difficulty;
+        options.has_difficulty = 1;
+
+        pppp_performance_attributes attributes;
+        CHECK(pppp_calculate_performance(map, &options, &attributes) == PPPP_INVALID_ARGUMENT);
+
+        pppp_beatmap_free(map);
+    }
+
     TEST_CASE("a missing file fails and leaves the handle untouched") {
         pppp_beatmap* map = 0;
 

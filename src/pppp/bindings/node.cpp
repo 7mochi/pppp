@@ -668,9 +668,114 @@ namespace {
         return 0;
     }
 
+    napi_value attribute_value(napi_env env, napi_value object, const char* name) {
+        if (!object) {
+            return NULL;
+        }
+        napi_value value = NULL;
+        if (napi_get_named_property(env, object, name, &value) != napi_ok) {
+            napi_value ignored = NULL;
+            napi_get_and_clear_last_exception(env, &ignored);
+            return NULL;
+        }
+        return value;
+    }
+
+    double attribute_number(napi_env env, napi_value object, const char* name) {
+        napi_value value = attribute_value(env, object, name);
+        double out = 0.0;
+        if (!value || napi_get_value_double(env, value, &out) != napi_ok) {
+            napi_value ignored = NULL;
+            napi_get_and_clear_last_exception(env, &ignored);
+            return 0.0;
+        }
+        return out;
+    }
+
+    int attribute_integer(napi_env env, napi_value object, const char* name) {
+        napi_value value = attribute_value(env, object, name);
+        int32_t out = 0;
+        if (!value || napi_get_value_int32(env, value, &out) != napi_ok) {
+            napi_value ignored = NULL;
+            napi_get_and_clear_last_exception(env, &ignored);
+            return 0;
+        }
+        return static_cast<int>(out);
+    }
+
+    int read_attributes(napi_env env, napi_value value, pppp::DifficultyAttributes& out) {
+        napi_valuetype type = napi_undefined;
+        if (napi_typeof(env, value, &type) != napi_ok || type != napi_object) {
+            napi_throw_type_error(env, NULL, "expected a DifficultyAttributes");
+            return -1;
+        }
+
+        const int ruleset = attribute_integer(env, value, "ruleset");
+        if (ruleset < 0 || ruleset > 3) {
+            napi_throw_range_error(env, NULL, "ruleset must be one of 0, 1, 2, 3");
+            return -1;
+        }
+        out.ruleset = static_cast<pppp::Ruleset::Value>(ruleset);
+
+        napi_value osu = attribute_value(env, value, "osu");
+        if (osu) {
+            out.osu.star_rating = attribute_number(env, osu, "star_rating");
+            out.osu.max_combo = attribute_integer(env, osu, "max_combo");
+            out.osu.aim_difficulty = attribute_number(env, osu, "aim_difficulty");
+            out.osu.speed_difficulty = attribute_number(env, osu, "speed_difficulty");
+            out.osu.reading_difficulty = attribute_number(env, osu, "reading_difficulty");
+            out.osu.flashlight_difficulty = attribute_number(env, osu, "flashlight_difficulty");
+            out.osu.slider_factor = attribute_number(env, osu, "slider_factor");
+            out.osu.aim_difficult_strain_count = attribute_number(env, osu, "aim_difficult_strain_count");
+            out.osu.speed_difficult_strain_count = attribute_number(env, osu, "speed_difficult_strain_count");
+            out.osu.reading_difficult_note_count = attribute_number(env, osu, "reading_difficult_note_count");
+            out.osu.aim_difficult_slider_count = attribute_number(env, osu, "aim_difficult_slider_count");
+            out.osu.aim_top_weighted_slider_factor =
+                attribute_number(env, osu, "aim_top_weighted_slider_factor");
+            out.osu.speed_top_weighted_slider_factor =
+                attribute_number(env, osu, "speed_top_weighted_slider_factor");
+            out.osu.speed_note_count = attribute_number(env, osu, "speed_note_count");
+            out.osu.hit_circle_count = attribute_integer(env, osu, "hit_circle_count");
+            out.osu.slider_count = attribute_integer(env, osu, "slider_count");
+            out.osu.large_tick_count = attribute_integer(env, osu, "large_tick_count");
+            out.osu.spinner_count = attribute_integer(env, osu, "spinner_count");
+            out.osu.nested_score_per_object = attribute_number(env, osu, "nested_score_per_object");
+            out.osu.legacy_score_base_multiplier = attribute_number(env, osu, "legacy_score_base_multiplier");
+            out.osu.maximum_legacy_combo_score = attribute_number(env, osu, "maximum_legacy_combo_score");
+        }
+
+        napi_value taiko = attribute_value(env, value, "taiko");
+        if (taiko) {
+            out.taiko.star_rating = attribute_number(env, taiko, "star_rating");
+            out.taiko.max_combo = attribute_integer(env, taiko, "max_combo");
+            out.taiko.mechanical_difficulty = attribute_number(env, taiko, "mechanical_difficulty");
+            out.taiko.rhythm_difficulty = attribute_number(env, taiko, "rhythm_difficulty");
+            out.taiko.reading_difficulty = attribute_number(env, taiko, "reading_difficulty");
+            out.taiko.colour_difficulty = attribute_number(env, taiko, "colour_difficulty");
+            out.taiko.stamina_difficulty = attribute_number(env, taiko, "stamina_difficulty");
+            out.taiko.mono_stamina_factor = attribute_number(env, taiko, "mono_stamina_factor");
+            out.taiko.consistency_factor = attribute_number(env, taiko, "consistency_factor");
+            out.taiko.stamina_top_strains = attribute_number(env, taiko, "stamina_top_strains");
+        }
+
+        napi_value fruits = attribute_value(env, value, "fruits");
+        if (fruits) {
+            out.fruits.star_rating = attribute_number(env, fruits, "star_rating");
+            out.fruits.max_combo = attribute_integer(env, fruits, "max_combo");
+        }
+
+        napi_value mania = attribute_value(env, value, "mania");
+        if (mania) {
+            out.mania.star_rating = attribute_number(env, mania, "star_rating");
+            out.mania.max_combo = attribute_integer(env, mania, "max_combo");
+        }
+
+        return 0;
+    }
+
     napi_value calculate_performance(napi_env env, napi_callback_info info) {
-        size_t argc = 6;
-        napi_value argv[6];
+        size_t argc = 7;
+        napi_value argv[7];
         if (napi_get_cb_info(env, info, &argc, argv, NULL, NULL) != napi_ok || argc < 1) {
             napi_throw_type_error(env, NULL, "expected a Beatmap");
             return NULL;
@@ -719,8 +824,20 @@ namespace {
             napi_throw_type_error(env, NULL, "expected an accuracy");
             return NULL;
         }
+        napi_value attributes_value = argc > 6 ? argv[6] : undefined;
+        bool attributes_absent = false;
+        if (!is_absent(env, attributes_value, &attributes_absent)) {
+            return NULL;
+        }
 
         pppp::Performance performance(*map);
+        if (!attributes_absent) {
+            pppp::DifficultyAttributes provided;
+            if (read_attributes(env, attributes_value, provided) < 0) {
+                return NULL;
+            }
+            performance.attributes(provided);
+        }
         performance.state(score);
         if (mod_count) {
             performance.mods(mods, mod_count);

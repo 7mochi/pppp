@@ -1133,6 +1133,114 @@ namespace {
         return 0;
     }
 
+    PyObject* attribute_value(PyObject* source, const char* key) {
+        if (PyDict_Check(source)) {
+            PyObject* value = PyDict_GetItemString(source, key);
+            Py_XINCREF(value);
+            return value;
+        }
+        PyObject* value = PyObject_GetAttrString(source, key);
+        if (!value) {
+            PyErr_Clear();
+        }
+        return value;
+    }
+
+    double attribute_number(PyObject* source, const char* key) {
+        const PyRef value(attribute_value(source, key));
+        if (!value.get()) {
+            return 0.0;
+        }
+        const double out = PyFloat_AsDouble(value.get());
+        if (PyErr_Occurred()) {
+            PyErr_Clear();
+            return 0.0;
+        }
+        return out;
+    }
+
+    int attribute_int(PyObject* source, const char* key) {
+        const PyRef value(attribute_value(source, key));
+        if (!value.get()) {
+            return 0;
+        }
+        const long out = PyLong_AsLong(value.get());
+        if (PyErr_Occurred()) {
+            PyErr_Clear();
+            return 0;
+        }
+        return static_cast<int>(out);
+    }
+
+    int read_attributes(PyObject* source, pppp::DifficultyAttributes& out) {
+        const PyRef ruleset(attribute_value(source, "ruleset"));
+        const long value = ruleset.get() ? PyLong_AsLong(ruleset.get()) : -1;
+        if (PyErr_Occurred() || value < 0 || value > 3) {
+            PyErr_Clear();
+            PyErr_SetString(PyExc_ValueError, "ruleset must be one of 0, 1, 2, 3");
+            return -1;
+        }
+        out.ruleset = static_cast<pppp::Ruleset::Value>(value);
+
+        const PyRef osu(attribute_value(source, "osu"));
+        if (osu.get()) {
+            out.osu.star_rating = attribute_number(osu.get(), "star_rating");
+            out.osu.max_combo = attribute_int(osu.get(), "max_combo");
+            out.osu.aim_difficulty = attribute_number(osu.get(), "aim_difficulty");
+            out.osu.speed_difficulty = attribute_number(osu.get(), "speed_difficulty");
+            out.osu.reading_difficulty = attribute_number(osu.get(), "reading_difficulty");
+            out.osu.flashlight_difficulty = attribute_number(osu.get(), "flashlight_difficulty");
+            out.osu.slider_factor = attribute_number(osu.get(), "slider_factor");
+            out.osu.aim_difficult_strain_count = attribute_number(osu.get(), "aim_difficult_strain_count");
+            out.osu.speed_difficult_strain_count =
+                attribute_number(osu.get(), "speed_difficult_strain_count");
+            out.osu.reading_difficult_note_count =
+                attribute_number(osu.get(), "reading_difficult_note_count");
+            out.osu.aim_difficult_slider_count = attribute_number(osu.get(), "aim_difficult_slider_count");
+            out.osu.aim_top_weighted_slider_factor =
+                attribute_number(osu.get(), "aim_top_weighted_slider_factor");
+            out.osu.speed_top_weighted_slider_factor =
+                attribute_number(osu.get(), "speed_top_weighted_slider_factor");
+            out.osu.speed_note_count = attribute_number(osu.get(), "speed_note_count");
+            out.osu.hit_circle_count = attribute_int(osu.get(), "hit_circle_count");
+            out.osu.slider_count = attribute_int(osu.get(), "slider_count");
+            out.osu.large_tick_count = attribute_int(osu.get(), "large_tick_count");
+            out.osu.spinner_count = attribute_int(osu.get(), "spinner_count");
+            out.osu.nested_score_per_object = attribute_number(osu.get(), "nested_score_per_object");
+            out.osu.legacy_score_base_multiplier =
+                attribute_number(osu.get(), "legacy_score_base_multiplier");
+            out.osu.maximum_legacy_combo_score = attribute_number(osu.get(), "maximum_legacy_combo_score");
+        }
+
+        const PyRef taiko(attribute_value(source, "taiko"));
+        if (taiko.get()) {
+            out.taiko.star_rating = attribute_number(taiko.get(), "star_rating");
+            out.taiko.max_combo = attribute_int(taiko.get(), "max_combo");
+            out.taiko.mechanical_difficulty = attribute_number(taiko.get(), "mechanical_difficulty");
+            out.taiko.rhythm_difficulty = attribute_number(taiko.get(), "rhythm_difficulty");
+            out.taiko.reading_difficulty = attribute_number(taiko.get(), "reading_difficulty");
+            out.taiko.colour_difficulty = attribute_number(taiko.get(), "colour_difficulty");
+            out.taiko.stamina_difficulty = attribute_number(taiko.get(), "stamina_difficulty");
+            out.taiko.mono_stamina_factor = attribute_number(taiko.get(), "mono_stamina_factor");
+            out.taiko.consistency_factor = attribute_number(taiko.get(), "consistency_factor");
+            out.taiko.stamina_top_strains = attribute_number(taiko.get(), "stamina_top_strains");
+        }
+
+        const PyRef fruits(attribute_value(source, "fruits"));
+        if (fruits.get()) {
+            out.fruits.star_rating = attribute_number(fruits.get(), "star_rating");
+            out.fruits.max_combo = attribute_int(fruits.get(), "max_combo");
+        }
+
+        const PyRef mania(attribute_value(source, "mania"));
+        if (mania.get()) {
+            out.mania.star_rating = attribute_number(mania.get(), "star_rating");
+            out.mania.max_combo = attribute_int(mania.get(), "max_combo");
+        }
+
+        return 0;
+    }
+
     PyObject* calculate_performance(PyObject* module, PyObject* args) {
         PyObject* beatmap_object;
         PyObject* mods_object;
@@ -1140,8 +1248,10 @@ namespace {
         PyObject* combo_object;
         PyObject* accuracy_object;
         PyObject* misses_object;
-        if (!PyArg_ParseTuple(args, "OOOOOO:calculate_performance", &beatmap_object, &mods_object,
-                              &score_object, &combo_object, &accuracy_object, &misses_object)) {
+        PyObject* attributes_object;
+        if (!PyArg_ParseTuple(args, "OOOOOOO:calculate_performance", &beatmap_object, &mods_object,
+                              &score_object, &combo_object, &accuracy_object, &misses_object,
+                              &attributes_object)) {
             return NULL;
         }
         State* state = static_cast<State*>(PyModule_GetState(module));
@@ -1186,6 +1296,13 @@ namespace {
 
         const BeatmapObject* beatmap = reinterpret_cast<const BeatmapObject*>(beatmap_object);
         pppp::Performance performance(*beatmap->map);
+        if (attributes_object != Py_None) {
+            pppp::DifficultyAttributes provided;
+            if (read_attributes(attributes_object, provided) < 0) {
+                return NULL;
+            }
+            performance.attributes(provided);
+        }
         performance.state(score);
         if (mod_count) {
             performance.mods(mods, mod_count);

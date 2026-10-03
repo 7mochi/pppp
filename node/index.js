@@ -64,6 +64,7 @@ class Performance {
     this.comboValue = options.combo ?? null;
     this.accuracyValue = options.accuracy ?? null;
     this.missesValue = options.misses ?? null;
+    this.attributesValue = options.attributes ?? null;
   }
 
   /** Specify mods, as osu!'s own specification list. */
@@ -90,6 +91,12 @@ class Performance {
     return this;
   }
 
+  /** Use the given already-calculated attributes, skipping the difficulty calculation. */
+  attributes(attributes) {
+    this.attributesValue = attributes;
+    return this;
+  }
+
   /** Specify the amount of misses of the play. */
   misses(misses) {
     this.missesValue = misses;
@@ -104,7 +111,8 @@ class Performance {
       this.scoreState,
       this.comboValue,
       this.accuracyValue,
-      this.missesValue
+      this.missesValue,
+      this.attributesValue
     );
   }
 }

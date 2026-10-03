@@ -9,6 +9,8 @@ namespace Pppp {
         private int? combo;
         private double? accuracy;
         private int? misses;
+        private DifficultyAttributes attributes;
+        private bool hasAttributes;
 
         public Performance(Beatmap beatmap) {
             if (beatmap == null) {
@@ -47,9 +49,20 @@ namespace Pppp {
             return this;
         }
 
-        /// <summary>Perform the performance calculation for the map's mode.</summary>
+        /// <summary>Use the given already-calculated attributes, skipping the difficulty
+        /// calculation.</summary>
+        public Performance Attributes(DifficultyAttributes value) {
+            attributes = value;
+            hasAttributes = true;
+            return this;
+        }
+
+        /// <summary>Perform the performance calculation for the map's or the attributes'
+        /// mode.</summary>
         public unsafe PerformanceAttributes Calculate() {
             Native.PerformanceOptions options = new Native.PerformanceOptions();
+            DifficultyAttributes provided = attributes;
+            DifficultyAttributes* pointer = hasAttributes ? &provided : null;
             fixed (byte* specification = Native.Utf8(mods)) {
                 options.mods = (IntPtr)specification;
                 if (state != null) {
@@ -68,17 +81,21 @@ namespace Pppp {
                     options.misses = misses.Value;
                     options.has_misses = 1;
                 }
+                if (hasAttributes) {
+                    options.difficulty = (IntPtr)pointer;
+                    options.has_difficulty = 1;
+                }
 
-                Native.PerformanceAttributes attributes;
+                Native.PerformanceAttributes result;
                 int status =
-                    Native.pppp_calculate_performance(beatmap.Handle, ref options, out attributes);
+                    Native.pppp_calculate_performance(beatmap.Handle, ref options, out result);
                 if (status == Native.Allocation) {
                     throw new OutOfMemoryException();
                 }
                 if (status != Native.Ok) {
                     throw new ArgumentException("invalid mod specification");
                 }
-                return Native.FromNative(attributes);
+                return Native.FromNative(result);
             }
         }
     }

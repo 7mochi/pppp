@@ -43,6 +43,8 @@ namespace Pppp {
             internal int has_accuracy;
             internal int misses;
             internal int has_misses;
+            internal IntPtr difficulty;
+            internal int has_difficulty;
         }
 
         [StructLayout(LayoutKind.Sequential)]

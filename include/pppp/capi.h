@@ -269,6 +269,9 @@ typedef struct pppp_difficulty_options {
 
 /// The input of `pppp_calculate_performance`. Zero-initialize it; `mods` may be null for no mods,
 /// and `score`, `combo`, `accuracy` and `misses` only apply when their `has_*` field is set.
+/// When `difficulty` is given, `has_difficulty` must be set, the attributes are used as they came
+/// out of `pppp_calculate_difficulty` and the difficulty is not calculated again; the performance
+/// is then calculated for the ruleset those attributes belong to.
 typedef struct pppp_performance_options {
     const char* mods;
     pppp_score_info score;
@@ -279,6 +282,8 @@ typedef struct pppp_performance_options {
     pppp_int32 has_accuracy;
     pppp_int32 misses;
     pppp_int32 has_misses;
+    const pppp_difficulty_attributes* difficulty;
+    pppp_int32 has_difficulty;
 } pppp_performance_options;
 
 /// A loaded beatmap. It owns everything it hands out, and is freed with `pppp_beatmap_free`.

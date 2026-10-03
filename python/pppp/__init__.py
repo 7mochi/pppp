@@ -96,6 +96,7 @@ class Performance:
         combo: int | None = None,
         accuracy: float | None = None,
         misses: int | None = None,
+        attributes: DifficultyAttributes | None = None,
     ) -> None:
         self._beatmap = beatmap
         self._mods = mods
@@ -103,6 +104,7 @@ class Performance:
         self._combo = combo
         self._accuracy = accuracy
         self._misses = misses
+        self._attributes = attributes
 
     def mods(self, spec: str) -> Performance:
         """Specify mods, as osu!'s own specification list."""
@@ -129,8 +131,28 @@ class Performance:
         self._misses = misses
         return self
 
+    def attributes(self, attributes: DifficultyAttributes) -> Performance:
+        """Use the given already-calculated attributes, skipping the difficulty calculation."""
+        self._attributes = attributes
+        return self
+
+    def _attributes_dict(self) -> dict | None:
+        if self._attributes is None:
+            return None
+        if isinstance(self._attributes, dict):
+            return self._attributes
+
+        def convert(value: object) -> object:
+            fields = getattr(value, "__dict__", None)
+            if not fields:
+                return value
+            return {key: convert(item) for key, item in fields.items()}
+
+        return convert(self._attributes)
+
     def calculate(self) -> PerformanceAttributes:
-        """Perform the performance calculation, difficulty included."""
+        """Perform the performance calculation, with the difficulty included unless attributes
+        were given."""
         return _performance_attributes(
             _core.calculate_performance(
                 self._beatmap,
@@ -139,6 +161,7 @@ class Performance:
                 self._combo,
                 self._accuracy,
                 self._misses,
+                self._attributes_dict(),
             )
         )
 

@@ -25,8 +25,8 @@ function(pppp_add_test name label)
   target_compile_features(test_${name} PRIVATE cxx_std_98)
   target_compile_definitions(test_${name} PRIVATE PPPP_TEST_RESOURCES="${CMAKE_CURRENT_SOURCE_DIR}/resources")
   target_link_libraries(test_${name} PRIVATE pppp_test_main pppp_internal pppp_warnings pppp_numerics ${ARGN})
-  add_test(NAME ${name} COMMAND test_${name})
-  set_tests_properties(${name} PROPERTIES LABELS ${label})
+  add_test(NAME ${name} COMMAND test_${name} ${PPPP_TEST_ARGS})
+  set_tests_properties(${name} PROPERTIES LABELS ${label} TIMEOUT 300)
 endfunction()
 
 if(PPPP_WITH_FOSU)
@@ -36,5 +36,9 @@ if(PPPP_WITH_FOSU)
 endif()
 
 if(PPPP_WITH_FOSU AND PPPP_BUILD_CAPI)
+  # --success names every test case as it runs, so a case that hangs and is killed by the timeout
+  # above can be told apart from the ones before it in the CI log.
+  set(PPPP_TEST_ARGS --success)
   pppp_add_test(capi bindings pppp_fosu pppp_c)
+  unset(PPPP_TEST_ARGS)
 endif()

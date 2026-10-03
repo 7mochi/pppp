@@ -1,6 +1,15 @@
 from typing import Any, Final
 
-from ._model import BeatmapDifficulty, BreakPeriod, HitObject, ScoreInfo, Slider, TimingPoint
+from ._model import (
+    BeatmapDifficulty,
+    BreakPeriod,
+    DifficultyAttributes,
+    HitObject,
+    PerformanceAttributes,
+    ScoreInfo,
+    Slider,
+    TimingPoint,
+)
 
 version: Final[str]
 
@@ -20,7 +29,7 @@ def calculate_difficulty(
     ruleset: int | None,
     clock_rate: float | None,
     /,
-) -> dict[str, Any]: ...
+) -> DifficultyAttributes: ...
 def calculate_performance(
     beatmap: Beatmap,
     mods: str | None,
@@ -28,9 +37,9 @@ def calculate_performance(
     combo: int | None,
     accuracy: float | None,
     misses: int | None,
-    attributes: dict[str, Any] | None,
+    attributes: DifficultyAttributes | None,
     /,
-) -> dict[str, Any]: ...
+) -> PerformanceAttributes: ...
 def _record(name: str, fields: tuple[str, ...], /) -> type: ...
 def _restore_record(cls: type, /) -> object: ...
 def from_file(path: str | bytes, /) -> Beatmap: ...

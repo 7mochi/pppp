@@ -215,6 +215,7 @@ export interface PerformanceOptions {
   combo?: number;
   accuracy?: number;
   misses?: number;
+  attributes?: DifficultyAttributes;
 }
 
 /** Performance calculator on maps of any mode. */
@@ -232,6 +233,9 @@ export declare class Performance {
 
   /** Set the accuracy between 0.0 and 1.0. */
   accuracy(accuracy: number): Performance;
+
+  /** Use the given already-calculated attributes, skipping the difficulty calculation. */
+  attributes(attributes: DifficultyAttributes): Performance;
 
   /** Specify the amount of misses of the play. */
   misses(misses: number): Performance;

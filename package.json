@@ -13,7 +13,8 @@
   },
   "scripts": {
     "install": "cd node && pkg-prebuilds-verify ./binding-options.js || cmake-js compile -d .. --out build",
-    "test": "jest"
+    "test": "jest",
+    "types": "tsc --noEmit --strict --target es2020 node/module.d.ts node/tests/types.ts"
   },
   "files": [
     "/node/index.js",
@@ -33,6 +34,7 @@
     "pkg-prebuilds": "^1.0.0"
   },
   "devDependencies": {
-    "jest": "^30.0.0"
+    "jest": "^30.5.2",
+    "typescript": "^7.0.2"
   }
 }

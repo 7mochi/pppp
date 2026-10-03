@@ -25,6 +25,7 @@
                 clang-tools
                 gnumake
                 nodejs
+                dotnet-sdk_8
                 (python3.withPackages (ps: with ps; [
                   pytest
                   mypy
@@ -44,6 +45,7 @@
               echo "  make test"
               echo "  make format-check"
               echo "  npm install && npm test  # the node bindings"
+              echo "  cd csharp/tests && dotnet build  # the C# bindings"
             '';
           };
         }

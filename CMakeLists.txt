@@ -19,8 +19,9 @@ option(PPPP_BUILD_TESTS "Build the test suites" ${PROJECT_IS_TOP_LEVEL})
 option(PPPP_INSTALL "Generate install rules" ${PROJECT_IS_TOP_LEVEL})
 option(PPPP_BUILD_PYTHON "Build the Python extension module" OFF)
 option(PPPP_BUILD_NODE "Build the Node bindings" OFF)
+option(PPPP_BUILD_CAPI "Build the C bindings" OFF)
 
-if(PPPP_BUILD_PYTHON OR PPPP_BUILD_NODE)
+if(PPPP_BUILD_PYTHON OR PPPP_BUILD_NODE OR PPPP_BUILD_CAPI)
   # The library is static and the extension is a shared object.
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
   # Nothing links LTO objects across the extension boundary.
@@ -394,6 +395,10 @@ if(PPPP_BUILD_NODE)
   include(cmake/Node.cmake)
 endif()
 
+if(PPPP_BUILD_CAPI AND PPPP_WITH_FOSU)
+  include(cmake/CAPI.cmake)
+endif()
+
 if(PPPP_BUILD_TESTS)
   add_subdirectory(tests)
 endif()
@@ -409,6 +414,9 @@ if(PPPP_INSTALL)
     pppp_taiko_base pppp_taiko_difficulty pppp_taiko_performance pppp_taiko)
   if(PPPP_WITH_FOSU)
     list(APPEND PPPP_INSTALL_TARGETS pppp_fosu fosu)
+    if(PPPP_BUILD_CAPI)
+      list(APPEND PPPP_INSTALL_TARGETS pppp_c)
+    endif()
   endif()
 
   install(TARGETS ${PPPP_INSTALL_TARGETS} EXPORT ppppTargets

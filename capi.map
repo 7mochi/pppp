@@ -1,0 +1,17 @@
+{
+  global:
+    pppp_version;
+    pppp_beatmap_from_file;
+    pppp_beatmap_free;
+    pppp_beatmap_format_version;
+    pppp_beatmap_mode;
+    pppp_beatmap_stack_leniency;
+    pppp_beatmap_get_difficulty;
+    pppp_beatmap_hit_objects;
+    pppp_beatmap_sliders;
+    pppp_beatmap_timing_points;
+    pppp_beatmap_breaks;
+    pppp_calculate_difficulty;
+    pppp_calculate_performance;
+  local: *;
+};

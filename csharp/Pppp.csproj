@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net20;netstandard2.0</TargetFrameworks>
+    <Version>0.0.0</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <PackageId>pppp-dotnet</PackageId>
+    <Description>Performance points and difficulty calculation for osu!, ported from osu!lazer.</Description>
+    <PackageLicenseFile>LICENCE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>native;osu;performance;difficulty</PackageTags>
+    <RepositoryUrl>https://github.com/7mochi/pppp</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);PpppPackageAssemblies</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests/**" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net20'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net20" Version="1.0.3" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../LICENCE" Pack="true" PackagePath="/" />
+    <None Include="../README.md" Pack="true" PackagePath="/" />
+    <None Include="build/net20/pppp-dotnet.targets" Pack="true" PackagePath="build/net20/" />
+    <None Include="buildTransitive/net20/pppp-dotnet.targets" Pack="true" PackagePath="buildTransitive/net20/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="native/win-x64/pppp_c.dll" Pack="true" PackagePath="runtimes/win-x64/native/"
+          Condition="Exists('native/win-x64/pppp_c.dll')" />
+    <None Include="native/win-x86/pppp_c.dll" Pack="true" PackagePath="runtimes/win-x86/native/"
+          Condition="Exists('native/win-x86/pppp_c.dll')" />
+    <None Include="native/win-arm64/pppp_c.dll" Pack="true" PackagePath="runtimes/win-arm64/native/"
+          Condition="Exists('native/win-arm64/pppp_c.dll')" />
+    <None Include="native/linux-x64/pppp_c.so" Pack="true" PackagePath="runtimes/linux-x64/native/"
+          Condition="Exists('native/linux-x64/pppp_c.so')" />
+    <None Include="native/linux-arm64/pppp_c.so" Pack="true" PackagePath="runtimes/linux-arm64/native/"
+          Condition="Exists('native/linux-arm64/pppp_c.so')" />
+    <None Include="native/osx-x64/pppp_c.dylib" Pack="true" PackagePath="runtimes/osx-x64/native/"
+          Condition="Exists('native/osx-x64/pppp_c.dylib')" />
+    <None Include="native/osx-arm64/pppp_c.dylib" Pack="true" PackagePath="runtimes/osx-arm64/native/"
+          Condition="Exists('native/osx-arm64/pppp_c.dylib')" />
+  </ItemGroup>
+
+  <Target Name="PpppPackageAssemblies">
+    <ItemGroup Condition="'$(TargetFramework)' == 'net20'">
+      <TfmSpecificPackageFile Include="$(TargetPath)">
+        <PackagePath>lib/net20/</PackagePath>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+      <TfmSpecificPackageFile Include="$(TargetPath)">
+        <PackagePath>ref/netstandard2.0/</PackagePath>
+      </TfmSpecificPackageFile>
+      <TfmSpecificPackageFile Include="$(TargetPath)">
+        <PackagePath>runtimes/any/lib/netstandard2.0/</PackagePath>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+  </Target>
+</Project>

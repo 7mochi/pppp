@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' AND '$(RuntimeIdentifier)' == ''">
+    <PpppNativeArch Condition="'$(PlatformTarget)' == 'x86'">x86</PpppNativeArch>
+    <PpppNativeArch Condition="'$(PlatformTarget)' == 'x64'">x64</PpppNativeArch>
+    <PpppNativeArch Condition="'$(PlatformTarget)' == 'ARM64'">arm64</PpppNativeArch>
+    <PpppNativeArch Condition="'$(PlatformTarget)' == 'AnyCPU' AND '$(Prefer32Bit)' == 'true'">x86</PpppNativeArch>
+    <PpppNativeArch Condition="'$(PlatformTarget)' == 'AnyCPU' AND '$(Prefer32Bit)' != 'true'">x64</PpppNativeArch>
+    <PpppNativeArch Condition="'$(PpppNativeArch)' == ''">x64</PpppNativeArch>
+
+    <PpppNativePath>$(MSBuildThisFileDirectory)..\..\runtimes\win-$(PpppNativeArch)\native\pppp_c.dll</PpppNativePath>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(PpppNativeArch)' != ''">
+    <Content Include="$(PpppNativePath)" Link="pppp_c.dll" CopyToOutputDirectory="PreserveNewest" Pack="false" />
+  </ItemGroup>
+</Project>

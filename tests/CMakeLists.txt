@@ -34,3 +34,7 @@ if(PPPP_WITH_FOSU)
   pppp_add_test(difficulty fosu pppp_fosu)
   pppp_add_test(performance fosu pppp_fosu)
 endif()
+
+if(PPPP_WITH_FOSU AND PPPP_BUILD_CAPI)
+  pppp_add_test(capi bindings pppp_fosu pppp_c)
+endif()

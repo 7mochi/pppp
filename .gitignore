@@ -17,3 +17,9 @@ dist/
 
 node_modules/
 prebuilds/
+
+csharp/**/bin/
+csharp/**/obj/
+csharp/native/
+!csharp/build/
+*.nupkg

@@ -34,3 +34,8 @@ replace = 'version = "{new_version}"'
 filename = "package.json"
 search = '"version": "{current_version}"'
 replace = '"version": "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "csharp/Pppp.csproj"
+search = "<Version>{current_version}</Version>"
+replace = "<Version>{new_version}</Version>"

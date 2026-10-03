@@ -1,0 +1,3 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)..\..\buildTransitive\net20\pppp-dotnet.targets" />
+</Project>

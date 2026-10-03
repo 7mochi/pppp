@@ -25,6 +25,11 @@ function(pppp_add_test name label)
   target_compile_features(test_${name} PRIVATE cxx_std_98)
   target_compile_definitions(test_${name} PRIVATE PPPP_TEST_RESOURCES="${CMAKE_CURRENT_SOURCE_DIR}/resources")
   target_link_libraries(test_${name} PRIVATE pppp_test_main pppp_internal pppp_warnings pppp_numerics ${ARGN})
+  if(WIN32)
+    add_custom_command(TARGET test_${name} POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:test_${name}> $<TARGET_RUNTIME_DLLS:test_${name}>
+      COMMAND_EXPAND_LISTS)
+  endif()
   add_test(NAME ${name} COMMAND test_${name} ${PPPP_TEST_ARGS})
   set_tests_properties(${name} PROPERTIES LABELS ${label} TIMEOUT 300)
 endfunction()

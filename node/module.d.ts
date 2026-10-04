@@ -73,10 +73,10 @@ export interface Beatmap {
   mode: number;
   stack_leniency: number;
   difficulty: BeatmapDifficulty;
-  hit_objects: HitObject[];
-  sliders: Slider[];
-  timing_points: TimingPoint[];
-  breaks: BreakPeriod[];
+  readonly hit_objects: HitObject[];
+  readonly sliders: Slider[];
+  readonly timing_points: TimingPoint[];
+  readonly breaks: BreakPeriod[];
 }
 
 export interface ScoreInfo {

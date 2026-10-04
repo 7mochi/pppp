@@ -180,6 +180,102 @@ namespace {
         return object;
     }
 
+    napi_value build_hit_objects(napi_env env, const pppp::beatmaps::Beatmap& map) {
+        const size_t count = map.hit_objects.size();
+        napi_value array = NULL;
+        if (napi_create_array_with_length(env, count, &array) != napi_ok) {
+            return NULL;
+        }
+        for (size_t i = 0; i < count; i++) {
+            napi_set_element(env, array, static_cast<uint32_t>(i), hit_object(env, map.hit_objects[i]));
+        }
+        return array;
+    }
+
+    napi_value build_sliders(napi_env env, const pppp::beatmaps::Beatmap& map) {
+        const size_t count = map.sliders.size();
+        napi_value array = NULL;
+        if (napi_create_array_with_length(env, count, &array) != napi_ok) {
+            return NULL;
+        }
+        for (size_t i = 0; i < count; i++) {
+            napi_set_element(env, array, static_cast<uint32_t>(i), slider(env, map.sliders[i]));
+        }
+        return array;
+    }
+
+    napi_value build_timing_points(napi_env env, const pppp::beatmaps::Beatmap& map) {
+        const size_t count = map.timing_points.size();
+        napi_value array = NULL;
+        if (napi_create_array_with_length(env, count, &array) != napi_ok) {
+            return NULL;
+        }
+        for (size_t i = 0; i < count; i++) {
+            napi_set_element(env, array, static_cast<uint32_t>(i), timing_point(env, map.timing_points[i]));
+        }
+        return array;
+    }
+
+    napi_value build_breaks(napi_env env, const pppp::beatmaps::Beatmap& map) {
+        const size_t count = map.breaks.size();
+        napi_value array = NULL;
+        if (napi_create_array_with_length(env, count, &array) != napi_ok) {
+            return NULL;
+        }
+        for (size_t i = 0; i < count; i++) {
+            napi_set_element(env, array, static_cast<uint32_t>(i), break_period(env, map.breaks[i]));
+        }
+        return array;
+    }
+
+    napi_value beatmap_field(napi_env env, napi_callback_info info, const char* cache,
+                             napi_value (*build)(napi_env, const pppp::beatmaps::Beatmap&)) {
+        napi_value receiver = NULL;
+        if (napi_get_cb_info(env, info, NULL, NULL, &receiver, NULL) != napi_ok) {
+            return NULL;
+        }
+        bool built = false;
+        if (napi_has_named_property(env, receiver, cache, &built) != napi_ok) {
+            return NULL;
+        }
+        if (built) {
+            napi_value cached = NULL;
+            if (napi_get_named_property(env, receiver, cache, &cached) != napi_ok) {
+                return NULL;
+            }
+            return cached;
+        }
+        void* data = NULL;
+        if (napi_unwrap(env, receiver, &data) != napi_ok || !data) {
+            return NULL;
+        }
+        napi_value array = build(env, *static_cast<const pppp::beatmaps::Beatmap*>(data));
+        if (!array) {
+            return NULL;
+        }
+        const napi_property_descriptor hidden = {cache, NULL, NULL, NULL, NULL, array, napi_default, NULL};
+        if (napi_define_properties(env, receiver, 1, &hidden) != napi_ok) {
+            return NULL;
+        }
+        return array;
+    }
+
+    napi_value get_hit_objects(napi_env env, napi_callback_info info) {
+        return beatmap_field(env, info, "_hit_objects", build_hit_objects);
+    }
+
+    napi_value get_sliders(napi_env env, napi_callback_info info) {
+        return beatmap_field(env, info, "_sliders", build_sliders);
+    }
+
+    napi_value get_timing_points(napi_env env, napi_callback_info info) {
+        return beatmap_field(env, info, "_timing_points", build_timing_points);
+    }
+
+    napi_value get_breaks(napi_env env, napi_callback_info info) {
+        return beatmap_field(env, info, "_breaks", build_breaks);
+    }
+
     void release_beatmap(napi_env env, void* data, void* hint) {
         delete static_cast<pppp::beatmaps::Beatmap*>(data);
     }
@@ -246,39 +342,14 @@ namespace {
         napi_set_named_property(env, object, "stack_leniency", number(env, map->stack_leniency));
         napi_set_named_property(env, object, "difficulty", difficulty(env, map->difficulty));
 
-        const size_t hit_object_count = map->hit_objects.size();
-        napi_value hit_objects = NULL;
-        napi_create_array_with_length(env, hit_object_count, &hit_objects);
-        for (size_t i = 0; i < hit_object_count; i++) {
-            napi_set_element(env, hit_objects, static_cast<uint32_t>(i),
-                             hit_object(env, map->hit_objects[i]));
+        const napi_property_descriptor fields[] = {
+            {"hit_objects", NULL, NULL, get_hit_objects, NULL, NULL, napi_enumerable, NULL},
+            {"sliders", NULL, NULL, get_sliders, NULL, NULL, napi_enumerable, NULL},
+            {"timing_points", NULL, NULL, get_timing_points, NULL, NULL, napi_enumerable, NULL},
+            {"breaks", NULL, NULL, get_breaks, NULL, NULL, napi_enumerable, NULL}};
+        if (napi_define_properties(env, object, 4, fields) != napi_ok) {
+            return NULL;
         }
-        napi_set_named_property(env, object, "hit_objects", hit_objects);
-
-        const size_t slider_count = map->sliders.size();
-        napi_value sliders = NULL;
-        napi_create_array_with_length(env, slider_count, &sliders);
-        for (size_t i = 0; i < slider_count; i++) {
-            napi_set_element(env, sliders, static_cast<uint32_t>(i), slider(env, map->sliders[i]));
-        }
-        napi_set_named_property(env, object, "sliders", sliders);
-
-        const size_t timing_point_count = map->timing_points.size();
-        napi_value timing_points = NULL;
-        napi_create_array_with_length(env, timing_point_count, &timing_points);
-        for (size_t i = 0; i < timing_point_count; i++) {
-            napi_set_element(env, timing_points, static_cast<uint32_t>(i),
-                             timing_point(env, map->timing_points[i]));
-        }
-        napi_set_named_property(env, object, "timing_points", timing_points);
-
-        const size_t break_count = map->breaks.size();
-        napi_value breaks = NULL;
-        napi_create_array_with_length(env, break_count, &breaks);
-        for (size_t i = 0; i < break_count; i++) {
-            napi_set_element(env, breaks, static_cast<uint32_t>(i), break_period(env, map->breaks[i]));
-        }
-        napi_set_named_property(env, object, "breaks", breaks);
 
         return object;
     }

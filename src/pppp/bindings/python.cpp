@@ -355,6 +355,7 @@ namespace {
 
     struct BeatmapObject {
         PyObject_HEAD pppp::beatmaps::Beatmap* map;
+        State* state;
         PyObject* difficulty;
         PyObject* hit_objects;
         PyObject* sliders;
@@ -842,34 +843,89 @@ namespace {
         return 0;
     }
 
-    PyObject* beatmap_field(PyObject* object, PyObject* BeatmapObject::* member) {
+    PyObject* beatmap_get_difficulty(PyObject* object, void*) {
         BeatmapObject* beatmap = reinterpret_cast<BeatmapObject*>(object);
-        PyObject* value = beatmap->*member;
-        if (!value) {
+        if (!beatmap->map) {
             PyErr_SetString(PyExc_AttributeError, "beatmap is not loaded");
             return NULL;
         }
-        return Py_NewRef(value);
-    }
-
-    PyObject* beatmap_get_difficulty(PyObject* object, void*) {
-        return beatmap_field(object, &BeatmapObject::difficulty);
+        if (!beatmap->difficulty) {
+            const PauseGC pause;
+            const Builder builder(beatmap->state);
+            beatmap->difficulty = builder.difficulty(beatmap->map->difficulty);
+            if (!beatmap->difficulty) {
+                return NULL;
+            }
+        }
+        return Py_NewRef(beatmap->difficulty);
     }
 
     PyObject* beatmap_get_hit_objects(PyObject* object, void*) {
-        return beatmap_field(object, &BeatmapObject::hit_objects);
+        BeatmapObject* beatmap = reinterpret_cast<BeatmapObject*>(object);
+        if (!beatmap->map) {
+            PyErr_SetString(PyExc_AttributeError, "beatmap is not loaded");
+            return NULL;
+        }
+        if (!beatmap->hit_objects) {
+            const PauseGC pause;
+            const Builder builder(beatmap->state);
+            beatmap->hit_objects = builder.hit_objects(beatmap->map->hit_objects);
+            if (!beatmap->hit_objects) {
+                return NULL;
+            }
+        }
+        return Py_NewRef(beatmap->hit_objects);
     }
 
     PyObject* beatmap_get_sliders(PyObject* object, void*) {
-        return beatmap_field(object, &BeatmapObject::sliders);
+        BeatmapObject* beatmap = reinterpret_cast<BeatmapObject*>(object);
+        if (!beatmap->map) {
+            PyErr_SetString(PyExc_AttributeError, "beatmap is not loaded");
+            return NULL;
+        }
+        if (!beatmap->sliders) {
+            const PauseGC pause;
+            const Builder builder(beatmap->state);
+            beatmap->sliders = builder.sliders(beatmap->map->sliders);
+            if (!beatmap->sliders) {
+                return NULL;
+            }
+        }
+        return Py_NewRef(beatmap->sliders);
     }
 
     PyObject* beatmap_get_timing_points(PyObject* object, void*) {
-        return beatmap_field(object, &BeatmapObject::timing_points);
+        BeatmapObject* beatmap = reinterpret_cast<BeatmapObject*>(object);
+        if (!beatmap->map) {
+            PyErr_SetString(PyExc_AttributeError, "beatmap is not loaded");
+            return NULL;
+        }
+        if (!beatmap->timing_points) {
+            const PauseGC pause;
+            const Builder builder(beatmap->state);
+            beatmap->timing_points = builder.timing_points(beatmap->map->timing_points);
+            if (!beatmap->timing_points) {
+                return NULL;
+            }
+        }
+        return Py_NewRef(beatmap->timing_points);
     }
 
     PyObject* beatmap_get_breaks(PyObject* object, void*) {
-        return beatmap_field(object, &BeatmapObject::breaks);
+        BeatmapObject* beatmap = reinterpret_cast<BeatmapObject*>(object);
+        if (!beatmap->map) {
+            PyErr_SetString(PyExc_AttributeError, "beatmap is not loaded");
+            return NULL;
+        }
+        if (!beatmap->breaks) {
+            const PauseGC pause;
+            const Builder builder(beatmap->state);
+            beatmap->breaks = builder.breaks(beatmap->map->breaks);
+            if (!beatmap->breaks) {
+                return NULL;
+            }
+        }
+        return Py_NewRef(beatmap->breaks);
     }
 
     PyObject* beatmap_get_format_version(PyObject* object, void*) {
@@ -941,20 +997,7 @@ namespace {
         }
         BeatmapObject* beatmap = reinterpret_cast<BeatmapObject*>(object);
         beatmap->map = map;
-        {
-            const PauseGC pause;
-            const Builder builder(state);
-            beatmap->difficulty = builder.difficulty(map->difficulty);
-            beatmap->hit_objects = builder.hit_objects(map->hit_objects);
-            beatmap->sliders = builder.sliders(map->sliders);
-            beatmap->timing_points = builder.timing_points(map->timing_points);
-            beatmap->breaks = builder.breaks(map->breaks);
-        }
-        if (!beatmap->difficulty || !beatmap->hit_objects || !beatmap->sliders || !beatmap->timing_points ||
-            !beatmap->breaks) {
-            Py_DECREF(object);
-            return NULL;
-        }
+        beatmap->state = state;
         return object;
     }
 

@@ -2,29 +2,68 @@
 #define PPPP_PERFORMANCE_H
 
 #include "pppp/beatmaps/beatmap.h"
+#include "pppp/common/hit_result.h"
 #include "pppp/common/score_info.h"
 #include "pppp/difficulty.h"
 #include "pppp/fruits/difficulty/catch_performance_attributes.h"
 #include "pppp/mania/difficulty/mania_performance_attributes.h"
-#include "pppp/mods/mod.h"
 #include "pppp/osu/difficulty/osu_performance_attributes.h"
+#include "pppp/status.h"
 #include "pppp/taiko/difficulty/taiko_performance_attributes.h"
-#include <cstddef>
-#include <vector>
 
 namespace pppp {
-    /// The four rulesets' performance attributes in one value: a tag plus the four mode structs.
-    struct PerformanceAttributes {
-        Ruleset::Value ruleset;
-        pppp::osu::difficulty::OsuPerformanceAttributes osu;
-        pppp::taiko::difficulty::TaikoPerformanceAttributes taiko;
-        pppp::fruits::difficulty::CatchPerformanceAttributes fruits;
-        pppp::mania::difficulty::ManiaPerformanceAttributes mania;
+    typedef pppp::common::ScoreInfo ScoreInfo;
+    typedef pppp::common::HitResult HitResult;
+    using pppp::common::HIT_RESULT_COMBO_BREAK;
+    using pppp::common::HIT_RESULT_COUNT;
+    using pppp::common::HIT_RESULT_GOOD;
+    using pppp::common::HIT_RESULT_GREAT;
+    using pppp::common::HIT_RESULT_IGNORE_HIT;
+    using pppp::common::HIT_RESULT_IGNORE_MISS;
+    using pppp::common::HIT_RESULT_LARGE_BONUS;
+    using pppp::common::HIT_RESULT_LARGE_TICK_HIT;
+    using pppp::common::HIT_RESULT_LARGE_TICK_MISS;
+    using pppp::common::HIT_RESULT_LEGACY_COMBO_INCREASE;
+    using pppp::common::HIT_RESULT_MEH;
+    using pppp::common::HIT_RESULT_MISS;
+    using pppp::common::HIT_RESULT_NONE;
+    using pppp::common::HIT_RESULT_OK;
+    using pppp::common::HIT_RESULT_PERFECT;
+    using pppp::common::HIT_RESULT_SLIDER_TAIL_HIT;
+    using pppp::common::HIT_RESULT_SMALL_BONUS;
+    using pppp::common::HIT_RESULT_SMALL_TICK_HIT;
+    using pppp::common::HIT_RESULT_SMALL_TICK_MISS;
 
+    typedef pppp::osu::difficulty::OsuPerformanceAttributes OsuPerformanceAttributes;
+    typedef pppp::taiko::difficulty::TaikoPerformanceAttributes TaikoPerformanceAttributes;
+    typedef pppp::fruits::difficulty::CatchPerformanceAttributes CatchPerformanceAttributes;
+    typedef pppp::mania::difficulty::ManiaPerformanceAttributes ManiaPerformanceAttributes;
+
+    /// The four rulesets' performance attributes in one value: a tag plus the four mode structs.
+    class PerformanceAttributes {
+    public:
         PerformanceAttributes();
+        PerformanceAttributes(const OsuPerformanceAttributes& attributes);
+        PerformanceAttributes(const TaikoPerformanceAttributes& attributes);
+        PerformanceAttributes(const CatchPerformanceAttributes& attributes);
+        PerformanceAttributes(const ManiaPerformanceAttributes& attributes);
+
+        Ruleset::Value ruleset() const;
+
+        const OsuPerformanceAttributes* osu() const;
+        const TaikoPerformanceAttributes* taiko() const;
+        const CatchPerformanceAttributes* fruits() const;
+        const ManiaPerformanceAttributes* mania() const;
 
         /// The live mode's total performance points.
         double total() const;
+
+    private:
+        Ruleset::Value tag;
+        OsuPerformanceAttributes osu_value;
+        TaikoPerformanceAttributes taiko_value;
+        CatchPerformanceAttributes fruits_value;
+        ManiaPerformanceAttributes mania_value;
     };
 
     /// Performance calculator on maps of any mode.
@@ -41,7 +80,7 @@ namespace pppp {
         Performance& attributes(const DifficultyAttributes& attributes);
 
         /// Specify mods.
-        Performance& mods(const pppp::mods::Mod* mods, size_t mod_count);
+        Performance& mods(const Mods& mods);
 
         /// Specify the max combo of the play.
         Performance& combo(int combo);
@@ -53,18 +92,18 @@ namespace pppp {
         Performance& misses(int misses);
 
         /// Provide the score state through a `ScoreInfo`.
-        Performance& state(const pppp::common::ScoreInfo& state);
+        Performance& score(const ScoreInfo& score);
 
         /// Perform the performance calculation for the map's or the attributes' mode.
-        PerformanceAttributes calculate() const;
+        Status calculate(PerformanceAttributes& out) const;
 
     private:
         const pppp::beatmaps::Beatmap* beatmap;
         DifficultyAttributes difficulty_attributes;
         bool has_attributes;
-        std::vector<pppp::mods::Mod> mod_list;
+        Mods mod_list;
         bool has_mods;
-        pppp::common::ScoreInfo score_state;
+        ScoreInfo score_state;
         bool has_combo;
         bool has_accuracy;
         bool has_misses;
@@ -74,18 +113,64 @@ namespace pppp {
     };
 
     inline PerformanceAttributes::PerformanceAttributes()
-        : ruleset(Ruleset::RULESET_OSU),
-          osu(),
-          taiko(),
-          fruits(),
-          mania() {}
+        : tag(Ruleset::OSU),
+          osu_value(),
+          taiko_value(),
+          fruits_value(),
+          mania_value() {}
+
+    inline PerformanceAttributes::PerformanceAttributes(const OsuPerformanceAttributes& attributes)
+        : tag(Ruleset::OSU),
+          osu_value(attributes),
+          taiko_value(),
+          fruits_value(),
+          mania_value() {}
+
+    inline PerformanceAttributes::PerformanceAttributes(const TaikoPerformanceAttributes& attributes)
+        : tag(Ruleset::TAIKO),
+          osu_value(),
+          taiko_value(attributes),
+          fruits_value(),
+          mania_value() {}
+
+    inline PerformanceAttributes::PerformanceAttributes(const CatchPerformanceAttributes& attributes)
+        : tag(Ruleset::CATCH),
+          osu_value(),
+          taiko_value(),
+          fruits_value(attributes),
+          mania_value() {}
+
+    inline PerformanceAttributes::PerformanceAttributes(const ManiaPerformanceAttributes& attributes)
+        : tag(Ruleset::MANIA),
+          osu_value(),
+          taiko_value(),
+          fruits_value(),
+          mania_value(attributes) {}
+
+    inline Ruleset::Value PerformanceAttributes::ruleset() const { return tag; }
+
+    inline const OsuPerformanceAttributes* PerformanceAttributes::osu() const {
+        return tag == Ruleset::OSU ? &osu_value : 0;
+    }
+
+    inline const TaikoPerformanceAttributes* PerformanceAttributes::taiko() const {
+        return tag == Ruleset::TAIKO ? &taiko_value : 0;
+    }
+
+    inline const CatchPerformanceAttributes* PerformanceAttributes::fruits() const {
+        return tag == Ruleset::CATCH ? &fruits_value : 0;
+    }
+
+    inline const ManiaPerformanceAttributes* PerformanceAttributes::mania() const {
+        return tag == Ruleset::MANIA ? &mania_value : 0;
+    }
 
     inline double PerformanceAttributes::total() const {
-        switch (ruleset) {
-        case Ruleset::RULESET_OSU: return osu.total;
-        case Ruleset::RULESET_TAIKO: return taiko.total;
-        case Ruleset::RULESET_CATCH: return fruits.total;
-        case Ruleset::RULESET_MANIA: return mania.total;
+        switch (tag) {
+        case Ruleset::OSU: return osu_value.total;
+        case Ruleset::TAIKO: return taiko_value.total;
+        case Ruleset::CATCH: return fruits_value.total;
+        case Ruleset::MANIA: return mania_value.total;
         default: return 0.0;
         }
     }
@@ -125,12 +210,8 @@ namespace pppp {
         return *this;
     }
 
-    inline Performance& Performance::mods(const pppp::mods::Mod* mods, size_t mod_count) {
-        if (mod_count == 0) {
-            mod_list.clear();
-        } else {
-            mod_list.assign(mods, mods + mod_count);
-        }
+    inline Performance& Performance::mods(const Mods& mods) {
+        mod_list = mods;
         has_mods = true;
         return *this;
     }
@@ -153,8 +234,8 @@ namespace pppp {
         return *this;
     }
 
-    inline Performance& Performance::state(const pppp::common::ScoreInfo& state) {
-        score_state = state;
+    inline Performance& Performance::score(const ScoreInfo& score) {
+        score_state = score;
         return *this;
     }
 } // namespace pppp

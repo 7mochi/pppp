@@ -3,10 +3,28 @@
 #include "pppp/capi.h"
 #include "pppp/pppp.h"
 #include <cstddef>
+#include <cstdio>
 #include <cstring>
 #include <doctest.h>
+#include <vector>
 
 namespace {
+    struct ModsHandle {
+        pppp_mods* handle;
+
+        explicit ModsHandle(const char* spec)
+            : handle(0) {
+            INFO(spec);
+            REQUIRE(pppp_mods_parse(spec, &handle) == PPPP_OK);
+        }
+
+        ~ModsHandle() { pppp_mods_free(handle); }
+
+    private:
+        ModsHandle(const ModsHandle&);
+        ModsHandle& operator=(const ModsHandle&);
+    };
+
     struct StarsRow {
         const char* map;
         const char* mods;
@@ -23,9 +41,10 @@ namespace {
         REQUIRE(pppp_beatmap_from_file(row.map, &map) == PPPP_OK);
         REQUIRE(map);
 
+        const ModsHandle mods(row.mods);
         pppp_difficulty_options options;
         std::memset(&options, 0, sizeof(options));
-        options.mods = row.mods;
+        options.mods = mods.handle;
         options.ruleset = row.ruleset;
         options.has_ruleset = 1;
 
@@ -42,19 +61,28 @@ namespace {
         pppp_beatmap* map = 0;
         REQUIRE(pppp_beatmap_from_file(path, &map) == PPPP_OK);
 
-        pppp::beatmaps::Beatmap reference;
+        pppp::Beatmap reference;
         pppp_test::load(reference, path);
 
-        const pppp_test::Mods mods("HD,DT");
-        const pppp::DifficultyAttributes expected = pppp::Difficulty()
-                                                        .mods(mods.list, mods.count)
-                                                        .ruleset(static_cast<pppp::Ruleset::Value>(ruleset))
-                                                        .clock_rate(1.5)
-                                                        .calculate(reference);
+        const pppp::DifficultyAttributes expected =
+            pppp_test::calculate(pppp::Difficulty()
+                                     .mods(pppp_test::parse_mods("HD,DT"))
+                                     .ruleset(static_cast<pppp::Ruleset::Value>(ruleset))
+                                     .clock_rate(1.5),
+                                 reference);
+        const pppp::OsuDifficultyAttributes osu =
+            expected.osu() ? *expected.osu() : pppp::OsuDifficultyAttributes();
+        const pppp::TaikoDifficultyAttributes taiko =
+            expected.taiko() ? *expected.taiko() : pppp::TaikoDifficultyAttributes();
+        const pppp::CatchDifficultyAttributes fruits =
+            expected.fruits() ? *expected.fruits() : pppp::CatchDifficultyAttributes();
+        const pppp::ManiaDifficultyAttributes mania =
+            expected.mania() ? *expected.mania() : pppp::ManiaDifficultyAttributes();
 
+        const ModsHandle mods("HD,DT");
         pppp_difficulty_options options;
         std::memset(&options, 0, sizeof(options));
-        options.mods = "HD,DT";
+        options.mods = mods.handle;
         options.ruleset = ruleset;
         options.has_ruleset = 1;
         options.clock_rate = 1.5;
@@ -64,21 +92,31 @@ namespace {
         REQUIRE(pppp_calculate_difficulty(map, &options, &attributes) == PPPP_OK);
         pppp_beatmap_free(map);
 
-        CHECK(attributes.ruleset == static_cast<pppp_int32>(expected.ruleset));
+        CHECK(attributes.ruleset == static_cast<pppp_int32>(expected.ruleset()));
         CHECK(attributes.star_rating == pppp_test::difficulty_approx(expected.star_rating()));
         CHECK(attributes.max_combo == expected.max_combo());
-        CHECK(attributes.osu.aim_difficulty == pppp_test::difficulty_approx(expected.osu.aim_difficulty));
-        CHECK(attributes.osu.speed_difficulty == pppp_test::difficulty_approx(expected.osu.speed_difficulty));
-        CHECK(attributes.osu.aim_difficult_slider_count ==
-              pppp_test::difficulty_approx(expected.osu.aim_difficult_slider_count));
-        CHECK(attributes.osu.hit_circle_count == expected.osu.hit_circle_count);
-        CHECK(attributes.osu.slider_count == expected.osu.slider_count);
-        CHECK(attributes.taiko.mechanical_difficulty ==
-              pppp_test::difficulty_approx(expected.taiko.mechanical_difficulty));
-        CHECK(attributes.taiko.stamina_top_strains ==
-              pppp_test::difficulty_approx(expected.taiko.stamina_top_strains));
-        CHECK(attributes.fruits.star_rating == pppp_test::difficulty_approx(expected.fruits.star_rating));
-        CHECK(attributes.mania.star_rating == pppp_test::difficulty_approx(expected.mania.star_rating));
+        switch (ruleset) {
+        case PPPP_RULESET_OSU:
+            CHECK(attributes.osu.aim_difficulty == pppp_test::difficulty_approx(osu.aim_difficulty));
+            CHECK(attributes.osu.speed_difficulty == pppp_test::difficulty_approx(osu.speed_difficulty));
+            CHECK(attributes.osu.aim_difficult_slider_count ==
+                  pppp_test::difficulty_approx(osu.aim_difficult_slider_count));
+            CHECK(attributes.osu.hit_circle_count == osu.hit_circle_count);
+            CHECK(attributes.osu.slider_count == osu.slider_count);
+            break;
+        case PPPP_RULESET_TAIKO:
+            CHECK(attributes.taiko.mechanical_difficulty ==
+                  pppp_test::difficulty_approx(taiko.mechanical_difficulty));
+            CHECK(attributes.taiko.stamina_top_strains ==
+                  pppp_test::difficulty_approx(taiko.stamina_top_strains));
+            break;
+        case PPPP_RULESET_CATCH:
+            CHECK(attributes.fruits.star_rating == pppp_test::difficulty_approx(fruits.star_rating));
+            break;
+        default:
+            CHECK(attributes.mania.star_rating == pppp_test::difficulty_approx(mania.star_rating));
+            break;
+        }
     }
 } // namespace
 
@@ -130,15 +168,15 @@ TEST_SUITE("CapiTest") {
         pppp_beatmap* map = 0;
         REQUIRE(pppp_beatmap_from_file(PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu", &map) == PPPP_OK);
 
-        pppp::beatmaps::Beatmap reference;
+        pppp::Beatmap reference;
         pppp_test::load(reference, PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu");
-        const pppp::DifficultyAttributes expected = pppp::Difficulty().calculate(reference);
+        const pppp::DifficultyAttributes expected = pppp_test::calculate(pppp::Difficulty(), reference);
 
         pppp_difficulty_attributes attributes;
         REQUIRE(pppp_calculate_difficulty(map, 0, &attributes) == PPPP_OK);
         pppp_beatmap_free(map);
 
-        CHECK(attributes.ruleset == static_cast<pppp_int32>(expected.ruleset));
+        CHECK(attributes.ruleset == static_cast<pppp_int32>(expected.ruleset()));
         CHECK(attributes.star_rating == pppp_test::difficulty_approx(expected.star_rating()));
         CHECK(attributes.max_combo == expected.max_combo());
     }
@@ -148,7 +186,7 @@ TEST_SUITE("CapiTest") {
         pppp_beatmap* map = 0;
         REQUIRE(pppp_beatmap_from_file(path, &map) == PPPP_OK);
 
-        pppp::beatmaps::Beatmap reference;
+        pppp::Beatmap reference;
         pppp_test::load(reference, path);
 
         CHECK(pppp_beatmap_format_version(map) == reference.format_version);
@@ -203,7 +241,7 @@ TEST_SUITE("CapiTest") {
         pppp_beatmap* map = 0;
         REQUIRE(pppp_beatmap_from_file(path, &map) == PPPP_OK);
 
-        pppp::beatmaps::Beatmap reference;
+        pppp::Beatmap reference;
         pppp_test::load(reference, path);
 
         const pppp_slider* sliders = 0;
@@ -252,7 +290,7 @@ TEST_SUITE("CapiTest") {
         pppp_beatmap* map = 0;
         REQUIRE(pppp_beatmap_from_file(path, &map) == PPPP_OK);
 
-        pppp::beatmaps::Beatmap reference;
+        pppp::Beatmap reference;
         pppp_test::load(reference, path);
 
         pppp::common::ScoreInfo score;
@@ -263,13 +301,15 @@ TEST_SUITE("CapiTest") {
         score.max_combo = 500;
         score.accuracy = pppp_test::classic_accuracy(300, 20, 3, 1);
 
-        const pppp_test::Mods mods("HD,DT");
-        const pppp::PerformanceAttributes expected =
-            pppp::Performance(reference).state(score).mods(mods.list, mods.count).combo(500).calculate();
+        const pppp::PerformanceAttributes performance = pppp_test::calculate(
+            pppp::Performance(reference).score(score).mods(pppp_test::parse_mods("HD,DT")).combo(500));
+        REQUIRE(performance.osu());
+        const pppp::OsuPerformanceAttributes& expected = *performance.osu();
 
+        const ModsHandle mods("HD,DT");
         pppp_performance_options options;
         std::memset(&options, 0, sizeof(options));
-        options.mods = "HD,DT";
+        options.mods = mods.handle;
         options.has_score = 1;
         for (int i = 0; i < PPPP_HIT_RESULT_COUNT; i++) {
             options.score.statistics[i] = score.statistics[i];
@@ -284,17 +324,15 @@ TEST_SUITE("CapiTest") {
         REQUIRE(pppp_calculate_performance(map, &options, &attributes) == PPPP_OK);
         pppp_beatmap_free(map);
 
-        CHECK(attributes.ruleset == static_cast<pppp_int32>(expected.ruleset));
-        CHECK(attributes.total == pppp_test::pp_approx(expected.total()));
-        CHECK(attributes.osu.aim == pppp_test::pp_approx(expected.osu.aim));
-        CHECK(attributes.osu.speed == pppp_test::pp_approx(expected.osu.speed));
-        CHECK(attributes.osu.accuracy == pppp_test::pp_approx(expected.osu.accuracy));
-        CHECK(attributes.osu.effective_miss_count == pppp_test::pp_approx(expected.osu.effective_miss_count));
+        CHECK(attributes.ruleset == static_cast<pppp_int32>(performance.ruleset()));
+        CHECK(attributes.total == pppp_test::pp_approx(performance.total()));
+        CHECK(attributes.osu.aim == pppp_test::pp_approx(expected.aim));
+        CHECK(attributes.osu.speed == pppp_test::pp_approx(expected.speed));
+        CHECK(attributes.osu.accuracy == pppp_test::pp_approx(expected.accuracy));
+        CHECK(attributes.osu.effective_miss_count == pppp_test::pp_approx(expected.effective_miss_count));
         CHECK(attributes.osu.has_score_based_estimated_miss_count ==
-              (expected.osu.score_based_estimated_miss_count.has_value() ? 1 : 0));
-        CHECK(attributes.osu.has_speed_deviation == (expected.osu.speed_deviation.has_value() ? 1 : 0));
-        CHECK(attributes.taiko.has_estimated_unstable_rate ==
-              (expected.taiko.estimated_unstable_rate.has_value() ? 1 : 0));
+              (expected.score_based_estimated_miss_count.has_value() ? 1 : 0));
+        CHECK(attributes.osu.has_speed_deviation == (expected.speed_deviation.has_value() ? 1 : 0));
     }
 
     TEST_CASE("performance from attributes skips the difficulty calculation") {
@@ -302,7 +340,7 @@ TEST_SUITE("CapiTest") {
         pppp_beatmap* map = 0;
         REQUIRE(pppp_beatmap_from_file(path, &map) == PPPP_OK);
 
-        pppp::beatmaps::Beatmap reference;
+        pppp::Beatmap reference;
         pppp_test::load(reference, path);
 
         pppp::common::ScoreInfo score;
@@ -313,9 +351,10 @@ TEST_SUITE("CapiTest") {
         score.max_combo = 500;
         score.accuracy = pppp_test::classic_accuracy(300, 20, 3, 1);
 
+        const ModsHandle mods("HD,DT");
         pppp_performance_options options;
         std::memset(&options, 0, sizeof(options));
-        options.mods = "HD,DT";
+        options.mods = mods.handle;
         options.has_score = 1;
         for (int i = 0; i < PPPP_HIT_RESULT_COUNT; i++) {
             options.score.statistics[i] = score.statistics[i];
@@ -333,7 +372,7 @@ TEST_SUITE("CapiTest") {
         {
             pppp_difficulty_options difficulty_options;
             std::memset(&difficulty_options, 0, sizeof(difficulty_options));
-            difficulty_options.mods = "HD,DT";
+            difficulty_options.mods = mods.handle;
             REQUIRE(pppp_calculate_difficulty(map, &difficulty_options, &difficulty) == PPPP_OK);
         }
 
@@ -362,7 +401,7 @@ TEST_SUITE("CapiTest") {
         pppp_beatmap* map = 0;
         REQUIRE(pppp_beatmap_from_file(path, &map) == PPPP_OK);
 
-        pppp::beatmaps::Beatmap reference;
+        pppp::Beatmap reference;
         pppp_test::load(reference, path);
 
         pppp_difficulty_options options;
@@ -375,9 +414,9 @@ TEST_SUITE("CapiTest") {
         REQUIRE(difficulty.ruleset == PPPP_RULESET_TAIKO);
 
         const pppp::DifficultyAttributes expected =
-            pppp::Difficulty().ruleset(pppp::Ruleset::RULESET_TAIKO).calculate(reference);
+            pppp_test::calculate(pppp::Difficulty().ruleset(pppp::Ruleset::TAIKO), reference);
         const pppp::PerformanceAttributes expected_performance =
-            pppp::Performance(reference, expected).calculate();
+            pppp_test::calculate(pppp::Performance(reference, expected));
 
         pppp_performance_options performance_options;
         std::memset(&performance_options, 0, sizeof(performance_options));
@@ -389,7 +428,8 @@ TEST_SUITE("CapiTest") {
 
         CHECK(attributes.ruleset == PPPP_RULESET_TAIKO);
         CHECK(attributes.total == pppp_test::pp_approx(expected_performance.total()));
-        CHECK(attributes.taiko.difficulty == pppp_test::pp_approx(expected_performance.taiko.difficulty));
+        REQUIRE(expected_performance.taiko());
+        CHECK(attributes.taiko.difficulty == pppp_test::pp_approx(expected_performance.taiko()->difficulty));
 
         pppp_beatmap_free(map);
     }
@@ -448,11 +488,167 @@ TEST_SUITE("CapiTest") {
         pppp_difficulty_attributes attributes;
         CHECK(pppp_calculate_difficulty(map, &options, &attributes) == PPPP_INVALID_ARGUMENT);
 
-        pppp_difficulty_options mods;
-        std::memset(&mods, 0, sizeof(mods));
-        mods.mods = "NO_SUCH_MOD";
-        CHECK(pppp_calculate_difficulty(map, &mods, &attributes) == PPPP_INVALID_ARGUMENT);
+        pppp_mods* mods = 0;
+        CHECK(pppp_mods_parse("NO_SUCH_MOD", &mods) == PPPP_INVALID_ARGUMENT);
+        CHECK(!mods);
+        CHECK(pppp_mods_parse(0, &mods) == PPPP_INVALID_ARGUMENT);
+        CHECK(pppp_mods_from_legacy(0, 0) == PPPP_INVALID_ARGUMENT);
+        pppp_mods_free(0);
 
         pppp_beatmap_free(map);
+    }
+
+    TEST_CASE("legacy mods match their acronyms") {
+        pppp_beatmap* map = 0;
+        REQUIRE(pppp_beatmap_from_file(PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu", &map) == PPPP_OK);
+
+        const ModsHandle acronyms("HD,DT");
+        pppp_mods* legacy = 0;
+        REQUIRE(pppp_mods_from_legacy(8u | 64u, &legacy) == PPPP_OK);
+
+        pppp_difficulty_options options;
+        std::memset(&options, 0, sizeof(options));
+        options.mods = acronyms.handle;
+        pppp_difficulty_attributes from_acronyms;
+        REQUIRE(pppp_calculate_difficulty(map, &options, &from_acronyms) == PPPP_OK);
+
+        options.mods = legacy;
+        pppp_difficulty_attributes from_legacy;
+        REQUIRE(pppp_calculate_difficulty(map, &options, &from_legacy) == PPPP_OK);
+        pppp_mods_free(legacy);
+        pppp_beatmap_free(map);
+
+        CHECK(from_legacy.star_rating == from_acronyms.star_rating);
+        CHECK(from_legacy.osu.reading_difficulty == from_acronyms.osu.reading_difficulty);
+    }
+
+    TEST_CASE("a beatmap from memory matches the one from its file") {
+        const char* path = PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu";
+        std::FILE* file = std::fopen(path, "rb");
+        REQUIRE(file);
+        std::vector<char> data;
+        char buffer[4096];
+        size_t read = 0;
+        while ((read = std::fread(buffer, 1, sizeof(buffer), file)) > 0) {
+            data.insert(data.end(), buffer, buffer + read);
+        }
+        std::fclose(file);
+
+        pppp_beatmap* from_bytes = 0;
+        REQUIRE(pppp_beatmap_from_bytes(&data[0], data.size(), &from_bytes) == PPPP_OK);
+        pppp_beatmap* from_file = 0;
+        REQUIRE(pppp_beatmap_from_file(path, &from_file) == PPPP_OK);
+
+        pppp_difficulty_attributes a;
+        pppp_difficulty_attributes b;
+        REQUIRE(pppp_calculate_difficulty(from_bytes, 0, &a) == PPPP_OK);
+        REQUIRE(pppp_calculate_difficulty(from_file, 0, &b) == PPPP_OK);
+        CHECK(a.star_rating == b.star_rating);
+        CHECK(a.osu.aim_difficulty == b.osu.aim_difficulty);
+        pppp_beatmap_free(from_bytes);
+        pppp_beatmap_free(from_file);
+
+        pppp_beatmap* untouched = 0;
+        CHECK(pppp_beatmap_from_bytes(0, 1, &untouched) == PPPP_INVALID_ARGUMENT);
+        CHECK(!untouched);
+    }
+
+    TEST_CASE("every result has a description") {
+        CHECK(std::strcmp(pppp_result_message(PPPP_OK), "no error") == 0);
+        CHECK(std::strcmp(pppp_result_message(PPPP_PARSE), "cannot parse the beatmap") == 0);
+    }
+}
+
+TEST_SUITE("CapiTest") {
+    TEST_CASE("the timed attributes match the library's") {
+        const char* path = PPPP_TEST_RESOURCES "/osu/2785319.osu";
+        pppp_beatmap* map = 0;
+        REQUIRE(pppp_beatmap_from_file(path, &map) == PPPP_OK);
+
+        const ModsHandle mods("HD,DT");
+        pppp_difficulty_options options;
+        std::memset(&options, 0, sizeof(options));
+        options.mods = mods.handle;
+
+        pppp_timed_difficulty* timed = 0;
+        REQUIRE(pppp_calculate_timed_difficulty(map, &options, &timed) == PPPP_OK);
+        const pppp_timed_difficulty_attributes* entries = 0;
+        size_t count = 0;
+        REQUIRE(pppp_timed_difficulty_entries(timed, &entries, &count) == PPPP_OK);
+
+        REQUIRE(count == 601);
+        CHECK(entries[300].time == 61309.235290751734);
+        CHECK(entries[300].attributes.star_rating == pppp_test::difficulty_approx(8.272126401328721));
+        CHECK(entries[300].attributes.max_combo == 433);
+        CHECK(entries[600].attributes.ruleset == PPPP_RULESET_OSU);
+        CHECK(entries[600].attributes.osu.max_combo == 909);
+        CHECK(entries[600].attributes.star_rating == pppp_test::difficulty_approx(8.898179651893287));
+
+        pppp_timed_difficulty_free(timed);
+        pppp_beatmap_free(map);
+    }
+
+    TEST_CASE("timed arguments are checked") {
+        pppp_timed_difficulty* timed = 0;
+        CHECK(pppp_calculate_timed_difficulty(0, 0, &timed) == PPPP_INVALID_ARGUMENT);
+        CHECK(!timed);
+        CHECK(pppp_timed_difficulty_entries(0, 0, 0) == PPPP_INVALID_ARGUMENT);
+        pppp_timed_difficulty_free(0);
+    }
+
+    TEST_CASE("the strain graph matches the library's") {
+        const char* path = PPPP_TEST_RESOURCES "/osu/2785319.osu";
+        pppp_beatmap* map = 0;
+        REQUIRE(pppp_beatmap_from_file(path, &map) == PPPP_OK);
+
+        const ModsHandle mods("DT");
+        pppp_difficulty_options options;
+        std::memset(&options, 0, sizeof(options));
+        options.mods = mods.handle;
+
+        pppp_strains* strains = 0;
+        REQUIRE(pppp_calculate_strains(map, &options, &strains) == PPPP_OK);
+        pppp_int32 ruleset = -1;
+        double start_time = 0.0;
+        double section_length = 0.0;
+        REQUIRE(pppp_strains_info(strains, &ruleset, &start_time, &section_length) == PPPP_OK);
+        CHECK(ruleset == PPPP_RULESET_OSU);
+        CHECK(start_time == 2400.0);
+        CHECK(section_length == 600.0);
+
+        pppp_osu_strains osu;
+        REQUIRE(pppp_strains_osu(strains, &osu) == PPPP_OK);
+        REQUIRE(osu.aim_count == 189);
+        CHECK(osu.aim[161] == pppp_test::difficulty_approx(549.3785675344396));
+        CHECK(osu.speed[130] == pppp_test::difficulty_approx(264.03121219093333));
+        CHECK(osu.reading_count == 189);
+        CHECK(!osu.flashlight);
+        CHECK(osu.flashlight_count == 0);
+
+        pppp_mania_strains mania;
+        CHECK(pppp_strains_mania(strains, &mania) == PPPP_INVALID_ARGUMENT);
+
+        pppp_strains_free(strains);
+
+        options.ruleset = PPPP_RULESET_MANIA;
+        options.has_ruleset = 1;
+        const ModsHandle keys("4K");
+        options.mods = keys.handle;
+        REQUIRE(pppp_calculate_strains(map, &options, &strains) == PPPP_OK);
+        REQUIRE(pppp_strains_mania(strains, &mania) == PPPP_OK);
+        REQUIRE(mania.strain_count == 282);
+        CHECK(mania.strain[195] == pppp_test::difficulty_approx(15.725755965531633));
+        pppp_strains_free(strains);
+
+        pppp_beatmap_free(map);
+    }
+
+    TEST_CASE("strain arguments are checked") {
+        pppp_strains* strains = 0;
+        CHECK(pppp_calculate_strains(0, 0, &strains) == PPPP_INVALID_ARGUMENT);
+        CHECK(!strains);
+        CHECK(pppp_strains_info(0, 0, 0, 0) == PPPP_INVALID_ARGUMENT);
+        CHECK(pppp_strains_osu(0, 0) == PPPP_INVALID_ARGUMENT);
+        pppp_strains_free(0);
     }
 }

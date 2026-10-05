@@ -5,9 +5,9 @@
 #define PPPP_MANIA_MANIA_BEATMAP_H
 
 #include "pppp/beatmaps/beatmap.h"
-#include "pppp/config.h"
 #include "pppp/mania/object/mania_hit_object.h"
 #include "pppp/mods/mod.h"
+#include "pppp/status.h"
 #include <cstddef>
 #include <vector>
 
@@ -28,8 +28,8 @@ namespace pppp { namespace mania {
         ManiaBeatmap();
     };
 
-    Result::Value build(ManiaBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
-                        size_t mod_count);
+    Status build(ManiaBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                 size_t mod_count);
 
     int max_combo(const ManiaBeatmap& pb);
 }} // namespace pppp::mania

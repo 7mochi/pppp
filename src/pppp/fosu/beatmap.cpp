@@ -18,12 +18,12 @@ namespace pppp { namespace beatmaps {
             return opts;
         }
 
-        Result::Value to_result(const ::fosu::Result< ::fosu::Beatmap*>& result) {
+        Status to_status(const ::fosu::Result< ::fosu::Beatmap*>& result) {
             if (result.ok()) {
-                return Result::OK;
+                return StatusCode::OK;
             }
-            return result.error().code == ::fosu::ErrorCode::AllocationFailure ? Result::ALLOCATION
-                                                                               : Result::PARSE;
+            return result.error().code == ::fosu::ErrorCode::AllocationFailure ? StatusCode::ALLOCATION
+                                                                               : StatusCode::PARSE;
         }
 
         SliderEventType to_slider_event_type(::fosu::SliderEventType::Value type) {
@@ -280,11 +280,11 @@ namespace pppp { namespace beatmaps {
             copy_breaks(out, map);
         }
 
-        Result::Value create_beatmap(Beatmap& out, const ::fosu::Beatmap* map, ::fosu::Parser* parser) {
+        Status create_beatmap(Beatmap& out, const ::fosu::Beatmap* map, ::fosu::Parser* parser) {
             SliderPathOpsContext* ctx = new (std::nothrow) SliderPathOpsContext(map, parser);
             if (!ctx) {
                 delete parser;
-                return Result::ALLOCATION;
+                return StatusCode::ALLOCATION;
             }
 
             out.clear();
@@ -294,50 +294,57 @@ namespace pppp { namespace beatmaps {
             out.slider_path.release = release;
             out.slider_path.ctx = ctx;
 
-            return Result::OK;
+            return StatusCode::OK;
         }
 
+        Status from_file(Beatmap& out, const char* path) {
+            if (!path) {
+                return StatusCode::INVALID_ARGUMENT;
+            }
+
+            ::fosu::Parser* parser = new (std::nothrow)::fosu::Parser;
+            if (!parser) {
+                return StatusCode::ALLOCATION;
+            }
+
+            const ::fosu::Result< ::fosu::Beatmap*> result = parser->parse_file(path, parse_options());
+            if (result.failed()) {
+                const Status status = to_status(result);
+                delete parser;
+                return status;
+            }
+            return create_beatmap(out, result.value(), parser);
+        }
+
+        Status from_bytes(Beatmap& out, const void* data, size_t size) {
+            ::fosu::Parser* parser = new (std::nothrow)::fosu::Parser;
+            if (!parser) {
+                return StatusCode::ALLOCATION;
+            }
+
+            const ::fosu::Result< ::fosu::Beatmap*> result =
+                parser->parse(static_cast<const char*>(data), size, parse_options());
+            if (result.failed()) {
+                const Status status = to_status(result);
+                delete parser;
+                return status;
+            }
+            return create_beatmap(out, result.value(), parser);
+        }
     } // namespace
 
-    Result::Value from_file(Beatmap& out, const char* path) {
-        if (!path) {
-            return Result::INVALID_ARGUMENT;
-        }
-
-        ::fosu::Parser* parser = new (std::nothrow)::fosu::Parser;
-        if (!parser) {
-            return Result::ALLOCATION;
-        }
-
-        const ::fosu::Result< ::fosu::Beatmap*> result = parser->parse_file(path, parse_options());
-        if (result.failed()) {
-            const Result::Value status = to_result(result);
-            delete parser;
-            return status;
-        }
-        return create_beatmap(out, result.value(), parser);
-    }
-
-    Result::Value from_bytes(Beatmap& out, const void* data, size_t size) {
-        ::fosu::Parser* parser = new (std::nothrow)::fosu::Parser;
-        if (!parser) {
-            return Result::ALLOCATION;
-        }
-
-        const ::fosu::Result< ::fosu::Beatmap*> result =
-            parser->parse(static_cast<const char*>(data), size, parse_options());
-        if (result.failed()) {
-            const Result::Value status = to_result(result);
-            delete parser;
-            return status;
-        }
-        return create_beatmap(out, result.value(), parser);
-    }
-
-    Result::Value from_parsed(Beatmap& out, const ::fosu::Beatmap* parsed) {
+    Status from_parsed(Beatmap& out, const ::fosu::Beatmap* parsed) {
         if (!parsed) {
-            return Result::INVALID_ARGUMENT;
+            return StatusCode::INVALID_ARGUMENT;
         }
         return create_beatmap(out, parsed, 0);
     }
 }} // namespace pppp::beatmaps
+
+namespace pppp {
+    Status Beatmap::load_file(const char* path) { return pppp::beatmaps::from_file(*this, path); }
+
+    Status Beatmap::load_buffer(const void* data, size_t size) {
+        return pppp::beatmaps::from_bytes(*this, data, size);
+    }
+} // namespace pppp

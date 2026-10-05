@@ -6,11 +6,7 @@
 
 #include "pppp/common/hit_result.h"
 #include "pppp/config.h"
-#include <cstddef>
-
-namespace pppp { namespace mods {
-    struct Mod;
-}} // namespace pppp::mods
+#include "pppp/mods/mods.h"
 
 namespace pppp { namespace common {
     struct ScoreInfo {
@@ -23,8 +19,7 @@ namespace pppp { namespace common {
         /// @remarks Not populated when the score is not a legacy score.
         nonstd::optional<pppp_int64> legacy_total_score;
 
-        const pppp::mods::Mod* mods;
-        size_t mod_count;
+        pppp::mods::Mods mods;
 
         ScoreInfo();
     };

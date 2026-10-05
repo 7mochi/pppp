@@ -4,13 +4,9 @@
 #include "common.h"
 #include "maps.h"
 #include "pppp/difficulty.h"
-#include "pppp/fruits/difficulty/catch_performance_calculator.h"
-#include "pppp/mania/difficulty/mania_performance_calculator.h"
 #include "pppp/osu/difficulty/osu_difficulty_attributes.h"
 #include "pppp/osu/difficulty/osu_performance_attributes.h"
-#include "pppp/osu/difficulty/osu_performance_calculator.h"
 #include "pppp/performance.h"
-#include "pppp/taiko/difficulty/taiko_performance_calculator.h"
 #include <cstddef>
 #include <doctest.h>
 
@@ -74,21 +70,18 @@ namespace {
     };
 
     void check(const pppp::beatmaps::Beatmap& beatmap, const OsuRow& row) {
-        const pppp_test::Mods mods(row.mods);
+        const pppp::Mods mods = pppp_test::parse_mods(row.mods);
         pppp::common::ScoreInfo score;
 
         INFO(row.mods);
         CAPTURE(row.great);
         CAPTURE(row.miss);
 
-        const pppp::DifficultyAttributes difficulty = pppp::Difficulty()
-                                                          .mods(mods.list, mods.count)
-                                                          .ruleset(pppp::Ruleset::RULESET_OSU)
-                                                          .calculate(beatmap);
-        const pppp::osu::difficulty::OsuDifficultyAttributes& attrs = difficulty.osu;
+        const pppp::DifficultyAttributes difficulty =
+            pppp_test::calculate(pppp::Difficulty().mods(mods).ruleset(pppp::Ruleset::OSU), beatmap);
+        const pppp::osu::difficulty::OsuDifficultyAttributes& attrs = *difficulty.osu();
 
-        score.mods = mods.list;
-        score.mod_count = mods.count;
+        score.mods = mods;
         score.statistics[pppp::common::HIT_RESULT_GREAT] = row.great;
         score.statistics[pppp::common::HIT_RESULT_OK] = row.ok;
         score.statistics[pppp::common::HIT_RESULT_MEH] = row.meh;
@@ -103,8 +96,8 @@ namespace {
         }
 
         const pppp::PerformanceAttributes performance =
-            pppp::Performance(beatmap, difficulty).mods(mods.list, mods.count).state(score).calculate();
-        const pppp::osu::difficulty::OsuPerformanceAttributes& pp = performance.osu;
+            pppp_test::calculate(pppp::Performance(beatmap, difficulty).mods(mods).score(score));
+        const pppp::osu::difficulty::OsuPerformanceAttributes& pp = *performance.osu();
         CHECK(pp.total == pppp_test::pp_approx(row.total));
         CHECK(pp.aim == pppp_test::pp_approx(row.aim));
         CHECK(pp.speed == pppp_test::pp_approx(row.speed));
@@ -127,21 +120,18 @@ namespace {
     }
 
     void check(const pppp::beatmaps::Beatmap& beatmap, const TaikoRow& row) {
-        const pppp_test::Mods mods(row.mods);
+        const pppp::Mods mods = pppp_test::parse_mods(row.mods);
         pppp::common::ScoreInfo score;
         const int total = row.great + row.ok + row.miss;
 
         INFO(row.mods);
         CAPTURE(row.great);
 
-        const pppp::DifficultyAttributes difficulty = pppp::Difficulty()
-                                                          .mods(mods.list, mods.count)
-                                                          .ruleset(pppp::Ruleset::RULESET_TAIKO)
-                                                          .calculate(beatmap);
-        const pppp::taiko::difficulty::TaikoDifficultyAttributes& attrs = difficulty.taiko;
+        const pppp::DifficultyAttributes difficulty =
+            pppp_test::calculate(pppp::Difficulty().mods(mods).ruleset(pppp::Ruleset::TAIKO), beatmap);
+        const pppp::taiko::difficulty::TaikoDifficultyAttributes& attrs = *difficulty.taiko();
 
-        score.mods = mods.list;
-        score.mod_count = mods.count;
+        score.mods = mods;
         score.statistics[pppp::common::HIT_RESULT_GREAT] = row.great;
         score.statistics[pppp::common::HIT_RESULT_OK] = row.ok;
         score.statistics[pppp::common::HIT_RESULT_MISS] = row.miss;
@@ -149,8 +139,8 @@ namespace {
         score.accuracy = (row.great * 300.0 + row.ok * 150.0) / (total * 300.0);
 
         const pppp::PerformanceAttributes performance =
-            pppp::Performance(beatmap, difficulty).mods(mods.list, mods.count).state(score).calculate();
-        const pppp::taiko::difficulty::TaikoPerformanceAttributes& pp = performance.taiko;
+            pppp_test::calculate(pppp::Performance(beatmap, difficulty).mods(mods).score(score));
+        const pppp::taiko::difficulty::TaikoPerformanceAttributes& pp = *performance.taiko();
         CHECK(pp.total == pppp_test::pp_approx(row.total));
         CHECK(pp.difficulty == pppp_test::pp_approx(row.difficulty));
         CHECK(pp.accuracy == pppp_test::pp_approx(row.accuracy));
@@ -159,21 +149,18 @@ namespace {
     }
 
     void check(const pppp::beatmaps::Beatmap& beatmap, const CatchRow& row) {
-        const pppp_test::Mods mods(row.mods);
+        const pppp::Mods mods = pppp_test::parse_mods(row.mods);
         pppp::common::ScoreInfo score;
         const int total = row.fruits + row.droplets + row.tiny_droplets + row.tiny_misses + row.miss;
 
         INFO(row.mods);
         CAPTURE(row.fruits);
 
-        const pppp::DifficultyAttributes difficulty = pppp::Difficulty()
-                                                          .mods(mods.list, mods.count)
-                                                          .ruleset(pppp::Ruleset::RULESET_CATCH)
-                                                          .calculate(beatmap);
-        const pppp::fruits::difficulty::CatchDifficultyAttributes& attrs = difficulty.fruits;
+        const pppp::DifficultyAttributes difficulty =
+            pppp_test::calculate(pppp::Difficulty().mods(mods).ruleset(pppp::Ruleset::CATCH), beatmap);
+        const pppp::fruits::difficulty::CatchDifficultyAttributes& attrs = *difficulty.fruits();
 
-        score.mods = mods.list;
-        score.mod_count = mods.count;
+        score.mods = mods;
         score.statistics[pppp::common::HIT_RESULT_GREAT] = row.fruits;
         score.statistics[pppp::common::HIT_RESULT_LARGE_TICK_HIT] = row.droplets;
         score.statistics[pppp::common::HIT_RESULT_SMALL_TICK_HIT] = row.tiny_droplets;
@@ -183,27 +170,24 @@ namespace {
         score.accuracy = static_cast<double>(row.fruits + row.droplets + row.tiny_droplets) / total;
 
         const pppp::PerformanceAttributes performance =
-            pppp::Performance(beatmap, difficulty).mods(mods.list, mods.count).state(score).calculate();
-        const pppp::fruits::difficulty::CatchPerformanceAttributes& pp = performance.fruits;
+            pppp_test::calculate(pppp::Performance(beatmap, difficulty).mods(mods).score(score));
+        const pppp::fruits::difficulty::CatchPerformanceAttributes& pp = *performance.fruits();
         CHECK(pp.total == pppp_test::pp_approx(row.total));
     }
 
     void check(const pppp::beatmaps::Beatmap& beatmap, const ManiaRow& row) {
-        const pppp_test::Mods mods(row.mods);
+        const pppp::Mods mods = pppp_test::parse_mods(row.mods);
         pppp::common::ScoreInfo score;
         const int total = row.perfect + row.great + row.good + row.ok + row.meh + row.miss;
 
         INFO(row.mods);
         CAPTURE(row.perfect);
 
-        const pppp::DifficultyAttributes difficulty = pppp::Difficulty()
-                                                          .mods(mods.list, mods.count)
-                                                          .ruleset(pppp::Ruleset::RULESET_MANIA)
-                                                          .calculate(beatmap);
-        const pppp::mania::difficulty::ManiaDifficultyAttributes& attrs = difficulty.mania;
+        const pppp::DifficultyAttributes difficulty =
+            pppp_test::calculate(pppp::Difficulty().mods(mods).ruleset(pppp::Ruleset::MANIA), beatmap);
+        const pppp::mania::difficulty::ManiaDifficultyAttributes& attrs = *difficulty.mania();
 
-        score.mods = mods.list;
-        score.mod_count = mods.count;
+        score.mods = mods;
         score.statistics[pppp::common::HIT_RESULT_PERFECT] = row.perfect;
         score.statistics[pppp::common::HIT_RESULT_GREAT] = row.great;
         score.statistics[pppp::common::HIT_RESULT_GOOD] = row.good;
@@ -216,8 +200,8 @@ namespace {
             (total * 305.0);
 
         const pppp::PerformanceAttributes performance =
-            pppp::Performance(beatmap, difficulty).mods(mods.list, mods.count).state(score).calculate();
-        const pppp::mania::difficulty::ManiaPerformanceAttributes& pp = performance.mania;
+            pppp_test::calculate(pppp::Performance(beatmap, difficulty).mods(mods).score(score));
+        const pppp::mania::difficulty::ManiaPerformanceAttributes& pp = *performance.mania();
         CHECK(pp.total == pppp_test::pp_approx(row.total));
     }
 } // namespace
@@ -365,7 +349,7 @@ TEST_CASE("basic_osu") {
          0,
          11.70045116819282},
     };
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
     pppp_test::load(beatmap, PPPP_TEST_RESOURCES "/osu/2785319.osu");
     for (size_t i = 0; i < sizeof(rows) / sizeof(rows[0]); i++) {
@@ -380,7 +364,7 @@ TEST_CASE("basic_taiko") {
         {"HR", 289, 0, 0, 0, 166.70246243922367, 36.50275483295865, 130.199707606265, 120.87621218031913},
         {"DT", 289, 0, 0, 0, 265.5965861527287, 92.42487686635559, 173.17170928637316, 97.54922386481894},
     };
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
     pppp_test::load(beatmap, PPPP_TEST_RESOURCES "/taiko/1028484.osu");
     for (size_t i = 0; i < sizeof(rows) / sizeof(rows[0]); i++) {
@@ -395,7 +379,7 @@ TEST_CASE("convert_taiko") {
         {"HR", 908, 0, 0, 0, 452.2496503558973, 194.56688580907107, 257.68276454682626, 70.84276408008971},
         {"DT", 908, 0, 0, 0, 769.13039895928, 385.1562322213426, 383.9741667379375, 54.49443390776131},
     };
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
     pppp_test::load(beatmap, PPPP_TEST_RESOURCES "/osu/2785319.osu");
     for (size_t i = 0; i < sizeof(rows) / sizeof(rows[0]); i++) {
@@ -410,7 +394,7 @@ TEST_CASE("basic_catch") {
         {"HD,HR", 728, 2, 263, 0, 0, 0, 231.1954012763412},
         {"DT", 728, 2, 263, 0, 0, 0, 245.48176596381523},
     };
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
     pppp_test::load(beatmap, PPPP_TEST_RESOURCES "/fruits/2118524.osu");
     for (size_t i = 0; i < sizeof(rows) / sizeof(rows[0]); i++) {
@@ -425,7 +409,7 @@ TEST_CASE("convert_catch") {
         {"HD,HR", 908, 0, 159, 0, 0, 0, 327.3523805137957},
         {"DT", 908, 0, 159, 0, 0, 0, 502.8408227990554},
     };
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
     pppp_test::load(beatmap, PPPP_TEST_RESOURCES "/osu/2785319.osu");
     for (size_t i = 0; i < sizeof(rows) / sizeof(rows[0]); i++) {
@@ -439,7 +423,7 @@ TEST_CASE("basic_mania") {
         {"EZ", 715, 0, 0, 0, 0, 0, 0, 54.46148735852584},
         {"DT", 715, 0, 0, 0, 0, 0, 0, 224.52717042937203},
     };
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
     pppp_test::load(beatmap, PPPP_TEST_RESOURCES "/mania/1638954.osu");
     for (size_t i = 0; i < sizeof(rows) / sizeof(rows[0]); i++) {
@@ -453,7 +437,7 @@ TEST_CASE("convert_mania") {
         {"EZ", 1312, 0, 0, 0, 0, 0, 0, 50.69594724635784},
         {"DT", 1312, 0, 0, 0, 0, 0, 0, 198.46891237015896},
     };
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
     pppp_test::load(beatmap, PPPP_TEST_RESOURCES "/osu/2785319.osu");
     for (size_t i = 0; i < sizeof(rows) / sizeof(rows[0]); i++) {
@@ -604,7 +588,7 @@ TEST_CASE("osu!standard scores with misses on 2785319.osu") {
          0.902726298511645,
          12.84569412425561},
     };
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
     pppp_test::load(beatmap, PPPP_TEST_RESOURCES "/osu/2785319.osu");
     for (size_t i = 0; i < sizeof(rows) / sizeof(rows[0]); i++) {
@@ -621,7 +605,7 @@ TEST_CASE("osu!taiko scores on v9.osu") {
         {"HD,FL", 705, 10, 1, 400, 178.20722347721272, 86.69833365996243, 91.50888981725028,
          159.26353298023395},
     };
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
     pppp_test::load(beatmap, PPPP_TEST_RESOURCES "/taiko/v9.osu");
     for (size_t i = 0; i < sizeof(rows) / sizeof(rows[0]); i++) {
@@ -636,7 +620,7 @@ TEST_CASE("osu!catch scores on v12.osu") {
         {"HD,HR", 292, 0, 0, 0, 0, 0, 105.49742830397298},
         {"HD,HR", 281, 10, 20, 2, 1, 300, 72.85739389948904},
     };
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
     pppp_test::load(beatmap, PPPP_TEST_RESOURCES "/fruits/v12.osu");
     for (size_t i = 0; i < sizeof(rows) / sizeof(rows[0]); i++) {
@@ -651,7 +635,7 @@ TEST_CASE("osu!mania scores on keys_4_holds.osu") {
         {"NF,DT", 520, 0, 0, 0, 0, 0, 0, 126.28339731995449},
         {"NF,DT", 499, 10, 5, 3, 2, 1, 2000, 117.47998741063074},
     };
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
     pppp_test::load(beatmap, PPPP_TEST_RESOURCES "/mania/keys_4_holds.osu");
     for (size_t i = 0; i < sizeof(rows) / sizeof(rows[0]); i++) {
@@ -659,42 +643,17 @@ TEST_CASE("osu!mania scores on keys_4_holds.osu") {
     }
 }
 
-TEST_CASE("every ruleset rejects a null mod list with a count") {
-    const pppp::beatmaps::Beatmap empty;
-    pppp::common::ScoreInfo score;
+TEST_CASE("the score's mods reach the difficulty when the calculator is given none") {
+    pppp::Beatmap beatmap;
+    pppp::ScoreInfo score;
 
-    score.mods = 0;
-    score.mod_count = 2;
+    pppp_test::load(beatmap, PPPP_TEST_RESOURCES "/taiko/1028484.osu");
+    score.mods = pppp_test::parse_mods("HR");
+    score.statistics[pppp::HIT_RESULT_GREAT] = 289;
+    score.max_combo = pppp_test::calculate(pppp::Difficulty().mods(score.mods), beatmap).max_combo();
+    score.accuracy = 1.0;
 
-    SUBCASE("osu!standard") {
-        const pppp::osu::difficulty::OsuDifficultyAttributes attrs;
-        pppp::osu::difficulty::OsuPerformanceAttributes pp;
-
-        CHECK(pppp::osu::difficulty::calculate_performance(pp, score, attrs, empty) ==
-              pppp::Result::INVALID_ARGUMENT);
-    }
-
-    SUBCASE("osu!taiko") {
-        const pppp::taiko::difficulty::TaikoDifficultyAttributes attrs;
-        pppp::taiko::difficulty::TaikoPerformanceAttributes pp;
-
-        CHECK(pppp::taiko::difficulty::calculate_performance(pp, score, attrs, empty) ==
-              pppp::Result::INVALID_ARGUMENT);
-    }
-
-    SUBCASE("osu!catch") {
-        pppp::fruits::difficulty::CatchDifficultyAttributes attrs;
-        pppp::fruits::difficulty::CatchPerformanceAttributes pp;
-
-        CHECK(pppp::fruits::difficulty::calculate_performance(pp, score, attrs, empty) ==
-              pppp::Result::INVALID_ARGUMENT);
-    }
-
-    SUBCASE("osu!mania") {
-        const pppp::mania::difficulty::ManiaDifficultyAttributes attrs;
-        pppp::mania::difficulty::ManiaPerformanceAttributes pp;
-
-        CHECK(pppp::mania::difficulty::calculate_performance(pp, score, attrs, empty) ==
-              pppp::Result::INVALID_ARGUMENT);
-    }
+    const pppp::PerformanceAttributes performance =
+        pppp_test::calculate(pppp::Performance(beatmap).score(score));
+    CHECK(performance.total() == pppp_test::pp_approx(166.70246243922367));
 }

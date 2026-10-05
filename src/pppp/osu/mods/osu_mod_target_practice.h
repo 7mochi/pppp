@@ -4,9 +4,9 @@
 #ifndef PPPP_OSU_MODS_OSU_MOD_TARGET_PRACTICE_H
 #define PPPP_OSU_MODS_OSU_MOD_TARGET_PRACTICE_H
 
-#include "pppp/config.h"
 #include "pppp/mods/mod.h"
 #include "pppp/osu/osu_beatmap.h"
+#include "pppp/status.h"
 
 namespace pppp { namespace osu { namespace mods {
     /// Jump distance for circles in the last combo
@@ -24,7 +24,7 @@ namespace pppp { namespace osu { namespace mods {
     /// Acceptable difference for timing comparisons
     const double TIMING_PRECISION = 1;
 
-    Result::Value apply_target_practice(pppp::osu::OsuBeatmap& pb, const pppp::mods::Mod& mod);
+    Status apply_target_practice(pppp::osu::OsuBeatmap& pb, const pppp::mods::Mod& mod);
 }}} // namespace pppp::osu::mods
 
 #endif

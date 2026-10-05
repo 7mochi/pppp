@@ -6,10 +6,11 @@
 
 namespace pppp { namespace fruits { namespace object {
     CatchHitObject create_juice_stream(const pppp::beatmaps::Slider& slider, double head_x, double time,
-                                       int slider_index) {
+                                       double end_time, int slider_index) {
         CatchHitObject stream;
         stream.kind = OBJECT_JUICE_STREAM;
         stream.time = time;
+        stream.end_time = end_time;
         stream.original_x = head_x;
         stream.x_offset = 0.0;
         stream.distance_to_hyper_dash = 0.0;
@@ -43,6 +44,7 @@ namespace pppp { namespace fruits { namespace object {
                         CatchHitObject tiny;
                         tiny.kind = OBJECT_TINY_DROPLET;
                         tiny.time = t + last_time;
+                        tiny.end_time = tiny.time;
                         tiny.original_x =
                             head_x + pppp::beatmaps::slider_position_at_undecimated(slider, progress).x;
                         tiny.x_offset = 0.0;
@@ -68,6 +70,7 @@ namespace pppp { namespace fruits { namespace object {
             CatchHitObject object;
             object.kind = e.type == pppp::beatmaps::SLIDER_EVENT_TICK ? OBJECT_DROPLET : OBJECT_FRUIT;
             object.time = e.time;
+            object.end_time = object.time;
             object.original_x =
                 head_x + pppp::beatmaps::slider_position_at_undecimated(slider, e.path_progress).x;
             object.x_offset = 0.0;

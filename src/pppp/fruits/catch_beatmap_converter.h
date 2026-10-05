@@ -6,11 +6,12 @@
 
 #include "pppp/beatmaps/beatmap_converter.h"
 #include "pppp/fruits/catch_beatmap.h"
+#include "pppp/status.h"
 
 namespace pppp { namespace fruits {
-    Result::Value convert(CatchBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap,
-                          const pppp::beatmaps::ObjectConverted<object::CatchHitObject>& object_converted =
-                              pppp::beatmaps::ObjectConverted<object::CatchHitObject>());
+    Status convert(CatchBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap,
+                   const pppp::beatmaps::ObjectConverted<object::CatchHitObject>& object_converted =
+                       pppp::beatmaps::ObjectConverted<object::CatchHitObject>());
 }} // namespace pppp::fruits
 
 #endif

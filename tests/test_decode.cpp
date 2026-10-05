@@ -40,7 +40,7 @@ TEST_CASE("fosu parses 2785319.osu with every calculation on") {
 }
 
 TEST_CASE("from_file fills a beatmap and clear() empties it") {
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
     pppp_test::load(beatmap, PPPP_TEST_RESOURCES "/osu/2785319.osu");
 
@@ -61,7 +61,7 @@ TEST_CASE("from_file fills a beatmap and clear() empties it") {
 }
 
 TEST_CASE("the mode and the hit sounds survive the adapter") {
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
     pppp_test::load(beatmap, PPPP_TEST_RESOURCES "/osu/2785319.osu");
 
@@ -97,9 +97,9 @@ TEST_CASE("from_parsed copies what the parser produced") {
     REQUIRE(result.ok());
 
     const ::fosu::Beatmap* parsed = result.value();
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
-    REQUIRE(pppp::beatmaps::from_parsed(beatmap, parsed) == pppp::Result::OK);
+    REQUIRE(pppp::beatmaps::from_parsed(beatmap, parsed).ok());
     CHECK(beatmap.hit_objects.size() == parsed->hit_objects.size());
     CHECK(beatmap.sliders.size() == parsed->sliders.size());
     REQUIRE(beatmap.slider_path.recompute);
@@ -153,12 +153,12 @@ TEST_CASE("from_parsed copies what the parser produced") {
 }
 
 TEST_CASE("bad input is rejected") {
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
-    CHECK(pppp::beatmaps::from_file(beatmap, "nonexistent.osu") == pppp::Result::PARSE);
-    CHECK(pppp::beatmaps::from_file(beatmap, 0) == pppp::Result::INVALID_ARGUMENT);
-    CHECK(pppp::beatmaps::from_bytes(beatmap, 0, 1) == pppp::Result::PARSE);
-    CHECK(pppp::beatmaps::from_parsed(beatmap, 0) == pppp::Result::INVALID_ARGUMENT);
+    CHECK(beatmap.load_file("nonexistent.osu").code() == pppp::StatusCode::PARSE);
+    CHECK(beatmap.load_file(0).code() == pppp::StatusCode::INVALID_ARGUMENT);
+    CHECK(beatmap.load_buffer(0, 1).code() == pppp::StatusCode::PARSE);
+    CHECK(pppp::beatmaps::from_parsed(beatmap, 0).code() == pppp::StatusCode::INVALID_ARGUMENT);
 }
 
 namespace {
@@ -187,7 +187,7 @@ namespace {
         return count;
     }
     void check(const Decoded& row) {
-        pppp::beatmaps::Beatmap beatmap;
+        pppp::Beatmap beatmap;
 
         pppp_test::load(beatmap, row.map);
         INFO(row.map);
@@ -210,7 +210,7 @@ namespace {
         const ::fosu::Result< ::fosu::Beatmap*> parsed = parser.parse("", 0, ::fosu::ParseOptions());
 
         REQUIRE(parsed.ok());
-        REQUIRE(pppp::beatmaps::from_parsed(beatmap, parsed.value()) == pppp::Result::OK);
+        REQUIRE(pppp::beatmaps::from_parsed(beatmap, parsed.value()).ok());
     }
 } // namespace
 
@@ -254,37 +254,37 @@ TEST_CASE("mania") {
 }
 
 TEST_CASE("empty_osu") {
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
     load_empty(beatmap);
     pppp::osu::difficulty::OsuDifficultyAttributes attrs;
 
-    CHECK(pppp::osu::difficulty::calculate_difficulty(attrs, beatmap, 0, 0) == pppp::Result::OK);
+    CHECK(pppp::osu::difficulty::calculate_difficulty(attrs, beatmap, 0, 0).ok());
 }
 
 TEST_CASE("empty_taiko") {
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
     load_empty(beatmap);
     pppp::taiko::difficulty::TaikoDifficultyAttributes attrs;
 
-    CHECK(pppp::taiko::difficulty::calculate_difficulty(attrs, beatmap, 0, 0) == pppp::Result::OK);
+    CHECK(pppp::taiko::difficulty::calculate_difficulty(attrs, beatmap, 0, 0).ok());
 }
 
 TEST_CASE("empty_catch") {
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
     load_empty(beatmap);
     pppp::fruits::difficulty::CatchDifficultyAttributes attrs;
 
-    CHECK(pppp::fruits::difficulty::calculate_difficulty(attrs, beatmap, 0, 0) == pppp::Result::OK);
+    CHECK(pppp::fruits::difficulty::calculate_difficulty(attrs, beatmap, 0, 0).ok());
 }
 
 TEST_CASE("empty_mania") {
-    pppp::beatmaps::Beatmap beatmap;
+    pppp::Beatmap beatmap;
 
     load_empty(beatmap);
     pppp::mania::difficulty::ManiaDifficultyAttributes attrs;
 
-    CHECK(pppp::mania::difficulty::calculate_difficulty(attrs, beatmap, 0, 0) == pppp::Result::OK);
+    CHECK(pppp::mania::difficulty::calculate_difficulty(attrs, beatmap, 0, 0).ok());
 }

@@ -4,6 +4,7 @@
 #include <pppp/pppp.h>
 
 #include <cstddef>
+#include <cstring>
 #include <new>
 #include <vector>
 
@@ -15,28 +16,24 @@
 
 namespace {
 
-    const int MAX_MODS = 64;
-
     PPPP_STATIC_ASSERT(hit_result_count_matches, PPPP_HIT_RESULT_COUNT == pppp::common::HIT_RESULT_COUNT);
     PPPP_STATIC_ASSERT(int32_is_32_bits, sizeof(pppp_int32) == 4);
     PPPP_STATIC_ASSERT(int64_is_64_bits, sizeof(pppp_int64) == 8);
-    PPPP_STATIC_ASSERT(result_ok_matches, PPPP_OK == static_cast<int>(pppp::Result::OK));
+    PPPP_STATIC_ASSERT(result_ok_matches, PPPP_OK == static_cast<int>(pppp::StatusCode::OK));
     PPPP_STATIC_ASSERT(result_invalid_argument_matches,
-                       PPPP_INVALID_ARGUMENT == static_cast<int>(pppp::Result::INVALID_ARGUMENT));
+                       PPPP_INVALID_ARGUMENT == static_cast<int>(pppp::StatusCode::INVALID_ARGUMENT));
     PPPP_STATIC_ASSERT(result_allocation_matches,
-                       PPPP_ALLOCATION == static_cast<int>(pppp::Result::ALLOCATION));
-    PPPP_STATIC_ASSERT(result_parse_matches, PPPP_PARSE == static_cast<int>(pppp::Result::PARSE));
+                       PPPP_ALLOCATION == static_cast<int>(pppp::StatusCode::ALLOCATION));
+    PPPP_STATIC_ASSERT(result_parse_matches, PPPP_PARSE == static_cast<int>(pppp::StatusCode::PARSE));
     PPPP_STATIC_ASSERT(result_no_slider_path_backend_matches,
-                       PPPP_NO_SLIDER_PATH_BACKEND == static_cast<int>(pppp::Result::NO_SLIDER_PATH_BACKEND));
+                       PPPP_NO_SLIDER_PATH_BACKEND ==
+                           static_cast<int>(pppp::StatusCode::NO_SLIDER_PATH_BACKEND));
     PPPP_STATIC_ASSERT(result_slider_path_matches,
-                       PPPP_SLIDER_PATH == static_cast<int>(pppp::Result::SLIDER_PATH));
-    PPPP_STATIC_ASSERT(ruleset_osu_matches, PPPP_RULESET_OSU == static_cast<int>(pppp::Ruleset::RULESET_OSU));
-    PPPP_STATIC_ASSERT(ruleset_taiko_matches,
-                       PPPP_RULESET_TAIKO == static_cast<int>(pppp::Ruleset::RULESET_TAIKO));
-    PPPP_STATIC_ASSERT(ruleset_catch_matches,
-                       PPPP_RULESET_CATCH == static_cast<int>(pppp::Ruleset::RULESET_CATCH));
-    PPPP_STATIC_ASSERT(ruleset_mania_matches,
-                       PPPP_RULESET_MANIA == static_cast<int>(pppp::Ruleset::RULESET_MANIA));
+                       PPPP_SLIDER_PATH == static_cast<int>(pppp::StatusCode::SLIDER_PATH));
+    PPPP_STATIC_ASSERT(ruleset_osu_matches, PPPP_RULESET_OSU == static_cast<int>(pppp::Ruleset::OSU));
+    PPPP_STATIC_ASSERT(ruleset_taiko_matches, PPPP_RULESET_TAIKO == static_cast<int>(pppp::Ruleset::TAIKO));
+    PPPP_STATIC_ASSERT(ruleset_catch_matches, PPPP_RULESET_CATCH == static_cast<int>(pppp::Ruleset::CATCH));
+    PPPP_STATIC_ASSERT(ruleset_mania_matches, PPPP_RULESET_MANIA == static_cast<int>(pppp::Ruleset::MANIA));
     PPPP_STATIC_ASSERT(slider_event_tick_matches,
                        PPPP_SLIDER_EVENT_TICK == static_cast<int>(pppp::beatmaps::SLIDER_EVENT_TICK));
     PPPP_STATIC_ASSERT(slider_event_legacy_last_tick_matches,
@@ -239,28 +236,78 @@ namespace {
         out.max_combo = in.max_combo;
     }
 
-    void read_difficulty(const pppp_difficulty_attributes& in, pppp::DifficultyAttributes& out) {
-        out.ruleset = static_cast<pppp::Ruleset::Value>(in.ruleset);
-        read_osu_difficulty(in.osu, out.osu);
-        read_taiko_difficulty(in.taiko, out.taiko);
-        read_catch_difficulty(in.fruits, out.fruits);
-        read_mania_difficulty(in.mania, out.mania);
+    pppp::DifficultyAttributes read_difficulty(const pppp_difficulty_attributes& in) {
+        switch (in.ruleset) {
+        case PPPP_RULESET_TAIKO: {
+            pppp::TaikoDifficultyAttributes out;
+            read_taiko_difficulty(in.taiko, out);
+            return out;
+        }
+        case PPPP_RULESET_CATCH: {
+            pppp::CatchDifficultyAttributes out;
+            read_catch_difficulty(in.fruits, out);
+            return out;
+        }
+        case PPPP_RULESET_MANIA: {
+            pppp::ManiaDifficultyAttributes out;
+            read_mania_difficulty(in.mania, out);
+            return out;
+        }
+        default: {
+            pppp::OsuDifficultyAttributes out;
+            read_osu_difficulty(in.osu, out);
+            return out;
+        }
+        }
     }
 
-    int read_mods(const char* specification, pppp::mods::Mod* mods, size_t* count) {
-        *count = 0;
-        if (!specification) {
-            return 0;
+    void fill_difficulty(const pppp::DifficultyAttributes& in, pppp_difficulty_attributes& out) {
+        std::memset(&out, 0, sizeof(out));
+        out.ruleset = static_cast<pppp_int32>(in.ruleset());
+        out.star_rating = in.star_rating();
+        out.max_combo = in.max_combo();
+        if (in.osu()) {
+            fill_osu_difficulty(*in.osu(), out.osu);
+        } else if (in.taiko()) {
+            fill_taiko_difficulty(*in.taiko(), out.taiko);
+        } else if (in.fruits()) {
+            fill_catch_difficulty(*in.fruits(), out.fruits);
+        } else if (in.mania()) {
+            fill_mania_difficulty(*in.mania(), out.mania);
         }
-        const int parsed = pppp::mods::mod_from_acronyms(mods, MAX_MODS, specification);
-        if (parsed < 0) {
-            return -1;
+    }
+
+    void fill_performance(const pppp::PerformanceAttributes& in, pppp_performance_attributes& out) {
+        std::memset(&out, 0, sizeof(out));
+        out.ruleset = static_cast<pppp_int32>(in.ruleset());
+        out.total = in.total();
+        if (in.osu()) {
+            fill_osu_performance(*in.osu(), out.osu);
+        } else if (in.taiko()) {
+            fill_taiko_performance(*in.taiko(), out.taiko);
+        } else if (in.fruits()) {
+            fill_catch_performance(*in.fruits(), out.fruits);
+        } else if (in.mania()) {
+            fill_mania_performance(*in.mania(), out.mania);
         }
-        *count = static_cast<size_t>(parsed);
-        return 0;
     }
 
 } // namespace
+
+// NOLINTNEXTLINE(readability-identifier-naming): the header declares the handle under this name.
+struct pppp_timed_difficulty {
+    std::vector<pppp_timed_difficulty_attributes> entries;
+};
+
+// NOLINTNEXTLINE(readability-identifier-naming): the header declares the handle under this name.
+struct pppp_strains {
+    pppp::Strains strains;
+};
+
+// NOLINTNEXTLINE(readability-identifier-naming): the header declares the handle under this name.
+struct pppp_mods {
+    pppp::Mods mods;
+};
 
 struct SliderView {
     std::vector<pppp_uint32> node_sounds;
@@ -275,7 +322,7 @@ struct SliderView {
 
 // NOLINTNEXTLINE(readability-identifier-naming): the header declares the handle under this name.
 struct pppp_beatmap {
-    pppp::beatmaps::Beatmap map;
+    pppp::Beatmap map;
 
     std::vector<SliderView> slider_views;
     std::vector<pppp_slider> sliders;
@@ -381,6 +428,42 @@ namespace {
 
 const char* pppp_version(void) { return PPPP_VERSION_STRING; }
 
+const char* pppp_result_message(pppp_result result) {
+    return pppp::Status(static_cast<pppp::StatusCode::Value>(result)).message();
+}
+
+pppp_result pppp_mods_parse(const char* specification, pppp_mods** out) {
+    if (!specification || !out) {
+        return PPPP_INVALID_ARGUMENT;
+    }
+    pppp_mods* mods = new (std::nothrow) pppp_mods;
+    if (!mods) {
+        return PPPP_ALLOCATION;
+    }
+    const pppp::Status status = mods->mods.parse(specification);
+    if (!status.ok()) {
+        delete mods;
+        return static_cast<pppp_result>(status.code());
+    }
+    *out = mods;
+    return PPPP_OK;
+}
+
+pppp_result pppp_mods_from_legacy(pppp_uint32 bits, pppp_mods** out) {
+    if (!out) {
+        return PPPP_INVALID_ARGUMENT;
+    }
+    pppp_mods* mods = new (std::nothrow) pppp_mods;
+    if (!mods) {
+        return PPPP_ALLOCATION;
+    }
+    mods->mods = pppp::Mods::from_legacy(bits);
+    *out = mods;
+    return PPPP_OK;
+}
+
+void pppp_mods_free(pppp_mods* mods) { delete mods; }
+
 pppp_result pppp_beatmap_from_file(const char* path, pppp_beatmap** out) {
     if (!path || !out) {
         return PPPP_INVALID_ARGUMENT;
@@ -389,10 +472,28 @@ pppp_result pppp_beatmap_from_file(const char* path, pppp_beatmap** out) {
     if (!beatmap) {
         return PPPP_ALLOCATION;
     }
-    const pppp::Result::Value status = pppp::beatmaps::from_file(beatmap->map, path);
-    if (status != pppp::Result::OK) {
+    const pppp::Status status = beatmap->map.load_file(path);
+    if (!status.ok()) {
         delete beatmap;
-        return static_cast<pppp_result>(status);
+        return static_cast<pppp_result>(status.code());
+    }
+    build_views(*beatmap);
+    *out = beatmap;
+    return PPPP_OK;
+}
+
+pppp_result pppp_beatmap_from_bytes(const void* data, size_t size, pppp_beatmap** out) {
+    if ((!data && size) || !out) {
+        return PPPP_INVALID_ARGUMENT;
+    }
+    pppp_beatmap* beatmap = new (std::nothrow) pppp_beatmap;
+    if (!beatmap) {
+        return PPPP_ALLOCATION;
+    }
+    const pppp::Status status = beatmap->map.load_buffer(data, size);
+    if (!status.ok()) {
+        delete beatmap;
+        return static_cast<pppp_result>(status.code());
     }
     build_views(*beatmap);
     *out = beatmap;
@@ -458,50 +559,176 @@ pppp_result pppp_beatmap_breaks(const pppp_beatmap* map, const pppp_break_period
     return PPPP_OK;
 }
 
+namespace {
+    int read_difficulty_options(const pppp_difficulty_options* options, pppp::Difficulty& difficulty) {
+        if (options && options->mods) {
+            difficulty.mods(options->mods->mods);
+        }
+        if (options && options->has_ruleset) {
+            if (options->ruleset < 0 || options->ruleset > 3) {
+                return -1;
+            }
+            difficulty.ruleset(static_cast<pppp::Ruleset::Value>(options->ruleset));
+        }
+        if (options && options->has_clock_rate) {
+            difficulty.clock_rate(options->clock_rate);
+        }
+        return 0;
+    }
+} // namespace
+
 pppp_result pppp_calculate_difficulty(const pppp_beatmap* map, const pppp_difficulty_options* options,
                                       pppp_difficulty_attributes* out) {
     if (!map || !out) {
         return PPPP_INVALID_ARGUMENT;
     }
-    pppp::mods::Mod mods[MAX_MODS];
-    size_t mod_count = 0;
-    if (read_mods(options ? options->mods : 0, mods, &mod_count) < 0) {
+    pppp::Difficulty difficulty;
+    if (read_difficulty_options(options, difficulty) < 0) {
+        return PPPP_INVALID_ARGUMENT;
+    }
+
+    pppp::DifficultyAttributes attributes;
+    const pppp::Status status = difficulty.calculate(map->map, attributes);
+    if (!status.ok()) {
+        return static_cast<pppp_result>(status.code());
+    }
+    fill_difficulty(attributes, *out);
+    return PPPP_OK;
+}
+
+pppp_result pppp_calculate_timed_difficulty(const pppp_beatmap* map, const pppp_difficulty_options* options,
+                                            pppp_timed_difficulty** out) {
+    if (!map || !out) {
         return PPPP_INVALID_ARGUMENT;
     }
     pppp::Difficulty difficulty;
-    difficulty.mods(mod_count ? mods : 0, mod_count);
-    if (options && options->has_ruleset) {
-        if (options->ruleset < 0 || options->ruleset > 3) {
-            return PPPP_INVALID_ARGUMENT;
-        }
-        difficulty.ruleset(static_cast<pppp::Ruleset::Value>(options->ruleset));
+    if (read_difficulty_options(options, difficulty) < 0) {
+        return PPPP_INVALID_ARGUMENT;
     }
-    if (options && options->has_clock_rate) {
-        difficulty.clock_rate(options->clock_rate);
+    std::vector<pppp::TimedDifficultyAttributes> entries;
+    const pppp::Status status = difficulty.calculate_timed(map->map, entries);
+    if (!status.ok()) {
+        return static_cast<pppp_result>(status.code());
+    }
+    pppp_timed_difficulty* timed = new (std::nothrow) pppp_timed_difficulty;
+    if (!timed) {
+        return PPPP_ALLOCATION;
     }
 
-    const pppp::DifficultyAttributes attributes = difficulty.calculate(map->map);
-    out->ruleset = static_cast<pppp_int32>(attributes.ruleset);
-    out->star_rating = attributes.star_rating();
-    out->max_combo = attributes.max_combo();
-    fill_osu_difficulty(attributes.osu, out->osu);
-    fill_taiko_difficulty(attributes.taiko, out->taiko);
-    fill_catch_difficulty(attributes.fruits, out->fruits);
-    fill_mania_difficulty(attributes.mania, out->mania);
+    timed->entries.resize(entries.size());
+    for (size_t i = 0; i < entries.size(); i++) {
+        timed->entries[i].time = entries[i].time;
+        fill_difficulty(entries[i].attributes, timed->entries[i].attributes);
+    }
+    *out = timed;
     return PPPP_OK;
 }
+
+pppp_result pppp_timed_difficulty_entries(const pppp_timed_difficulty* timed,
+                                          const pppp_timed_difficulty_attributes** out, size_t* count) {
+    if (!timed || !out || !count) {
+        return PPPP_INVALID_ARGUMENT;
+    }
+    *out = timed->entries.empty() ? 0 : &timed->entries[0];
+    *count = timed->entries.size();
+    return PPPP_OK;
+}
+
+void pppp_timed_difficulty_free(pppp_timed_difficulty* timed) { delete timed; }
+
+namespace {
+    void series(const std::vector<double>& in, const double** data, size_t* count) {
+        *data = in.empty() ? 0 : &in[0];
+        *count = in.size();
+    }
+} // namespace
+
+pppp_result pppp_calculate_strains(const pppp_beatmap* map, const pppp_difficulty_options* options,
+                                   pppp_strains** out) {
+    if (!map || !out) {
+        return PPPP_INVALID_ARGUMENT;
+    }
+    pppp::Difficulty difficulty;
+    if (read_difficulty_options(options, difficulty) < 0) {
+        return PPPP_INVALID_ARGUMENT;
+    }
+    pppp_strains* strains = new (std::nothrow) pppp_strains;
+    if (!strains) {
+        return PPPP_ALLOCATION;
+    }
+
+    const pppp::Status status = difficulty.strains(map->map, strains->strains);
+    if (!status.ok()) {
+        delete strains;
+        return static_cast<pppp_result>(status.code());
+    }
+    *out = strains;
+    return PPPP_OK;
+}
+
+pppp_result pppp_strains_info(const pppp_strains* strains, pppp_int32* ruleset, double* start_time,
+                              double* section_length) {
+    if (!strains || !ruleset || !start_time || !section_length) {
+        return PPPP_INVALID_ARGUMENT;
+    }
+    *ruleset = static_cast<pppp_int32>(strains->strains.ruleset());
+    *start_time = strains->strains.start_time();
+    *section_length = strains->strains.section_length();
+    return PPPP_OK;
+}
+
+pppp_result pppp_strains_osu(const pppp_strains* strains, pppp_osu_strains* out) {
+    const pppp::OsuStrains* in = strains ? strains->strains.osu() : 0;
+    if (!in || !out) {
+        return PPPP_INVALID_ARGUMENT;
+    }
+    series(in->aim, &out->aim, &out->aim_count);
+    series(in->aim_no_sliders, &out->aim_no_sliders, &out->aim_no_sliders_count);
+    series(in->speed, &out->speed, &out->speed_count);
+    series(in->reading, &out->reading, &out->reading_count);
+    series(in->flashlight, &out->flashlight, &out->flashlight_count);
+    return PPPP_OK;
+}
+
+pppp_result pppp_strains_taiko(const pppp_strains* strains, pppp_taiko_strains* out) {
+    const pppp::TaikoStrains* in = strains ? strains->strains.taiko() : 0;
+    if (!in || !out) {
+        return PPPP_INVALID_ARGUMENT;
+    }
+    series(in->colour, &out->colour, &out->colour_count);
+    series(in->reading, &out->reading, &out->reading_count);
+    series(in->rhythm, &out->rhythm, &out->rhythm_count);
+    series(in->stamina, &out->stamina, &out->stamina_count);
+    series(in->single_colour_stamina, &out->single_colour_stamina, &out->single_colour_stamina_count);
+    return PPPP_OK;
+}
+
+pppp_result pppp_strains_catch(const pppp_strains* strains, pppp_catch_strains* out) {
+    const pppp::CatchStrains* in = strains ? strains->strains.fruits() : 0;
+    if (!in || !out) {
+        return PPPP_INVALID_ARGUMENT;
+    }
+    series(in->movement, &out->movement, &out->movement_count);
+    return PPPP_OK;
+}
+
+pppp_result pppp_strains_mania(const pppp_strains* strains, pppp_mania_strains* out) {
+    const pppp::ManiaStrains* in = strains ? strains->strains.mania() : 0;
+    if (!in || !out) {
+        return PPPP_INVALID_ARGUMENT;
+    }
+    series(in->strain, &out->strain, &out->strain_count);
+    return PPPP_OK;
+}
+
+void pppp_strains_free(pppp_strains* strains) { delete strains; }
 
 pppp_result pppp_calculate_performance(const pppp_beatmap* map, const pppp_performance_options* options,
                                        pppp_performance_attributes* out) {
     if (!map || !out) {
         return PPPP_INVALID_ARGUMENT;
     }
-    pppp::mods::Mod mods[MAX_MODS];
-    size_t mod_count = 0;
-    if (read_mods(options ? options->mods : 0, mods, &mod_count) < 0) {
-        return PPPP_INVALID_ARGUMENT;
-    }
-    pppp::common::ScoreInfo score;
+    pppp::ScoreInfo score;
     if (options && options->has_score) {
         for (int i = 0; i < pppp::common::HIT_RESULT_COUNT; i++) {
             score.statistics[i] = options->score.statistics[i];
@@ -519,13 +746,11 @@ pppp_result pppp_calculate_performance(const pppp_beatmap* map, const pppp_perfo
         if (!options->difficulty || options->difficulty->ruleset < 0 || options->difficulty->ruleset > 3) {
             return PPPP_INVALID_ARGUMENT;
         }
-        pppp::DifficultyAttributes provided;
-        read_difficulty(*options->difficulty, provided);
-        performance.attributes(provided);
+        performance.attributes(read_difficulty(*options->difficulty));
     }
-    performance.state(score);
-    if (mod_count) {
-        performance.mods(mods, mod_count);
+    performance.score(score);
+    if (options && options->mods && !options->mods->mods.empty()) {
+        performance.mods(options->mods->mods);
     }
     if (options && options->has_combo) {
         performance.combo(options->combo);
@@ -537,12 +762,11 @@ pppp_result pppp_calculate_performance(const pppp_beatmap* map, const pppp_perfo
         performance.misses(options->misses);
     }
 
-    const pppp::PerformanceAttributes attributes = performance.calculate();
-    out->ruleset = static_cast<pppp_int32>(attributes.ruleset);
-    out->total = attributes.total();
-    fill_osu_performance(attributes.osu, out->osu);
-    fill_taiko_performance(attributes.taiko, out->taiko);
-    fill_catch_performance(attributes.fruits, out->fruits);
-    fill_mania_performance(attributes.mania, out->mania);
+    pppp::PerformanceAttributes attributes;
+    const pppp::Status status = performance.calculate(attributes);
+    if (!status.ok()) {
+        return static_cast<pppp_result>(status.code());
+    }
+    fill_performance(attributes, *out);
     return PPPP_OK;
 }

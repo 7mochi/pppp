@@ -56,6 +56,112 @@ namespace pppp { namespace osu { namespace difficulty {
             }
         }
 
+        void create_difficulty_attributes(OsuDifficultyAttributes& out,
+                                          const pppp::beatmaps::Beatmap& beatmap, const OsuBeatmap& pb,
+                                          skills::Aim& aim_with_sliders, skills::Aim& aim_no_sliders,
+                                          skills::Speed& speed, skills::Reading& reading,
+                                          skills::Flashlight* flashlight) {
+            double aim_dv = aim_with_sliders.difficulty_value();
+            double aim_no_sliders_dv = aim_no_sliders.difficulty_value();
+            double speed_dv = speed.difficulty_value();
+            double reading_dv = reading.difficulty_value();
+
+            double aim_difficult_strain_count = aim_with_sliders.count_top_weighted_strains(aim_dv);
+            double speed_difficult_strain_count = speed.count_top_weighted_object_difficulties(speed_dv);
+            double reading_difficult_note_count = reading.count_top_weighted_object_difficulties(reading_dv);
+
+            double speed_note_count = speed.relevant_object_count();
+
+            double aim_no_sliders_top_weighted_slider_count =
+                aim_no_sliders.count_top_weighted_sliders(aim_no_sliders_dv);
+            double aim_no_sliders_difficult_strain_count =
+                aim_no_sliders.count_top_weighted_strains(aim_no_sliders_dv);
+            double aim_top_weighted_slider_factor =
+                aim_no_sliders_top_weighted_slider_count /
+                std::max(1.0,
+                         aim_no_sliders_difficult_strain_count - aim_no_sliders_top_weighted_slider_count);
+            double speed_top_weighted_slider_count = speed.count_top_weighted_sliders(speed_dv);
+            double speed_top_weighted_slider_factor =
+                speed_top_weighted_slider_count /
+                std::max(1.0, speed_difficult_strain_count - speed_top_weighted_slider_count);
+            double difficult_sliders = aim_with_sliders.get_difficult_sliders();
+
+            double aim_rating = calculate_aim_difficulty_rating(aim_dv);
+            double aim_no_sliders_rating = calculate_aim_difficulty_rating(aim_no_sliders_dv);
+
+            double slider_factor = aim_dv > 0 ? aim_no_sliders_rating / aim_rating : 1.0;
+
+            double speed_rating = calculate_difficulty_rating(speed_dv);
+            double reading_rating = calculate_difficulty_rating(reading_dv);
+
+            double flashlight_rating = 0.0;
+            if (flashlight) {
+                flashlight_rating = calculate_difficulty_rating(flashlight->difficulty_value());
+            }
+
+            double base_aim_perf = difficulty_to_performance(aim_rating);
+            double base_speed_perf = difficulty_to_performance(speed_rating);
+            double base_reading_perf = difficulty_to_performance(reading_rating);
+            double base_flashlight_perf = flashlight_difficulty_to_performance(flashlight_rating);
+            double base_cognition_perf = sum_cognition_difficulty(base_reading_perf, base_flashlight_perf);
+
+            double base_performance = utils::norm(1.1, base_aim_perf, base_speed_perf, base_cognition_perf);
+            double star_rating = calculate_star_rating(base_performance);
+
+            int hit_circle_count = 0, slider_count = 0, large_tick_count = 0, spinner_count = 0;
+            count_objects(pb, &hit_circle_count, &slider_count, &large_tick_count, &spinner_count);
+
+            out.star_rating = star_rating;
+            out.aim_difficulty = aim_rating;
+            out.speed_difficulty = speed_rating;
+            out.reading_difficulty = reading_rating;
+            out.flashlight_difficulty = flashlight_rating;
+            out.slider_factor = slider_factor;
+            out.aim_difficult_strain_count = aim_difficult_strain_count;
+            out.speed_difficult_strain_count = speed_difficult_strain_count;
+            out.reading_difficult_note_count = reading_difficult_note_count;
+            out.aim_difficult_slider_count = difficult_sliders;
+            out.aim_top_weighted_slider_factor = aim_top_weighted_slider_factor;
+            out.speed_top_weighted_slider_factor = speed_top_weighted_slider_factor;
+            out.speed_note_count = speed_note_count;
+            out.hit_circle_count = hit_circle_count;
+            out.slider_count = slider_count;
+            out.large_tick_count = large_tick_count;
+            out.spinner_count = spinner_count;
+
+            out.max_combo = max_combo(pb);
+
+            out.nested_score_per_object =
+                calculate_nested_score_per_object(pb, static_cast<int>(pb.objects.size()));
+            out.legacy_score_base_multiplier = peppy_stars(beatmap);
+            out.maximum_legacy_combo_score = simulate(beatmap, pb).combo_score;
+        }
+
+        const double STRAIN_SECTION_LENGTH = 400;
+
+        void build_strain_series(std::vector<double>& out, const std::vector<double>& values,
+                                 const std::vector<preprocessing::OsuDifficultyHitObject>& objects,
+                                 double start_time) {
+            out.clear();
+            if (objects.empty() || values.empty()) {
+                return;
+            }
+
+            int length = std::max(1, static_cast<int>(std::floor((objects.back().start_time - start_time) /
+                                                                 STRAIN_SECTION_LENGTH)) +
+                                         1);
+            out.assign(static_cast<size_t>(length), 0.0);
+
+            for (size_t i = 0; i < objects.size(); i++) {
+                int section = static_cast<int>(
+                    std::floor((objects[i].start_time - start_time) / STRAIN_SECTION_LENGTH));
+
+                if (section >= 0 && section < length) {
+                    out[static_cast<size_t>(section)] =
+                        std::max(out[static_cast<size_t>(section)], values[i]);
+                }
+            }
+        }
     } // namespace
 
     void preprocessing::create_hit_objects(std::vector<preprocessing::OsuDifficultyHitObject>& out,
@@ -100,15 +206,15 @@ namespace pppp { namespace osu { namespace difficulty {
         }
     }
 
-    Result::Value calculate_difficulty(OsuDifficultyAttributes& out, const pppp::beatmaps::Beatmap& beatmap,
-                                       const pppp::mods::Mod* mods, size_t mod_count) {
+    Status calculate_difficulty(OsuDifficultyAttributes& out, const pppp::beatmaps::Beatmap& beatmap,
+                                const pppp::mods::Mod* mods, size_t mod_count) {
         if (!mods && mod_count) {
-            return Result::INVALID_ARGUMENT;
+            return StatusCode::INVALID_ARGUMENT;
         }
 
         OsuBeatmap pb;
-        Result::Value rc = build(pb, beatmap, mods, mod_count);
-        if (rc != Result::OK) {
+        Status rc = build(pb, beatmap, mods, mod_count);
+        if (!rc.ok()) {
             return rc;
         }
 
@@ -117,7 +223,7 @@ namespace pppp { namespace osu { namespace difficulty {
         if (pb.objects.size() < 2) {
             if (pb.objects.empty()) {
                 out.slider_factor = 0.0;
-                return Result::OK;
+                return StatusCode::OK;
             }
             count_objects(pb, &out.hit_circle_count, &out.slider_count, &out.large_tick_count,
                           &out.spinner_count);
@@ -126,7 +232,7 @@ namespace pppp { namespace osu { namespace difficulty {
                 calculate_nested_score_per_object(pb, static_cast<int>(pb.objects.size()));
             out.legacy_score_base_multiplier = peppy_stars(beatmap);
             out.maximum_legacy_combo_score = simulate(beatmap, pb).combo_score;
-            return Result::OK;
+            return StatusCode::OK;
         }
 
         std::vector<preprocessing::OsuDifficultyHitObject> dho_list;
@@ -134,7 +240,7 @@ namespace pppp { namespace osu { namespace difficulty {
         preprocessing::create_hit_objects(dho_list, dho_ptrs, pb);
 
         if (dho_list.empty()) {
-            return Result::OK;
+            return StatusCode::OK;
         }
 
         bool has_flashlight = pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_FL);
@@ -155,82 +261,133 @@ namespace pppp { namespace osu { namespace difficulty {
             }
         }
 
-        double aim_dv = aim_with_sliders.difficulty_value();
-        double aim_no_sliders_dv = aim_no_sliders.difficulty_value();
-        double speed_dv = speed.difficulty_value();
-        double reading_dv = reading.difficulty_value();
+        create_difficulty_attributes(out, beatmap, pb, aim_with_sliders, aim_no_sliders, speed, reading,
+                                     has_flashlight ? &flashlight : 0);
 
-        double aim_difficult_strain_count = aim_with_sliders.count_top_weighted_strains(aim_dv);
-        double speed_difficult_strain_count = speed.count_top_weighted_object_difficulties(speed_dv);
-        double reading_difficult_note_count = reading.count_top_weighted_object_difficulties(reading_dv);
+        return StatusCode::OK;
+    }
 
-        double speed_note_count = speed.relevant_object_count();
-
-        double aim_no_sliders_top_weighted_slider_count =
-            aim_no_sliders.count_top_weighted_sliders(aim_no_sliders_dv);
-        double aim_no_sliders_difficult_strain_count =
-            aim_no_sliders.count_top_weighted_strains(aim_no_sliders_dv);
-        double aim_top_weighted_slider_factor =
-            aim_no_sliders_top_weighted_slider_count /
-            std::max(1.0, aim_no_sliders_difficult_strain_count - aim_no_sliders_top_weighted_slider_count);
-        double speed_top_weighted_slider_count = speed.count_top_weighted_sliders(speed_dv);
-        double speed_top_weighted_slider_factor =
-            speed_top_weighted_slider_count /
-            std::max(1.0, speed_difficult_strain_count - speed_top_weighted_slider_count);
-        double difficult_sliders = aim_with_sliders.get_difficult_sliders();
-
-        double aim_rating = calculate_aim_difficulty_rating(aim_dv);
-        double aim_no_sliders_rating = calculate_aim_difficulty_rating(aim_no_sliders_dv);
-
-        double slider_factor = aim_dv > 0 ? aim_no_sliders_rating / aim_rating : 1.0;
-
-        double speed_rating = calculate_difficulty_rating(speed_dv);
-        double reading_rating = calculate_difficulty_rating(reading_dv);
-
-        double flashlight_rating = 0.0;
-        double flashlight_dv = 0.0;
-        if (has_flashlight) {
-            flashlight_dv = flashlight.difficulty_value();
-            flashlight_rating = calculate_difficulty_rating(flashlight_dv);
+    Status calculate_timed_difficulty(std::vector<double>& times,
+                                      std::vector<OsuDifficultyAttributes>& attributes,
+                                      const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                                      size_t mod_count) {
+        times.clear();
+        attributes.clear();
+        if (!mods && mod_count) {
+            return StatusCode::INVALID_ARGUMENT;
         }
 
-        double base_aim_perf = difficulty_to_performance(aim_rating);
-        double base_speed_perf = difficulty_to_performance(speed_rating);
-        double base_reading_perf = difficulty_to_performance(reading_rating);
-        double base_flashlight_perf = flashlight_difficulty_to_performance(flashlight_rating);
-        double base_cognition_perf = sum_cognition_difficulty(base_reading_perf, base_flashlight_perf);
+        OsuBeatmap pb;
+        Status rc = build(pb, beatmap, mods, mod_count);
+        if (!rc.ok()) {
+            return rc;
+        }
 
-        double base_performance = utils::norm(1.1, base_aim_perf, base_speed_perf, base_cognition_perf);
-        double star_rating = calculate_star_rating(base_performance);
+        if (pb.objects.empty()) {
+            return StatusCode::OK;
+        }
 
-        int hit_circle_count = 0, slider_count = 0, large_tick_count = 0, spinner_count = 0;
-        count_objects(pb, &hit_circle_count, &slider_count, &large_tick_count, &spinner_count);
+        bool has_flashlight = pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_FL);
 
-        out.star_rating = star_rating;
-        out.aim_difficulty = aim_rating;
-        out.speed_difficulty = speed_rating;
-        out.reading_difficulty = reading_rating;
-        out.flashlight_difficulty = flashlight_rating;
-        out.slider_factor = slider_factor;
-        out.aim_difficult_strain_count = aim_difficult_strain_count;
-        out.speed_difficult_strain_count = speed_difficult_strain_count;
-        out.reading_difficult_note_count = reading_difficult_note_count;
-        out.aim_difficult_slider_count = difficult_sliders;
-        out.aim_top_weighted_slider_factor = aim_top_weighted_slider_factor;
-        out.speed_top_weighted_slider_factor = speed_top_weighted_slider_factor;
-        out.speed_note_count = speed_note_count;
-        out.hit_circle_count = hit_circle_count;
-        out.slider_count = slider_count;
-        out.large_tick_count = large_tick_count;
-        out.spinner_count = spinner_count;
+        skills::Aim aim_with_sliders(mods, mod_count, true);
+        skills::Aim aim_no_sliders(mods, mod_count, false);
+        skills::Speed speed(mods, mod_count);
+        skills::Reading reading(mods, mod_count);
+        skills::Flashlight flashlight(mods, mod_count, static_cast<int>(pb.objects.size()));
 
-        out.max_combo = max_combo(pb);
+        OsuBeatmap progressive = pb;
+        progressive.objects.clear();
 
-        out.nested_score_per_object =
-            calculate_nested_score_per_object(pb, static_cast<int>(pb.objects.size()));
-        out.legacy_score_base_multiplier = peppy_stars(beatmap);
-        out.maximum_legacy_combo_score = simulate(beatmap, pb).combo_score;
+        std::vector<preprocessing::OsuDifficultyHitObject> dho_list;
+        std::vector<preprocessing::DifficultyHitObject*> dho_ptrs;
+        preprocessing::create_hit_objects(dho_list, dho_ptrs, pb);
 
-        return Result::OK;
+        size_t current = 0;
+
+        for (size_t i = 0; i < pb.objects.size(); i++) {
+            progressive.objects.push_back(pb.objects[i]);
+
+            while (current < dho_list.size() && pb.objects[current + 1].end_time <= pb.objects[i].end_time) {
+                aim_with_sliders.process(dho_list[current]);
+                aim_no_sliders.process(dho_list[current]);
+                speed.process(dho_list[current]);
+                reading.process(dho_list[current]);
+                if (has_flashlight) {
+                    flashlight.process(dho_list[current]);
+                }
+
+                current++;
+            }
+
+            OsuDifficultyAttributes step;
+            create_difficulty_attributes(step, beatmap, progressive, aim_with_sliders, aim_no_sliders, speed,
+                                         reading, has_flashlight ? &flashlight : 0);
+            times.push_back(pb.objects[i].end_time);
+            attributes.push_back(step);
+        }
+
+        return StatusCode::OK;
+    }
+
+    Status calculate_strains(OsuStrains& out, const pppp::beatmaps::Beatmap& beatmap,
+                             const pppp::mods::Mod* mods, size_t mod_count) {
+        out = OsuStrains();
+        if (!mods && mod_count) {
+            return StatusCode::INVALID_ARGUMENT;
+        }
+
+        OsuBeatmap pb;
+        Status rc = build(pb, beatmap, mods, mod_count);
+        if (!rc.ok()) {
+            return rc;
+        }
+
+        out.section_length = STRAIN_SECTION_LENGTH * pb.clock_rate;
+
+        if (pb.objects.size() < 2) {
+            return StatusCode::OK;
+        }
+
+        std::vector<preprocessing::OsuDifficultyHitObject> dho_list;
+        std::vector<preprocessing::DifficultyHitObject*> dho_ptrs;
+        preprocessing::create_hit_objects(dho_list, dho_ptrs, pb);
+
+        if (dho_list.empty()) {
+            return StatusCode::OK;
+        }
+
+        bool has_flashlight = pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_FL);
+
+        skills::Aim aim_with_sliders(mods, mod_count, true);
+        skills::Aim aim_no_sliders(mods, mod_count, false);
+        skills::Speed speed(mods, mod_count);
+        skills::Reading reading(mods, mod_count);
+        skills::Flashlight flashlight(mods, mod_count, static_cast<int>(pb.objects.size()));
+
+        for (size_t i = 0; i < dho_list.size(); i++) {
+            aim_with_sliders.process(dho_list[i]);
+            aim_no_sliders.process(dho_list[i]);
+            speed.process(dho_list[i]);
+            reading.process(dho_list[i]);
+            if (has_flashlight) {
+                flashlight.process(dho_list[i]);
+            }
+        }
+
+        double start_time =
+            std::ceil(dho_list[0].start_time / STRAIN_SECTION_LENGTH) * STRAIN_SECTION_LENGTH -
+            STRAIN_SECTION_LENGTH;
+        out.start_time = start_time * pb.clock_rate;
+
+        build_strain_series(out.aim, aim_with_sliders.get_object_difficulties(), dho_list, start_time);
+        build_strain_series(out.aim_no_sliders, aim_no_sliders.get_object_difficulties(), dho_list,
+                            start_time);
+        build_strain_series(out.speed, speed.get_object_difficulties(), dho_list, start_time);
+        build_strain_series(out.reading, reading.get_object_difficulties(), dho_list, start_time);
+        if (has_flashlight) {
+            build_strain_series(out.flashlight, flashlight.get_object_difficulties(), dho_list, start_time);
+        }
+
+        return StatusCode::OK;
     }
 }}} // namespace pppp::osu::difficulty

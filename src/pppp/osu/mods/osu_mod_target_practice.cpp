@@ -200,9 +200,9 @@ namespace pppp { namespace osu { namespace mods {
         }
     } // namespace
 
-    Result::Value apply_target_practice(OsuBeatmap& pb, const pppp::mods::Mod& mod) {
+    Status apply_target_practice(OsuBeatmap& pb, const pppp::mods::Mod& mod) {
         if (pb.objects.empty()) {
-            return Result::OK;
+            return StatusCode::OK;
         }
         utils::DotNetRandom rng(mod.target.seed.value());
 
@@ -277,6 +277,6 @@ namespace pppp { namespace osu { namespace mods {
 
         pb.objects.swap(objs);
         pb.sliders.clear();
-        return Result::OK;
+        return StatusCode::OK;
     }
 }}} // namespace pppp::osu::mods

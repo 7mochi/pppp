@@ -102,8 +102,8 @@ namespace pppp { namespace osu {
         }
     } // namespace
 
-    Result::Value convert(OsuBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap,
-                          const pppp::beatmaps::ObjectConverted<object::OsuHitObject>& object_converted) {
+    Status convert(OsuBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap,
+                   const pppp::beatmaps::ObjectConverted<object::OsuHitObject>& object_converted) {
         pb = OsuBeatmap();
         pb.source = &beatmap;
         pb.format_version = beatmap.format_version;
@@ -182,7 +182,7 @@ namespace pppp { namespace osu {
             pb.breaks[i].start_time = beatmap.breaks[i].start_time;
             pb.breaks[i].end_time = std::max(beatmap.breaks[i].start_time, beatmap.breaks[i].end_time);
         }
-        return Result::OK;
+        return StatusCode::OK;
     }
 
     void apply_defaults(OsuBeatmap& pb) {
@@ -195,14 +195,14 @@ namespace pppp { namespace osu {
         }
     }
 
-    Result::Value reflect(OsuBeatmap& pb, int axes) {
+    Status reflect(OsuBeatmap& pb, int axes) {
         if (axes == pppp::mods::MOD_REFLECTION_NONE) {
-            return Result::OK;
+            return StatusCode::OK;
         }
         bool h = (axes & pppp::mods::MOD_REFLECTION_HORIZONTAL) != 0;
         bool v = (axes & pppp::mods::MOD_REFLECTION_VERTICAL) != 0;
         if (!pb.sliders.empty() && !can_recompute_sliders(pb)) {
-            return Result::NO_SLIDER_PATH_BACKEND;
+            return StatusCode::NO_SLIDER_PATH_BACKEND;
         }
         for (size_t i = 0; i < pb.objects.size(); i++) {
             object::OsuHitObject& o = pb.objects[i];
@@ -231,15 +231,15 @@ namespace pppp { namespace osu {
                 }
             }
 
-            Result::Value rc = slider_recompute(pb, s);
-            if (rc != Result::OK) {
+            Status rc = slider_recompute(pb, s);
+            if (!rc.ok()) {
                 return rc;
             }
         }
-        return Result::OK;
+        return StatusCode::OK;
     }
 
-    Result::Value apply_beatmap_mods(OsuBeatmap& pb, const pppp::mods::Mod* mods, size_t mod_count) {
+    Status apply_beatmap_mods(OsuBeatmap& pb, const pppp::mods::Mod* mods, size_t mod_count) {
         for (size_t m = 0; m < mod_count; m++) {
             switch (mods[m].id) {
             case pppp::mods::MOD_HD:
@@ -265,33 +265,33 @@ namespace pppp { namespace osu {
                 break;
             }
             case pppp::mods::MOD_RD: {
-                Result::Value rc = mods::apply_random(pb, mods[m]);
-                if (rc != Result::OK) {
+                Status rc = mods::apply_random(pb, mods[m]);
+                if (!rc.ok()) {
                     return rc;
                 }
             } break;
             case pppp::mods::MOD_TP: {
-                Result::Value rc = mods::apply_target_practice(pb, mods[m]);
-                if (rc != Result::OK) {
+                Status rc = mods::apply_target_practice(pb, mods[m]);
+                if (!rc.ok()) {
                     return rc;
                 }
             } break;
             default: break;
             }
         }
-        return Result::OK;
+        return StatusCode::OK;
     }
 
     bool can_recompute_sliders(const OsuBeatmap& pb) {
         return pb.source != 0 && pb.source->slider_path.recompute != 0;
     }
 
-    Result::Value slider_recompute(OsuBeatmap& pb, size_t slider_index) {
+    Status slider_recompute(OsuBeatmap& pb, size_t slider_index) {
         if (slider_index >= pb.sliders.size()) {
-            return Result::INVALID_ARGUMENT;
+            return StatusCode::INVALID_ARGUMENT;
         }
         if (!can_recompute_sliders(pb)) {
-            return Result::NO_SLIDER_PATH_BACKEND;
+            return StatusCode::NO_SLIDER_PATH_BACKEND;
         }
         object::PlayableSlider& sl = pb.sliders[slider_index];
         const pppp::beatmaps::SliderPathOps& backend = pb.source->slider_path;
@@ -299,13 +299,13 @@ namespace pppp { namespace osu {
                                    sl.control_points.empty() ? 0 : &sl.control_points[0],
                                    sl.control_points.size(), &sl.path, &sl.cumulative_lengths);
         if (rc != 0) {
-            return Result::SLIDER_PATH;
+            return StatusCode::SLIDER_PATH;
         }
 
         for (size_t e = 0; e < sl.events.size(); e++) {
             sl.events[e].position = slider_position_at(sl, sl.events[e].path_progress);
         }
-        return Result::OK;
+        return StatusCode::OK;
     }
 
 }} // namespace pppp::osu

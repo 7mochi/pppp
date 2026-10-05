@@ -136,17 +136,9 @@ namespace {
         f_sliders,
         f_timing_points,
         f_breaks,
-        f_statistics,
-        f_maximum_statistics,
         f_max_combo,
         f_accuracy,
-        f_legacy_total_score,
-        f_ruleset,
         f_star_rating,
-        f_osu,
-        f_taiko,
-        f_fruits,
-        f_mania,
         f_total,
         f_aim_difficulty,
         f_speed_difficulty,
@@ -185,6 +177,15 @@ namespace {
         f_speed_estimated_slider_breaks,
         f_speed_deviation,
         f_estimated_unstable_rate,
+        f_attributes,
+        f_section_length,
+        f_aim_no_sliders,
+        f_colour,
+        f_rhythm,
+        f_stamina,
+        f_single_colour_stamina,
+        f_movement,
+        f_strain,
         field_count
     };
 
@@ -230,17 +231,9 @@ namespace {
                                  "sliders",
                                  "timing_points",
                                  "breaks",
-                                 "statistics",
-                                 "maximum_statistics",
                                  "max_combo",
                                  "accuracy",
-                                 "legacy_total_score",
-                                 "ruleset",
                                  "star_rating",
-                                 "osu",
-                                 "taiko",
-                                 "fruits",
-                                 "mania",
                                  "total",
                                  "aim_difficulty",
                                  "speed_difficulty",
@@ -278,7 +271,16 @@ namespace {
                                  "aim_estimated_slider_breaks",
                                  "speed_estimated_slider_breaks",
                                  "speed_deviation",
-                                 "estimated_unstable_rate"};
+                                 "estimated_unstable_rate",
+                                 "attributes",
+                                 "section_length",
+                                 "aim_no_sliders",
+                                 "colour",
+                                 "rhythm",
+                                 "stamina",
+                                 "single_colour_stamina",
+                                 "movement",
+                                 "strain"};
 
     PPPP_STATIC_ASSERT(field_names_match_field_count,
                        sizeof(field_names) / sizeof(field_names[0]) == field_count);
@@ -292,17 +294,19 @@ namespace {
         t_timing_point,
         t_break_period,
         t_slider_event,
-        t_score_info,
         t_osu_difficulty_attributes,
         t_taiko_difficulty_attributes,
         t_catch_difficulty_attributes,
         t_mania_difficulty_attributes,
-        t_difficulty_attributes,
         t_osu_performance_attributes,
         t_taiko_performance_attributes,
         t_catch_performance_attributes,
         t_mania_performance_attributes,
-        t_performance_attributes,
+        t_timed_difficulty_attributes,
+        t_osu_strains,
+        t_taiko_strains,
+        t_catch_strains,
+        t_mania_strains,
         type_count
     };
 
@@ -313,17 +317,19 @@ namespace {
                                 "TimingPoint",
                                 "BreakPeriod",
                                 "SliderEvent",
-                                "ScoreInfo",
                                 "OsuDifficultyAttributes",
                                 "TaikoDifficultyAttributes",
                                 "CatchDifficultyAttributes",
                                 "ManiaDifficultyAttributes",
-                                "DifficultyAttributes",
                                 "OsuPerformanceAttributes",
                                 "TaikoPerformanceAttributes",
                                 "CatchPerformanceAttributes",
                                 "ManiaPerformanceAttributes",
-                                "PerformanceAttributes"};
+                                "TimedDifficultyAttributes",
+                                "OsuStrains",
+                                "TaikoStrains",
+                                "CatchStrains",
+                                "ManiaStrains"};
 
     PPPP_STATIC_ASSERT(type_names_match_type_count, sizeof(type_names) / sizeof(type_names[0]) == type_count);
 
@@ -334,27 +340,32 @@ namespace {
                                      "pppp._model.TimingPoint",
                                      "pppp._model.BreakPeriod",
                                      "pppp._model.SliderEvent",
-                                     "pppp._model.ScoreInfo",
                                      "pppp._model.OsuDifficultyAttributes",
                                      "pppp._model.TaikoDifficultyAttributes",
                                      "pppp._model.CatchDifficultyAttributes",
                                      "pppp._model.ManiaDifficultyAttributes",
-                                     "pppp._model.DifficultyAttributes",
                                      "pppp._model.OsuPerformanceAttributes",
                                      "pppp._model.TaikoPerformanceAttributes",
                                      "pppp._model.CatchPerformanceAttributes",
                                      "pppp._model.ManiaPerformanceAttributes",
-                                     "pppp._model.PerformanceAttributes"};
+                                     "pppp._model.TimedDifficultyAttributes",
+                                     "pppp._model.OsuStrains",
+                                     "pppp._model.TaikoStrains",
+                                     "pppp._model.CatchStrains",
+                                     "pppp._model.ManiaStrains"};
 
     struct State {
         PyObject* types[type_count];
         Py_ssize_t slots[type_count][field_count];
         Py_ssize_t sizes[type_count];
         PyObject* beatmap_type;
+        PyObject* error;
+        PyObject* mods_error;
+        PyObject* parse_error;
     };
 
     struct BeatmapObject {
-        PyObject_HEAD pppp::beatmaps::Beatmap* map;
+        PyObject_HEAD pppp::Beatmap* map;
         State* state;
         PyObject* difficulty;
         PyObject* hit_objects;
@@ -515,14 +526,16 @@ namespace {
         }
 
         PyObject* difficulty_attributes(const pppp::DifficultyAttributes& value) const {
-            FieldValue values[] = {{f_ruleset, py_integer(static_cast<int>(value.ruleset))},
-                                   {f_star_rating, py_number(value.star_rating())},
-                                   {f_max_combo, py_integer(value.max_combo())},
-                                   {f_osu, osu_difficulty_attributes(value.osu)},
-                                   {f_taiko, taiko_difficulty_attributes(value.taiko)},
-                                   {f_fruits, catch_difficulty_attributes(value.fruits)},
-                                   {f_mania, mania_difficulty_attributes(value.mania)}};
-            return build(t_difficulty_attributes, values, 7);
+            if (value.taiko()) {
+                return taiko_difficulty_attributes(*value.taiko());
+            }
+            if (value.fruits()) {
+                return catch_difficulty_attributes(*value.fruits());
+            }
+            if (value.mania()) {
+                return mania_difficulty_attributes(*value.mania());
+            }
+            return osu_difficulty_attributes(*value.osu());
         }
 
         PyObject*
@@ -567,14 +580,61 @@ namespace {
             return build(t_mania_performance_attributes, values, 2);
         }
 
+        PyObject* timed_difficulty_attributes(const pppp::TimedDifficultyAttributes& value) const {
+            FieldValue values[] = {{f_time, py_number(value.time)},
+                                   {f_attributes, difficulty_attributes(value.attributes)}};
+            return build(t_timed_difficulty_attributes, values, 2);
+        }
+
+        PyObject* timed_difficulty(const std::vector<pppp::TimedDifficultyAttributes>& values) const {
+            return list_of(values, &Builder::timed_difficulty_attributes);
+        }
+
+        PyObject* strains(const pppp::Strains& value) const {
+            if (const pppp::TaikoStrains* taiko = value.taiko()) {
+                FieldValue values[] = {{f_start_time, py_number(taiko->start_time)},
+                                       {f_section_length, py_number(taiko->section_length)},
+                                       {f_colour, numbers(taiko->colour)},
+                                       {f_reading, numbers(taiko->reading)},
+                                       {f_rhythm, numbers(taiko->rhythm)},
+                                       {f_stamina, numbers(taiko->stamina)},
+                                       {f_single_colour_stamina, numbers(taiko->single_colour_stamina)}};
+                return build(t_taiko_strains, values, 7);
+            }
+            if (const pppp::CatchStrains* fruits = value.fruits()) {
+                FieldValue values[] = {{f_start_time, py_number(fruits->start_time)},
+                                       {f_section_length, py_number(fruits->section_length)},
+                                       {f_movement, numbers(fruits->movement)}};
+                return build(t_catch_strains, values, 3);
+            }
+            if (const pppp::ManiaStrains* mania = value.mania()) {
+                FieldValue values[] = {{f_start_time, py_number(mania->start_time)},
+                                       {f_section_length, py_number(mania->section_length)},
+                                       {f_strain, numbers(mania->strain)}};
+                return build(t_mania_strains, values, 3);
+            }
+            const pppp::OsuStrains& osu = *value.osu();
+            FieldValue values[] = {{f_start_time, py_number(osu.start_time)},
+                                   {f_section_length, py_number(osu.section_length)},
+                                   {f_aim, numbers(osu.aim)},
+                                   {f_aim_no_sliders, numbers(osu.aim_no_sliders)},
+                                   {f_speed, numbers(osu.speed)},
+                                   {f_reading, numbers(osu.reading)},
+                                   {f_flashlight, numbers(osu.flashlight)}};
+            return build(t_osu_strains, values, 7);
+        }
+
         PyObject* performance_attributes(const pppp::PerformanceAttributes& value) const {
-            FieldValue values[] = {{f_ruleset, py_integer(static_cast<int>(value.ruleset))},
-                                   {f_total, py_number(value.total())},
-                                   {f_osu, osu_performance_attributes(value.osu)},
-                                   {f_taiko, taiko_performance_attributes(value.taiko)},
-                                   {f_fruits, catch_performance_attributes(value.fruits)},
-                                   {f_mania, mania_performance_attributes(value.mania)}};
-            return build(t_performance_attributes, values, 6);
+            if (value.taiko()) {
+                return taiko_performance_attributes(*value.taiko());
+            }
+            if (value.fruits()) {
+                return catch_performance_attributes(*value.fruits());
+            }
+            if (value.mania()) {
+                return mania_performance_attributes(*value.mania());
+            }
+            return osu_performance_attributes(*value.osu());
         }
 
         template <class T>
@@ -950,43 +1010,35 @@ namespace {
                                     {"breaks", beatmap_get_breaks, NULL, NULL, NULL},
                                     {NULL, NULL, NULL, NULL, NULL}};
 
-    PyObject* from_file(PyObject* module, PyObject* argument) {
-        State* state = static_cast<State*>(PyModule_GetState(module));
-        PyRef path(PyOS_FSPath(argument));
-        if (!path.get()) {
+    PyObject* beatmap_from_bytes(PyObject* type, PyObject* argument) {
+        State* state = static_cast<State*>(PyType_GetModuleState(reinterpret_cast<PyTypeObject*>(type)));
+        if (!state) {
             return NULL;
         }
-        if (PyUnicode_Check(path.get())) {
-            path.reset(PyUnicode_EncodeFSDefault(path.get()));
-            if (!path.get()) {
-                return NULL;
-            }
+        PyRef data(PyObject_Bytes(argument));
+        if (!data.get()) {
+            return NULL;
         }
         char* bytes = NULL;
         Py_ssize_t size = 0;
-        if (PyBytes_AsStringAndSize(path.get(), &bytes, &size) < 0) {
-            return NULL;
-        }
-        if (std::memchr(bytes, 0, static_cast<size_t>(size))) {
-            PyErr_SetString(PyExc_ValueError, "embedded null byte");
+        if (PyBytes_AsStringAndSize(data.get(), &bytes, &size) < 0) {
             return NULL;
         }
 
-        pppp::beatmaps::Beatmap* map = new (std::nothrow) pppp::beatmaps::Beatmap;
+        pppp::Beatmap* map = new (std::nothrow) pppp::Beatmap;
         if (!map) {
             return PyErr_NoMemory();
         }
-        pppp::Result::Value status;
-        // Both native entry points are noexcept, including allocation and I/O failures.
+        pppp::Status status;
         PyThreadState* thread = PyEval_SaveThread();
-        status = pppp::beatmaps::from_file(*map, bytes);
+        status = map->load_buffer(bytes, static_cast<size_t>(size));
         PyEval_RestoreThread(thread);
-        if (status != pppp::Result::OK) {
+        if (!status.ok()) {
             delete map;
-            if (status == pppp::Result::ALLOCATION) {
+            if (status.code() == pppp::StatusCode::ALLOCATION) {
                 return PyErr_NoMemory();
             }
-            PyErr_Format(PyExc_ValueError, "cannot parse the beatmap (result %d)", static_cast<int>(status));
+            PyErr_SetString(state->parse_error, "cannot parse the beatmap");
             return NULL;
         }
 
@@ -1001,12 +1053,33 @@ namespace {
         return object;
     }
 
-    const int MAX_MODS = 64;
+    PyMethodDef beatmap_methods[] = {
+        {"from_bytes", beatmap_from_bytes, METH_CLASS | METH_O,
+         "Parse a `Beatmap` by providing the content of a `.osu` file as a slice of bytes."},
+        {NULL, NULL, 0, NULL}};
 
-    int read_mods(PyObject* object, pppp::mods::Mod* mods, size_t* count) {
-        *count = 0;
+    int read_mods(State* state, PyObject* object, pppp::Mods& mods) {
+        mods.clear();
         if (object == Py_None) {
             return 0;
+        }
+        if (PyLong_Check(object) && !PyBool_Check(object)) {
+            const unsigned long bits = PyLong_AsUnsignedLong(object);
+            if (bits == static_cast<unsigned long>(-1) && PyErr_Occurred()) {
+                PyErr_Clear();
+                PyErr_SetString(state->mods_error, "invalid mod specification");
+                return -1;
+            }
+            if (bits > 0xffffffffUL) {
+                PyErr_SetString(state->mods_error, "invalid mod specification");
+                return -1;
+            }
+            mods = pppp::Mods::from_legacy(static_cast<unsigned>(bits));
+            return 0;
+        }
+        if (!PyUnicode_Check(object)) {
+            PyErr_SetString(PyExc_TypeError, "mods must be a str or an int");
+            return -1;
         }
         PyRef encoded(PyUnicode_AsUTF8String(object));
         if (!encoded.get()) {
@@ -1017,12 +1090,10 @@ namespace {
         if (PyBytes_AsStringAndSize(encoded.get(), &spec, &size) < 0) {
             return -1;
         }
-        const int parsed = pppp::mods::mod_from_acronyms(mods, MAX_MODS, spec);
-        if (parsed < 0) {
-            PyErr_SetString(PyExc_ValueError, "invalid mod specification");
+        if (!mods.parse(spec).ok()) {
+            PyErr_SetString(state->mods_error, "invalid mod specification");
             return -1;
         }
-        *count = static_cast<size_t>(parsed);
         return 0;
     }
 
@@ -1042,28 +1113,34 @@ namespace {
         return 0;
     }
 
-    PyObject* calculate_difficulty(PyObject* module, PyObject* args) {
+    const BeatmapObject* read_beatmap(State* state, PyObject* object) {
+        if (!PyObject_TypeCheck(object, reinterpret_cast<PyTypeObject*>(state->beatmap_type))) {
+            PyErr_SetString(PyExc_TypeError, "expected a Beatmap");
+            return NULL;
+        }
+        return reinterpret_cast<const BeatmapObject*>(object);
+    }
+
+    const BeatmapObject* read_difficulty(State* state, PyObject* args, const char* format,
+                                         pppp::Difficulty& difficulty) {
         PyObject* beatmap_object;
         PyObject* mods_object;
         PyObject* ruleset_object;
         PyObject* clock_rate_object;
-        if (!PyArg_ParseTuple(args, "OOOO:calculate_difficulty", &beatmap_object, &mods_object,
-                              &ruleset_object, &clock_rate_object)) {
+        if (!PyArg_ParseTuple(args, format, &beatmap_object, &mods_object, &ruleset_object,
+                              &clock_rate_object)) {
             return NULL;
         }
-        State* state = static_cast<State*>(PyModule_GetState(module));
-        if (!PyObject_TypeCheck(beatmap_object, reinterpret_cast<PyTypeObject*>(state->beatmap_type))) {
-            PyErr_SetString(PyExc_TypeError, "expected a Beatmap");
+        const BeatmapObject* beatmap = read_beatmap(state, beatmap_object);
+        if (!beatmap) {
             return NULL;
         }
 
-        pppp::mods::Mod mods[MAX_MODS];
-        size_t mod_count = 0;
-        if (read_mods(mods_object, mods, &mod_count) < 0) {
+        pppp::Mods mods;
+        if (read_mods(state, mods_object, mods) < 0) {
             return NULL;
         }
-        pppp::Difficulty difficulty;
-        difficulty.mods(mod_count ? mods : 0, mod_count);
+        difficulty.mods(mods);
         if (read_ruleset(ruleset_object, difficulty) < 0) {
             return NULL;
         }
@@ -1074,16 +1151,79 @@ namespace {
             }
             difficulty.clock_rate(value);
         }
+        return beatmap;
+    }
 
-        const BeatmapObject* beatmap = reinterpret_cast<const BeatmapObject*>(beatmap_object);
+    PyObject* raise_status(State* state, const pppp::Status& status) {
+        if (status.code() == pppp::StatusCode::ALLOCATION) {
+            return PyErr_NoMemory();
+        }
+        PyErr_SetString(state->error, status.message());
+        return NULL;
+    }
+
+    PyObject* calculate_difficulty(PyObject* module, PyObject* args) {
+        State* state = static_cast<State*>(PyModule_GetState(module));
+        pppp::Difficulty difficulty;
+        const BeatmapObject* beatmap = read_difficulty(state, args, "OOOO:calculate_difficulty", difficulty);
+        if (!beatmap) {
+            return NULL;
+        }
+
         pppp::DifficultyAttributes attributes;
         PyThreadState* thread = PyEval_SaveThread();
-        attributes = difficulty.calculate(*beatmap->map);
+        const pppp::Status status = difficulty.calculate(*beatmap->map, attributes);
         PyEval_RestoreThread(thread);
+        if (!status.ok()) {
+            return raise_status(state, status);
+        }
 
         const PauseGC pause;
         const Builder builder(state);
         return builder.difficulty_attributes(attributes);
+    }
+
+    PyObject* calculate_timed_difficulty(PyObject* module, PyObject* args) {
+        State* state = static_cast<State*>(PyModule_GetState(module));
+        pppp::Difficulty difficulty;
+        const BeatmapObject* beatmap =
+            read_difficulty(state, args, "OOOO:calculate_timed_difficulty", difficulty);
+        if (!beatmap) {
+            return NULL;
+        }
+
+        std::vector<pppp::TimedDifficultyAttributes> timed;
+        PyThreadState* thread = PyEval_SaveThread();
+        const pppp::Status status = difficulty.calculate_timed(*beatmap->map, timed);
+        PyEval_RestoreThread(thread);
+        if (!status.ok()) {
+            return raise_status(state, status);
+        }
+
+        const PauseGC pause;
+        const Builder builder(state);
+        return builder.timed_difficulty(timed);
+    }
+
+    PyObject* calculate_strains(PyObject* module, PyObject* args) {
+        State* state = static_cast<State*>(PyModule_GetState(module));
+        pppp::Difficulty difficulty;
+        const BeatmapObject* beatmap = read_difficulty(state, args, "OOOO:calculate_strains", difficulty);
+        if (!beatmap) {
+            return NULL;
+        }
+
+        pppp::Strains strains;
+        PyThreadState* thread = PyEval_SaveThread();
+        const pppp::Status status = difficulty.strains(*beatmap->map, strains);
+        PyEval_RestoreThread(thread);
+        if (!status.ok()) {
+            return raise_status(state, status);
+        }
+
+        const PauseGC pause;
+        const Builder builder(state);
+        return builder.strains(strains);
     }
 
     int read_optional_long(PyObject* object, long* out, bool* present) {
@@ -1096,228 +1236,155 @@ namespace {
     }
 
     int read_statistics(PyObject* object, int* out) {
-        if (!PyList_Check(object) || PyList_Size(object) != pppp::common::HIT_RESULT_COUNT) {
-            PyErr_Format(PyExc_ValueError, "statistics must be a list of %d counts",
-                         pppp::common::HIT_RESULT_COUNT);
+        if (object == Py_None) {
+            return 0;
+        }
+        PyRef items(PyMapping_Items(object));
+        if (!items.get()) {
             return -1;
         }
-        for (int i = 0; i < pppp::common::HIT_RESULT_COUNT; i++) {
-            const long value = PyLong_AsLong(PyList_GetItem(object, i));
+        const Py_ssize_t count = PyList_Size(items.get());
+        for (Py_ssize_t i = 0; i < count; i++) {
+            PyObject* item = PyList_GetItem(items.get(), i);
+            const long key = PyLong_AsLong(PyTuple_GetItem(item, 0));
+            if (key == -1 && PyErr_Occurred()) {
+                return -1;
+            }
+            if (key < 0 || key >= pppp::common::HIT_RESULT_COUNT) {
+                PyErr_SetString(PyExc_ValueError, "statistics keys must be hit results");
+                return -1;
+            }
+            const long value = PyLong_AsLong(PyTuple_GetItem(item, 1));
             if (value == -1 && PyErr_Occurred()) {
                 return -1;
             }
-            out[i] = static_cast<int>(value);
-        }
-        return 0;
-    }
-
-    int read_score(State* state, PyObject* object, pppp::common::ScoreInfo* score) {
-        PyObject** fields = record_fields(object);
-        const Py_ssize_t* slots = state->slots[t_score_info];
-        if (read_statistics(fields[slots[f_statistics]], score->statistics) < 0 ||
-            read_statistics(fields[slots[f_maximum_statistics]], score->maximum_statistics) < 0) {
-            return -1;
-        }
-        score->max_combo = static_cast<int>(PyLong_AsLong(fields[slots[f_max_combo]]));
-        score->accuracy = PyFloat_AsDouble(fields[slots[f_accuracy]]);
-        if (PyErr_Occurred()) {
-            return -1;
-        }
-        PyObject* legacy = fields[slots[f_legacy_total_score]];
-        if (legacy != Py_None) {
-            const long long value = PyLong_AsLongLong(legacy);
-            if (value == -1 && PyErr_Occurred()) {
-                return -1;
-            }
-            score->legacy_total_score = static_cast<pppp_int64>(value);
+            out[key] = static_cast<int>(value);
         }
         return 0;
     }
 
     struct AttributeSource {
-        AttributeSource()
-            : object(NULL),
-              fields(NULL),
-              slots(NULL) {}
-
-        PyObject* object;
         PyObject** fields;
         const Py_ssize_t* slots;
+
+        double number(int field) const {
+            const double out = PyFloat_AsDouble(fields[slots[field]]);
+            if (PyErr_Occurred()) {
+                PyErr_Clear();
+                return 0.0;
+            }
+            return out;
+        }
+
+        int integer(int field) const {
+            const long out = PyLong_AsLong(fields[slots[field]]);
+            if (PyErr_Occurred()) {
+                PyErr_Clear();
+                return 0;
+            }
+            return static_cast<int>(out);
+        }
     };
 
-    AttributeSource attribute_source(State* state, PyObject* object, int kind) {
-        AttributeSource source;
-        if (object && PyObject_TypeCheck(object, reinterpret_cast<PyTypeObject*>(state->types[kind]))) {
-            source.object = object;
-            source.fields = record_fields(object);
-            source.slots = state->slots[kind];
+    bool is_record(State* state, PyObject* object, int kind, AttributeSource* source) {
+        if (!PyObject_TypeCheck(object, reinterpret_cast<PyTypeObject*>(state->types[kind]))) {
+            return false;
         }
-        return source;
-    }
-
-    PyObject* attribute_value(const AttributeSource& source, const char* key, int field) {
-        if (source.slots) {
-            return Py_NewRef(source.fields[source.slots[field]]);
-        }
-        if (PyDict_Check(source.object)) {
-            PyObject* value = PyDict_GetItemString(source.object, key);
-            Py_XINCREF(value);
-            return value;
-        }
-        PyObject* value = PyObject_GetAttrString(source.object, key);
-        if (!value) {
-            PyErr_Clear();
-        }
-        return value;
-    }
-
-    double attribute_number(const AttributeSource& source, const char* key, int field) {
-        const PyRef value(attribute_value(source, key, field));
-        if (!value.get()) {
-            return 0.0;
-        }
-        const double out = PyFloat_AsDouble(value.get());
-        if (PyErr_Occurred()) {
-            PyErr_Clear();
-            return 0.0;
-        }
-        return out;
-    }
-
-    int attribute_int(const AttributeSource& source, const char* key, int field) {
-        const PyRef value(attribute_value(source, key, field));
-        if (!value.get()) {
-            return 0;
-        }
-        const long out = PyLong_AsLong(value.get());
-        if (PyErr_Occurred()) {
-            PyErr_Clear();
-            return 0;
-        }
-        return static_cast<int>(out);
+        source->fields = record_fields(object);
+        source->slots = state->slots[kind];
+        return true;
     }
 
     int read_attributes(State* state, PyObject* object, pppp::DifficultyAttributes& out) {
-        const AttributeSource source = attribute_source(state, object, t_difficulty_attributes);
-        const PyRef ruleset(attribute_value(source, "ruleset", f_ruleset));
-        const long value = ruleset.get() ? PyLong_AsLong(ruleset.get()) : -1;
-        if (PyErr_Occurred() || value < 0 || value > 3) {
-            PyErr_Clear();
-            PyErr_SetString(PyExc_ValueError, "ruleset must be one of 0, 1, 2, 3");
-            return -1;
+        AttributeSource source;
+        if (is_record(state, object, t_osu_difficulty_attributes, &source)) {
+            pppp::OsuDifficultyAttributes attributes;
+            attributes.star_rating = source.number(f_star_rating);
+            attributes.max_combo = source.integer(f_max_combo);
+            attributes.aim_difficulty = source.number(f_aim_difficulty);
+            attributes.speed_difficulty = source.number(f_speed_difficulty);
+            attributes.reading_difficulty = source.number(f_reading_difficulty);
+            attributes.flashlight_difficulty = source.number(f_flashlight_difficulty);
+            attributes.slider_factor = source.number(f_slider_factor);
+            attributes.aim_difficult_strain_count = source.number(f_aim_difficult_strain_count);
+            attributes.speed_difficult_strain_count = source.number(f_speed_difficult_strain_count);
+            attributes.reading_difficult_note_count = source.number(f_reading_difficult_note_count);
+            attributes.aim_difficult_slider_count = source.number(f_aim_difficult_slider_count);
+            attributes.aim_top_weighted_slider_factor = source.number(f_aim_top_weighted_slider_factor);
+            attributes.speed_top_weighted_slider_factor = source.number(f_speed_top_weighted_slider_factor);
+            attributes.speed_note_count = source.number(f_speed_note_count);
+            attributes.hit_circle_count = source.integer(f_hit_circle_count);
+            attributes.slider_count = source.integer(f_slider_count);
+            attributes.large_tick_count = source.integer(f_large_tick_count);
+            attributes.spinner_count = source.integer(f_spinner_count);
+            attributes.nested_score_per_object = source.number(f_nested_score_per_object);
+            attributes.legacy_score_base_multiplier = source.number(f_legacy_score_base_multiplier);
+            attributes.maximum_legacy_combo_score = source.number(f_maximum_legacy_combo_score);
+            out = attributes;
+            return 0;
         }
-        out.ruleset = static_cast<pppp::Ruleset::Value>(value);
-
-        const PyRef osu_value(
-            out.ruleset == pppp::Ruleset::RULESET_OSU ? attribute_value(source, "osu", f_osu) : 0);
-        const AttributeSource osu(attribute_source(state, osu_value.get(), t_osu_difficulty_attributes));
-        if (osu.object) {
-            out.osu.star_rating = attribute_number(osu, "star_rating", f_star_rating);
-            out.osu.max_combo = attribute_int(osu, "max_combo", f_max_combo);
-            out.osu.aim_difficulty = attribute_number(osu, "aim_difficulty", f_aim_difficulty);
-            out.osu.speed_difficulty = attribute_number(osu, "speed_difficulty", f_speed_difficulty);
-            out.osu.reading_difficulty = attribute_number(osu, "reading_difficulty", f_reading_difficulty);
-            out.osu.flashlight_difficulty =
-                attribute_number(osu, "flashlight_difficulty", f_flashlight_difficulty);
-            out.osu.slider_factor = attribute_number(osu, "slider_factor", f_slider_factor);
-            out.osu.aim_difficult_strain_count =
-                attribute_number(osu, "aim_difficult_strain_count", f_aim_difficult_strain_count);
-            out.osu.speed_difficult_strain_count =
-                attribute_number(osu, "speed_difficult_strain_count", f_speed_difficult_strain_count);
-            out.osu.reading_difficult_note_count =
-                attribute_number(osu, "reading_difficult_note_count", f_reading_difficult_note_count);
-            out.osu.aim_difficult_slider_count =
-                attribute_number(osu, "aim_difficult_slider_count", f_aim_difficult_slider_count);
-            out.osu.aim_top_weighted_slider_factor =
-                attribute_number(osu, "aim_top_weighted_slider_factor", f_aim_top_weighted_slider_factor);
-            out.osu.speed_top_weighted_slider_factor =
-                attribute_number(osu, "speed_top_weighted_slider_factor", f_speed_top_weighted_slider_factor);
-            out.osu.speed_note_count = attribute_number(osu, "speed_note_count", f_speed_note_count);
-            out.osu.hit_circle_count = attribute_int(osu, "hit_circle_count", f_hit_circle_count);
-            out.osu.slider_count = attribute_int(osu, "slider_count", f_slider_count);
-            out.osu.large_tick_count = attribute_int(osu, "large_tick_count", f_large_tick_count);
-            out.osu.spinner_count = attribute_int(osu, "spinner_count", f_spinner_count);
-            out.osu.nested_score_per_object =
-                attribute_number(osu, "nested_score_per_object", f_nested_score_per_object);
-            out.osu.legacy_score_base_multiplier =
-                attribute_number(osu, "legacy_score_base_multiplier", f_legacy_score_base_multiplier);
-            out.osu.maximum_legacy_combo_score =
-                attribute_number(osu, "maximum_legacy_combo_score", f_maximum_legacy_combo_score);
+        if (is_record(state, object, t_taiko_difficulty_attributes, &source)) {
+            pppp::TaikoDifficultyAttributes attributes;
+            attributes.star_rating = source.number(f_star_rating);
+            attributes.max_combo = source.integer(f_max_combo);
+            attributes.mechanical_difficulty = source.number(f_mechanical_difficulty);
+            attributes.rhythm_difficulty = source.number(f_rhythm_difficulty);
+            attributes.reading_difficulty = source.number(f_reading_difficulty);
+            attributes.colour_difficulty = source.number(f_colour_difficulty);
+            attributes.stamina_difficulty = source.number(f_stamina_difficulty);
+            attributes.mono_stamina_factor = source.number(f_mono_stamina_factor);
+            attributes.consistency_factor = source.number(f_consistency_factor);
+            attributes.stamina_top_strains = source.number(f_stamina_top_strains);
+            out = attributes;
+            return 0;
         }
-
-        const PyRef taiko_value(
-            out.ruleset == pppp::Ruleset::RULESET_TAIKO ? attribute_value(source, "taiko", f_taiko) : 0);
-        const AttributeSource taiko(
-            attribute_source(state, taiko_value.get(), t_taiko_difficulty_attributes));
-        if (taiko.object) {
-            out.taiko.star_rating = attribute_number(taiko, "star_rating", f_star_rating);
-            out.taiko.max_combo = attribute_int(taiko, "max_combo", f_max_combo);
-            out.taiko.mechanical_difficulty =
-                attribute_number(taiko, "mechanical_difficulty", f_mechanical_difficulty);
-            out.taiko.rhythm_difficulty = attribute_number(taiko, "rhythm_difficulty", f_rhythm_difficulty);
-            out.taiko.reading_difficulty =
-                attribute_number(taiko, "reading_difficulty", f_reading_difficulty);
-            out.taiko.colour_difficulty = attribute_number(taiko, "colour_difficulty", f_colour_difficulty);
-            out.taiko.stamina_difficulty =
-                attribute_number(taiko, "stamina_difficulty", f_stamina_difficulty);
-            out.taiko.mono_stamina_factor =
-                attribute_number(taiko, "mono_stamina_factor", f_mono_stamina_factor);
-            out.taiko.consistency_factor =
-                attribute_number(taiko, "consistency_factor", f_consistency_factor);
-            out.taiko.stamina_top_strains =
-                attribute_number(taiko, "stamina_top_strains", f_stamina_top_strains);
+        if (is_record(state, object, t_catch_difficulty_attributes, &source)) {
+            pppp::CatchDifficultyAttributes attributes;
+            attributes.star_rating = source.number(f_star_rating);
+            attributes.max_combo = source.integer(f_max_combo);
+            out = attributes;
+            return 0;
         }
-
-        const PyRef fruits_value(
-            out.ruleset == pppp::Ruleset::RULESET_CATCH ? attribute_value(source, "fruits", f_fruits) : 0);
-        const AttributeSource fruits(
-            attribute_source(state, fruits_value.get(), t_catch_difficulty_attributes));
-        if (fruits.object) {
-            out.fruits.star_rating = attribute_number(fruits, "star_rating", f_star_rating);
-            out.fruits.max_combo = attribute_int(fruits, "max_combo", f_max_combo);
+        if (is_record(state, object, t_mania_difficulty_attributes, &source)) {
+            pppp::ManiaDifficultyAttributes attributes;
+            attributes.star_rating = source.number(f_star_rating);
+            attributes.max_combo = source.integer(f_max_combo);
+            out = attributes;
+            return 0;
         }
-
-        const PyRef mania_value(
-            out.ruleset == pppp::Ruleset::RULESET_MANIA ? attribute_value(source, "mania", f_mania) : 0);
-        const AttributeSource mania(
-            attribute_source(state, mania_value.get(), t_mania_difficulty_attributes));
-        if (mania.object) {
-            out.mania.star_rating = attribute_number(mania, "star_rating", f_star_rating);
-            out.mania.max_combo = attribute_int(mania, "max_combo", f_max_combo);
-        }
-
-        return 0;
+        PyErr_SetString(PyExc_TypeError, "expected difficulty attributes");
+        return -1;
     }
 
     PyObject* calculate_performance(PyObject* module, PyObject* args) {
         PyObject* beatmap_object;
         PyObject* mods_object;
-        PyObject* score_object;
-        PyObject* combo_object;
+        PyObject* max_combo_object;
         PyObject* accuracy_object;
         PyObject* misses_object;
+        PyObject* statistics_object;
+        PyObject* legacy_total_score_object;
         PyObject* attributes_object;
-        if (!PyArg_ParseTuple(args, "OOOOOOO:calculate_performance", &beatmap_object, &mods_object,
-                              &score_object, &combo_object, &accuracy_object, &misses_object,
-                              &attributes_object)) {
+        if (!PyArg_ParseTuple(args, "OOOOOOOO:calculate_performance", &beatmap_object, &mods_object,
+                              &max_combo_object, &accuracy_object, &misses_object, &statistics_object,
+                              &legacy_total_score_object, &attributes_object)) {
             return NULL;
         }
         State* state = static_cast<State*>(PyModule_GetState(module));
-        if (!PyObject_TypeCheck(beatmap_object, reinterpret_cast<PyTypeObject*>(state->beatmap_type))) {
-            PyErr_SetString(PyExc_TypeError, "expected a Beatmap");
+        const BeatmapObject* beatmap = read_beatmap(state, beatmap_object);
+        if (!beatmap) {
             return NULL;
         }
 
-        pppp::mods::Mod mods[MAX_MODS];
-        size_t mod_count = 0;
-        if (read_mods(mods_object, mods, &mod_count) < 0) {
+        pppp::Mods mods;
+        if (read_mods(state, mods_object, mods) < 0) {
             return NULL;
         }
-        long combo = 0;
+        long max_combo = 0;
         long misses = 0;
-        bool has_combo = false;
+        bool has_max_combo = false;
         bool has_misses = false;
-        if (read_optional_long(combo_object, &combo, &has_combo) < 0 ||
+        if (read_optional_long(max_combo_object, &max_combo, &has_max_combo) < 0 ||
             read_optional_long(misses_object, &misses, &has_misses) < 0) {
             return NULL;
         }
@@ -1330,19 +1397,18 @@ namespace {
             }
         }
 
-        pppp::common::ScoreInfo score;
-        if (score_object != Py_None) {
-            if (!PyObject_TypeCheck(score_object,
-                                    reinterpret_cast<PyTypeObject*>(state->types[t_score_info]))) {
-                PyErr_SetString(PyExc_TypeError, "expected a ScoreInfo");
+        pppp::ScoreInfo score;
+        if (read_statistics(statistics_object, score.statistics) < 0) {
+            return NULL;
+        }
+        if (legacy_total_score_object != Py_None) {
+            const long long value = PyLong_AsLongLong(legacy_total_score_object);
+            if (value == -1 && PyErr_Occurred()) {
                 return NULL;
             }
-            if (read_score(state, score_object, &score) < 0) {
-                return NULL;
-            }
+            score.legacy_total_score = static_cast<pppp_int64>(value);
         }
 
-        const BeatmapObject* beatmap = reinterpret_cast<const BeatmapObject*>(beatmap_object);
         pppp::Performance performance(*beatmap->map);
         if (attributes_object != Py_None) {
             pppp::DifficultyAttributes provided;
@@ -1351,12 +1417,12 @@ namespace {
             }
             performance.attributes(provided);
         }
-        performance.state(score);
-        if (mod_count) {
-            performance.mods(mods, mod_count);
+        performance.score(score);
+        if (!mods.empty()) {
+            performance.mods(mods);
         }
-        if (has_combo) {
-            performance.combo(static_cast<int>(combo));
+        if (has_max_combo) {
+            performance.combo(static_cast<int>(max_combo));
         }
         if (has_accuracy) {
             performance.accuracy(accuracy);
@@ -1367,8 +1433,11 @@ namespace {
 
         pppp::PerformanceAttributes attributes;
         PyThreadState* thread = PyEval_SaveThread();
-        attributes = performance.calculate();
+        const pppp::Status status = performance.calculate(attributes);
         PyEval_RestoreThread(thread);
+        if (!status.ok()) {
+            return raise_status(state, status);
+        }
 
         const PauseGC pause;
         const Builder builder(state);
@@ -1407,12 +1476,38 @@ namespace {
         return 0;
     }
 
+    PyObject* add_error(PyObject* module, const char* name, const char* attribute, PyObject* base) {
+        PyRef bases(base ? PyTuple_Pack(2, base, PyExc_ValueError) : NULL);
+        if (base && !bases.get()) {
+            return NULL;
+        }
+        PyObject* error = PyErr_NewException(name, base ? bases.get() : NULL, NULL);
+        if (!error || PyModule_AddObjectRef(module, attribute, error) < 0) {
+            Py_XDECREF(error);
+            return NULL;
+        }
+        return error;
+    }
+
+    int add_errors(PyObject* module) {
+        State* state = static_cast<State*>(PyModule_GetState(module));
+        state->error = add_error(module, "pppp.Error", "Error", NULL);
+        if (!state->error) {
+            return -1;
+        }
+        state->mods_error = add_error(module, "pppp.ModsError", "ModsError", state->error);
+        if (!state->mods_error) {
+            return -1;
+        }
+        state->parse_error = add_error(module, "pppp.ParseError", "ParseError", state->error);
+        return state->parse_error ? 0 : -1;
+    }
+
     int add_beatmap_type(PyObject* module) {
-        PyType_Slot beatmap_slots[] = {{Py_tp_dealloc, slot(beatmap_dealloc)},
-                                       {Py_tp_getset, beatmap_getset},
-                                       {Py_tp_traverse, slot(beatmap_traverse)},
-                                       {Py_tp_clear, slot(beatmap_clear)},
-                                       {0, NULL}};
+        PyType_Slot beatmap_slots[] = {
+            {Py_tp_dealloc, slot(beatmap_dealloc)}, {Py_tp_getset, beatmap_getset},
+            {Py_tp_methods, beatmap_methods},       {Py_tp_traverse, slot(beatmap_traverse)},
+            {Py_tp_clear, slot(beatmap_clear)},     {0, NULL}};
         PyType_Spec spec = {"pppp.Beatmap", static_cast<int>(sizeof(BeatmapObject)), 0,
                             Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC, beatmap_slots};
         State* state = static_cast<State*>(PyModule_GetState(module));
@@ -1423,14 +1518,21 @@ namespace {
         return PyModule_AddType(module, reinterpret_cast<PyTypeObject*>(state->beatmap_type));
     }
 
-    PyMethodDef methods[] = {{"_record", make_record, METH_VARARGS, NULL},
-                             {"_restore_record", restore_record, METH_O, NULL},
-                             {"from_file", from_file, METH_O, "Read a beatmap from a file path."},
-                             {"calculate_difficulty", calculate_difficulty, METH_VARARGS,
-                              "Calculate the difficulty attributes of a beatmap."},
-                             {"calculate_performance", calculate_performance, METH_VARARGS,
-                              "Calculate the performance attributes of a play on a beatmap."},
-                             {NULL, NULL, 0, NULL}};
+    PyMethodDef methods[] = {
+        {"_record", make_record, METH_VARARGS, NULL},
+        {"_restore_record", restore_record, METH_O, NULL},
+        {"calculate_difficulty", calculate_difficulty, METH_VARARGS,
+         "Calculate the difficulty attributes of a beatmap."},
+        {"calculate_timed_difficulty", calculate_timed_difficulty, METH_VARARGS,
+         "Calculates the difficulty of the beatmap using a specific mod combination and returns a set of "
+         "TimedDifficultyAttributes representing the difficulty at every relevant time value in the "
+         "beatmap."},
+        {"calculate_strains", calculate_strains, METH_VARARGS,
+         "Perform the difficulty calculation but instead of evaluating the skill strains, return them as "
+         "is."},
+        {"calculate_performance", calculate_performance, METH_VARARGS,
+         "Calculate the performance attributes of a play on a beatmap."},
+        {NULL, NULL, 0, NULL}};
 
     int traverse(PyObject* module, visitproc visit, void* arg) {
         State* state = static_cast<State*>(PyModule_GetState(module));
@@ -1441,6 +1543,9 @@ namespace {
             Py_VISIT(state->types[kind]);
         }
         Py_VISIT(state->beatmap_type);
+        Py_VISIT(state->error);
+        Py_VISIT(state->mods_error);
+        Py_VISIT(state->parse_error);
         return 0;
     }
 
@@ -1453,6 +1558,9 @@ namespace {
             Py_CLEAR(state->types[kind]);
         }
         Py_CLEAR(state->beatmap_type);
+        Py_CLEAR(state->error);
+        Py_CLEAR(state->mods_error);
+        Py_CLEAR(state->parse_error);
         return 0;
     }
 
@@ -1460,7 +1568,7 @@ namespace {
     void free_module(void* module) { clear(static_cast<PyObject*>(module)); }
 
     int exec_module(PyObject* module) {
-        if (add_version(module) < 0) {
+        if (add_version(module) < 0 || add_errors(module) < 0) {
             return -1;
         }
         if (add_beatmap_type(module) < 0) {

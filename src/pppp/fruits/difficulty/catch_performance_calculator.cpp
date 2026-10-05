@@ -43,13 +43,9 @@ namespace pppp { namespace fruits { namespace difficulty {
         };
     } // namespace
 
-    Result::Value calculate_performance(CatchPerformanceAttributes& out, const pppp::common::ScoreInfo& score,
-                                        const CatchDifficultyAttributes& attributes,
-                                        const pppp::beatmaps::Beatmap& beatmap) {
-        if (!score.mods && score.mod_count) {
-            return Result::INVALID_ARGUMENT;
-        }
-
+    Status calculate_performance(CatchPerformanceAttributes& out, const pppp::common::ScoreInfo& score,
+                                 const CatchDifficultyAttributes& attributes,
+                                 const pppp::beatmaps::Beatmap& beatmap) {
         out = CatchPerformanceAttributes();
 
         CatchPerformanceCalculator c(score, attributes);
@@ -84,8 +80,8 @@ namespace pppp { namespace fruits { namespace difficulty {
                 std::min(utils::pow(score_max_combo, 0.35) / utils::pow(attributes.max_combo, 0.35), 1.0);
         }
 
-        double clock_rate = pppp::mods::mod_calculate_rate(score.mods, score.mod_count);
-        ModdedDifficulty difficulty = modded_difficulty(beatmap, score.mods, score.mod_count);
+        double clock_rate = pppp::mods::mod_calculate_rate(score.mods.data(), score.mods.size());
+        ModdedDifficulty difficulty = modded_difficulty(beatmap, score.mods.data(), score.mods.size());
 
         // this is the same as osu!, so there's potential to share the implementation... maybe
         double preempt =
@@ -105,7 +101,7 @@ namespace pppp { namespace fruits { namespace difficulty {
 
         value *= approach_rate_factor;
 
-        if (pppp::mods::mod_has(score.mods, score.mod_count, pppp::mods::MOD_HD)) {
+        if (pppp::mods::mod_has(score.mods.data(), score.mods.size(), pppp::mods::MOD_HD)) {
             // Hiddens gives almost nothing on max approach rate, and more the lower it is
             if (approach_rate <= 10.0) {
                 value *= 1.05 + 0.075 * (10.0 - approach_rate); // 7.5% for each AR below 10
@@ -114,18 +110,18 @@ namespace pppp { namespace fruits { namespace difficulty {
             }
         }
 
-        if (pppp::mods::mod_has(score.mods, score.mod_count, pppp::mods::MOD_FL)) {
+        if (pppp::mods::mod_has(score.mods.data(), score.mods.size(), pppp::mods::MOD_FL)) {
             value *= 1.35 * length_bonus;
         }
 
         value *= utils::pow(c.accuracy(), 5.5);
 
-        if (pppp::mods::mod_has(score.mods, score.mod_count, pppp::mods::MOD_NF)) {
+        if (pppp::mods::mod_has(score.mods.data(), score.mods.size(), pppp::mods::MOD_NF)) {
             value *= std::max(0.90, 1.0 - 0.02 * c.num_miss);
         }
 
         out.total = value;
 
-        return Result::OK;
+        return StatusCode::OK;
     }
 }}} // namespace pppp::fruits::difficulty

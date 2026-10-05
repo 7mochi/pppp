@@ -53,32 +53,19 @@ namespace Pppp.Tests {
 
         private delegate void Throwing();
 
-        private static void CheckThrows(Throwing action, string message, string what) {
+        private static void CheckThrows<T>(Throwing action, string what) where T : Exception {
             checks++;
             try {
                 action();
+            } catch (T) {
+                return;
             } catch (Exception error) {
-                if (error.Message == message) {
-                    return;
-                }
                 failures++;
-                Console.WriteLine("FAIL: " + what + " (message was " + error.Message + ")");
+                Console.WriteLine("FAIL: " + what + " (threw " + error.GetType().Name + ")");
                 return;
             }
             failures++;
             Console.WriteLine("FAIL: " + what + " (nothing was thrown)");
-        }
-
-        // The hit-result indices are the library's: `GREAT = 5`, `SMALL_TICK_HIT = 8`,
-        // `LARGE_TICK_HIT = 10` and `SLIDER_TAIL_HIT = 16`.
-        private static ScoreInfo Score(int[] indices, int[] counts, int combo) {
-            ScoreInfo score = new ScoreInfo();
-            for (int i = 0; i < indices.Length; i++) {
-                score.statistics[indices[i]] = counts[i];
-            }
-            score.max_combo = combo;
-            score.accuracy = 1.0;
-            return score;
         }
 
         private static void TheVersionIsAVersion() {
@@ -88,43 +75,56 @@ namespace Pppp.Tests {
 
         private static void FromFileReadsTheModel() {
             using (Beatmap beatmap = Beatmap.FromFile(MapPath("osu/diffcalc-test.osu"))) {
-                Check(beatmap.format_version == 14, "format_version");
-                Check(beatmap.mode == 0, "mode");
-                CheckApprox(beatmap.stack_leniency, 0.3, "stack_leniency");
-                Check(beatmap.difficulty.drain_rate == 5.0, "drain_rate");
-                Check(beatmap.difficulty.circle_size == 4.0, "circle_size");
-                Check(beatmap.difficulty.overall_difficulty == 7.0, "overall_difficulty");
-                CheckApprox(beatmap.difficulty.approach_rate, 8.3, "approach_rate");
-                Check(beatmap.difficulty.slider_multiplier == 1.6, "slider_multiplier");
-                Check(beatmap.difficulty.slider_tick_rate == 1.0, "slider_tick_rate");
-                Check(beatmap.hit_objects.Length == 124, "hit_objects");
-                Check(beatmap.sliders.Length == 33, "sliders");
-                Check(beatmap.timing_points.Length == 3, "timing_points");
-                Check(beatmap.breaks.Length == 0, "breaks");
+                Check(beatmap.FormatVersion == 14, "FormatVersion");
+                Check(beatmap.Mode == 0, "Mode");
+                CheckApprox(beatmap.StackLeniency, 0.3, "StackLeniency");
+                Check(beatmap.Difficulty.DrainRate == 5.0, "DrainRate");
+                Check(beatmap.Difficulty.CircleSize == 4.0, "CircleSize");
+                Check(beatmap.Difficulty.OverallDifficulty == 7.0, "OverallDifficulty");
+                CheckApprox(beatmap.Difficulty.ApproachRate, 8.3, "ApproachRate");
+                Check(beatmap.Difficulty.SliderMultiplier == 1.6, "SliderMultiplier");
+                Check(beatmap.Difficulty.SliderTickRate == 1.0, "SliderTickRate");
+                Check(beatmap.HitObjects.Length == 124, "HitObjects");
+                Check(beatmap.Sliders.Length == 33, "Sliders");
+                Check(beatmap.TimingPoints.Length == 3, "TimingPoints");
+                Check(beatmap.Breaks.Length == 0, "Breaks");
 
-                int on_sliders = 0;
-                for (int i = 0; i < beatmap.hit_objects.Length; i++) {
-                    if (beatmap.hit_objects[i].slider >= 0) {
-                        on_sliders++;
-                        Check(beatmap.hit_objects[i].slider < beatmap.sliders.Length,
+                int onSliders = 0;
+                for (int i = 0; i < beatmap.HitObjects.Length; i++) {
+                    if (beatmap.HitObjects[i].Slider >= 0) {
+                        onSliders++;
+                        Check(beatmap.HitObjects[i].Slider < beatmap.Sliders.Length,
                               "a hit object's slider index is in range");
                     }
                 }
-                Check(on_sliders == beatmap.sliders.Length, "hit objects point at their sliders");
+                Check(onSliders == beatmap.Sliders.Length, "hit objects point at their sliders");
 
-                Slider slider = beatmap.sliders[0];
-                Check(slider.slides == 1, "the first slider's slides");
-                Check(slider.expected_length == 160.0, "the first slider's expected_length");
-                Check(slider.control_points.Length == 1, "the first slider's control_points");
-                Check(slider.events.Length == 3, "the first slider's events");
-                Check(slider.path.Length == slider.cumulative_lengths.Length,
+                Slider slider = beatmap.Sliders[0];
+                Check(slider.Slides == 1, "the first slider's Slides");
+                Check(slider.ExpectedLength == 160.0, "the first slider's ExpectedLength");
+                Check(slider.ControlPoints.Length == 1, "the first slider's ControlPoints");
+                Check(slider.Events.Length == 3, "the first slider's Events");
+                Check(slider.Path.Length == slider.CumulativeLengths.Length,
                       "a slider's path matches its cumulative lengths");
+
+                HitObject last = beatmap.HitObjects[beatmap.HitObjects.Length - 1];
+                Check(last.Position.X == 256.0f && last.Position.Y == 192.0f, "a spinner is centred");
+                Check(last.StartTime == 102125.0 && last.EndTime == 103000.0, "a spinner's times");
             }
         }
 
-        private static void AMissingFileIsAnError() {
-            CheckThrows(delegate { Beatmap.FromFile(MapPath("osu/does-not-exist.osu")); },
-                        "cannot parse the beatmap (result 3)", "a missing file is an error");
+        private static void FromBytesMatchesTheFile() {
+            string path = MapPath("osu/diffcalc-test.osu");
+            using (Beatmap fromBytes = Beatmap.FromBytes(File.ReadAllBytes(path)))
+            using (Beatmap fromFile = Beatmap.FromFile(path)) {
+                CheckClose(new Difficulty().Calculate(fromBytes).StarRating,
+                           new Difficulty().Calculate(fromFile).StarRating, "FromBytes matches FromFile");
+            }
+        }
+
+        private static void AMissingFileIsTheFrameworkException() {
+            CheckThrows<FileNotFoundException>(delegate { Beatmap.FromFile(MapPath("osu/does-not-exist.osu")); },
+                                               "a missing file is a FileNotFoundException");
         }
 
         private static void DifficultyMatchesThePinnedStars() {
@@ -136,133 +136,239 @@ namespace Pppp.Tests {
 
             for (int i = 0; i < names.Length; i++) {
                 using (Beatmap beatmap = Beatmap.FromFile(MapPath(names[i]))) {
-                    DifficultyAttributes attributes = new Difficulty(beatmap).Calculate();
-                    CheckClose(attributes.star_rating, stars[i], names[i] + " star rating");
-                    Check(attributes.max_combo == combos[i], names[i] + " max combo");
+                    DifficultyAttributes attributes = new Difficulty().Calculate(beatmap);
+                    CheckClose(attributes.StarRating, stars[i], names[i] + " star rating");
+                    Check(attributes.MaxCombo == combos[i], names[i] + " max combo");
                 }
             }
         }
 
         private static void ModsChangeTheCalculation() {
             using (Beatmap beatmap = Beatmap.FromFile(MapPath("fruits/2118524.osu"))) {
-                DifficultyAttributes attributes = new Difficulty(beatmap).Mods("HR").Calculate();
-                CheckClose(attributes.star_rating, 4.308291009137178, "HR star rating");
+                DifficultyAttributes attributes = new Difficulty { Mods = "HR" }.Calculate(beatmap);
+                CheckClose(attributes.StarRating, 4.308291009137178, "HR star rating");
+            }
+        }
+
+        private static void StableModBitsMatchTheirAcronyms() {
+            using (Beatmap beatmap = Beatmap.FromFile(MapPath("fruits/2118524.osu"))) {
+                DifficultyAttributes legacy = new Difficulty { Mods = LegacyMods.HardRock }.Calculate(beatmap);
+                CheckClose(legacy.StarRating, 4.308291009137178, "LegacyMods.HardRock star rating");
             }
         }
 
         private static void TheRulesetCanBeForced() {
             using (Beatmap beatmap = Beatmap.FromFile(MapPath("osu/2785319.osu"))) {
-                DifficultyAttributes attributes =
-                    new Difficulty(beatmap).Ruleset(Ruleset.Taiko).Calculate();
-                Check(attributes.ruleset == (int)Ruleset.Taiko, "the forced ruleset");
-                CheckClose(attributes.taiko.star_rating, 4.752572620626138, "the taiko star rating");
-                Check(attributes.taiko.mechanical_difficulty > 0.0, "the taiko mechanical difficulty");
+                DifficultyAttributes attributes = new Difficulty { Ruleset = Ruleset.Taiko }.Calculate(beatmap);
+                TaikoDifficultyAttributes taiko = attributes as TaikoDifficultyAttributes;
+                Check(attributes.Ruleset == Ruleset.Taiko, "the forced ruleset");
+                Check(taiko != null, "the forced ruleset's attribute class");
+                CheckClose(attributes.StarRating, 4.752572620626138, "the taiko star rating");
+                Check(taiko != null && taiko.MechanicalDifficulty > 0.0, "the taiko mechanical difficulty");
             }
         }
 
-        private static void ATaikoMapFillsTheTaikoAttributes() {
+        private static void TheAttributesAreTheLiveRulesetOnly() {
             using (Beatmap beatmap = Beatmap.FromFile(MapPath("taiko/1028484.osu"))) {
-                DifficultyAttributes attributes = new Difficulty(beatmap).Calculate();
-                Check(attributes.ruleset == (int)Ruleset.Taiko, "a taiko map's ruleset");
-                Check(attributes.osu.star_rating == 0.0, "the inactive osu attributes");
-                Check(attributes.taiko.mechanical_difficulty > 0.0, "the taiko mechanical difficulty");
+                DifficultyAttributes attributes = new Difficulty().Calculate(beatmap);
+                Check(attributes is TaikoDifficultyAttributes, "a taiko map's attribute class");
+                Check(!(attributes is OsuDifficultyAttributes), "no osu attributes on a taiko map");
             }
         }
 
-        private static void AnUnknownModIsAnError() {
+        private static void AnUnknownModIsAnArgumentException() {
             using (Beatmap beatmap = Beatmap.FromFile(MapPath("osu/2785319.osu"))) {
-                CheckThrows(delegate { new Difficulty(beatmap).Mods("XX").Calculate(); },
-                            "invalid mod specification", "an unknown mod is an error");
+                checks++;
+                try {
+                    new Difficulty { Mods = "XX" }.Calculate(beatmap);
+                    failures++;
+                    Console.WriteLine("FAIL: an unknown mod (nothing was thrown)");
+                } catch (ArgumentException error) {
+                    if (error.ParamName != "Mods" || !error.Message.StartsWith("invalid mod specification")) {
+                        failures++;
+                        Console.WriteLine("FAIL: an unknown mod (" + error.ParamName + ": " + error.Message + ")");
+                    }
+                }
             }
         }
 
         private static void ARulesetOutsideTheFourIsAnError() {
             using (Beatmap beatmap = Beatmap.FromFile(MapPath("osu/2785319.osu"))) {
-                CheckThrows(delegate { new Difficulty(beatmap).Ruleset((Ruleset)9); },
-                            "ruleset must be one of 0, 1, 2, 3", "a ruleset outside the four");
+                CheckThrows<ArgumentOutOfRangeException>(
+                    delegate { new Difficulty { Ruleset = (Ruleset)9 }.Calculate(beatmap); },
+                    "a ruleset outside the four");
             }
         }
 
         private static void ThePerformanceOfOsuMatchesThePinnedPp() {
             using (Beatmap beatmap = Beatmap.FromFile(MapPath("osu/2785319.osu"))) {
-                DifficultyAttributes difficulty = new Difficulty(beatmap).Calculate();
-                ScoreInfo score = Score(new[] {5, 16}, new[] {601, difficulty.osu.slider_count}, 909);
-                PerformanceAttributes play =
-                    new Performance(beatmap).State(score).Calculate();
-                CheckClose(play.total, 316.5901855625614, "the osu total");
-                CheckClose(play.osu.aim, 148.75278891878943, "the osu aim");
-                CheckClose(play.osu.speed, 61.34653468094172, "the osu speed");
-                CheckClose(play.osu.accuracy, 98.99847982709288, "the osu accuracy");
-                CheckClose(play.osu.reading, 2.2291238201795176, "the osu reading");
-                Check(!play.osu.score_based_estimated_miss_count.HasValue,
-                      "the unset optional stays null");
+                OsuDifficultyAttributes difficulty = (OsuDifficultyAttributes)new Difficulty().Calculate(beatmap);
+                PerformanceAttributes play = new Performance {
+                    MaxCombo = 909,
+                    Accuracy = 1.0,
+                    Statistics = {{HitResult.Great, 601}, {HitResult.SliderTailHit, difficulty.SliderCount}},
+                }.Calculate(beatmap);
+                OsuPerformanceAttributes osu = (OsuPerformanceAttributes)play;
+                CheckClose(play.Total, 316.5901855625614, "the osu total");
+                CheckClose(osu.Aim, 148.75278891878943, "the osu aim");
+                CheckClose(osu.Speed, 61.34653468094172, "the osu speed");
+                CheckClose(osu.Accuracy, 98.99847982709288, "the osu accuracy");
+                CheckClose(osu.Reading, 2.2291238201795176, "the osu reading");
+                Check(!osu.ScoreBasedEstimatedMissCount.HasValue, "the unset optional stays null");
             }
         }
 
         private static void ThePerformanceOfTaikoMatchesThePinnedPp() {
             using (Beatmap beatmap = Beatmap.FromFile(MapPath("taiko/1028484.osu"))) {
-                ScoreInfo score = Score(new[] {5}, new[] {289}, 289);
-                PerformanceAttributes play = new Performance(beatmap).State(score).Calculate();
-                Check(play.ruleset == (int)Ruleset.Taiko, "the taiko ruleset");
-                CheckClose(play.total, 130.26636361095524, "the taiko total");
-                CheckClose(play.taiko.difficulty, 33.48488833057447, "the taiko difficulty");
-                CheckClose(play.taiko.accuracy, 96.78147528038076, "the taiko accuracy");
-                CheckClose(play.taiko.estimated_unstable_rate.Value, 146.3238357972284,
+                PerformanceAttributes play = new Performance {
+                    MaxCombo = 289,
+                    Accuracy = 1.0,
+                    Statistics = {{HitResult.Great, 289}},
+                }.Calculate(beatmap);
+                TaikoPerformanceAttributes taiko = (TaikoPerformanceAttributes)play;
+                Check(play.Ruleset == Ruleset.Taiko, "the taiko ruleset");
+                CheckClose(play.Total, 130.26636361095524, "the taiko total");
+                CheckClose(taiko.Difficulty, 33.48488833057447, "the taiko difficulty");
+                CheckClose(taiko.Accuracy, 96.78147528038076, "the taiko accuracy");
+                Check(taiko.EstimatedUnstableRate.HasValue, "the set optional has a value");
+                CheckClose(taiko.EstimatedUnstableRate.GetValueOrDefault(), 146.3238357972284,
                            "the taiko unstable rate");
-                Check(play.taiko.estimated_unstable_rate.HasValue, "the set optional has a value");
             }
         }
 
         private static void ThePerformanceOfCatchMatchesThePinnedPp() {
             using (Beatmap beatmap = Beatmap.FromFile(MapPath("fruits/2118524.osu"))) {
-                DifficultyAttributes difficulty = new Difficulty(beatmap).Calculate();
-                ScoreInfo score = Score(new[] {5, 10, 8}, new[] {728, 2, 263}, difficulty.max_combo);
-                PerformanceAttributes play = new Performance(beatmap).State(score).Calculate();
-                Check(play.ruleset == (int)Ruleset.Catch, "the catch ruleset");
-                CheckClose(play.total, 112.72215339177879, "the catch total");
+                DifficultyAttributes difficulty = new Difficulty().Calculate(beatmap);
+                PerformanceAttributes play = new Performance {
+                    MaxCombo = difficulty.MaxCombo,
+                    Accuracy = 1.0,
+                    Statistics = {{HitResult.Great, 728}, {HitResult.LargeTickHit, 2}, {HitResult.SmallTickHit, 263}},
+                }.Calculate(beatmap);
+                Check(play.Ruleset == Ruleset.Catch, "the catch ruleset");
+                CheckClose(play.Total, 112.72215339177879, "the catch total");
             }
         }
 
         private static void ThePerformanceOfManiaMatchesThePinnedPp() {
             using (Beatmap beatmap = Beatmap.FromFile(MapPath("mania/1638954.osu"))) {
-                DifficultyAttributes difficulty = new Difficulty(beatmap).Calculate();
-                ScoreInfo score = Score(new[] {6}, new[] {715}, difficulty.max_combo);
-                PerformanceAttributes play = new Performance(beatmap).State(score).Calculate();
-                Check(play.ruleset == (int)Ruleset.Mania, "the mania ruleset");
-                CheckClose(play.total, 108.92297471705167, "the mania total");
+                DifficultyAttributes difficulty = new Difficulty().Calculate(beatmap);
+                PerformanceAttributes play = new Performance {
+                    MaxCombo = difficulty.MaxCombo,
+                    Accuracy = 1.0,
+                    Statistics = {{HitResult.Perfect, 715}},
+                }.Calculate(beatmap);
+                Check(play.Ruleset == Ruleset.Mania, "the mania ruleset");
+                CheckClose(play.Total, 108.92297471705167, "the mania total");
             }
         }
 
         private static void ThePerformanceTakesTheComboAndMissesItIsGiven() {
             using (Beatmap beatmap = Beatmap.FromFile(MapPath("osu/2785319.osu"))) {
                 PerformanceAttributes play =
-                    new Performance(beatmap).Combo(909).Accuracy(1.0).Misses(0).Calculate();
-                Check(play.total > 0.0, "a play with an explicit combo");
+                    new Performance { MaxCombo = 909, Accuracy = 1.0, Misses = 0 }.Calculate(beatmap);
+                Check(play.Total > 0.0, "a play with an explicit combo");
             }
         }
 
         private static void ThePerformanceFromAttributesMatchesTheMap() {
             using (Beatmap beatmap = Beatmap.FromFile(MapPath("osu/2785319.osu"))) {
-                DifficultyAttributes difficulty = new Difficulty(beatmap).Calculate();
-                ScoreInfo score = Score(new[] {5, 16}, new[] {601, difficulty.osu.slider_count}, 909);
-                PerformanceAttributes fromMap = new Performance(beatmap).State(score).Calculate();
-                PerformanceAttributes fromAttributes =
-                    new Performance(beatmap).State(score).Attributes(difficulty).Calculate();
-                CheckClose(fromAttributes.total, fromMap.total, "the total from the attributes");
-                CheckClose(fromAttributes.osu.aim, fromMap.osu.aim, "the aim from the attributes");
-                CheckClose(fromAttributes.osu.speed, fromMap.osu.speed, "the speed from the attributes");
+                OsuDifficultyAttributes difficulty = (OsuDifficultyAttributes)new Difficulty().Calculate(beatmap);
+                Performance performance = new Performance {
+                    MaxCombo = 909,
+                    Accuracy = 1.0,
+                    Statistics = {{HitResult.Great, 601}, {HitResult.SliderTailHit, difficulty.SliderCount}},
+                };
+                OsuPerformanceAttributes fromMap = (OsuPerformanceAttributes)performance.Calculate(beatmap);
+                OsuPerformanceAttributes fromAttributes =
+                    (OsuPerformanceAttributes)performance.Calculate(beatmap, difficulty);
+                CheckClose(fromAttributes.Total, fromMap.Total, "the total from the attributes");
+                CheckClose(fromAttributes.Aim, fromMap.Aim, "the aim from the attributes");
+                CheckClose(fromAttributes.Speed, fromMap.Speed, "the speed from the attributes");
+            }
+        }
+
+        private static void TheTimedAttributesMatchUpstream() {
+            string[] names = {"osu/diffcalc-test.osu", "osu/2785319.osu", "taiko/diffcalc-test.osu",
+                              "fruits/diffcalc-test.osu", "mania/diffcalc-test.osu", "osu/2785319.osu"};
+            string[] mods = {"NM", "HD,DT", "DT", "DT", "NM", "4K"};
+            Ruleset[] rulesets = {Ruleset.Osu, Ruleset.Osu, Ruleset.Taiko, Ruleset.Catch, Ruleset.Mania, Ruleset.Mania};
+            int[] counts = {124, 601, 238, 93, 137, 838};
+            double[] lastTimes = {103000, 115486.23529075173, 53000, 45250, 30500, 115486};
+            double[] lastStars = {6.524323005451468, 8.898179651893287, 4.455142137225538, 5.152717389780087,
+                                  2.3493769750220914, 2.653795415351293};
+            int[] lastCombos = {239, 909, 200, 127, 242, 1072};
+
+            for (int i = 0; i < names.Length; i++) {
+                using (Beatmap beatmap = Beatmap.FromFile(MapPath(names[i]))) {
+                    TimedDifficultyAttributes[] timed =
+                        new Difficulty { Mods = mods[i], Ruleset = rulesets[i] }.CalculateTimed(beatmap);
+                    Check(timed.Length == counts[i], names[i] + " " + mods[i] + " timed count");
+                    TimedDifficultyAttributes last = timed[timed.Length - 1];
+                    Check(last.Time == lastTimes[i], names[i] + " " + mods[i] + " last time");
+                    CheckApprox(last.Attributes.StarRating, lastStars[i], names[i] + " " + mods[i] + " last stars");
+                    Check(last.Attributes.MaxCombo == lastCombos[i], names[i] + " " + mods[i] + " last combo");
+                    Check(last.Attributes.Ruleset == rulesets[i], names[i] + " " + mods[i] + " last ruleset");
+                }
+            }
+        }
+
+        private static void TheStrainGraphMatchesUpstream() {
+            using (Beatmap beatmap = Beatmap.FromFile(MapPath("osu/diffcalc-test.osu"))) {
+                OsuStrains osu = new Difficulty { Mods = "HD,FL" }.CalculateStrains(beatmap) as OsuStrains;
+                Check(osu != null, "osu! strains");
+                if (osu != null) {
+                    Check(osu.Ruleset == Ruleset.Osu, "osu! strains ruleset");
+                    Check(osu.StartTime == 800, "osu! strains start time");
+                    Check(osu.SectionLength == 400, "osu! strains section length");
+                    Check(osu.Aim.Length == 254 && osu.Flashlight.Length == 254, "osu! strains length");
+                    CheckApprox(osu.Aim[46], 522.4551066294925, "osu! aim strain");
+                    CheckApprox(osu.Flashlight[18], 41.02690817661656, "osu! flashlight strain");
+                }
+            }
+
+            using (Beatmap beatmap = Beatmap.FromFile(MapPath("taiko/diffcalc-test.osu"))) {
+                TaikoStrains taiko = new Difficulty { Mods = "DT" }.CalculateStrains(beatmap) as TaikoStrains;
+                Check(taiko != null, "osu!taiko strains");
+                if (taiko != null) {
+                    Check(taiko.SectionLength == 600, "osu!taiko strains section length");
+                    Check(taiko.SingleColourStamina.Length == 89, "osu!taiko strains length");
+                    CheckApprox(taiko.SingleColourStamina[6], 4.473586847131765, "osu!taiko single colour stamina strain");
+                }
+            }
+
+            using (Beatmap beatmap = Beatmap.FromFile(MapPath("fruits/diffcalc-test.osu"))) {
+                CatchStrains fruits = new Difficulty { Mods = "DT" }.CalculateStrains(beatmap) as CatchStrains;
+                Check(fruits != null, "osu!catch strains");
+                if (fruits != null) {
+                    Check(fruits.SectionLength == 1125, "osu!catch strains section length");
+                    Check(fruits.Movement.Length == 41, "osu!catch strains length");
+                    CheckApprox(fruits.Movement[11], 0.35301054964344125, "osu!catch movement strain");
+                }
+            }
+
+            using (Beatmap beatmap = Beatmap.FromFile(MapPath("osu/2785319.osu"))) {
+                ManiaStrains mania =
+                    new Difficulty { Mods = "4K", Ruleset = Ruleset.Mania }.CalculateStrains(beatmap) as ManiaStrains;
+                Check(mania != null, "osu!mania strains");
+                if (mania != null) {
+                    Check(mania.StartTime == 2800, "osu!mania strains start time");
+                    Check(mania.Strain.Length == 282, "osu!mania strains length");
+                    CheckApprox(mania.Strain[195], 15.725755965531633, "osu!mania strain");
+                }
             }
         }
 
         private static int Main() {
             TheVersionIsAVersion();
             FromFileReadsTheModel();
-            AMissingFileIsAnError();
+            FromBytesMatchesTheFile();
+            AMissingFileIsTheFrameworkException();
             DifficultyMatchesThePinnedStars();
             ModsChangeTheCalculation();
+            StableModBitsMatchTheirAcronyms();
             TheRulesetCanBeForced();
-            ATaikoMapFillsTheTaikoAttributes();
-            AnUnknownModIsAnError();
+            TheAttributesAreTheLiveRulesetOnly();
+            AnUnknownModIsAnArgumentException();
             ARulesetOutsideTheFourIsAnError();
             ThePerformanceOfOsuMatchesThePinnedPp();
             ThePerformanceOfTaikoMatchesThePinnedPp();
@@ -270,6 +376,8 @@ namespace Pppp.Tests {
             ThePerformanceOfManiaMatchesThePinnedPp();
             ThePerformanceTakesTheComboAndMissesItIsGiven();
             ThePerformanceFromAttributesMatchesTheMap();
+            TheTimedAttributesMatchUpstream();
+            TheStrainGraphMatchesUpstream();
 
             Console.WriteLine(checks + " checks, " + failures + " failures");
             return failures == 0 ? 0 : 1;

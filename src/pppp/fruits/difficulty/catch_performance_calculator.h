@@ -6,14 +6,14 @@
 
 #include "pppp/beatmaps/beatmap.h"
 #include "pppp/common/score_info.h"
-#include "pppp/config.h"
 #include "pppp/fruits/difficulty/catch_difficulty_attributes.h"
 #include "pppp/fruits/difficulty/catch_performance_attributes.h"
+#include "pppp/status.h"
 
 namespace pppp { namespace fruits { namespace difficulty {
-    Result::Value calculate_performance(CatchPerformanceAttributes& out, const pppp::common::ScoreInfo& score,
-                                        const CatchDifficultyAttributes& attributes,
-                                        const pppp::beatmaps::Beatmap& beatmap);
+    Status calculate_performance(CatchPerformanceAttributes& out, const pppp::common::ScoreInfo& score,
+                                 const CatchDifficultyAttributes& attributes,
+                                 const pppp::beatmaps::Beatmap& beatmap);
 }}} // namespace pppp::fruits::difficulty
 
 #endif

@@ -1,17 +1,42 @@
-import { Difficulty, Performance, ScoreInfo, fromFile } from "../module";
+import {
+  Beatmap,
+  Difficulty,
+  type DifficultyAttributes,
+  Performance,
+  Ruleset,
+  type Strains,
+  type TimedDifficultyAttributes,
+} from "../module";
 
-const beatmap = fromFile("map.osu");
-const difficulty = new Difficulty(beatmap).mods("HD,DT").calculate();
+async function main(): Promise<void> {
+  const beatmap = await Beatmap.fromFile("map.osu");
+  const sync: Beatmap = Beatmap.fromFileSync("map.osu");
+  const fromBytes: Beatmap = Beatmap.fromBytes(new Uint8Array(0));
 
-const score: ScoreInfo = {
-  statistics: [0, 0, 0, 0, 0, 601],
-  maximum_statistics: [0, 0, 0, 0, 0, 601],
-  max_combo: 909,
-  accuracy: 1.0,
-  legacy_total_score: null,
-};
+  const difficulty: DifficultyAttributes = new Difficulty({ mods: "HD,DT" }).calculate(beatmap);
+  if (difficulty.ruleset === Ruleset.Osu) {
+    console.log(difficulty.aimDifficulty, difficulty.sliderCount);
+  }
 
-const byConstructor = new Performance(beatmap, { state: score, attributes: difficulty }).calculate();
-const bySetter = new Performance(beatmap).attributes(difficulty).calculate();
+  const play = new Performance({
+    mods: 72,
+    maxCombo: 909,
+    statistics: { great: 601, miss: 2 },
+  }).calculate(sync, difficulty);
+  console.log(play.total, fromBytes.hitObjects.length, beatmap.stackLeniency);
 
-console.log(byConstructor.total, bySetter.osu.aim);
+  const timed: TimedDifficultyAttributes[] = new Difficulty({ mods: 64 }).calculateTimed(beatmap);
+  console.log(timed[0].time, timed[0].attributes.starRating);
+
+  const later: DifficultyAttributes = await new Difficulty({ mods: "DT" }).calculateAsync(beatmap);
+  const pp: number = (await new Performance().calculateAsync(beatmap, later)).total;
+  const timedLater: TimedDifficultyAttributes[] = await new Difficulty().calculateTimedAsync(beatmap);
+  console.log(pp, timedLater.length);
+
+  const strains: Strains = await new Difficulty().strainsAsync(beatmap);
+  if (strains.ruleset === Ruleset.Taiko) {
+    console.log(strains.sectionLength, strains.singleColourStamina.length);
+  }
+}
+
+void main();

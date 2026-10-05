@@ -7,8 +7,8 @@
 #include "pppp/beatmaps/beatmap.h"
 #include "pppp/beatmaps/beatmap_converter.h"
 #include "pppp/beatmaps/control_points/control_point_info.h"
-#include "pppp/config.h"
 #include "pppp/mods/mod.h"
+#include "pppp/status.h"
 #include "pppp/taiko/object/taiko_hit_object.h"
 #include <cstddef>
 #include <vector>
@@ -51,10 +51,10 @@ namespace pppp { namespace taiko {
     ModdedDifficulty modded_difficulty(const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
                                        size_t mod_count);
 
-    Result::Value build(TaikoBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
-                        size_t mod_count,
-                        const pppp::beatmaps::ObjectConverted<TaikoHitObject>& object_converted =
-                            pppp::beatmaps::ObjectConverted<TaikoHitObject>());
+    Status build(TaikoBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                 size_t mod_count,
+                 const pppp::beatmaps::ObjectConverted<TaikoHitObject>& object_converted =
+                     pppp::beatmaps::ObjectConverted<TaikoHitObject>());
 
     double beat_length_at(const TaikoBeatmap& pb, double time);
 

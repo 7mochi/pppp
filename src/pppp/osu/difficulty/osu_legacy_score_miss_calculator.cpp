@@ -15,7 +15,7 @@ namespace pppp { namespace osu { namespace difficulty {
         }
 
         double score_v1_multiplier = attributes.legacy_score_base_multiplier *
-                                     get_legacy_score_multiplier(score.mods, score.mod_count);
+                                     get_legacy_score_multiplier(score.mods.data(), score.mods.size());
         double relevant_combo_per_object = calculate_relevant_score_combo_per_object();
 
         double maximum_miss_count = calculate_maximum_combo_based_miss_count();

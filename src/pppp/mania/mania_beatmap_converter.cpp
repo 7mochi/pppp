@@ -271,10 +271,10 @@ namespace pppp { namespace mania {
         }
     }
 
-    Result::Value build(ManiaBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
-                        size_t mod_count) {
+    Status build(ManiaBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                 size_t mod_count) {
         ManiaBeatmapConverter converter(beatmap, mods, mod_count);
         converter.convert(pb);
-        return Result::OK;
+        return StatusCode::OK;
     }
 }} // namespace pppp::mania

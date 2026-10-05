@@ -2,147 +2,122 @@
 
 from __future__ import annotations
 
-from enum import IntEnum
+import os
+from collections.abc import Mapping
+from dataclasses import dataclass
 
 from . import _core
 from ._core import Beatmap as Beatmap
-from ._core import from_file as from_file
-from ._core import version as version
+from ._core import Error as Error
+from ._core import ModsError as ModsError
+from ._core import ParseError as ParseError
 from ._model import (
     BeatmapDifficulty,
     BreakPeriod,
     CatchDifficultyAttributes,
     CatchPerformanceAttributes,
+    CatchStrains,
     DifficultyAttributes,
     HitObject,
+    HitResult,
     ManiaDifficultyAttributes,
     ManiaPerformanceAttributes,
+    ManiaStrains,
     OsuDifficultyAttributes,
     OsuPerformanceAttributes,
+    OsuStrains,
     PerformanceAttributes,
-    ScoreInfo,
+    Ruleset,
     Slider,
     SliderEvent,
+    Strains,
     TaikoDifficultyAttributes,
     TaikoPerformanceAttributes,
+    TaikoStrains,
+    TimedDifficultyAttributes,
     TimingPoint,
     Vector2,
 )
 
-
-class Ruleset(IntEnum):
-    """The ruleset a tagged attribute set belongs to; the values are the beatmap's mode."""
-
-    OSU = 0
-    TAIKO = 1
-    CATCH = 2
-    MANIA = 3
+__version__: str = _core.version
 
 
+def _from_file(cls: type[Beatmap], path: str | bytes | os.PathLike[str] | os.PathLike[bytes]) -> Beatmap:
+    """Parse a `Beatmap` by providing a path to a `.osu` file."""
+    with open(path, "rb") as file:
+        return cls.from_bytes(file.read())
+
+
+_from_file.__name__ = "from_file"
+_from_file.__qualname__ = "Beatmap.from_file"
+Beatmap.from_file = classmethod(_from_file)  # type: ignore[assignment,method-assign]
+
+
+@dataclass(frozen=True, kw_only=True)
 class Difficulty:
     """Difficulty calculator on maps of any mode."""
 
-    def __init__(
-        self,
-        beatmap: Beatmap,
-        *,
-        mods: str = "",
-        ruleset: Ruleset | None = None,
-        clock_rate: float | None = None,
-    ) -> None:
-        self._beatmap = beatmap
-        self._mods = mods
-        self._ruleset = ruleset
-        self._clock_rate = clock_rate
+    mods: str | int = ""
+    ruleset: Ruleset | None = None
+    clock_rate: float | None = None
 
-    def mods(self, spec: str) -> Difficulty:
-        """Specify mods, as osu!'s own specification list."""
-        self._mods = spec
-        return self
-
-    def ruleset(self, ruleset: Ruleset) -> Difficulty:
-        """Calculate for this ruleset instead of the beatmap's own mode."""
-        self._ruleset = ruleset
-        return self
-
-    def clock_rate(self, rate: float) -> Difficulty:
-        """Adjust the clock rate used in the calculation."""
-        self._clock_rate = rate
-        return self
-
-    def calculate(self) -> DifficultyAttributes:
+    def calculate(self, beatmap: Beatmap) -> DifficultyAttributes:
         """Perform the difficulty calculation."""
         return _core.calculate_difficulty(
-            self._beatmap,
-            self._mods,
-            None if self._ruleset is None else int(self._ruleset),
-            self._clock_rate,
+            beatmap,
+            self.mods,
+            None if self.ruleset is None else int(self.ruleset),
+            self.clock_rate,
+        )
+
+    def calculate_timed(self, beatmap: Beatmap) -> list[TimedDifficultyAttributes]:
+        """Calculates the difficulty of the beatmap using a specific mod combination and returns a set of
+        TimedDifficultyAttributes representing the difficulty at every relevant time value in the
+        beatmap."""
+        return _core.calculate_timed_difficulty(
+            beatmap,
+            self.mods,
+            None if self.ruleset is None else int(self.ruleset),
+            self.clock_rate,
+        )
+
+    def strains(self, beatmap: Beatmap) -> Strains:
+        """Perform the difficulty calculation but instead of evaluating the skill
+        strains, return them as is.
+
+        Suitable to plot the difficulty of a map over time."""
+        return _core.calculate_strains(
+            beatmap,
+            self.mods,
+            None if self.ruleset is None else int(self.ruleset),
+            self.clock_rate,
         )
 
 
+@dataclass(frozen=True, kw_only=True)
 class Performance:
     """Performance calculator on maps of any mode."""
 
-    def __init__(
-        self,
-        beatmap: Beatmap,
-        *,
-        mods: str = "",
-        state: ScoreInfo | None = None,
-        combo: int | None = None,
-        accuracy: float | None = None,
-        misses: int | None = None,
-        attributes: DifficultyAttributes | None = None,
-    ) -> None:
-        self._beatmap = beatmap
-        self._mods = mods
-        self._state = state
-        self._combo = combo
-        self._accuracy = accuracy
-        self._misses = misses
-        self._attributes = attributes
+    mods: str | int = ""
+    max_combo: int | None = None
+    accuracy: float | None = None
+    misses: int | None = None
+    statistics: Mapping[HitResult, int] | None = None
+    legacy_total_score: int | None = None
 
-    def mods(self, spec: str) -> Performance:
-        """Specify mods, as osu!'s own specification list."""
-        self._mods = spec
-        return self
-
-    def state(self, state: ScoreInfo) -> Performance:
-        """Provide the score state through a `ScoreInfo`."""
-        self._state = state
-        return self
-
-    def combo(self, combo: int) -> Performance:
-        """Specify the max combo of the play."""
-        self._combo = combo
-        return self
-
-    def accuracy(self, accuracy: float) -> Performance:
-        """Set the accuracy between 0.0 and 1.0."""
-        self._accuracy = accuracy
-        return self
-
-    def misses(self, misses: int) -> Performance:
-        """Specify the amount of misses of the play."""
-        self._misses = misses
-        return self
-
-    def attributes(self, attributes: DifficultyAttributes) -> Performance:
-        """Use the given already-calculated attributes, skipping the difficulty calculation."""
-        self._attributes = attributes
-        return self
-
-    def calculate(self) -> PerformanceAttributes:
-        """Perform the performance calculation, with the difficulty included unless attributes
-        were given."""
+    def calculate(
+        self, beatmap: Beatmap, attributes: DifficultyAttributes | None = None
+    ) -> PerformanceAttributes:
+        """Perform the performance calculation for the map's or the attributes' mode."""
         return _core.calculate_performance(
-            self._beatmap,
-            self._mods,
-            self._state,
-            self._combo,
-            self._accuracy,
-            self._misses,
-            self._attributes,
+            beatmap,
+            self.mods,
+            self.max_combo,
+            self.accuracy,
+            self.misses,
+            self.statistics,
+            self.legacy_total_score,
+            attributes,
         )
 
 
@@ -152,23 +127,31 @@ __all__ = [
     "BreakPeriod",
     "CatchDifficultyAttributes",
     "CatchPerformanceAttributes",
+    "CatchStrains",
     "Difficulty",
     "DifficultyAttributes",
+    "Error",
     "HitObject",
+    "HitResult",
     "ManiaDifficultyAttributes",
     "ManiaPerformanceAttributes",
+    "ManiaStrains",
+    "ModsError",
     "OsuDifficultyAttributes",
     "OsuPerformanceAttributes",
+    "OsuStrains",
+    "ParseError",
     "Performance",
     "PerformanceAttributes",
     "Ruleset",
-    "ScoreInfo",
     "Slider",
     "SliderEvent",
+    "Strains",
     "TaikoDifficultyAttributes",
     "TaikoPerformanceAttributes",
+    "TaikoStrains",
+    "TimedDifficultyAttributes",
     "TimingPoint",
     "Vector2",
-    "from_file",
-    "version",
+    "__version__",
 ]

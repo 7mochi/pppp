@@ -27,10 +27,4 @@ PPPP_STATIC_ASSERT(int64_is_64_bits, sizeof(pppp_int64) == 8);
 PPPP_STATIC_ASSERT(uint64_is_64_bits, sizeof(pppp_uint64) == 8);
 PPPP_STATIC_ASSERT(int_is_at_least_32_bits, sizeof(int) >= 4);
 
-namespace pppp {
-    struct Result {
-        enum Value { OK = 0, INVALID_ARGUMENT, ALLOCATION, PARSE, NO_SLIDER_PATH_BACKEND, SLIDER_PATH };
-    };
-} // namespace pppp
-
 #endif

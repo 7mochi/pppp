@@ -12,7 +12,5 @@ namespace pppp { namespace common {
         max_combo = 0;
         accuracy = 0.0;
         legacy_total_score.reset();
-        mods = 0;
-        mod_count = 0;
     }
 }} // namespace pppp::common

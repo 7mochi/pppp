@@ -1,101 +1,59 @@
 using System;
+using System.Collections.Generic;
 
 namespace Pppp {
     /// <summary>Performance calculator on maps of any mode.</summary>
     public sealed class Performance {
-        private readonly Beatmap beatmap;
-        private string mods = "";
-        private ScoreInfo state;
-        private int? combo;
-        private double? accuracy;
-        private int? misses;
-        private DifficultyAttributes attributes;
-        private bool hasAttributes;
-
-        public Performance(Beatmap beatmap) {
-            if (beatmap == null) {
-                throw new ArgumentNullException("beatmap");
-            }
-            this.beatmap = beatmap;
-        }
+        public Performance() { Statistics = new Dictionary<HitResult, int>(); }
 
         /// <summary>Specify mods.</summary>
-        public Performance Mods(string specification) {
-            mods = specification == null ? "" : specification;
-            return this;
-        }
-
-        /// <summary>Provide the score state through a ScoreInfo.</summary>
-        public Performance State(ScoreInfo score) {
-            state = score;
-            return this;
-        }
+        public Mods Mods { get; set; }
 
         /// <summary>Specify the max combo of the play.</summary>
-        public Performance Combo(int value) {
-            combo = value;
-            return this;
-        }
+        public int? MaxCombo { get; set; }
 
         /// <summary>Set the accuracy between 0.0 and 1.0.</summary>
-        public Performance Accuracy(double value) {
-            accuracy = value;
-            return this;
-        }
+        public double? Accuracy { get; set; }
 
         /// <summary>Specify the amount of misses of the play.</summary>
-        public Performance Misses(int value) {
-            misses = value;
-            return this;
-        }
+        public int? Misses { get; set; }
+
+        public Dictionary<HitResult, int> Statistics { get; set; }
+
+        /// <summary>Used to preserve the total score for legacy scores.</summary>
+        /// <remarks>Not populated when the score is not a legacy score.</remarks>
+        public long? LegacyTotalScore { get; set; }
+
+        /// <summary>Perform the performance calculation for the map's or the attributes' mode.</summary>
+        public PerformanceAttributes Calculate(Beatmap beatmap) { return Calculate(beatmap, null); }
 
         /// <summary>Use the given already-calculated attributes, skipping the difficulty
         /// calculation.</summary>
-        public Performance Attributes(DifficultyAttributes value) {
-            attributes = value;
-            hasAttributes = true;
-            return this;
-        }
-
-        /// <summary>Perform the performance calculation for the map's or the attributes'
-        /// mode.</summary>
-        public unsafe PerformanceAttributes Calculate() {
+        public unsafe PerformanceAttributes Calculate(Beatmap beatmap, DifficultyAttributes attributes) {
+            if (beatmap == null) {
+                throw new ArgumentNullException("beatmap");
+            }
             Native.PerformanceOptions options = new Native.PerformanceOptions();
-            DifficultyAttributes provided = attributes;
-            DifficultyAttributes* pointer = hasAttributes ? &provided : null;
-            fixed (byte* specification = Native.Utf8(mods)) {
-                options.mods = (IntPtr)specification;
-                if (state != null) {
-                    options.score = Native.ToNative(state);
-                    options.has_score = 1;
-                }
-                if (combo.HasValue) {
-                    options.combo = combo.Value;
-                    options.has_combo = 1;
-                }
-                if (accuracy.HasValue) {
-                    options.accuracy = accuracy.Value;
-                    options.has_accuracy = 1;
-                }
-                if (misses.HasValue) {
-                    options.misses = misses.Value;
-                    options.has_misses = 1;
-                }
-                if (hasAttributes) {
-                    options.difficulty = (IntPtr)pointer;
-                    options.has_difficulty = 1;
-                }
+            options.score = Native.ToNative(Statistics, MaxCombo, Accuracy, LegacyTotalScore);
+            options.has_score = 1;
+            if (Misses.HasValue) {
+                options.misses = Misses.Value;
+                options.has_misses = 1;
+            }
+            Native.DifficultyAttributes provided = attributes == null ? new Native.DifficultyAttributes()
+                                                                      : attributes.ToNative();
+            if (attributes != null) {
+                options.difficulty = (IntPtr)(&provided);
+                options.has_difficulty = 1;
+            }
 
+            options.mods = Native.CreateMods(Mods);
+            try {
                 Native.PerformanceAttributes result;
-                int status =
-                    Native.pppp_calculate_performance(beatmap.Handle, ref options, out result);
-                if (status == Native.Allocation) {
-                    throw new OutOfMemoryException();
-                }
-                if (status != Native.Ok) {
-                    throw new ArgumentException("invalid mod specification");
-                }
+                Native.Check(Native.pppp_calculate_performance(beatmap.Handle, ref options, out result));
                 return Native.FromNative(result);
+            } finally {
+                Native.pppp_mods_free(options.mods);
             }
         }
     }

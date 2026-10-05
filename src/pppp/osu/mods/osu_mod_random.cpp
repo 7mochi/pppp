@@ -88,12 +88,12 @@ namespace pppp { namespace osu { namespace mods {
         };
     } // namespace
 
-    Result::Value apply_random(OsuBeatmap& pb, const pppp::mods::Mod& mod) {
+    Status apply_random(OsuBeatmap& pb, const pppp::mods::Mod& mod) {
         if (pb.objects.empty()) {
-            return Result::OK;
+            return StatusCode::OK;
         }
         if (!pb.sliders.empty() && !can_recompute_sliders(pb)) {
-            return Result::NO_SLIDER_PATH_BACKEND;
+            return StatusCode::NO_SLIDER_PATH_BACKEND;
         }
 
         int seed = mod.random.seed.value();
@@ -152,6 +152,6 @@ namespace pppp { namespace osu { namespace mods {
         }
 
         object::reposition_hit_objects(pb, infos);
-        return Result::OK;
+        return StatusCode::OK;
     }
 }}} // namespace pppp::osu::mods

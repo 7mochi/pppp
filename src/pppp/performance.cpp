@@ -5,23 +5,12 @@
 #include "pppp/taiko/difficulty/taiko_performance_calculator.h"
 
 namespace pppp {
-    PerformanceAttributes Performance::calculate() const {
-        DifficultyAttributes attributes = difficulty_attributes;
-        if (!has_attributes) {
-            Difficulty difficulty;
-            if (has_mods) {
-                difficulty.mods(mod_list.empty() ? 0 : &mod_list[0], mod_list.size());
-            }
-            attributes = difficulty.calculate(*beatmap);
-        }
+    Status Performance::calculate(PerformanceAttributes& out) const {
+        out = PerformanceAttributes();
 
-        PerformanceAttributes out;
-        out.ruleset = attributes.ruleset;
-
-        pppp::common::ScoreInfo score = score_state;
+        ScoreInfo score = score_state;
         if (has_mods) {
-            score.mods = mod_list.empty() ? 0 : &mod_list[0];
-            score.mod_count = mod_list.size();
+            score.mods = mod_list;
         }
         if (has_combo) {
             score.max_combo = combo_value;
@@ -30,24 +19,55 @@ namespace pppp {
             score.accuracy = accuracy_value;
         }
         if (has_misses) {
-            score.statistics[pppp::common::HIT_RESULT_MISS] = misses_value;
+            score.statistics[HIT_RESULT_MISS] = misses_value;
         }
 
-        switch (attributes.ruleset) {
-        case Ruleset::RULESET_OSU:
-            pppp::osu::difficulty::calculate_performance(out.osu, score, attributes.osu, *beatmap);
-            break;
-        case Ruleset::RULESET_TAIKO:
-            pppp::taiko::difficulty::calculate_performance(out.taiko, score, attributes.taiko, *beatmap);
-            break;
-        case Ruleset::RULESET_CATCH:
-            pppp::fruits::difficulty::calculate_performance(out.fruits, score, attributes.fruits, *beatmap);
-            break;
-        case Ruleset::RULESET_MANIA:
-            pppp::mania::difficulty::calculate_performance(out.mania, score, attributes.mania, *beatmap);
-            break;
-        default: break;
+        DifficultyAttributes attributes = difficulty_attributes;
+        if (!has_attributes) {
+            const Status status = Difficulty().mods(score.mods).calculate(*beatmap, attributes);
+            if (!status.ok()) {
+                return status;
+            }
         }
-        return out;
+
+        switch (attributes.ruleset()) {
+        case Ruleset::OSU: {
+            OsuPerformanceAttributes value;
+            const Status status =
+                pppp::osu::difficulty::calculate_performance(value, score, *attributes.osu(), *beatmap);
+            if (status.ok()) {
+                out = value;
+            }
+            return status;
+        }
+        case Ruleset::TAIKO: {
+            TaikoPerformanceAttributes value;
+            const Status status =
+                pppp::taiko::difficulty::calculate_performance(value, score, *attributes.taiko(), *beatmap);
+            if (status.ok()) {
+                out = value;
+            }
+            return status;
+        }
+        case Ruleset::CATCH: {
+            CatchPerformanceAttributes value;
+            const Status status =
+                pppp::fruits::difficulty::calculate_performance(value, score, *attributes.fruits(), *beatmap);
+            if (status.ok()) {
+                out = value;
+            }
+            return status;
+        }
+        case Ruleset::MANIA: {
+            ManiaPerformanceAttributes value;
+            const Status status =
+                pppp::mania::difficulty::calculate_performance(value, score, *attributes.mania(), *beatmap);
+            if (status.ok()) {
+                out = value;
+            }
+            return status;
+        }
+        default: return StatusCode::INVALID_ARGUMENT;
+        }
     }
 } // namespace pppp

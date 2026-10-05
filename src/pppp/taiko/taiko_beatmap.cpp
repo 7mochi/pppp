@@ -229,9 +229,8 @@ namespace pppp { namespace taiko {
         return point != 0 ? point->clamped_scroll_speed() : 1.0;
     }
 
-    Result::Value build(TaikoBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
-                        size_t mod_count,
-                        const pppp::beatmaps::ObjectConverted<TaikoHitObject>& object_converted) {
+    Status build(TaikoBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                 size_t mod_count, const pppp::beatmaps::ObjectConverted<TaikoHitObject>& object_converted) {
         convert(pb, beatmap, object_converted);
         pb.clock_rate = pppp::mods::mod_calculate_rate(mods, mod_count);
 
@@ -253,7 +252,7 @@ namespace pppp { namespace taiko {
             }
         }
 
-        return Result::OK;
+        return StatusCode::OK;
     }
 
     int max_combo(const TaikoBeatmap& pb) {

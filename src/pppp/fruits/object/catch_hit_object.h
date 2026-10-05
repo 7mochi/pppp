@@ -20,6 +20,9 @@ namespace pppp { namespace fruits { namespace object {
         ObjectKind kind;
         double time;
 
+        /// The time at which the HitObject ends.
+        double end_time;
+
         /// The horizontal position of the hit object between 0 and PLAYFIELD_WIDTH.
         /// This value is the original X value specified in the beatmap, not affected by the beatmap
         /// processing. Use effective_x() for gameplay.

@@ -6,9 +6,9 @@
 
 #include "pppp/beatmaps/beatmap.h"
 #include "pppp/beatmaps/beatmap_converter.h"
-#include "pppp/config.h"
 #include "pppp/fruits/object/catch_hit_object.h"
 #include "pppp/mods/mod.h"
+#include "pppp/status.h"
 #include <cstddef>
 #include <vector>
 
@@ -25,10 +25,10 @@ namespace pppp { namespace fruits {
         CatchBeatmap();
     };
 
-    Result::Value build(CatchBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
-                        size_t mod_count,
-                        const pppp::beatmaps::ObjectConverted<object::CatchHitObject>& object_converted =
-                            pppp::beatmaps::ObjectConverted<object::CatchHitObject>());
+    Status build(CatchBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                 size_t mod_count,
+                 const pppp::beatmaps::ObjectConverted<object::CatchHitObject>& object_converted =
+                     pppp::beatmaps::ObjectConverted<object::CatchHitObject>());
 
     struct ModdedDifficulty {
         double circle_size;

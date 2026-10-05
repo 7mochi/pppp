@@ -18,6 +18,16 @@
 
 namespace pppp { namespace taiko { namespace difficulty {
     namespace {
+        /// Applies a final re-scaling of the star rating.
+        /// @param star_rating The raw star rating value before re-scaling.
+        double rescale(double star_rating) {
+            if (star_rating < 0) {
+                return star_rating;
+            }
+
+            return 10.43 * std::log(star_rating / 8.0 + 1.0);
+        }
+
         struct TaikoDifficultyCalculator {
             double strain_length_bonus;
             double pattern_multiplier;
@@ -29,6 +39,53 @@ namespace pppp { namespace taiko { namespace difficulty {
                   pattern_multiplier(0.0),
                   is_relax(false),
                   is_convert(false) {}
+
+            void create_difficulty_attributes(TaikoDifficultyAttributes& out, const TaikoBeatmap& pb,
+                                              skills::Rhythm& rhythm, skills::Reading& reading,
+                                              skills::Colour& colour, skills::Stamina& stamina,
+                                              skills::Stamina& single_colour_stamina) {
+                double stamina_difficulty_value = stamina.difficulty_value();
+
+                double rhythm_skill = rhythm.difficulty_value() * RHYTHM_SKILL_MULTIPLIER;
+                double reading_skill = reading.difficulty_value() * READING_SKILL_MULTIPLIER;
+                double colour_skill = colour.difficulty_value() * COLOUR_SKILL_MULTIPLIER;
+                double stamina_skill = stamina_difficulty_value * STAMINA_SKILL_MULTIPLIER;
+                double mono_stamina_skill =
+                    single_colour_stamina.difficulty_value() * STAMINA_SKILL_MULTIPLIER;
+                double mono_stamina_factor =
+                    stamina_skill == 0 ? 1.0 : pppp::utils::pow(mono_stamina_skill / stamina_skill, 5);
+
+                double stamina_difficult_strains =
+                    stamina.count_top_weighted_strains(stamina_difficulty_value);
+
+                // As we don't have pattern integration in osu!taiko, we apply the other two skills relative
+                // to rhythm.
+                pattern_multiplier = pppp::utils::pow(stamina_skill * colour_skill, 0.10);
+                strain_length_bonus =
+                    1.0 + 0.15 * pppp::utils::reverse_lerp(stamina_difficult_strains, 1000.0, 1555.0);
+
+                double consistency_factor = 0.0;
+                double combined_rating =
+                    combined_difficulty_value(consistency_factor, rhythm, reading, colour, stamina);
+
+                double star_rating = rescale(combined_rating * 1.4);
+
+                // Calculate proportional contribution of each skill to the combinedRating.
+                double skill_rating =
+                    star_rating / (rhythm_skill + reading_skill + colour_skill + stamina_skill);
+
+                out.star_rating = star_rating;
+                out.rhythm_difficulty = rhythm_skill * skill_rating;
+                out.reading_difficulty = reading_skill * skill_rating;
+                out.colour_difficulty = colour_skill * skill_rating;
+                out.stamina_difficulty = stamina_skill * skill_rating;
+                // Mechanical difficulty is the sum of colour and stamina difficulties.
+                out.mechanical_difficulty = out.colour_difficulty + out.stamina_difficulty;
+                out.mono_stamina_factor = mono_stamina_factor;
+                out.stamina_top_strains = stamina_difficult_strains;
+                out.consistency_factor = consistency_factor;
+                out.max_combo = max_combo(pb);
+            }
 
             /// Returns the combined star rating of the beatmap, calculated using peak strains from
             /// all sections of the map. For each section, the peak strains of all separate skills
@@ -123,16 +180,6 @@ namespace pppp { namespace taiko { namespace difficulty {
                 }
             }
         };
-
-        /// Applies a final re-scaling of the star rating.
-        /// @param star_rating The raw star rating value before re-scaling.
-        double rescale(double star_rating) {
-            if (star_rating < 0) {
-                return star_rating;
-            }
-
-            return 10.43 * std::log(star_rating / 8.0 + 1.0);
-        }
     } // namespace
 
     void
@@ -176,23 +223,23 @@ namespace pppp { namespace taiko { namespace difficulty {
         }
     }
 
-    Result::Value calculate_difficulty(TaikoDifficultyAttributes& out, const pppp::beatmaps::Beatmap& beatmap,
-                                       const pppp::mods::Mod* mods, size_t mod_count) {
+    Status calculate_difficulty(TaikoDifficultyAttributes& out, const pppp::beatmaps::Beatmap& beatmap,
+                                const pppp::mods::Mod* mods, size_t mod_count) {
         if (!mods && mod_count) {
-            return Result::INVALID_ARGUMENT;
+            return StatusCode::INVALID_ARGUMENT;
         }
 
         TaikoBeatmap pb;
         TaikoDifficultyCalculator c;
-        Result::Value status = build(pb, beatmap, mods, mod_count);
-        if (status != Result::OK) {
+        Status status = build(pb, beatmap, mods, mod_count);
+        if (!status.ok()) {
             return status;
         }
 
         out = TaikoDifficultyAttributes();
 
         if (pb.objects.empty()) {
-            return Result::OK;
+            return StatusCode::OK;
         }
 
         std::vector<preprocessing::TaikoDifficultyHitObject> dhos;
@@ -229,45 +276,149 @@ namespace pppp { namespace taiko { namespace difficulty {
             single_colour_stamina.process(dhos[i]);
         }
 
-        double stamina_difficulty_value = stamina.difficulty_value();
+        c.create_difficulty_attributes(out, pb, rhythm, reading, colour, stamina, single_colour_stamina);
 
-        double rhythm_skill = rhythm.difficulty_value() * RHYTHM_SKILL_MULTIPLIER;
-        double reading_skill = reading.difficulty_value() * READING_SKILL_MULTIPLIER;
-        double colour_skill = colour.difficulty_value() * COLOUR_SKILL_MULTIPLIER;
-        double stamina_skill = stamina_difficulty_value * STAMINA_SKILL_MULTIPLIER;
-        double mono_stamina_skill = single_colour_stamina.difficulty_value() * STAMINA_SKILL_MULTIPLIER;
-        double mono_stamina_factor =
-            stamina_skill == 0 ? 1.0 : pppp::utils::pow(mono_stamina_skill / stamina_skill, 5);
+        return StatusCode::OK;
+    }
 
-        double stamina_difficult_strains = stamina.count_top_weighted_strains(stamina_difficulty_value);
+    Status calculate_timed_difficulty(std::vector<double>& times,
+                                      std::vector<TaikoDifficultyAttributes>& attributes,
+                                      const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                                      size_t mod_count) {
+        times.clear();
+        attributes.clear();
+        if (!mods && mod_count) {
+            return StatusCode::INVALID_ARGUMENT;
+        }
 
-        // As we don't have pattern integration in osu!taiko, we apply the other two skills relative to
-        // rhythm.
-        c.pattern_multiplier = pppp::utils::pow(stamina_skill * colour_skill, 0.10);
-        c.strain_length_bonus =
-            1.0 + 0.15 * pppp::utils::reverse_lerp(stamina_difficult_strains, 1000.0, 1555.0);
+        TaikoBeatmap pb;
+        TaikoDifficultyCalculator c;
+        Status status = build(pb, beatmap, mods, mod_count);
+        if (!status.ok()) {
+            return status;
+        }
 
-        double consistency_factor = 0.0;
-        double combined_rating =
-            c.combined_difficulty_value(consistency_factor, rhythm, reading, colour, stamina);
+        if (pb.objects.empty()) {
+            return StatusCode::OK;
+        }
 
-        double star_rating = rescale(combined_rating * 1.4);
+        c.is_relax = pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_RX);
+        c.is_convert = pb.is_convert;
 
-        // Calculate proportional contribution of each skill to the combinedRating.
-        double skill_rating = star_rating / (rhythm_skill + reading_skill + colour_skill + stamina_skill);
+        skills::Rhythm rhythm(mods, mod_count);
+        skills::Reading reading(mods, mod_count);
+        skills::Colour colour(mods, mod_count);
+        skills::Stamina stamina(mods, mod_count, false, pb.is_convert);
+        skills::Stamina single_colour_stamina(mods, mod_count, true, pb.is_convert);
 
-        out.star_rating = star_rating;
-        out.rhythm_difficulty = rhythm_skill * skill_rating;
-        out.reading_difficulty = reading_skill * skill_rating;
-        out.colour_difficulty = colour_skill * skill_rating;
-        out.stamina_difficulty = stamina_skill * skill_rating;
-        // Mechanical difficulty is the sum of colour and stamina difficulties.
-        out.mechanical_difficulty = out.colour_difficulty + out.stamina_difficulty;
-        out.mono_stamina_factor = mono_stamina_factor;
-        out.stamina_top_strains = stamina_difficult_strains;
-        out.consistency_factor = consistency_factor;
-        out.max_combo = max_combo(pb);
+        TaikoBeatmap progressive = pb;
+        progressive.objects.clear();
 
-        return Result::OK;
+        std::vector<preprocessing::TaikoDifficultyHitObject> dhos;
+        std::vector<preprocessing::DifficultyHitObject*> dho_ptrs;
+        std::vector<preprocessing::TaikoDifficultyHitObject*> centre_objects;
+        std::vector<preprocessing::TaikoDifficultyHitObject*> rim_objects;
+        std::vector<preprocessing::TaikoDifficultyHitObject*> note_objects;
+        preprocessing::create_hit_objects(dhos, dho_ptrs, centre_objects, rim_objects, note_objects, pb);
+
+        std::vector<preprocessing::MonoStreak> mono_streaks;
+        std::vector<preprocessing::AlternatingMonoPattern> alternating_mono_patterns;
+        std::vector<preprocessing::RepeatingHitPatterns> repeating_hit_patterns;
+        preprocessing::colour::process_and_assign(dhos, mono_streaks, alternating_mono_patterns,
+                                                  repeating_hit_patterns);
+
+        std::vector<preprocessing::SameRhythmHitObjectGrouping> rhythm_groupings;
+        std::vector<preprocessing::SamePatternsGroupedHitObjects> pattern_groupings;
+        preprocessing::rhythm::process_and_assign(note_objects, rhythm_groupings, pattern_groupings);
+
+        size_t current = 0;
+
+        for (size_t i = 0; i < pb.objects.size(); i++) {
+            progressive.objects.push_back(pb.objects[i]);
+            const double end_time = pb.objects[i].time + pb.objects[i].duration;
+
+            while (current < dhos.size() &&
+                   pb.objects[current + 2].time + pb.objects[current + 2].duration <= end_time) {
+                rhythm.process(dhos[current]);
+                reading.process(dhos[current]);
+                colour.process(dhos[current]);
+                stamina.process(dhos[current]);
+                single_colour_stamina.process(dhos[current]);
+
+                current++;
+            }
+
+            TaikoDifficultyAttributes step;
+            c.create_difficulty_attributes(step, progressive, rhythm, reading, colour, stamina,
+                                           single_colour_stamina);
+            times.push_back(end_time);
+            attributes.push_back(step);
+        }
+
+        return StatusCode::OK;
+    }
+
+    Status calculate_strains(TaikoStrains& out, const pppp::beatmaps::Beatmap& beatmap,
+                             const pppp::mods::Mod* mods, size_t mod_count) {
+        out = TaikoStrains();
+        if (!mods && mod_count) {
+            return StatusCode::INVALID_ARGUMENT;
+        }
+
+        TaikoBeatmap pb;
+        Status status = build(pb, beatmap, mods, mod_count);
+        if (!status.ok()) {
+            return status;
+        }
+
+        const double section_length = 400;
+
+        std::vector<preprocessing::TaikoDifficultyHitObject> dhos;
+        std::vector<preprocessing::DifficultyHitObject*> dho_ptrs;
+        std::vector<preprocessing::TaikoDifficultyHitObject*> centre_objects;
+        std::vector<preprocessing::TaikoDifficultyHitObject*> rim_objects;
+        std::vector<preprocessing::TaikoDifficultyHitObject*> note_objects;
+        preprocessing::create_hit_objects(dhos, dho_ptrs, centre_objects, rim_objects, note_objects, pb);
+
+        std::vector<preprocessing::MonoStreak> mono_streaks;
+        std::vector<preprocessing::AlternatingMonoPattern> alternating_mono_patterns;
+        std::vector<preprocessing::RepeatingHitPatterns> repeating_hit_patterns;
+        preprocessing::colour::process_and_assign(dhos, mono_streaks, alternating_mono_patterns,
+                                                  repeating_hit_patterns);
+
+        std::vector<preprocessing::SameRhythmHitObjectGrouping> rhythm_groupings;
+        std::vector<preprocessing::SamePatternsGroupedHitObjects> pattern_groupings;
+        preprocessing::rhythm::process_and_assign(note_objects, rhythm_groupings, pattern_groupings);
+
+        skills::Rhythm rhythm(mods, mod_count);
+        skills::Reading reading(mods, mod_count);
+        skills::Colour colour(mods, mod_count);
+        skills::Stamina stamina(mods, mod_count, false, pb.is_convert);
+        skills::Stamina single_colour_stamina(mods, mod_count, true, pb.is_convert);
+
+        if (!pb.objects.empty()) {
+            for (size_t i = 0; i < dhos.size(); i++) {
+                rhythm.process(dhos[i]);
+                reading.process(dhos[i]);
+                colour.process(dhos[i]);
+                stamina.process(dhos[i]);
+                single_colour_stamina.process(dhos[i]);
+            }
+        }
+
+        if (!dhos.empty()) {
+            out.start_time =
+                (std::ceil(dhos[0].start_time / section_length) * section_length - section_length) *
+                pb.clock_rate;
+        }
+        out.section_length = section_length * pb.clock_rate;
+
+        colour.get_current_strain_peaks(out.colour);
+        reading.get_current_strain_peaks(out.reading);
+        rhythm.get_current_strain_peaks(out.rhythm);
+        stamina.get_current_strain_peaks(out.stamina);
+        single_colour_stamina.get_current_strain_peaks(out.single_colour_stamina);
+
+        return StatusCode::OK;
     }
 }}} // namespace pppp::taiko::difficulty

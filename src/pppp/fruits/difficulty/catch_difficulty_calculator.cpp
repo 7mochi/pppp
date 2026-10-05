@@ -9,6 +9,21 @@
 #include <vector>
 
 namespace pppp { namespace fruits { namespace difficulty {
+    namespace {
+        void flatten(std::vector<object::CatchHitObject*>& out, object::CatchHitObject& object) {
+            out.push_back(&object);
+            for (size_t i = 0; i < object.nested.size(); i++) {
+                flatten(out, object.nested[i]);
+            }
+        }
+
+        void create_difficulty_attributes(CatchDifficultyAttributes& out, const CatchBeatmap& pb,
+                                          skills::Movement& movement) {
+            out.star_rating = std::sqrt(movement.difficulty_value()) * DIFFICULTY_MULTIPLIER;
+            out.max_combo = max_combo(pb);
+        }
+    } // namespace
+
     void preprocessing::create_hit_objects(std::vector<preprocessing::CatchDifficultyHitObject>& out,
                                            std::vector<preprocessing::DifficultyHitObject*>& object_ptrs,
                                            CatchBeatmap& pb) {
@@ -42,22 +57,22 @@ namespace pppp { namespace fruits { namespace difficulty {
         }
     }
 
-    Result::Value calculate_difficulty(CatchDifficultyAttributes& out, const pppp::beatmaps::Beatmap& beatmap,
-                                       const pppp::mods::Mod* mods, size_t mod_count) {
+    Status calculate_difficulty(CatchDifficultyAttributes& out, const pppp::beatmaps::Beatmap& beatmap,
+                                const pppp::mods::Mod* mods, size_t mod_count) {
         if (!mods && mod_count) {
-            return Result::INVALID_ARGUMENT;
+            return StatusCode::INVALID_ARGUMENT;
         }
 
         CatchBeatmap pb;
-        Result::Value status = build(pb, beatmap, mods, mod_count);
-        if (status != Result::OK) {
+        Status status = build(pb, beatmap, mods, mod_count);
+        if (!status.ok()) {
             return status;
         }
 
         out = CatchDifficultyAttributes();
 
         if (pb.objects.empty()) {
-            return Result::OK;
+            return StatusCode::OK;
         }
 
         std::vector<preprocessing::CatchDifficultyHitObject> dho_list;
@@ -69,9 +84,99 @@ namespace pppp { namespace fruits { namespace difficulty {
             movement.process(dho_list[i]);
         }
 
-        out.star_rating = std::sqrt(movement.difficulty_value()) * DIFFICULTY_MULTIPLIER;
-        out.max_combo = max_combo(pb);
+        create_difficulty_attributes(out, pb, movement);
 
-        return Result::OK;
+        return StatusCode::OK;
+    }
+
+    Status calculate_timed_difficulty(std::vector<double>& times,
+                                      std::vector<CatchDifficultyAttributes>& attributes,
+                                      const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                                      size_t mod_count) {
+        times.clear();
+        attributes.clear();
+        if (!mods && mod_count) {
+            return StatusCode::INVALID_ARGUMENT;
+        }
+
+        CatchBeatmap pb;
+        Status status = build(pb, beatmap, mods, mod_count);
+        if (!status.ok()) {
+            return status;
+        }
+
+        if (pb.objects.empty()) {
+            return StatusCode::OK;
+        }
+
+        skills::Movement movement(mods, mod_count);
+
+        CatchBeatmap progressive = pb;
+        progressive.objects.clear();
+        progressive.all_objects.clear();
+
+        std::vector<preprocessing::CatchDifficultyHitObject> dho_list;
+        std::vector<preprocessing::DifficultyHitObject*> dho_ptrs;
+        preprocessing::create_hit_objects(dho_list, dho_ptrs, pb);
+
+        std::vector<object::CatchHitObject*> palpable;
+        palpable_objects(palpable, pb);
+
+        size_t current = 0;
+
+        for (size_t i = 0; i < pb.objects.size(); i++) {
+            flatten(progressive.all_objects, pb.objects[i]);
+
+            while (current < dho_list.size() && palpable[current + 1]->end_time <= pb.objects[i].end_time) {
+                movement.process(dho_list[current]);
+
+                current++;
+            }
+
+            CatchDifficultyAttributes step;
+            create_difficulty_attributes(step, progressive, movement);
+            times.push_back(pb.objects[i].end_time);
+            attributes.push_back(step);
+        }
+
+        return StatusCode::OK;
+    }
+
+    Status calculate_strains(CatchStrains& out, const pppp::beatmaps::Beatmap& beatmap,
+                             const pppp::mods::Mod* mods, size_t mod_count) {
+        out = CatchStrains();
+        if (!mods && mod_count) {
+            return StatusCode::INVALID_ARGUMENT;
+        }
+
+        CatchBeatmap pb;
+        Status status = build(pb, beatmap, mods, mod_count);
+        if (!status.ok()) {
+            return status;
+        }
+
+        const double section_length = 750;
+
+        std::vector<preprocessing::CatchDifficultyHitObject> dho_list;
+        std::vector<preprocessing::DifficultyHitObject*> dho_ptrs;
+        preprocessing::create_hit_objects(dho_list, dho_ptrs, pb);
+
+        skills::Movement movement(mods, mod_count);
+        if (!pb.objects.empty()) {
+            for (size_t i = 0; i < dho_list.size(); i++) {
+                movement.process(dho_list[i]);
+            }
+        }
+
+        if (!dho_list.empty()) {
+            out.start_time =
+                (std::ceil(dho_list[0].start_time / section_length) * section_length - section_length) *
+                pb.clock_rate;
+        }
+        out.section_length = section_length * pb.clock_rate;
+
+        movement.get_current_strain_peaks(out.movement);
+
+        return StatusCode::OK;
     }
 }}} // namespace pppp::fruits::difficulty

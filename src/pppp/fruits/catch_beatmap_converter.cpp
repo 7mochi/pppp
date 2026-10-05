@@ -18,8 +18,8 @@ namespace pppp { namespace fruits {
         }
     } // namespace
 
-    Result::Value convert(CatchBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap,
-                          const pppp::beatmaps::ObjectConverted<object::CatchHitObject>& object_converted) {
+    Status convert(CatchBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap,
+                   const pppp::beatmaps::ObjectConverted<object::CatchHitObject>& object_converted) {
         for (size_t i = 0; i < beatmap.hit_objects.size(); i++) {
             const pppp::beatmaps::HitObject& ho = beatmap.hit_objects[i];
             const size_t first = pb.objects.size();
@@ -31,13 +31,14 @@ namespace pppp { namespace fruits {
                 // time duration.
                 pb.objects.push_back(object::create_juice_stream(
                     slider, utils::math::clamp(ho.position.x, 0.0, object::PLAYFIELD_WIDTH), ho.start_time,
-                    static_cast<int>(ho.slider)));
+                    ho.end_time, static_cast<int>(ho.slider)));
             } else if ((ho.type & 8) != 0) {
                 pb.objects.push_back(object::create_banana_shower(ho.start_time, ho.end_time));
             } else {
                 object::CatchHitObject fruit;
                 fruit.kind = object::OBJECT_FRUIT;
                 fruit.time = ho.start_time;
+                fruit.end_time = fruit.time;
                 fruit.original_x = ho.position.x;
                 fruit.x_offset = 0.0;
                 fruit.distance_to_hyper_dash = 0.0;
@@ -53,6 +54,6 @@ namespace pppp { namespace fruits {
         }
 
         flatten(pb.all_objects, pb.objects);
-        return Result::OK;
+        return StatusCode::OK;
     }
 }} // namespace pppp::fruits

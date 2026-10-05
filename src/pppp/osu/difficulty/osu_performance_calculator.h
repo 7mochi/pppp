@@ -6,14 +6,14 @@
 
 #include "pppp/beatmaps/beatmap.h"
 #include "pppp/common/score_info.h"
-#include "pppp/config.h"
 #include "pppp/osu/difficulty/osu_difficulty_attributes.h"
 #include "pppp/osu/difficulty/osu_performance_attributes.h"
+#include "pppp/status.h"
 
 namespace pppp { namespace osu { namespace difficulty {
-    Result::Value calculate_performance(OsuPerformanceAttributes& out, const pppp::common::ScoreInfo& score,
-                                        const OsuDifficultyAttributes& attributes,
-                                        const pppp::beatmaps::Beatmap& beatmap);
+    Status calculate_performance(OsuPerformanceAttributes& out, const pppp::common::ScoreInfo& score,
+                                 const OsuDifficultyAttributes& attributes,
+                                 const pppp::beatmaps::Beatmap& beatmap);
 }}} // namespace pppp::osu::difficulty
 
 #endif

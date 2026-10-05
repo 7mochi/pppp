@@ -19,25 +19,33 @@ namespace Pppp {
     public sealed class Beatmap : IDisposable {
         private readonly BeatmapHandle handle;
 
-        private HitObject[] _hit_objects;
-        private Slider[] _sliders;
-        private TimingPoint[] _timing_points;
-        private BreakPeriod[] _breaks;
+        private HitObject[] hitObjects;
+        private Slider[] sliders;
+        private TimingPoint[] timingPoints;
+        private BreakPeriod[] breaks;
 
         private Beatmap(BeatmapHandle handle) { this.handle = handle; }
 
-        /// <summary>Load a beatmap from a `.osu` file path.</summary>
+        /// <summary>Parse a <see cref="Beatmap"/> by providing a path to a `.osu` file.</summary>
         public static Beatmap FromFile(string path) {
             if (path == null) {
                 throw new ArgumentNullException("path");
             }
+            return FromBytes(File.ReadAllBytes(path));
+        }
+
+        /// <summary>Parse a <see cref="Beatmap"/> by providing the content of a `.osu` file as a slice of bytes.</summary>
+        public static Beatmap FromBytes(byte[] data) {
+            if (data == null) {
+                throw new ArgumentNullException("data");
+            }
             IntPtr map;
-            int status = Native.pppp_beatmap_from_file(Native.Utf8(path), out map);
+            int status = Native.pppp_beatmap_from_bytes(data, new UIntPtr((uint)data.Length), out map);
             if (status == Native.Allocation) {
                 throw new OutOfMemoryException();
             }
             if (status != Native.Ok) {
-                throw new InvalidDataException("cannot parse the beatmap (result " + status + ")");
+                throw new InvalidDataException("cannot parse the beatmap");
             }
             return new Beatmap(new BeatmapHandle(map));
         }
@@ -51,20 +59,20 @@ namespace Pppp {
             }
         }
 
-        public int format_version {
+        public int FormatVersion {
             get { return Native.pppp_beatmap_format_version(Handle); }
         }
 
-        public int mode {
+        public int Mode {
             get { return Native.pppp_beatmap_mode(Handle); }
         }
 
-        public double stack_leniency {
+        public double StackLeniency {
             get { return Native.pppp_beatmap_stack_leniency(Handle); }
         }
 
         /// <summary>A representation of all top-level difficulty settings for a beatmap.</summary>
-        public BeatmapDifficulty difficulty {
+        public BeatmapDifficulty Difficulty {
             get {
                 BeatmapDifficulty settings;
                 Native.pppp_beatmap_get_difficulty(Handle, out settings);
@@ -72,72 +80,69 @@ namespace Pppp {
             }
         }
 
-        public HitObject[] hit_objects {
+        public HitObject[] HitObjects {
             get {
-                if (_hit_objects == null) {
+                if (hitObjects == null) {
                     IntPtr pointer;
                     UIntPtr count;
                     Native.pppp_beatmap_hit_objects(Handle, out pointer, out count);
-                    _hit_objects = Native.CopyArray<HitObject>(pointer, count);
+                    hitObjects = Native.CopyArray<HitObject>(pointer, count);
                 }
-                return _hit_objects;
+                return hitObjects;
             }
         }
 
-        public Slider[] sliders {
+        public Slider[] Sliders {
             get {
-                if (_sliders == null) {
+                if (sliders == null) {
                     IntPtr pointer;
                     UIntPtr count;
                     Native.pppp_beatmap_sliders(Handle, out pointer, out count);
                     Native.Slider[] views = Native.CopyArray<Native.Slider>(pointer, count);
-                    _sliders = new Slider[views.Length];
+                    sliders = new Slider[views.Length];
                     for (int i = 0; i < views.Length; i++) {
-                        _sliders[i] = new Slider(views[i].slides, views[i].expected_length,
-                                                 Native.CopyUnsigned(views[i].node_sounds,
-                                                                     views[i].node_sound_count),
-                                                 Native.CopyArray<Vector2>(views[i].control_points,
-                                                                           views[i].control_point_count),
-                                                 Native.CopyArray<Vector2>(views[i].path,
-                                                                           views[i].path_count),
-                                                 Native.CopyDoubles(views[i].cumulative_lengths,
-                                                                    views[i].cumulative_length_count),
-                                                 Native.CopyArray<Vector2>(views[i].undecimated_path,
-                                                                           views[i].undecimated_path_count),
-                                                 Native.CopyDoubles(
-                                                     views[i].undecimated_cumulative_lengths,
-                                                     views[i].undecimated_cumulative_length_count),
-                                                 Native.CopyArray<SliderEventDescriptor>(views[i].events,
-                                                                                        views[i].event_count),
-                                                 Native.CopyArray<SliderEventDescriptor>(views[i].catch_events,
-                                                                                        views[i].catch_event_count));
+                        sliders[i] = new Slider(views[i].slides, views[i].expected_length,
+                                                Native.CopyUnsigned(views[i].node_sounds, views[i].node_sound_count),
+                                                Native.CopyArray<Vector2>(views[i].control_points,
+                                                                          views[i].control_point_count),
+                                                Native.CopyArray<Vector2>(views[i].path, views[i].path_count),
+                                                Native.CopyDoubles(views[i].cumulative_lengths,
+                                                                   views[i].cumulative_length_count),
+                                                Native.CopyArray<Vector2>(views[i].undecimated_path,
+                                                                          views[i].undecimated_path_count),
+                                                Native.CopyDoubles(views[i].undecimated_cumulative_lengths,
+                                                                   views[i].undecimated_cumulative_length_count),
+                                                Native.CopyArray<SliderEventDescriptor>(views[i].events,
+                                                                                       views[i].event_count),
+                                                Native.CopyArray<SliderEventDescriptor>(views[i].catch_events,
+                                                                                       views[i].catch_event_count));
                     }
                 }
-                return _sliders;
+                return sliders;
             }
         }
 
-        public TimingPoint[] timing_points {
+        public TimingPoint[] TimingPoints {
             get {
-                if (_timing_points == null) {
+                if (timingPoints == null) {
                     IntPtr pointer;
                     UIntPtr count;
                     Native.pppp_beatmap_timing_points(Handle, out pointer, out count);
-                    _timing_points = Native.CopyArray<TimingPoint>(pointer, count);
+                    timingPoints = Native.CopyArray<TimingPoint>(pointer, count);
                 }
-                return _timing_points;
+                return timingPoints;
             }
         }
 
-        public BreakPeriod[] breaks {
+        public BreakPeriod[] Breaks {
             get {
-                if (_breaks == null) {
+                if (breaks == null) {
                     IntPtr pointer;
                     UIntPtr count;
                     Native.pppp_beatmap_breaks(Handle, out pointer, out count);
-                    _breaks = Native.CopyArray<BreakPeriod>(pointer, count);
+                    breaks = Native.CopyArray<BreakPeriod>(pointer, count);
                 }
-                return _breaks;
+                return breaks;
             }
         }
 

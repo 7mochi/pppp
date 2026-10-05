@@ -1,7 +1,12 @@
 {
   global:
     pppp_version;
+    pppp_result_message;
+    pppp_mods_parse;
+    pppp_mods_from_legacy;
+    pppp_mods_free;
     pppp_beatmap_from_file;
+    pppp_beatmap_from_bytes;
     pppp_beatmap_free;
     pppp_beatmap_format_version;
     pppp_beatmap_mode;
@@ -13,5 +18,15 @@
     pppp_beatmap_breaks;
     pppp_calculate_difficulty;
     pppp_calculate_performance;
+    pppp_calculate_timed_difficulty;
+    pppp_timed_difficulty_entries;
+    pppp_timed_difficulty_free;
+    pppp_calculate_strains;
+    pppp_strains_info;
+    pppp_strains_osu;
+    pppp_strains_taiko;
+    pppp_strains_catch;
+    pppp_strains_mania;
+    pppp_strains_free;
   local: *;
 };

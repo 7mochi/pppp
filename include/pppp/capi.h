@@ -17,6 +17,12 @@
 #define PPPP_C_API
 #endif
 
+#if defined(__GNUC__)
+#define PPPP_C_EXTENSION __extension__
+#else
+#define PPPP_C_EXTENSION
+#endif
+
 // NOLINTBEGIN(readability-identifier-naming): the C naming convention has no namespaces, so every
 // name here carries the prefix and keeps the underscores.
 
@@ -237,30 +243,92 @@ typedef struct pppp_mania_performance_attributes {
     double difficulty;
 } pppp_mania_performance_attributes;
 
-/// The four rulesets' difficulty attributes in one value: a tag plus the four mode structs.
 typedef struct pppp_difficulty_attributes {
     pppp_int32 ruleset;
     double star_rating;
     pppp_int32 max_combo;
-    pppp_osu_difficulty_attributes osu;
-    pppp_taiko_difficulty_attributes taiko;
-    pppp_catch_difficulty_attributes fruits;
-    pppp_mania_difficulty_attributes mania;
+    PPPP_C_EXTENSION union {
+        pppp_osu_difficulty_attributes osu;
+        pppp_taiko_difficulty_attributes taiko;
+        pppp_catch_difficulty_attributes fruits;
+        pppp_mania_difficulty_attributes mania;
+    };
 } pppp_difficulty_attributes;
 
-/// The four rulesets' performance attributes in one value: a tag plus the four mode structs.
 typedef struct pppp_performance_attributes {
     pppp_int32 ruleset;
     double total;
-    pppp_osu_performance_attributes osu;
-    pppp_taiko_performance_attributes taiko;
-    pppp_catch_performance_attributes fruits;
-    pppp_mania_performance_attributes mania;
+    PPPP_C_EXTENSION union {
+        pppp_osu_performance_attributes osu;
+        pppp_taiko_performance_attributes taiko;
+        pppp_catch_performance_attributes fruits;
+        pppp_mania_performance_attributes mania;
+    };
 } pppp_performance_attributes;
+
+/// Wraps a `pppp_difficulty_attributes` and adds a time value for which the attribute is valid.
+/// Output by `pppp_calculate_timed_difficulty`.
+typedef struct pppp_timed_difficulty_attributes {
+    /// The non-clock-adjusted time value at which the attributes take effect.
+    double time;
+
+    /// The attributes.
+    pppp_difficulty_attributes attributes;
+} pppp_timed_difficulty_attributes;
+
+/// The result of `pppp_calculate_timed_difficulty`. It owns its entries, and is freed with
+/// `pppp_timed_difficulty_free`.
+typedef struct pppp_timed_difficulty pppp_timed_difficulty;
+
+/// The result of `pppp_calculate_strains`. It owns its series, and is freed with
+/// `pppp_strains_free`.
+typedef struct pppp_strains pppp_strains;
+
+/// The series of an osu! strain graph, borrowed from a `pppp_strains`. An empty series has a null
+/// pointer and a count of 0.
+typedef struct pppp_osu_strains {
+    const double* aim;
+    size_t aim_count;
+    const double* aim_no_sliders;
+    size_t aim_no_sliders_count;
+    const double* speed;
+    size_t speed_count;
+    const double* reading;
+    size_t reading_count;
+    const double* flashlight;
+    size_t flashlight_count;
+} pppp_osu_strains;
+
+typedef struct pppp_taiko_strains {
+    const double* colour;
+    size_t colour_count;
+    const double* reading;
+    size_t reading_count;
+    const double* rhythm;
+    size_t rhythm_count;
+    const double* stamina;
+    size_t stamina_count;
+    const double* single_colour_stamina;
+    size_t single_colour_stamina_count;
+} pppp_taiko_strains;
+
+typedef struct pppp_catch_strains {
+    const double* movement;
+    size_t movement_count;
+} pppp_catch_strains;
+
+typedef struct pppp_mania_strains {
+    const double* strain;
+    size_t strain_count;
+} pppp_mania_strains;
+
+/// A parsed mod set, made with `pppp_mods_parse` or `pppp_mods_from_legacy` and freed with
+/// `pppp_mods_free`.
+typedef struct pppp_mods pppp_mods;
 
 /// The input of `pppp_calculate_difficulty`. Zero-initialize it; `mods` may be null for no mods.
 typedef struct pppp_difficulty_options {
-    const char* mods;
+    const pppp_mods* mods;
     pppp_int32 ruleset;
     pppp_int32 has_ruleset;
     double clock_rate;
@@ -273,7 +341,7 @@ typedef struct pppp_difficulty_options {
 /// out of `pppp_calculate_difficulty` and the difficulty is not calculated again; the performance
 /// is then calculated for the ruleset those attributes belong to.
 typedef struct pppp_performance_options {
-    const char* mods;
+    const pppp_mods* mods;
     pppp_score_info score;
     pppp_int32 has_score;
     pppp_int32 combo;
@@ -296,9 +364,27 @@ extern "C" {
 /// The version as `major.minor.patch`. The returned string is static; do not free it.
 PPPP_C_API const char* pppp_version(void);
 
+/// The message of a result, in English. The returned string is static; do not free it.
+PPPP_C_API const char* pppp_result_message(pppp_result result);
+
+/// Parse osu!'s own mod specification list (`"HD,DT:speed_change=1.4"`). On success `out`
+/// receives a new mod set that the caller must release with `pppp_mods_free`. On failure `out` is
+/// left untouched.
+PPPP_C_API pppp_result pppp_mods_parse(const char* specification, pppp_mods** out);
+
+/// Convert osu!stable's mod bitmask, classic is not added.
+PPPP_C_API pppp_result pppp_mods_from_legacy(pppp_uint32 bits, pppp_mods** out);
+
+/// Release a mod set. Passing null is allowed and does nothing.
+PPPP_C_API void pppp_mods_free(pppp_mods* mods);
+
 /// Load a beatmap from a `.osu` file path. On success `out` receives a new beatmap that the caller
 /// must release with `pppp_beatmap_free`. On failure `out` is left untouched.
 PPPP_C_API pppp_result pppp_beatmap_from_file(const char* path, pppp_beatmap** out);
+
+/// Load a beatmap from the contents of a `.osu` file already in memory, as `pppp_beatmap_from_file`
+/// does from a path.
+PPPP_C_API pppp_result pppp_beatmap_from_bytes(const void* data, size_t size, pppp_beatmap** out);
 
 /// Release a beatmap. Passing null is allowed and does nothing.
 PPPP_C_API void pppp_beatmap_free(pppp_beatmap* map);
@@ -329,6 +415,46 @@ PPPP_C_API pppp_result pppp_calculate_difficulty(const pppp_beatmap* map,
 PPPP_C_API pppp_result pppp_calculate_performance(const pppp_beatmap* map,
                                                   const pppp_performance_options* options,
                                                   pppp_performance_attributes* out);
+
+/// Calculates the difficulty of the beatmap using a specific mod combination and returns a set of
+/// TimedDifficultyAttributes representing the difficulty at every relevant time value in the
+/// beatmap. The options are `pppp_calculate_difficulty`'s. On success `out` receives a new result
+/// that the caller must release with `pppp_timed_difficulty_free`. On failure `out` is left
+/// untouched.
+PPPP_C_API pppp_result pppp_calculate_timed_difficulty(const pppp_beatmap* map,
+                                                       const pppp_difficulty_options* options,
+                                                       pppp_timed_difficulty** out);
+
+/// The entries of a timed result. The returned pointer is borrowed from the result and stays valid
+/// until `pppp_timed_difficulty_free`; null is written when there are none.
+PPPP_C_API pppp_result pppp_timed_difficulty_entries(const pppp_timed_difficulty* timed,
+                                                     const pppp_timed_difficulty_attributes** out,
+                                                     size_t* count);
+
+/// Release a timed result. Passing null is allowed and does nothing.
+PPPP_C_API void pppp_timed_difficulty_free(pppp_timed_difficulty* timed);
+
+/// Perform the difficulty calculation but instead of evaluating the skill strains, return them as
+/// is. The options are `pppp_calculate_difficulty`'s. On success `out` receives a new result
+/// that the caller must release with `pppp_strains_free`. On failure `out` is left untouched.
+PPPP_C_API pppp_result pppp_calculate_strains(const pppp_beatmap* map, const pppp_difficulty_options* options,
+                                              pppp_strains** out);
+
+/// The ruleset of a strain graph, the time its first section starts at and the length of each
+/// section, both in milliseconds.
+PPPP_C_API pppp_result pppp_strains_info(const pppp_strains* strains, pppp_int32* ruleset, double* start_time,
+                                         double* section_length);
+
+/// The series of a strain graph. The pointers are borrowed from the result and stay valid until
+/// `pppp_strains_free`. Each fails with `PPPP_INVALID_ARGUMENT` when the graph is another
+/// ruleset's.
+PPPP_C_API pppp_result pppp_strains_osu(const pppp_strains* strains, pppp_osu_strains* out);
+PPPP_C_API pppp_result pppp_strains_taiko(const pppp_strains* strains, pppp_taiko_strains* out);
+PPPP_C_API pppp_result pppp_strains_catch(const pppp_strains* strains, pppp_catch_strains* out);
+PPPP_C_API pppp_result pppp_strains_mania(const pppp_strains* strains, pppp_mania_strains* out);
+
+/// Release a strain graph. Passing null is allowed and does nothing.
+PPPP_C_API void pppp_strains_free(pppp_strains* strains);
 
 #ifdef __cplusplus
 } // extern "C"

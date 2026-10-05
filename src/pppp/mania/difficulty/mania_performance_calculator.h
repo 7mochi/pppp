@@ -6,14 +6,14 @@
 
 #include "pppp/beatmaps/beatmap.h"
 #include "pppp/common/score_info.h"
-#include "pppp/config.h"
 #include "pppp/mania/difficulty/mania_difficulty_attributes.h"
 #include "pppp/mania/difficulty/mania_performance_attributes.h"
+#include "pppp/status.h"
 
 namespace pppp { namespace mania { namespace difficulty {
-    Result::Value calculate_performance(ManiaPerformanceAttributes& out, const pppp::common::ScoreInfo& score,
-                                        const ManiaDifficultyAttributes& attributes,
-                                        const pppp::beatmaps::Beatmap& beatmap);
+    Status calculate_performance(ManiaPerformanceAttributes& out, const pppp::common::ScoreInfo& score,
+                                 const ManiaDifficultyAttributes& attributes,
+                                 const pppp::beatmaps::Beatmap& beatmap);
 }}} // namespace pppp::mania::difficulty
 
 #endif

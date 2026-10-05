@@ -4,12 +4,12 @@
 #ifndef PPPP_OSU_MODS_OSU_MOD_RANDOM_H
 #define PPPP_OSU_MODS_OSU_MOD_RANDOM_H
 
-#include "pppp/config.h"
 #include "pppp/mods/mod.h"
 #include "pppp/osu/osu_beatmap.h"
+#include "pppp/status.h"
 
 namespace pppp { namespace osu { namespace mods {
-    Result::Value apply_random(pppp::osu::OsuBeatmap& pb, const pppp::mods::Mod& mod);
+    Status apply_random(pppp::osu::OsuBeatmap& pb, const pppp::mods::Mod& mod);
 }}} // namespace pppp::osu::mods
 
 #endif

@@ -88,9 +88,9 @@ namespace pppp { namespace fruits {
         return out;
     }
 
-    Result::Value build(CatchBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
-                        size_t mod_count,
-                        const pppp::beatmaps::ObjectConverted<object::CatchHitObject>& object_converted) {
+    Status build(CatchBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                 size_t mod_count,
+                 const pppp::beatmaps::ObjectConverted<object::CatchHitObject>& object_converted) {
         pb = CatchBeatmap();
         pb.clock_rate = pppp::mods::mod_calculate_rate(mods, mod_count);
         pb.is_convert = beatmap.mode == 0;
@@ -119,6 +119,6 @@ namespace pppp { namespace fruits {
             }
         }
 
-        return Result::OK;
+        return StatusCode::OK;
     }
 }} // namespace pppp::fruits

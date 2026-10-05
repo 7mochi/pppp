@@ -5,10 +5,12 @@
 #define PPPP_TAIKO_DIFFICULTY_TAIKO_DIFFICULTY_CALCULATOR_H
 
 #include "pppp/beatmaps/beatmap.h"
-#include "pppp/config.h"
 #include "pppp/mods/mod.h"
+#include "pppp/status.h"
 #include "pppp/taiko/difficulty/taiko_difficulty_attributes.h"
+#include "pppp/taiko/difficulty/taiko_strains.h"
 #include <cstddef>
+#include <vector>
 
 namespace pppp { namespace taiko { namespace difficulty {
     const double DIFFICULTY_MULTIPLIER = 0.084375;
@@ -17,8 +19,16 @@ namespace pppp { namespace taiko { namespace difficulty {
     const double COLOUR_SKILL_MULTIPLIER = 0.375 * DIFFICULTY_MULTIPLIER;
     const double STAMINA_SKILL_MULTIPLIER = 0.445 * DIFFICULTY_MULTIPLIER;
 
-    Result::Value calculate_difficulty(TaikoDifficultyAttributes& out, const pppp::beatmaps::Beatmap& beatmap,
-                                       const pppp::mods::Mod* mods, size_t mod_count);
+    Status calculate_difficulty(TaikoDifficultyAttributes& out, const pppp::beatmaps::Beatmap& beatmap,
+                                const pppp::mods::Mod* mods, size_t mod_count);
+
+    Status calculate_timed_difficulty(std::vector<double>& times,
+                                      std::vector<TaikoDifficultyAttributes>& attributes,
+                                      const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                                      size_t mod_count);
+
+    Status calculate_strains(TaikoStrains& out, const pppp::beatmaps::Beatmap& beatmap,
+                             const pppp::mods::Mod* mods, size_t mod_count);
 }}} // namespace pppp::taiko::difficulty
 
 #endif

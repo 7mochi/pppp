@@ -58,14 +58,10 @@ namespace pppp { namespace mania { namespace difficulty {
         };
     } // namespace
 
-    Result::Value calculate_performance(ManiaPerformanceAttributes& out, const pppp::common::ScoreInfo& score,
-                                        const ManiaDifficultyAttributes& attributes,
-                                        const pppp::beatmaps::Beatmap& beatmap) {
+    Status calculate_performance(ManiaPerformanceAttributes& out, const pppp::common::ScoreInfo& score,
+                                 const ManiaDifficultyAttributes& attributes,
+                                 const pppp::beatmaps::Beatmap& beatmap) {
         (void)beatmap;
-
-        if (!score.mods && score.mod_count) {
-            return Result::INVALID_ARGUMENT;
-        }
 
         out = ManiaPerformanceAttributes();
 
@@ -81,7 +77,7 @@ namespace pppp { namespace mania { namespace difficulty {
 
         double multiplier = 1.0;
 
-        for (size_t i = 0; i < score.mod_count; i++) {
+        for (size_t i = 0; i < score.mods.size(); i++) {
             if (score.mods[i].id == pppp::mods::MOD_NF) {
                 multiplier *= 0.75;
             }
@@ -96,6 +92,6 @@ namespace pppp { namespace mania { namespace difficulty {
         out.difficulty = difficulty_value;
         out.total = total_value;
 
-        return Result::OK;
+        return StatusCode::OK;
     }
 }}} // namespace pppp::mania::difficulty

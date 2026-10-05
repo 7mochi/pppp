@@ -8,6 +8,7 @@ namespace pppp { namespace fruits { namespace object {
         CatchHitObject shower;
         shower.kind = OBJECT_BANANA_SHOWER;
         shower.time = start_time;
+        shower.end_time = end_time;
         shower.original_x = 0.0;
         shower.x_offset = 0.0;
         shower.distance_to_hyper_dash = 0.0;
@@ -31,6 +32,7 @@ namespace pppp { namespace fruits { namespace object {
             CatchHitObject banana;
             banana.kind = OBJECT_BANANA;
             banana.time = time;
+            banana.end_time = banana.time;
             banana.original_x = 0.0;
             banana.x_offset = 0.0;
             banana.distance_to_hyper_dash = 0.0;

@@ -88,11 +88,11 @@ namespace pppp { namespace osu {
         return combo;
     }
 
-    Result::Value build(OsuBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
-                        size_t mod_count,
-                        const pppp::beatmaps::ObjectConverted<object::OsuHitObject>& object_converted) {
-        Result::Value rc = convert(pb, beatmap, object_converted);
-        if (rc != Result::OK) {
+    Status build(OsuBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                 size_t mod_count,
+                 const pppp::beatmaps::ObjectConverted<object::OsuHitObject>& object_converted) {
+        Status rc = convert(pb, beatmap, object_converted);
+        if (!rc.ok()) {
             return rc;
         }
 
@@ -113,7 +113,7 @@ namespace pppp { namespace osu {
         update_combo_information(pb);
         apply_defaults(pb);
         rc = reflect(pb, pppp::mods::mod_reflection(mods, mod_count));
-        if (rc != Result::OK) {
+        if (!rc.ok()) {
             return rc;
         }
         apply_stacking(pb);

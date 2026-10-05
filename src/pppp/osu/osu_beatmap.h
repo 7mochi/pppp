@@ -9,6 +9,7 @@
 #include "pppp/beatmaps/control_points/control_point_info.h"
 #include "pppp/mods/mod.h"
 #include "pppp/osu/object/osu_hit_object.h"
+#include "pppp/status.h"
 #include "pppp/utils/vector2.h"
 #include <cstddef>
 #include <vector>
@@ -55,10 +56,10 @@ namespace pppp { namespace osu {
     /// Finds the maximum achievable combo by hitting all HitObjects in a beatmap.
     int max_combo(const OsuBeatmap& pb);
 
-    Result::Value build(OsuBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
-                        size_t mod_count,
-                        const pppp::beatmaps::ObjectConverted<object::OsuHitObject>& object_converted =
-                            pppp::beatmaps::ObjectConverted<object::OsuHitObject>());
+    Status build(OsuBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                 size_t mod_count,
+                 const pppp::beatmaps::ObjectConverted<object::OsuHitObject>& object_converted =
+                     pppp::beatmaps::ObjectConverted<object::OsuHitObject>());
 }} // namespace pppp::osu
 
 #endif

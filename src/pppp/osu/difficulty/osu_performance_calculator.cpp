@@ -72,7 +72,7 @@ namespace pppp { namespace osu { namespace difficulty {
                   speed_estimated_slider_breaks(0.0) {}
 
             bool has_mod(pppp::mods::ModId id) const {
-                return pppp::mods::mod_has(score.mods, score.mod_count, id) != 0;
+                return pppp::mods::mod_has(score.mods.data(), score.mods.size(), id) != 0;
             }
             int total_hits() const { return count_great + count_ok + count_meh + count_miss; }
             int total_successful_hits() const { return count_great + count_ok + count_meh; }
@@ -467,17 +467,14 @@ namespace pppp { namespace osu { namespace difficulty {
 
     } // namespace
 
-    Result::Value calculate_performance(OsuPerformanceAttributes& out, const pppp::common::ScoreInfo& score,
-                                        const OsuDifficultyAttributes& attributes,
-                                        const pppp::beatmaps::Beatmap& beatmap) {
-        if (!score.mods && score.mod_count) {
-            return Result::INVALID_ARGUMENT;
-        }
+    Status calculate_performance(OsuPerformanceAttributes& out, const pppp::common::ScoreInfo& score,
+                                 const OsuDifficultyAttributes& attributes,
+                                 const pppp::beatmaps::Beatmap& beatmap) {
         out = OsuPerformanceAttributes();
         OsuPerformanceCalculator c(score, attributes);
 
         c.using_classic_slider_accuracy = false;
-        for (size_t i = 0; i < score.mod_count; i++) {
+        for (size_t i = 0; i < score.mods.size(); i++) {
             if (score.mods[i].id == pppp::mods::MOD_CL && score.mods[i].classic.no_slider_head_accuracy) {
                 c.using_classic_slider_accuracy = true;
             }
@@ -502,8 +499,8 @@ namespace pppp { namespace osu { namespace difficulty {
         ds.approach_rate = static_cast<float>(beatmap.difficulty.approach_rate);
         ds.slider_multiplier = beatmap.difficulty.slider_multiplier;
         ds.slider_tick_rate = beatmap.difficulty.slider_tick_rate;
-        pppp::mods::mod_apply_to_difficulty(score.mods, score.mod_count, &ds);
-        c.clock_rate = pppp::mods::mod_calculate_rate(score.mods, score.mod_count);
+        pppp::mods::mod_apply_to_difficulty(score.mods.data(), score.mods.size(), &ds);
+        c.clock_rate = pppp::mods::mod_calculate_rate(score.mods.data(), score.mods.size());
 
         pppp::osu::OsuHitWindows hit_windows;
         hit_windows.set_difficulty(static_cast<float>(ds.overall_difficulty));
@@ -589,6 +586,6 @@ namespace pppp { namespace osu { namespace difficulty {
         out.speed_estimated_slider_breaks = c.speed_estimated_slider_breaks;
         out.speed_deviation = c.speed_deviation;
         out.total = total;
-        return Result::OK;
+        return StatusCode::OK;
     }
 }}} // namespace pppp::osu::difficulty

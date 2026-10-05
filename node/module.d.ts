@@ -1,10 +1,11 @@
-/** The ruleset a tagged attribute set belongs to; the values are the beatmap's mode. */
+/** Which ruleset a tagged attribute set belongs to. The values are the beatmap's `Mode`. */
 export declare const Ruleset: {
-  readonly OSU: 0;
-  readonly TAIKO: 1;
-  readonly CATCH: 2;
-  readonly MANIA: 3;
+  readonly Osu: 0;
+  readonly Taiko: 1;
+  readonly Catch: 2;
+  readonly Mania: 3;
 };
+export type Ruleset = (typeof Ruleset)[keyof typeof Ruleset];
 
 export declare const version: string;
 
@@ -14,232 +15,332 @@ export interface Vector2 {
 }
 
 export interface BeatmapDifficulty {
-  drain_rate: number;
-  circle_size: number;
-  overall_difficulty: number;
-  approach_rate: number;
-  slider_multiplier: number;
-  slider_tick_rate: number;
+  drainRate: number;
+  circleSize: number;
+  overallDifficulty: number;
+  approachRate: number;
+  sliderMultiplier: number;
+  sliderTickRate: number;
 }
 
 export interface SliderEvent {
   type: number;
   time: number;
-  span_index: number;
-  span_start_time: number;
-  path_progress: number;
+  spanIndex: number;
+  spanStartTime: number;
+  pathProgress: number;
   position: Vector2;
 }
 
 export interface Slider {
   slides: number;
-  expected_length: number;
-  node_sounds: number[];
-  control_points: Vector2[];
+  expectedLength: number;
+  nodeSounds: number[];
+  controlPoints: Vector2[];
   path: Vector2[];
-  cumulative_lengths: number[];
-  undecimated_path: Vector2[];
-  undecimated_cumulative_lengths: number[];
+  cumulativeLengths: number[];
+  undecimatedPath: Vector2[];
+  undecimatedCumulativeLengths: number[];
   events: SliderEvent[];
-  catch_events: SliderEvent[];
+  catchEvents: SliderEvent[];
 }
 
 export interface HitObject {
   position: Vector2;
   type: number;
   hitsound: number;
-  start_time: number;
-  end_time: number;
-  new_combo: boolean;
-  combo_offset: number;
+  startTime: number;
+  endTime: number;
+  newCombo: boolean;
+  comboOffset: number;
   slider: number;
 }
 
 export interface TimingPoint {
   time: number;
-  beat_length: number;
+  beatLength: number;
   meter: number;
   uninherited: boolean;
   effects: number;
 }
 
 export interface BreakPeriod {
-  start_time: number;
-  end_time: number;
+  startTime: number;
+  endTime: number;
 }
 
-export interface Beatmap {
-  format_version: number;
-  mode: number;
-  stack_leniency: number;
-  difficulty: BeatmapDifficulty;
-  readonly hit_objects: HitObject[];
+/** A loaded beatmap. */
+export declare class Beatmap {
+  private constructor();
+
+  /** Parse a `Beatmap` by providing the content of a `.osu` file as a slice of bytes. */
+  static fromBytes(data: Uint8Array): Beatmap;
+
+  /** Parse a `Beatmap` by providing a path to a `.osu` file. */
+  static fromFileSync(path: string | URL | Uint8Array): Beatmap;
+
+  /** Parse a `Beatmap` by providing a path to a `.osu` file. */
+  static fromFile(path: string | URL | Uint8Array): Promise<Beatmap>;
+
+  readonly formatVersion: number;
+  readonly mode: number;
+  readonly stackLeniency: number;
+  readonly difficulty: BeatmapDifficulty;
+  readonly hitObjects: HitObject[];
   readonly sliders: Slider[];
-  readonly timing_points: TimingPoint[];
+  readonly timingPoints: TimingPoint[];
   readonly breaks: BreakPeriod[];
 }
 
-export interface ScoreInfo {
-  statistics: number[];
-  maximum_statistics: number[];
-  max_combo: number;
-  accuracy: number;
-  legacy_total_score: number | null;
-}
-
 export interface OsuDifficultyAttributes {
-  star_rating: number;
-  max_combo: number;
-  aim_difficulty: number;
-  speed_difficulty: number;
-  reading_difficulty: number;
-  flashlight_difficulty: number;
-  slider_factor: number;
-  aim_difficult_strain_count: number;
-  speed_difficult_strain_count: number;
-  reading_difficult_note_count: number;
-  aim_difficult_slider_count: number;
-  aim_top_weighted_slider_factor: number;
-  speed_top_weighted_slider_factor: number;
-  speed_note_count: number;
-  hit_circle_count: number;
-  slider_count: number;
-  large_tick_count: number;
-  spinner_count: number;
-  nested_score_per_object: number;
-  legacy_score_base_multiplier: number;
-  maximum_legacy_combo_score: number;
+  ruleset: typeof Ruleset.Osu;
+  starRating: number;
+  maxCombo: number;
+  aimDifficulty: number;
+  speedDifficulty: number;
+  readingDifficulty: number;
+  flashlightDifficulty: number;
+  sliderFactor: number;
+  aimDifficultStrainCount: number;
+  speedDifficultStrainCount: number;
+  readingDifficultNoteCount: number;
+  aimDifficultSliderCount: number;
+  aimTopWeightedSliderFactor: number;
+  speedTopWeightedSliderFactor: number;
+  speedNoteCount: number;
+  hitCircleCount: number;
+  sliderCount: number;
+  largeTickCount: number;
+  spinnerCount: number;
+  nestedScorePerObject: number;
+  legacyScoreBaseMultiplier: number;
+  maximumLegacyComboScore: number;
 }
 
 export interface TaikoDifficultyAttributes {
-  star_rating: number;
-  max_combo: number;
-  mechanical_difficulty: number;
-  rhythm_difficulty: number;
-  reading_difficulty: number;
-  colour_difficulty: number;
-  stamina_difficulty: number;
-  mono_stamina_factor: number;
-  consistency_factor: number;
-  stamina_top_strains: number;
+  ruleset: typeof Ruleset.Taiko;
+  starRating: number;
+  maxCombo: number;
+  mechanicalDifficulty: number;
+  rhythmDifficulty: number;
+  readingDifficulty: number;
+  colourDifficulty: number;
+  staminaDifficulty: number;
+  monoStaminaFactor: number;
+  consistencyFactor: number;
+  staminaTopStrains: number;
 }
 
 export interface CatchDifficultyAttributes {
-  star_rating: number;
-  max_combo: number;
+  ruleset: typeof Ruleset.Catch;
+  starRating: number;
+  maxCombo: number;
 }
 
 export interface ManiaDifficultyAttributes {
-  star_rating: number;
-  max_combo: number;
+  ruleset: typeof Ruleset.Mania;
+  starRating: number;
+  maxCombo: number;
 }
 
-export interface DifficultyAttributes {
-  ruleset: number;
-  star_rating: number;
-  max_combo: number;
-  osu: OsuDifficultyAttributes;
-  taiko: TaikoDifficultyAttributes;
-  fruits: CatchDifficultyAttributes;
-  mania: ManiaDifficultyAttributes;
+export type DifficultyAttributes =
+  | OsuDifficultyAttributes
+  | TaikoDifficultyAttributes
+  | CatchDifficultyAttributes
+  | ManiaDifficultyAttributes;
+
+/**
+ * Wraps a DifficultyAttributes object and adds a time value for which the attribute is valid.
+ * Output by `Difficulty.calculateTimed`.
+ */
+export interface TimedDifficultyAttributes {
+  /** The non-clock-adjusted time value at which the attributes take effect. */
+  time: number;
+  /** The attributes. */
+  attributes: DifficultyAttributes;
 }
+
+/**
+ * The result of calculating the strains on a osu! map.
+ *
+ * Suitable to plot the difficulty of a map over time.
+ */
+export interface OsuStrains {
+  ruleset: typeof Ruleset.Osu;
+  startTime: number;
+  sectionLength: number;
+  aim: number[];
+  aimNoSliders: number[];
+  speed: number[];
+  reading: number[];
+  flashlight: number[];
+}
+
+/**
+ * The result of calculating the strains on a osu!taiko map.
+ *
+ * Suitable to plot the difficulty of a map over time.
+ */
+export interface TaikoStrains {
+  ruleset: typeof Ruleset.Taiko;
+  startTime: number;
+  sectionLength: number;
+  colour: number[];
+  reading: number[];
+  rhythm: number[];
+  stamina: number[];
+  singleColourStamina: number[];
+}
+
+/**
+ * The result of calculating the strains on a osu!catch map.
+ *
+ * Suitable to plot the difficulty of a map over time.
+ */
+export interface CatchStrains {
+  ruleset: typeof Ruleset.Catch;
+  startTime: number;
+  sectionLength: number;
+  movement: number[];
+}
+
+/**
+ * The result of calculating the strains on a osu!mania map.
+ *
+ * Suitable to plot the difficulty of a map over time.
+ */
+export interface ManiaStrains {
+  ruleset: typeof Ruleset.Mania;
+  startTime: number;
+  sectionLength: number;
+  strain: number[];
+}
+
+/**
+ * The result of calculating the strains on a map.
+ *
+ * Suitable to plot the difficulty of a map over time.
+ */
+export type Strains = OsuStrains | TaikoStrains | CatchStrains | ManiaStrains;
 
 export interface OsuPerformanceAttributes {
+  ruleset: typeof Ruleset.Osu;
   total: number;
   aim: number;
   speed: number;
   accuracy: number;
   flashlight: number;
   reading: number;
-  effective_miss_count: number;
-  combo_based_estimated_miss_count: number;
-  score_based_estimated_miss_count: number | null;
-  aim_estimated_slider_breaks: number;
-  speed_estimated_slider_breaks: number;
-  speed_deviation: number | null;
+  effectiveMissCount: number;
+  comboBasedEstimatedMissCount: number;
+  scoreBasedEstimatedMissCount: number | null;
+  aimEstimatedSliderBreaks: number;
+  speedEstimatedSliderBreaks: number;
+  speedDeviation: number | null;
 }
 
 export interface TaikoPerformanceAttributes {
+  ruleset: typeof Ruleset.Taiko;
   total: number;
   difficulty: number;
   accuracy: number;
-  estimated_unstable_rate: number | null;
+  estimatedUnstableRate: number | null;
 }
 
 export interface CatchPerformanceAttributes {
+  ruleset: typeof Ruleset.Catch;
   total: number;
 }
 
 export interface ManiaPerformanceAttributes {
+  ruleset: typeof Ruleset.Mania;
   total: number;
   difficulty: number;
 }
 
-export interface PerformanceAttributes {
-  ruleset: number;
-  total: number;
-  osu: OsuPerformanceAttributes;
-  taiko: TaikoPerformanceAttributes;
-  fruits: CatchPerformanceAttributes;
-  mania: ManiaPerformanceAttributes;
+export type PerformanceAttributes =
+  | OsuPerformanceAttributes
+  | TaikoPerformanceAttributes
+  | CatchPerformanceAttributes
+  | ManiaPerformanceAttributes;
+
+export interface Statistics {
+  none?: number;
+  miss?: number;
+  meh?: number;
+  ok?: number;
+  good?: number;
+  great?: number;
+  perfect?: number;
+  smallTickMiss?: number;
+  smallTickHit?: number;
+  largeTickMiss?: number;
+  largeTickHit?: number;
+  smallBonus?: number;
+  largeBonus?: number;
+  ignoreMiss?: number;
+  ignoreHit?: number;
+  comboBreak?: number;
+  sliderTailHit?: number;
+  legacyComboIncrease?: number;
 }
 
-export declare function fromFile(path: string): Beatmap;
-
 export interface DifficultyOptions {
-  mods?: string;
-  ruleset?: number;
-  clockRate?: number;
+  mods?: string | number;
+  ruleset?: Ruleset | null;
+  clockRate?: number | null;
 }
 
 /** Difficulty calculator on maps of any mode. */
 export declare class Difficulty {
-  constructor(beatmap: Beatmap, options?: DifficultyOptions);
+  constructor(options?: DifficultyOptions);
 
-  /** Specify mods, as osu!'s own specification list. */
-  mods(spec: string): Difficulty;
-
-  /** Calculate for this ruleset instead of the beatmap's own mode. */
-  ruleset(ruleset: number): Difficulty;
-
-  /** Adjust the clock rate used in the calculation. */
-  clockRate(rate: number): Difficulty;
+  mods: string | number;
+  ruleset: Ruleset | null;
+  clockRate: number | null;
 
   /** Perform the difficulty calculation. */
-  calculate(): DifficultyAttributes;
+  calculate(beatmap: Beatmap): DifficultyAttributes;
+  calculateAsync(beatmap: Beatmap): Promise<DifficultyAttributes>;
+
+  /**
+   * Calculates the difficulty of the beatmap using a specific mod combination and returns a set of
+   * TimedDifficultyAttributes representing the difficulty at every relevant time value in the beatmap.
+   */
+  calculateTimed(beatmap: Beatmap): TimedDifficultyAttributes[];
+  calculateTimedAsync(beatmap: Beatmap): Promise<TimedDifficultyAttributes[]>;
+
+  /**
+   * Perform the difficulty calculation but instead of evaluating the skill strains, return them as
+   * is.
+   *
+   * Suitable to plot the difficulty of a map over time.
+   */
+  strains(beatmap: Beatmap): Strains;
+  strainsAsync(beatmap: Beatmap): Promise<Strains>;
 }
 
 export interface PerformanceOptions {
-  mods?: string;
-  state?: ScoreInfo;
-  combo?: number;
-  accuracy?: number;
-  misses?: number;
-  attributes?: DifficultyAttributes;
+  mods?: string | number;
+  maxCombo?: number | null;
+  accuracy?: number | null;
+  misses?: number | null;
+  statistics?: Statistics | null;
+  legacyTotalScore?: number | null;
 }
 
 /** Performance calculator on maps of any mode. */
 export declare class Performance {
-  constructor(beatmap: Beatmap, options?: PerformanceOptions);
+  constructor(options?: PerformanceOptions);
 
-  /** Specify mods, as osu!'s own specification list. */
-  mods(spec: string): Performance;
+  mods: string | number;
+  maxCombo: number | null;
+  accuracy: number | null;
+  misses: number | null;
+  statistics: Statistics | null;
+  legacyTotalScore: number | null;
 
-  /** Provide the score state through a `ScoreInfo`. */
-  state(state: ScoreInfo): Performance;
-
-  /** Specify the max combo of the play. */
-  combo(combo: number): Performance;
-
-  /** Set the accuracy between 0.0 and 1.0. */
-  accuracy(accuracy: number): Performance;
-
-  /** Use the given already-calculated attributes, skipping the difficulty calculation. */
-  attributes(attributes: DifficultyAttributes): Performance;
-
-  /** Specify the amount of misses of the play. */
-  misses(misses: number): Performance;
-
-  /** Perform the performance calculation. */
-  calculate(): PerformanceAttributes;
+  /** Perform the performance calculation for the map's or the attributes' mode. */
+  calculate(beatmap: Beatmap, attributes?: DifficultyAttributes | null): PerformanceAttributes;
+  calculateAsync(beatmap: Beatmap, attributes?: DifficultyAttributes | null): Promise<PerformanceAttributes>;
 }

@@ -69,7 +69,7 @@ target_link_libraries(pppp_utils PUBLIC pppp_options)
 target_link_libraries(pppp_utils PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_utils PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
-  FILES include/pppp/config.h include/pppp/utils/vector2.h)
+  FILES include/pppp/config.h include/pppp/status.h include/pppp/utils/vector2.h)
 
 add_library(pppp_beatmaps
   src/pppp/beatmaps/beatmap.cpp
@@ -88,7 +88,8 @@ target_sources(pppp_beatmaps PUBLIC FILE_SET HEADERS
 add_library(pppp_mods
   src/pppp/mods/mod.cpp
   src/pppp/mods/mod_legacy.cpp
-  src/pppp/mods/mod_settings.cpp)
+  src/pppp/mods/mod_settings.cpp
+  src/pppp/mods/mods.cpp)
 add_library(pppp::mods ALIAS pppp_mods)
 set_target_properties(pppp_mods PROPERTIES EXPORT_NAME mods)
 target_include_directories(pppp_mods PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -96,7 +97,7 @@ target_link_libraries(pppp_mods PUBLIC pppp_utils)
 target_link_libraries(pppp_mods PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_mods PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
-  FILES include/pppp/mods/mod.h)
+  FILES include/pppp/mods/mod.h include/pppp/mods/mods.h)
 
 add_library(pppp_common
   src/pppp/common/difficulty_attributes.cpp
@@ -146,7 +147,8 @@ target_link_libraries(pppp_catch_difficulty PUBLIC pppp_catch_base pppp_common)
 target_link_libraries(pppp_catch_difficulty PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_catch_difficulty PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
-  FILES include/pppp/fruits/difficulty/catch_difficulty_attributes.h)
+  FILES include/pppp/fruits/difficulty/catch_difficulty_attributes.h
+        include/pppp/fruits/difficulty/catch_strains.h)
 
 add_library(pppp_catch_performance
   src/pppp/fruits/difficulty/catch_performance_attributes.cpp
@@ -199,7 +201,8 @@ target_link_libraries(pppp_mania_difficulty PUBLIC pppp_mania_base pppp_common)
 target_link_libraries(pppp_mania_difficulty PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_mania_difficulty PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
-  FILES include/pppp/mania/difficulty/mania_difficulty_attributes.h)
+  FILES include/pppp/mania/difficulty/mania_difficulty_attributes.h
+        include/pppp/mania/difficulty/mania_strains.h)
 
 add_library(pppp_mania_performance
   src/pppp/mania/difficulty/mania_performance_attributes.cpp
@@ -260,7 +263,8 @@ target_link_libraries(pppp_osu_difficulty PUBLIC pppp_osu_base pppp_common)
 target_link_libraries(pppp_osu_difficulty PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_osu_difficulty PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
-  FILES include/pppp/osu/difficulty/osu_difficulty_attributes.h)
+  FILES include/pppp/osu/difficulty/osu_difficulty_attributes.h
+        include/pppp/osu/difficulty/osu_strains.h)
 
 add_library(pppp_osu_performance
   src/pppp/osu/difficulty/osu_legacy_score_miss_calculator.cpp
@@ -317,7 +321,8 @@ target_link_libraries(pppp_taiko_difficulty PUBLIC pppp_taiko_base pppp_common)
 target_link_libraries(pppp_taiko_difficulty PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_taiko_difficulty PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
-  FILES include/pppp/taiko/difficulty/taiko_difficulty_attributes.h)
+  FILES include/pppp/taiko/difficulty/taiko_difficulty_attributes.h
+        include/pppp/taiko/difficulty/taiko_strains.h)
 
 add_library(pppp_taiko_performance
   src/pppp/taiko/difficulty/taiko_performance_attributes.cpp

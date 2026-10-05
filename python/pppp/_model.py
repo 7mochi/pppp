@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import sys
-from typing import ClassVar, TypeVar, cast, get_origin
+from enum import IntEnum
+from typing import ClassVar, TypeAlias, TypeVar, cast, get_origin
 
 if sys.version_info >= (3, 11):
     from typing import dataclass_transform
@@ -30,13 +31,45 @@ def _record(cls: type[_T]) -> type[_T]:
         name
         for name, hint in annotations.items()
         if cast(object, get_origin(hint)) is not ClassVar
+        and not (isinstance(hint, str) and hint.startswith("ClassVar["))
     )
     result = _core._record(cls.__name__, fields)
     for name, value in vars(cls).items():
         if name not in {"__dict__", "__weakref__", "__annotations__"}:
             setattr(result, name, value)
     result.__annotations__ = annotations
+    setattr(result, "__match_args__", fields)
     return cast(type[_T], result)
+
+
+class Ruleset(IntEnum):
+    """Which ruleset a tagged attribute set belongs to. The values are the beatmap's `Mode`."""
+
+    OSU = 0
+    TAIKO = 1
+    CATCH = 2
+    MANIA = 3
+
+
+class HitResult(IntEnum):
+    NONE = 0
+    MISS = 1
+    MEH = 2
+    OK = 3
+    GOOD = 4
+    GREAT = 5
+    PERFECT = 6
+    SMALL_TICK_MISS = 7
+    SMALL_TICK_HIT = 8
+    LARGE_TICK_MISS = 9
+    LARGE_TICK_HIT = 10
+    SMALL_BONUS = 11
+    LARGE_BONUS = 12
+    IGNORE_MISS = 13
+    IGNORE_HIT = 14
+    COMBO_BREAK = 15
+    SLIDER_TAIL_HIT = 16
+    LEGACY_COMBO_INCREASE = 17
 
 
 @_record
@@ -107,16 +140,8 @@ class BreakPeriod:
 
 
 @_record
-class ScoreInfo:
-    statistics: list[int]
-    maximum_statistics: list[int]
-    max_combo: int
-    accuracy: float
-    legacy_total_score: int | None
-
-
-@_record
 class OsuDifficultyAttributes:
+    ruleset: ClassVar[Ruleset] = Ruleset.OSU
     star_rating: float
     max_combo: int
     aim_difficulty: float
@@ -142,6 +167,7 @@ class OsuDifficultyAttributes:
 
 @_record
 class TaikoDifficultyAttributes:
+    ruleset: ClassVar[Ruleset] = Ruleset.TAIKO
     star_rating: float
     max_combo: int
     mechanical_difficulty: float
@@ -156,29 +182,97 @@ class TaikoDifficultyAttributes:
 
 @_record
 class CatchDifficultyAttributes:
+    ruleset: ClassVar[Ruleset] = Ruleset.CATCH
     star_rating: float
     max_combo: int
 
 
 @_record
 class ManiaDifficultyAttributes:
+    ruleset: ClassVar[Ruleset] = Ruleset.MANIA
     star_rating: float
     max_combo: int
+
+
+DifficultyAttributes: TypeAlias = (
+    OsuDifficultyAttributes
+    | TaikoDifficultyAttributes
+    | CatchDifficultyAttributes
+    | ManiaDifficultyAttributes
+)
 
 
 @_record
-class DifficultyAttributes:
-    ruleset: int
-    star_rating: float
-    max_combo: int
-    osu: OsuDifficultyAttributes
-    taiko: TaikoDifficultyAttributes
-    fruits: CatchDifficultyAttributes
-    mania: ManiaDifficultyAttributes
+class TimedDifficultyAttributes:
+    """Wraps a DifficultyAttributes object and adds a time value for which the attribute is valid.
+    Output by `Difficulty.calculate_timed`."""
+
+    time: float
+    attributes: DifficultyAttributes
+
+
+@_record
+class OsuStrains:
+    """The result of calculating the strains on a osu! map.
+
+    Suitable to plot the difficulty of a map over time."""
+
+    ruleset: ClassVar[Ruleset] = Ruleset.OSU
+    start_time: float
+    section_length: float
+    aim: list[float]
+    aim_no_sliders: list[float]
+    speed: list[float]
+    reading: list[float]
+    flashlight: list[float]
+
+
+@_record
+class TaikoStrains:
+    """The result of calculating the strains on a osu!taiko map.
+
+    Suitable to plot the difficulty of a map over time."""
+
+    ruleset: ClassVar[Ruleset] = Ruleset.TAIKO
+    start_time: float
+    section_length: float
+    colour: list[float]
+    reading: list[float]
+    rhythm: list[float]
+    stamina: list[float]
+    single_colour_stamina: list[float]
+
+
+@_record
+class CatchStrains:
+    """The result of calculating the strains on a osu!catch map.
+
+    Suitable to plot the difficulty of a map over time."""
+
+    ruleset: ClassVar[Ruleset] = Ruleset.CATCH
+    start_time: float
+    section_length: float
+    movement: list[float]
+
+
+@_record
+class ManiaStrains:
+    """The result of calculating the strains on a osu!mania map.
+
+    Suitable to plot the difficulty of a map over time."""
+
+    ruleset: ClassVar[Ruleset] = Ruleset.MANIA
+    start_time: float
+    section_length: float
+    strain: list[float]
+
+
+Strains: TypeAlias = OsuStrains | TaikoStrains | CatchStrains | ManiaStrains
 
 
 @_record
 class OsuPerformanceAttributes:
+    ruleset: ClassVar[Ruleset] = Ruleset.OSU
     total: float
     aim: float
     speed: float
@@ -195,6 +289,7 @@ class OsuPerformanceAttributes:
 
 @_record
 class TaikoPerformanceAttributes:
+    ruleset: ClassVar[Ruleset] = Ruleset.TAIKO
     total: float
     difficulty: float
     accuracy: float
@@ -203,20 +298,20 @@ class TaikoPerformanceAttributes:
 
 @_record
 class CatchPerformanceAttributes:
+    ruleset: ClassVar[Ruleset] = Ruleset.CATCH
     total: float
 
 
 @_record
 class ManiaPerformanceAttributes:
+    ruleset: ClassVar[Ruleset] = Ruleset.MANIA
     total: float
     difficulty: float
 
 
-@_record
-class PerformanceAttributes:
-    ruleset: int
-    total: float
-    osu: OsuPerformanceAttributes
-    taiko: TaikoPerformanceAttributes
-    fruits: CatchPerformanceAttributes
-    mania: ManiaPerformanceAttributes
+PerformanceAttributes: TypeAlias = (
+    OsuPerformanceAttributes
+    | TaikoPerformanceAttributes
+    | CatchPerformanceAttributes
+    | ManiaPerformanceAttributes
+)

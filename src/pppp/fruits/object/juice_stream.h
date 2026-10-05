@@ -9,7 +9,7 @@
 
 namespace pppp { namespace fruits { namespace object {
     CatchHitObject create_juice_stream(const pppp::beatmaps::Slider& slider, double head_x, double time,
-                                       int slider_index);
+                                       double end_time, int slider_index);
 }}} // namespace pppp::fruits::object
 
 #endif

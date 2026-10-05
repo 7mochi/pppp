@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -78,6 +79,123 @@ namespace Pppp {
         }
 
         [StructLayout(LayoutKind.Sequential)]
+        internal struct OsuDifficultyAttributes {
+            internal double star_rating;
+            internal int max_combo;
+            internal double aim_difficulty;
+            internal double speed_difficulty;
+            internal double reading_difficulty;
+            internal double flashlight_difficulty;
+            internal double slider_factor;
+            internal double aim_difficult_strain_count;
+            internal double speed_difficult_strain_count;
+            internal double reading_difficult_note_count;
+            internal double aim_difficult_slider_count;
+            internal double aim_top_weighted_slider_factor;
+            internal double speed_top_weighted_slider_factor;
+            internal double speed_note_count;
+            internal int hit_circle_count;
+            internal int slider_count;
+            internal int large_tick_count;
+            internal int spinner_count;
+            internal double nested_score_per_object;
+            internal double legacy_score_base_multiplier;
+            internal double maximum_legacy_combo_score;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct TaikoDifficultyAttributes {
+            internal double star_rating;
+            internal int max_combo;
+            internal double mechanical_difficulty;
+            internal double rhythm_difficulty;
+            internal double reading_difficulty;
+            internal double colour_difficulty;
+            internal double stamina_difficulty;
+            internal double mono_stamina_factor;
+            internal double consistency_factor;
+            internal double stamina_top_strains;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct CatchDifficultyAttributes {
+            internal double star_rating;
+            internal int max_combo;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct ManiaDifficultyAttributes {
+            internal double star_rating;
+            internal int max_combo;
+        }
+
+        [StructLayout(LayoutKind.Explicit)]
+        internal struct DifficultyUnion {
+            [FieldOffset(0)]
+            internal OsuDifficultyAttributes osu;
+            [FieldOffset(0)]
+            internal TaikoDifficultyAttributes taiko;
+            [FieldOffset(0)]
+            internal CatchDifficultyAttributes fruits;
+            [FieldOffset(0)]
+            internal ManiaDifficultyAttributes mania;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct DifficultyAttributes {
+            internal int ruleset;
+            internal double star_rating;
+            internal int max_combo;
+            internal DifficultyUnion attributes;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct TimedDifficultyAttributes {
+            internal double time;
+            internal DifficultyAttributes attributes;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct OsuStrains {
+            internal IntPtr aim;
+            internal UIntPtr aim_count;
+            internal IntPtr aim_no_sliders;
+            internal UIntPtr aim_no_sliders_count;
+            internal IntPtr speed;
+            internal UIntPtr speed_count;
+            internal IntPtr reading;
+            internal UIntPtr reading_count;
+            internal IntPtr flashlight;
+            internal UIntPtr flashlight_count;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct TaikoStrains {
+            internal IntPtr colour;
+            internal UIntPtr colour_count;
+            internal IntPtr reading;
+            internal UIntPtr reading_count;
+            internal IntPtr rhythm;
+            internal UIntPtr rhythm_count;
+            internal IntPtr stamina;
+            internal UIntPtr stamina_count;
+            internal IntPtr single_colour_stamina;
+            internal UIntPtr single_colour_stamina_count;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct CatchStrains {
+            internal IntPtr movement;
+            internal UIntPtr movement_count;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct ManiaStrains {
+            internal IntPtr strain;
+            internal UIntPtr strain_count;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
         internal struct OsuPerformanceAttributes {
             internal double total;
             internal double aim;
@@ -105,24 +223,33 @@ namespace Pppp {
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct DifficultyAttributes {
-            internal int ruleset;
-            internal double star_rating;
-            internal int max_combo;
-            internal OsuDifficultyAttributes osu;
-            internal TaikoDifficultyAttributes taiko;
-            internal CatchDifficultyAttributes fruits;
-            internal ManiaDifficultyAttributes mania;
+        internal struct CatchPerformanceAttributes {
+            internal double total;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct ManiaPerformanceAttributes {
+            internal double total;
+            internal double difficulty;
+        }
+
+        [StructLayout(LayoutKind.Explicit)]
+        internal struct PerformanceUnion {
+            [FieldOffset(0)]
+            internal OsuPerformanceAttributes osu;
+            [FieldOffset(0)]
+            internal TaikoPerformanceAttributes taiko;
+            [FieldOffset(0)]
+            internal CatchPerformanceAttributes fruits;
+            [FieldOffset(0)]
+            internal ManiaPerformanceAttributes mania;
         }
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct PerformanceAttributes {
             internal int ruleset;
             internal double total;
-            internal OsuPerformanceAttributes osu;
-            internal TaikoPerformanceAttributes taiko;
-            internal CatchPerformanceAttributes fruits;
-            internal ManiaPerformanceAttributes mania;
+            internal PerformanceUnion attributes;
         }
 
         internal static byte[] Utf8(string value) {
@@ -161,85 +288,94 @@ namespace Pppp {
             return values;
         }
 
-        internal static ScoreInfo ToNative(Pppp.ScoreInfo score) {
-            if (score.statistics.Length != HitResultCount) {
-                throw new ArgumentException("statistics must be a list of " + HitResultCount + " counts");
+        internal static void Check(int status) {
+            if (status == Allocation) {
+                throw new OutOfMemoryException();
             }
-            if (score.maximum_statistics.Length != HitResultCount) {
-                throw new ArgumentException("statistics must be a list of " + HitResultCount + " counts");
+            if (status != Ok) {
+                throw new InvalidOperationException(Marshal.PtrToStringAnsi(pppp_result_message(status)));
             }
+        }
+
+        internal static IntPtr CreateMods(Pppp.Mods mods) {
+            IntPtr handle;
+            int status;
+            if (mods.IsLegacy) {
+                status = pppp_mods_from_legacy((uint)mods.Legacy, out handle);
+            } else {
+                status = pppp_mods_parse(Utf8(mods.Specification), out handle);
+            }
+            if (status == Allocation) {
+                throw new OutOfMemoryException();
+            }
+            if (status != Ok) {
+                throw new ArgumentException("invalid mod specification", "Mods");
+            }
+            return handle;
+        }
+
+        internal static ScoreInfo ToNative(Dictionary<HitResult, int> statistics, int? maxCombo, double? accuracy,
+                                           long? legacyTotalScore) {
             ScoreInfo native = new ScoreInfo();
-            for (int i = 0; i < HitResultCount; i++) {
-                native.statistics[i] = score.statistics[i];
-                native.maximum_statistics[i] = score.maximum_statistics[i];
+            if (statistics != null) {
+                foreach (KeyValuePair<HitResult, int> entry in statistics) {
+                    int index = (int)entry.Key;
+                    if (index < 0 || index >= HitResultCount) {
+                        throw new ArgumentOutOfRangeException("Statistics", "statistics keys must be hit results");
+                    }
+                    native.statistics[index] = entry.Value;
+                }
             }
-            native.max_combo = score.max_combo;
-            native.accuracy = score.accuracy;
-            native.has_legacy_total_score = score.legacy_total_score.HasValue ? 1 : 0;
-            native.legacy_total_score = score.legacy_total_score.GetValueOrDefault();
+            native.max_combo = maxCombo.GetValueOrDefault();
+            native.accuracy = accuracy.GetValueOrDefault();
+            native.has_legacy_total_score = legacyTotalScore.HasValue ? 1 : 0;
+            native.legacy_total_score = legacyTotalScore.GetValueOrDefault();
             return native;
         }
 
-        internal static Pppp.DifficultyAttributes FromNative(DifficultyAttributes attributes) {
-            Pppp.DifficultyAttributes managed = new Pppp.DifficultyAttributes();
-            managed.ruleset = attributes.ruleset;
-            managed.star_rating = attributes.star_rating;
-            managed.max_combo = attributes.max_combo;
-            managed.osu = attributes.osu;
-            managed.taiko = attributes.taiko;
-            managed.fruits = attributes.fruits;
-            managed.mania = attributes.mania;
-            return managed;
+        internal static Pppp.DifficultyAttributes FromNative(DifficultyAttributes native) {
+            switch (native.ruleset) {
+            case (int)Ruleset.Taiko:
+                return new Pppp.TaikoDifficultyAttributes(native.attributes.taiko);
+            case (int)Ruleset.Catch:
+                return new Pppp.CatchDifficultyAttributes(native.attributes.fruits);
+            case (int)Ruleset.Mania:
+                return new Pppp.ManiaDifficultyAttributes(native.attributes.mania);
+            default:
+                return new Pppp.OsuDifficultyAttributes(native.attributes.osu);
+            }
         }
 
-        internal static Pppp.OsuPerformanceAttributes FromNative(OsuPerformanceAttributes attributes) {
-            Pppp.OsuPerformanceAttributes managed = new Pppp.OsuPerformanceAttributes();
-            managed.total = attributes.total;
-            managed.aim = attributes.aim;
-            managed.speed = attributes.speed;
-            managed.accuracy = attributes.accuracy;
-            managed.flashlight = attributes.flashlight;
-            managed.reading = attributes.reading;
-            managed.effective_miss_count = attributes.effective_miss_count;
-            managed.combo_based_estimated_miss_count = attributes.combo_based_estimated_miss_count;
-            if (attributes.has_score_based_estimated_miss_count != 0) {
-                managed.score_based_estimated_miss_count = attributes.score_based_estimated_miss_count;
+        internal static Pppp.PerformanceAttributes FromNative(PerformanceAttributes native) {
+            switch (native.ruleset) {
+            case (int)Ruleset.Taiko:
+                return new Pppp.TaikoPerformanceAttributes(native.attributes.taiko);
+            case (int)Ruleset.Catch:
+                return new Pppp.CatchPerformanceAttributes(native.attributes.fruits);
+            case (int)Ruleset.Mania:
+                return new Pppp.ManiaPerformanceAttributes(native.attributes.mania);
+            default:
+                return new Pppp.OsuPerformanceAttributes(native.attributes.osu);
             }
-            managed.aim_estimated_slider_breaks = attributes.aim_estimated_slider_breaks;
-            managed.speed_estimated_slider_breaks = attributes.speed_estimated_slider_breaks;
-            if (attributes.has_speed_deviation != 0) {
-                managed.speed_deviation = attributes.speed_deviation;
-            }
-            return managed;
-        }
-
-        internal static Pppp.TaikoPerformanceAttributes FromNative(TaikoPerformanceAttributes attributes) {
-            Pppp.TaikoPerformanceAttributes managed = new Pppp.TaikoPerformanceAttributes();
-            managed.total = attributes.total;
-            managed.difficulty = attributes.difficulty;
-            managed.accuracy = attributes.accuracy;
-            if (attributes.has_estimated_unstable_rate != 0) {
-                managed.estimated_unstable_rate = attributes.estimated_unstable_rate;
-            }
-            return managed;
-        }
-
-        internal static Pppp.PerformanceAttributes FromNative(PerformanceAttributes attributes) {
-            Pppp.PerformanceAttributes managed = new Pppp.PerformanceAttributes();
-            managed.ruleset = attributes.ruleset;
-            managed.total = attributes.total;
-            managed.osu = FromNative(attributes.osu);
-            managed.taiko = FromNative(attributes.taiko);
-            managed.fruits = attributes.fruits;
-            managed.mania = attributes.mania;
-            return managed;
         }
 
         [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr pppp_version();
 
         [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern int pppp_beatmap_from_file(byte[] path, out IntPtr map);
+        internal static extern IntPtr pppp_result_message(int result);
+
+        [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int pppp_mods_parse(byte[] specification, out IntPtr mods);
+
+        [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int pppp_mods_from_legacy(uint bits, out IntPtr mods);
+
+        [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern void pppp_mods_free(IntPtr mods);
+
+        [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int pppp_beatmap_from_bytes(byte[] data, UIntPtr size, out IntPtr map);
 
         [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
         internal static extern void pppp_beatmap_free(IntPtr map);
@@ -273,6 +409,38 @@ namespace Pppp {
         [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
         internal static extern int pppp_calculate_difficulty(IntPtr map, ref DifficultyOptions options,
                                                              out DifficultyAttributes attributes);
+
+        [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int pppp_calculate_timed_difficulty(IntPtr map, ref DifficultyOptions options,
+                                                                   out IntPtr timed);
+
+        [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int pppp_timed_difficulty_entries(IntPtr timed, out IntPtr entries, out UIntPtr count);
+
+        [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern void pppp_timed_difficulty_free(IntPtr timed);
+
+        [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int pppp_calculate_strains(IntPtr map, ref DifficultyOptions options, out IntPtr strains);
+
+        [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int pppp_strains_info(IntPtr strains, out int ruleset, out double startTime,
+                                                     out double sectionLength);
+
+        [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int pppp_strains_osu(IntPtr strains, out OsuStrains osu);
+
+        [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int pppp_strains_taiko(IntPtr strains, out TaikoStrains taiko);
+
+        [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int pppp_strains_catch(IntPtr strains, out CatchStrains fruits);
+
+        [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int pppp_strains_mania(IntPtr strains, out ManiaStrains mania);
+
+        [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern void pppp_strains_free(IntPtr strains);
 
         [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
         internal static extern int pppp_calculate_performance(IntPtr map, ref PerformanceOptions options,

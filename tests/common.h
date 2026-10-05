@@ -1,24 +1,45 @@
 #ifndef PPPP_TESTS_SUPPORT_H
 #define PPPP_TESTS_SUPPORT_H
 
-#include "pppp/mods/mod.h"
-#include <cstddef>
+#include "pppp/mods/mods.h"
+#include "pppp/performance.h"
 #include <doctest.h>
+#include <vector>
 
 namespace pppp_test {
-    struct Mods {
-        pppp::mods::Mod list[8];
-        size_t count;
+    inline pppp::mods::Mods parse_mods(const char* spec) {
+        pppp::mods::Mods out;
 
-        explicit Mods(const char* spec)
-            : count(0) {
-            const int parsed = pppp::mods::mod_from_acronyms(list, 8, spec);
+        INFO(spec);
+        REQUIRE(out.parse(spec).ok());
+        return out;
+    }
 
-            INFO(spec);
-            REQUIRE(parsed >= 0);
-            count = static_cast<size_t>(parsed);
-        }
-    };
+    inline pppp::DifficultyAttributes calculate(const pppp::Difficulty& difficulty,
+                                                const pppp::beatmaps::Beatmap& beatmap) {
+        pppp::DifficultyAttributes out;
+        REQUIRE(difficulty.calculate(beatmap, out).ok());
+        return out;
+    }
+
+    inline std::vector<pppp::TimedDifficultyAttributes>
+    calculate_timed(const pppp::Difficulty& difficulty, const pppp::beatmaps::Beatmap& beatmap) {
+        std::vector<pppp::TimedDifficultyAttributes> out;
+        REQUIRE(difficulty.calculate_timed(beatmap, out).ok());
+        return out;
+    }
+
+    inline pppp::Strains strains(const pppp::Difficulty& difficulty, const pppp::beatmaps::Beatmap& beatmap) {
+        pppp::Strains out;
+        REQUIRE(difficulty.strains(beatmap, out).ok());
+        return out;
+    }
+
+    inline pppp::PerformanceAttributes calculate(const pppp::Performance& performance) {
+        pppp::PerformanceAttributes out;
+        REQUIRE(performance.calculate(out).ok());
+        return out;
+    }
 
     inline doctest::Approx difficulty_approx(double value) { return doctest::Approx(value).epsilon(1e-6); }
 

@@ -13,6 +13,15 @@
         "PPPP_BUILD_PYTHON": "ON",
         "PPPP_BUILD_CAPI": "ON"
       }
+    },
+    {
+      "name": "clang_tidy",
+      "displayName": "Development with clang-tidy",
+      "inherits": "dev",
+      "binaryDir": "${sourceDir}/build_clang_tidy",
+      "cacheVariables": {
+        "CMAKE_CXX_CLANG_TIDY": "clang-tidy;-p;${sourceDir}/build_clang_tidy"
+      }
     }
   ],
   "buildPresets": [

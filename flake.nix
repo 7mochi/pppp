@@ -43,7 +43,7 @@
             shellHook = ''
               echo "pp++"
               echo "  make test"
-              echo "  make format-check"
+              echo "  make check-format"
               echo "  npm install && npm test  # the node bindings"
               echo "  cd csharp/tests && dotnet build  # the C# bindings"
             '';

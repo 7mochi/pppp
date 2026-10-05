@@ -31,7 +31,7 @@ jobs:
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
       - name: Format
-        run: nix develop -c make format-check
+        run: nix develop -c make check-format
       - name: Build and test
         run: nix develop -c make test
       - name: Test the bindings

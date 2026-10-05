@@ -1,7 +1,7 @@
 BUILD_DIR   := build
 NPROC := $(shell nproc 2>/dev/null || echo 4)
 
-.PHONY: all clean rebuild test configure format format-check check-tidy
+.PHONY: all clean rebuild test configure format check-format check-tidy
 
 all: build
 
@@ -25,8 +25,9 @@ rebuild: clean build test
 format: configure
 	cmake --build $(BUILD_DIR) --target format
 
-format-check: configure
-	cmake --build $(BUILD_DIR) --target format-check
+check-format: configure
+	cmake --build $(BUILD_DIR) --target check_format
 
-check-tidy: configure
-	cmake --build $(BUILD_DIR) --target check-tidy || true
+check-tidy:
+	cmake --preset clang_tidy
+	cmake --build build_clang_tidy -j$(NPROC) -- -k 0 || true

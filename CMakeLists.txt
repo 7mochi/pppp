@@ -372,6 +372,8 @@ if(PPPP_WITH_FOSU)
   set(FOSU_WARNINGS_AS_ERRORS ${PPPP_WARNINGS_AS_ERRORS})
 
   add_subdirectory(third_party/fosu)
+  get_property(PPPP_FOSU_TARGETS DIRECTORY third_party/fosu PROPERTY BUILDSYSTEM_TARGETS)
+  set_property(TARGET ${PPPP_FOSU_TARGETS} PROPERTY CXX_CLANG_TIDY "")
 
   set_target_properties(fosu PROPERTIES EXPORT_NAME fosu_parser)
 

@@ -6,16 +6,16 @@ namespace Pppp {
         public abstract Ruleset Ruleset { get; }
 
         /// <summary>The combined star rating of all skills.</summary>
-        public abstract double StarRating { get; }
+        public abstract double StarRating { get; set; }
 
         /// <summary>The maximum achievable combo.</summary>
-        public abstract int MaxCombo { get; }
+        public abstract int MaxCombo { get; set; }
 
         internal abstract Native.DifficultyAttributes ToNative();
     }
 
     public sealed class OsuDifficultyAttributes : DifficultyAttributes {
-        private readonly Native.OsuDifficultyAttributes value;
+        private Native.OsuDifficultyAttributes value;
 
         internal OsuDifficultyAttributes(Native.OsuDifficultyAttributes value) { this.value = value; }
 
@@ -25,30 +25,36 @@ namespace Pppp {
 
         public override double StarRating {
             get { return value.star_rating; }
+            set { this.value.star_rating = value; }
         }
 
         public override int MaxCombo {
             get { return value.max_combo; }
+            set { this.value.max_combo = value; }
         }
 
         /// <summary>The difficulty corresponding to the aim skill.</summary>
         public double AimDifficulty {
             get { return value.aim_difficulty; }
+            set { this.value.aim_difficulty = value; }
         }
 
         /// <summary>The difficulty corresponding to the speed skill.</summary>
         public double SpeedDifficulty {
             get { return value.speed_difficulty; }
+            set { this.value.speed_difficulty = value; }
         }
 
         /// <summary>The difficulty corresponding to the reading skill.</summary>
         public double ReadingDifficulty {
             get { return value.reading_difficulty; }
+            set { this.value.reading_difficulty = value; }
         }
 
         /// <summary>The difficulty corresponding to the flashlight skill.</summary>
         public double FlashlightDifficulty {
             get { return value.flashlight_difficulty; }
+            set { this.value.flashlight_difficulty = value; }
         }
 
         /// <summary>Describes how much of <see cref="AimDifficulty"/> is contributed to by hitcircles or
@@ -140,7 +146,7 @@ namespace Pppp {
     }
 
     public sealed class TaikoDifficultyAttributes : DifficultyAttributes {
-        private readonly Native.TaikoDifficultyAttributes value;
+        private Native.TaikoDifficultyAttributes value;
 
         internal TaikoDifficultyAttributes(Native.TaikoDifficultyAttributes value) { this.value = value; }
 
@@ -150,10 +156,12 @@ namespace Pppp {
 
         public override double StarRating {
             get { return value.star_rating; }
+            set { this.value.star_rating = value; }
         }
 
         public override int MaxCombo {
             get { return value.max_combo; }
+            set { this.value.max_combo = value; }
         }
 
         /// <summary>
@@ -162,26 +170,31 @@ namespace Pppp {
         /// </summary>
         public double MechanicalDifficulty {
             get { return value.mechanical_difficulty; }
+            set { this.value.mechanical_difficulty = value; }
         }
 
         /// <summary>The difficulty corresponding to the rhythm skill.</summary>
         public double RhythmDifficulty {
             get { return value.rhythm_difficulty; }
+            set { this.value.rhythm_difficulty = value; }
         }
 
         /// <summary>The difficulty corresponding to the reading skill.</summary>
         public double ReadingDifficulty {
             get { return value.reading_difficulty; }
+            set { this.value.reading_difficulty = value; }
         }
 
         /// <summary>The difficulty corresponding to the colour skill.</summary>
         public double ColourDifficulty {
             get { return value.colour_difficulty; }
+            set { this.value.colour_difficulty = value; }
         }
 
         /// <summary>The difficulty corresponding to the stamina skill.</summary>
         public double StaminaDifficulty {
             get { return value.stamina_difficulty; }
+            set { this.value.stamina_difficulty = value; }
         }
 
         /// <summary>
@@ -212,7 +225,7 @@ namespace Pppp {
     }
 
     public sealed class CatchDifficultyAttributes : DifficultyAttributes {
-        private readonly Native.CatchDifficultyAttributes value;
+        private Native.CatchDifficultyAttributes value;
 
         internal CatchDifficultyAttributes(Native.CatchDifficultyAttributes value) { this.value = value; }
 
@@ -222,10 +235,12 @@ namespace Pppp {
 
         public override double StarRating {
             get { return value.star_rating; }
+            set { this.value.star_rating = value; }
         }
 
         public override int MaxCombo {
             get { return value.max_combo; }
+            set { this.value.max_combo = value; }
         }
 
         internal override Native.DifficultyAttributes ToNative() {
@@ -239,7 +254,7 @@ namespace Pppp {
     }
 
     public sealed class ManiaDifficultyAttributes : DifficultyAttributes {
-        private readonly Native.ManiaDifficultyAttributes value;
+        private Native.ManiaDifficultyAttributes value;
 
         internal ManiaDifficultyAttributes(Native.ManiaDifficultyAttributes value) { this.value = value; }
 
@@ -249,10 +264,12 @@ namespace Pppp {
 
         public override double StarRating {
             get { return value.star_rating; }
+            set { this.value.star_rating = value; }
         }
 
         public override int MaxCombo {
             get { return value.max_combo; }
+            set { this.value.max_combo = value; }
         }
 
         internal override Native.DifficultyAttributes ToNative() {

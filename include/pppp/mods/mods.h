@@ -24,6 +24,7 @@ namespace pppp { namespace mods {
 
         void push_back(const Mod& mod);
         void push_back(ModId id);
+        void add_classic();
         void clear();
 
         bool contains(ModId id) const;

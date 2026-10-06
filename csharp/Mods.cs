@@ -40,19 +40,23 @@ namespace Pppp {
     public struct Mods {
         private readonly string specification;
         private readonly LegacyMods legacy;
-        private readonly bool isLegacy;
+        private readonly bool isLegacyBitmask;
+        private readonly bool classic;
 
-        private Mods(string specification, LegacyMods legacy, bool isLegacy) {
+        private Mods(string specification, LegacyMods legacy, bool isLegacyBitmask, bool classic) {
             this.specification = specification;
             this.legacy = legacy;
-            this.isLegacy = isLegacy;
+            this.isLegacyBitmask = isLegacyBitmask;
+            this.classic = classic;
         }
 
         public static implicit operator Mods(string specification) {
-            return new Mods(specification == null ? "" : specification, LegacyMods.None, false);
+            return new Mods(specification == null ? "" : specification, LegacyMods.None, false, false);
         }
 
-        public static implicit operator Mods(LegacyMods legacy) { return new Mods(null, legacy, true); }
+        public static implicit operator Mods(LegacyMods legacy) { return new Mods(null, legacy, true, false); }
+
+        public Mods WithClassic() { return new Mods(specification, legacy, isLegacyBitmask, true); }
 
         internal string Specification {
             get { return specification == null ? "" : specification; }
@@ -62,10 +66,14 @@ namespace Pppp {
             get { return legacy; }
         }
 
-        internal bool IsLegacy {
-            get { return isLegacy; }
+        internal bool IsLegacyBitmask {
+            get { return isLegacyBitmask; }
         }
 
-        public override string ToString() { return isLegacy ? legacy.ToString() : Specification; }
+        internal bool Classic {
+            get { return classic; }
+        }
+
+        public override string ToString() { return isLegacyBitmask ? legacy.ToString() : Specification; }
     }
 }

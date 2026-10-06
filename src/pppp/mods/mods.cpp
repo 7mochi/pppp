@@ -37,6 +37,12 @@ namespace pppp { namespace mods {
         list.push_back(mod);
     }
 
+    void Mods::add_classic() {
+        if (!contains(MOD_CL)) {
+            push_back(MOD_CL);
+        }
+    }
+
     void Mods::clear() { list.clear(); }
 
     bool Mods::contains(ModId id) const { return mod_has(data(), list.size(), id); }

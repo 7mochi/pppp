@@ -40,6 +40,7 @@ def calculate_difficulty(
     mods: str | int,
     ruleset: int | None,
     clock_rate: float | None,
+    classic: bool,
     /,
 ) -> DifficultyAttributes: ...
 def calculate_timed_difficulty(
@@ -47,6 +48,7 @@ def calculate_timed_difficulty(
     mods: str | int,
     ruleset: int | None,
     clock_rate: float | None,
+    classic: bool,
     /,
 ) -> list[TimedDifficultyAttributes]: ...
 def calculate_strains(
@@ -54,6 +56,7 @@ def calculate_strains(
     mods: str | int,
     ruleset: int | None,
     clock_rate: float | None,
+    classic: bool,
     /,
 ) -> Strains: ...
 def calculate_performance(
@@ -65,6 +68,7 @@ def calculate_performance(
     statistics: Mapping[HitResult, int] | None,
     legacy_total_score: int | None,
     attributes: DifficultyAttributes | None,
+    classic: bool,
     /,
 ) -> PerformanceAttributes: ...
 def _record(name: str, fields: tuple[str, ...], /) -> type: ...

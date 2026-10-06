@@ -1121,14 +1121,26 @@ namespace {
         return reinterpret_cast<const BeatmapObject*>(object);
     }
 
+    int read_classic(PyObject* object, pppp::Mods& mods) {
+        const int truth = PyObject_IsTrue(object);
+        if (truth < 0) {
+            return -1;
+        }
+        if (truth) {
+            mods.add_classic();
+        }
+        return 0;
+    }
+
     const BeatmapObject* read_difficulty(State* state, PyObject* args, const char* format,
                                          pppp::Difficulty& difficulty) {
         PyObject* beatmap_object;
         PyObject* mods_object;
         PyObject* ruleset_object;
         PyObject* clock_rate_object;
+        PyObject* classic_object;
         if (!PyArg_ParseTuple(args, format, &beatmap_object, &mods_object, &ruleset_object,
-                              &clock_rate_object)) {
+                              &clock_rate_object, &classic_object)) {
             return NULL;
         }
         const BeatmapObject* beatmap = read_beatmap(state, beatmap_object);
@@ -1138,6 +1150,9 @@ namespace {
 
         pppp::Mods mods;
         if (read_mods(state, mods_object, mods) < 0) {
+            return NULL;
+        }
+        if (read_classic(classic_object, mods) < 0) {
             return NULL;
         }
         difficulty.mods(mods);
@@ -1165,7 +1180,7 @@ namespace {
     PyObject* calculate_difficulty(PyObject* module, PyObject* args) {
         State* state = static_cast<State*>(PyModule_GetState(module));
         pppp::Difficulty difficulty;
-        const BeatmapObject* beatmap = read_difficulty(state, args, "OOOO:calculate_difficulty", difficulty);
+        const BeatmapObject* beatmap = read_difficulty(state, args, "OOOOO:calculate_difficulty", difficulty);
         if (!beatmap) {
             return NULL;
         }
@@ -1187,7 +1202,7 @@ namespace {
         State* state = static_cast<State*>(PyModule_GetState(module));
         pppp::Difficulty difficulty;
         const BeatmapObject* beatmap =
-            read_difficulty(state, args, "OOOO:calculate_timed_difficulty", difficulty);
+            read_difficulty(state, args, "OOOOO:calculate_timed_difficulty", difficulty);
         if (!beatmap) {
             return NULL;
         }
@@ -1208,7 +1223,7 @@ namespace {
     PyObject* calculate_strains(PyObject* module, PyObject* args) {
         State* state = static_cast<State*>(PyModule_GetState(module));
         pppp::Difficulty difficulty;
-        const BeatmapObject* beatmap = read_difficulty(state, args, "OOOO:calculate_strains", difficulty);
+        const BeatmapObject* beatmap = read_difficulty(state, args, "OOOOO:calculate_strains", difficulty);
         if (!beatmap) {
             return NULL;
         }
@@ -1365,9 +1380,10 @@ namespace {
         PyObject* statistics_object;
         PyObject* legacy_total_score_object;
         PyObject* attributes_object;
-        if (!PyArg_ParseTuple(args, "OOOOOOOO:calculate_performance", &beatmap_object, &mods_object,
+        PyObject* classic_object;
+        if (!PyArg_ParseTuple(args, "OOOOOOOOO:calculate_performance", &beatmap_object, &mods_object,
                               &max_combo_object, &accuracy_object, &misses_object, &statistics_object,
-                              &legacy_total_score_object, &attributes_object)) {
+                              &legacy_total_score_object, &attributes_object, &classic_object)) {
             return NULL;
         }
         State* state = static_cast<State*>(PyModule_GetState(module));
@@ -1378,6 +1394,9 @@ namespace {
 
         pppp::Mods mods;
         if (read_mods(state, mods_object, mods) < 0) {
+            return NULL;
+        }
+        if (read_classic(classic_object, mods) < 0) {
             return NULL;
         }
         long max_combo = 0;

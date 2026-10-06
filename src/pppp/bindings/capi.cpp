@@ -462,6 +462,14 @@ pppp_result pppp_mods_from_legacy(pppp_uint32 bits, pppp_mods** out) {
     return PPPP_OK;
 }
 
+pppp_result pppp_mods_add_classic(pppp_mods* mods) {
+    if (!mods) {
+        return PPPP_INVALID_ARGUMENT;
+    }
+    mods->mods.add_classic();
+    return PPPP_OK;
+}
+
 void pppp_mods_free(pppp_mods* mods) { delete mods; }
 
 pppp_result pppp_beatmap_from_file(const char* path, pppp_beatmap** out) {

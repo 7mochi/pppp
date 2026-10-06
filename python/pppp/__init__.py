@@ -60,6 +60,7 @@ class Difficulty:
     mods: str | int = ""
     ruleset: Ruleset | None = None
     clock_rate: float | None = None
+    classic: bool = False
 
     def calculate(self, beatmap: Beatmap) -> DifficultyAttributes:
         """Perform the difficulty calculation."""
@@ -68,6 +69,7 @@ class Difficulty:
             self.mods,
             None if self.ruleset is None else int(self.ruleset),
             self.clock_rate,
+            self.classic,
         )
 
     def calculate_timed(self, beatmap: Beatmap) -> list[TimedDifficultyAttributes]:
@@ -79,6 +81,7 @@ class Difficulty:
             self.mods,
             None if self.ruleset is None else int(self.ruleset),
             self.clock_rate,
+            self.classic,
         )
 
     def strains(self, beatmap: Beatmap) -> Strains:
@@ -91,6 +94,7 @@ class Difficulty:
             self.mods,
             None if self.ruleset is None else int(self.ruleset),
             self.clock_rate,
+            self.classic,
         )
 
 
@@ -104,6 +108,7 @@ class Performance:
     misses: int | None = None
     statistics: Mapping[HitResult, int] | None = None
     legacy_total_score: int | None = None
+    classic: bool = False
 
     def calculate(
         self, beatmap: Beatmap, attributes: DifficultyAttributes | None = None
@@ -118,6 +123,7 @@ class Performance:
             self.statistics,
             self.legacy_total_score,
             attributes,
+            self.classic,
         )
 
 

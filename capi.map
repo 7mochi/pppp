@@ -4,6 +4,7 @@
     pppp_result_message;
     pppp_mods_parse;
     pppp_mods_from_legacy;
+    pppp_mods_add_classic;
     pppp_mods_free;
     pppp_beatmap_from_file;
     pppp_beatmap_from_bytes;

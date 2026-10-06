@@ -657,3 +657,35 @@ TEST_CASE("the score's mods reach the difficulty when the calculator is given no
         pppp_test::calculate(pppp::Performance(beatmap).score(score));
     CHECK(performance.total() == pppp_test::pp_approx(166.70246243922367));
 }
+
+TEST_CASE("adding classic to legacy mods matches the classic specification") {
+    pppp::Beatmap beatmap;
+    pppp_test::load(beatmap, PPPP_TEST_RESOURCES "/osu/2785319.osu");
+
+    pppp::mods::Mods from_bits = pppp::mods::Mods::from_legacy(0u);
+    REQUIRE_FALSE(from_bits.contains(pppp::mods::MOD_CL));
+
+    from_bits.add_classic();
+    REQUIRE(from_bits.contains(pppp::mods::MOD_CL));
+
+    const size_t size = from_bits.size();
+    from_bits.add_classic();
+    CHECK(from_bits.size() == size);
+
+    const pppp::DifficultyAttributes attributes =
+        pppp_test::calculate(pppp::Difficulty().mods(from_bits).ruleset(pppp::Ruleset::OSU), beatmap);
+
+    pppp::common::ScoreInfo score;
+    score.statistics[pppp::common::HIT_RESULT_GREAT] = 601;
+    score.statistics[pppp::common::HIT_RESULT_SLIDER_TAIL_HIT] = attributes.osu()->slider_count;
+    score.max_combo = 909;
+    score.accuracy = pppp_test::classic_accuracy(601, 0, 0, 0);
+
+    const pppp::PerformanceAttributes actual =
+        pppp_test::calculate(pppp::Performance(beatmap, attributes).mods(from_bits).score(score));
+    CHECK(actual.osu()->total == pppp_test::pp_approx(298.5325815982227));
+
+    const pppp::PerformanceAttributes expected = pppp_test::calculate(
+        pppp::Performance(beatmap, attributes).mods(pppp_test::parse_mods("CL")).score(score));
+    CHECK(actual.osu()->total == expected.osu()->total);
+}

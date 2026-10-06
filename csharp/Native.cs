@@ -300,7 +300,7 @@ namespace Pppp {
         internal static IntPtr CreateMods(Pppp.Mods mods) {
             IntPtr handle;
             int status;
-            if (mods.IsLegacy) {
+            if (mods.IsLegacyBitmask) {
                 status = pppp_mods_from_legacy((uint)mods.Legacy, out handle);
             } else {
                 status = pppp_mods_parse(Utf8(mods.Specification), out handle);
@@ -310,6 +310,12 @@ namespace Pppp {
             }
             if (status != Ok) {
                 throw new ArgumentException("invalid mod specification", "Mods");
+            }
+            if (mods.Classic) {
+                if (pppp_mods_add_classic(handle) != Ok) {
+                    pppp_mods_free(handle);
+                    throw new ArgumentException("invalid mod specification", "Mods");
+                }
             }
             return handle;
         }
@@ -370,6 +376,9 @@ namespace Pppp {
 
         [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
         internal static extern int pppp_mods_from_legacy(uint bits, out IntPtr mods);
+
+        [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int pppp_mods_add_classic(IntPtr mods);
 
         [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
         internal static extern void pppp_mods_free(IntPtr mods);

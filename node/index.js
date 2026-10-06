@@ -37,19 +37,20 @@ class Beatmap {
 
 /** Difficulty calculator on maps of any mode. */
 class Difficulty {
-  constructor({ mods = "", ruleset = null, clockRate = null } = {}) {
+  constructor({ mods = "", ruleset = null, clockRate = null, classic = false } = {}) {
     this.mods = mods;
     this.ruleset = ruleset;
     this.clockRate = clockRate;
+    this.classic = classic;
   }
 
   /** Perform the difficulty calculation. */
   calculate(beatmap) {
-    return binding.calculateDifficulty(beatmap, this.mods, this.ruleset, this.clockRate);
+    return binding.calculateDifficulty(beatmap, this.mods, this.ruleset, this.clockRate, this.classic);
   }
 
   calculateAsync(beatmap) {
-    return binding.calculateDifficultyAsync(beatmap, this.mods, this.ruleset, this.clockRate);
+    return binding.calculateDifficultyAsync(beatmap, this.mods, this.ruleset, this.clockRate, this.classic);
   }
 
   /**
@@ -57,11 +58,11 @@ class Difficulty {
    * TimedDifficultyAttributes representing the difficulty at every relevant time value in the beatmap.
    */
   calculateTimed(beatmap) {
-    return binding.calculateTimedDifficulty(beatmap, this.mods, this.ruleset, this.clockRate);
+    return binding.calculateTimedDifficulty(beatmap, this.mods, this.ruleset, this.clockRate, this.classic);
   }
 
   calculateTimedAsync(beatmap) {
-    return binding.calculateTimedDifficultyAsync(beatmap, this.mods, this.ruleset, this.clockRate);
+    return binding.calculateTimedDifficultyAsync(beatmap, this.mods, this.ruleset, this.clockRate, this.classic);
   }
 
   /**
@@ -71,11 +72,11 @@ class Difficulty {
    * Suitable to plot the difficulty of a map over time.
    */
   strains(beatmap) {
-    return binding.calculateStrains(beatmap, this.mods, this.ruleset, this.clockRate);
+    return binding.calculateStrains(beatmap, this.mods, this.ruleset, this.clockRate, this.classic);
   }
 
   strainsAsync(beatmap) {
-    return binding.calculateStrainsAsync(beatmap, this.mods, this.ruleset, this.clockRate);
+    return binding.calculateStrainsAsync(beatmap, this.mods, this.ruleset, this.clockRate, this.classic);
   }
 }
 
@@ -88,6 +89,7 @@ class Performance {
     misses = null,
     statistics = null,
     legacyTotalScore = null,
+    classic = false,
   } = {}) {
     this.mods = mods;
     this.maxCombo = maxCombo;
@@ -95,6 +97,7 @@ class Performance {
     this.misses = misses;
     this.statistics = statistics;
     this.legacyTotalScore = legacyTotalScore;
+    this.classic = classic;
   }
 
   /** Perform the performance calculation for the map's or the attributes' mode. */
@@ -107,7 +110,8 @@ class Performance {
       this.misses,
       this.statistics,
       this.legacyTotalScore,
-      attributes
+      attributes,
+      this.classic
     );
   }
 
@@ -120,7 +124,8 @@ class Performance {
       this.misses,
       this.statistics,
       this.legacyTotalScore,
-      attributes
+      attributes,
+      this.classic
     );
   }
 }

@@ -454,6 +454,17 @@ TEST_SUITE("CapiTest") {
         pppp_beatmap_free(map);
     }
 
+    TEST_CASE("adding classic is allowed twice and a null set is rejected") {
+        pppp_mods* mods = 0;
+        REQUIRE(pppp_mods_from_legacy(0u, &mods) == PPPP_OK);
+
+        CHECK(pppp_mods_add_classic(mods) == PPPP_OK);
+        CHECK(pppp_mods_add_classic(mods) == PPPP_OK);
+        CHECK(pppp_mods_add_classic(0) == PPPP_INVALID_ARGUMENT);
+
+        pppp_mods_free(mods);
+    }
+
     TEST_CASE("a missing file fails and leaves the handle untouched") {
         pppp_beatmap* map = 0;
 

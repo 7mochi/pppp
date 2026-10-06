@@ -528,9 +528,31 @@ namespace {
         return 0;
     }
 
+    int read_classic(napi_env env, napi_value value, pppp::Mods& mods) {
+        bool absent = false;
+        if (!is_absent(env, value, &absent)) {
+            return -1;
+        }
+        if (absent) {
+            return 0;
+        }
+        bool truth = false;
+        if (napi_get_value_bool(env, value, &truth) != napi_ok) {
+            napi_throw_type_error(env, "ERR_INVALID_ARG_TYPE", "classic must be a boolean");
+            return -1;
+        }
+        if (truth) {
+            mods.add_classic();
+        }
+        return 0;
+    }
+
     int configure_difficulty(napi_env env, const napi_value* argv, pppp::Difficulty& difficulty) {
         pppp::Mods mods;
         if (read_mods(env, argv[1], mods) < 0) {
+            return -1;
+        }
+        if (read_classic(env, argv[4], mods) < 0) {
             return -1;
         }
         difficulty.mods(mods);
@@ -877,6 +899,9 @@ namespace {
         if (read_mods(env, argv[1], mods) < 0) {
             return -1;
         }
+        if (read_classic(env, argv[8], mods) < 0) {
+            return -1;
+        }
         int max_combo = 0;
         int misses = 0;
         bool has_max_combo = false;
@@ -1071,8 +1096,8 @@ namespace {
     }
 
     napi_value calculate(napi_env env, napi_callback_info info) {
-        size_t argc = 8;
-        napi_value argv[8];
+        size_t argc = 9;
+        napi_value argv[9];
         void* data = NULL;
         if (napi_get_cb_info(env, info, &argc, argv, NULL, &data) != napi_ok || argc < 1) {
             napi_throw_type_error(env, "ERR_INVALID_ARG_TYPE", "expected a Beatmap");

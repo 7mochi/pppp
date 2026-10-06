@@ -375,6 +375,11 @@ PPPP_C_API pppp_result pppp_mods_parse(const char* specification, pppp_mods** ou
 /// Convert osu!stable's mod bitmask, classic is not added.
 PPPP_C_API pppp_result pppp_mods_from_legacy(pppp_uint32 bits, pppp_mods** out);
 
+/// Add the Classic mod, for scores that osu!stable set and that should calculate the way stable
+/// does. Adding it twice is allowed and does nothing the second time; null fails with
+/// `PPPP_INVALID_ARGUMENT`.
+PPPP_C_API pppp_result pppp_mods_add_classic(pppp_mods* mods);
+
 /// Release a mod set. Passing null is allowed and does nothing.
 PPPP_C_API void pppp_mods_free(pppp_mods* mods);
 

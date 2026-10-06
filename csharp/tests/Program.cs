@@ -157,6 +157,42 @@ namespace Pppp.Tests {
             }
         }
 
+        private static void ClassicCanBeAddedToStableModBits() {
+            using (Beatmap beatmap = Beatmap.FromFile(MapPath("osu/2785319.osu"))) {
+                OsuDifficultyAttributes difficulty = (OsuDifficultyAttributes)new Difficulty().Calculate(beatmap);
+                Mods stable = LegacyMods.None;
+                PerformanceAttributes classic = new Performance {
+                    Mods = stable.WithClassic(),
+                    MaxCombo = 909,
+                    Accuracy = 1.0,
+                    Statistics = {{HitResult.Great, 601}, {HitResult.SliderTailHit, difficulty.SliderCount}},
+                }.Calculate(beatmap);
+                PerformanceAttributes twice = new Performance {
+                    Mods = stable.WithClassic().WithClassic(),
+                    MaxCombo = 909,
+                    Accuracy = 1.0,
+                    Statistics = {{HitResult.Great, 601}, {HitResult.SliderTailHit, difficulty.SliderCount}},
+                }.Calculate(beatmap);
+                PerformanceAttributes fromSpecification = new Performance {
+                    Mods = "CL",
+                    MaxCombo = 909,
+                    Accuracy = 1.0,
+                    Statistics = {{HitResult.Great, 601}, {HitResult.SliderTailHit, difficulty.SliderCount}},
+                }.Calculate(beatmap);
+                PerformanceAttributes plainBits = new Performance {
+                    Mods = stable,
+                    MaxCombo = 909,
+                    Accuracy = 1.0,
+                    Statistics = {{HitResult.Great, 601}, {HitResult.SliderTailHit, difficulty.SliderCount}},
+                }.Calculate(beatmap);
+
+                CheckClose(classic.Total, 298.5325815982227, "classic from stable bits");
+                CheckClose(classic.Total, fromSpecification.Total, "classic from bits vs from the specification");
+                CheckClose(twice.Total, classic.Total, "adding classic twice changes nothing");
+                CheckClose(plainBits.Total, 316.5901855625614, "the same bits without classic stay on lazer");
+            }
+        }
+
         private static void TheRulesetCanBeForced() {
             using (Beatmap beatmap = Beatmap.FromFile(MapPath("osu/2785319.osu"))) {
                 DifficultyAttributes attributes = new Difficulty { Ruleset = Ruleset.Taiko }.Calculate(beatmap);
@@ -366,6 +402,7 @@ namespace Pppp.Tests {
             DifficultyMatchesThePinnedStars();
             ModsChangeTheCalculation();
             StableModBitsMatchTheirAcronyms();
+            ClassicCanBeAddedToStableModBits();
             TheRulesetCanBeForced();
             TheAttributesAreTheLiveRulesetOnly();
             AnUnknownModIsAnArgumentException();

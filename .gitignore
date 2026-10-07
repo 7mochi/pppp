@@ -18,6 +18,8 @@ dist/
 node_modules/
 prebuilds/
 
+.commandcode/
+
 csharp/**/bin/
 csharp/**/obj/
 csharp/native/

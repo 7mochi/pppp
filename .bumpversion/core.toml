@@ -1,9 +1,8 @@
 [tool.bumpversion]
 current_version = "0.0.0"
 commit = true
-tag = true
-message = "chore: bump version"
-pre_commit_hooks = ["npm install --package-lock-only --ignore-scripts", "git add package-lock.json"]
+tag = false
+message = "chore: bump version (core)"
 
 [[tool.bumpversion.files]]
 filename = "CMakeLists.txt"
@@ -24,18 +23,3 @@ replace = "#define PPPP_VERSION_MINOR {new_minor}"
 filename = "include/pppp/config.h"
 search = "#define PPPP_VERSION_PATCH {current_patch}"
 replace = "#define PPPP_VERSION_PATCH {new_patch}"
-
-[[tool.bumpversion.files]]
-filename = "pyproject.toml"
-search = 'version = "{current_version}"'
-replace = 'version = "{new_version}"'
-
-[[tool.bumpversion.files]]
-filename = "package.json"
-search = '"version": "{current_version}"'
-replace = '"version": "{new_version}"'
-
-[[tool.bumpversion.files]]
-filename = "csharp/Pppp.csproj"
-search = "<Version>{current_version}</Version>"
-replace = "<Version>{new_version}</Version>"

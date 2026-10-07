@@ -68,7 +68,6 @@ namespace pppp { namespace osu { namespace difficulty {
                   drain_rate(0.0),
                   speed_deviation(),
                   aim_estimated_slider_breaks(0.0),
-                  // NOLINTNEXTLINE(clang-analyzer-optin.cplusplus.UninitializedObject)
                   speed_estimated_slider_breaks(0.0) {}
 
             bool has_mod(pppp::mods::ModId id) const {

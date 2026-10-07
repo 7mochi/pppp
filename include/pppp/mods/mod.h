@@ -127,7 +127,6 @@ namespace pppp { namespace mods {
 
         RandomSettings()
             : seed(),
-              // NOLINTNEXTLINE(clang-analyzer-optin.cplusplus.UninitializedObject)
               angle_sharpness(0.0) {}
     };
 
@@ -135,7 +134,6 @@ namespace pppp { namespace mods {
         nonstd::optional<int> seed;
 
         TargetSettings()
-            // NOLINTNEXTLINE(clang-analyzer-optin.cplusplus.UninitializedObject)
             : seed() {}
     };
 
@@ -202,7 +200,6 @@ namespace pppp { namespace mods {
               overall_difficulty(),
               scroll_speed(),
               hard_rock_offsets(false),
-              // NOLINTNEXTLINE(clang-analyzer-optin.cplusplus.UninitializedObject)
               extended_limits(false) {}
     };
 

@@ -9,7 +9,6 @@
 #include "pppp/mania/mods/mania_mod_mirror.h"
 #include "pppp/mania/mods/mania_mod_random.h"
 #include "pppp/mania/patterns/hit_circle_pattern_generator.h"
-#include "pppp/mania/patterns/legacy_pattern_generator.h"
 #include "pppp/mania/patterns/pass_through_pattern_generator.h"
 #include "pppp/mania/patterns/slider_pattern_generator.h"
 #include "pppp/mania/patterns/spinner_pattern_generator.h"

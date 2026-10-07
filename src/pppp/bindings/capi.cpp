@@ -294,17 +294,17 @@ namespace {
 
 } // namespace
 
-// NOLINTNEXTLINE(readability-identifier-naming): the header declares the handle under this name.
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct pppp_timed_difficulty {
     std::vector<pppp_timed_difficulty_attributes> entries;
 };
 
-// NOLINTNEXTLINE(readability-identifier-naming): the header declares the handle under this name.
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct pppp_strains {
     pppp::Strains strains;
 };
 
-// NOLINTNEXTLINE(readability-identifier-naming): the header declares the handle under this name.
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct pppp_mods {
     pppp::Mods mods;
 };
@@ -320,7 +320,7 @@ struct SliderView {
     std::vector<pppp_slider_event_descriptor> catch_events;
 };
 
-// NOLINTNEXTLINE(readability-identifier-naming): the header declares the handle under this name.
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct pppp_beatmap {
     pppp::Beatmap map;
 

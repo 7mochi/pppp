@@ -11,10 +11,14 @@ Checks: >
     bugprone-swapped-arguments,
     cert-flp30-c,
     clang-analyzer-*,
+    -clang-analyzer-optin.cplusplus.UninitializedObject,
     -clang-analyzer-optin.performance.Padding,
     -clang-analyzer-security.FloatLoopCounter,
     -clang-analyzer-unix.*,
     misc-include-cleaner,
+    performance-for-range-copy,
+    performance-unnecessary-copy-initialization,
+    performance-unnecessary-value-param,
     readability-identifier-naming
 HeaderFilterRegex: '.*/pppp/(include|src|tests)/.*'
 FormatStyle: file

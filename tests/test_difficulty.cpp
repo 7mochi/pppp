@@ -579,7 +579,7 @@ TEST_CASE("the facade reports a calculation that could not run") {
     CHECK(pppp::Performance(beatmap).score(score).calculate(performance).code() ==
           pppp::StatusCode::NO_SLIDER_PATH_BACKEND);
 
-    // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange): the ruleset outside the four is the case.
+    // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
     const pppp::Difficulty unknown = pppp::Difficulty().ruleset(static_cast<pppp::Ruleset::Value>(4));
     CHECK(unknown.calculate(beatmap, attributes).code() == pppp::StatusCode::INVALID_ARGUMENT);
     CHECK(unknown.calculate_timed(beatmap, timed).code() == pppp::StatusCode::INVALID_ARGUMENT);

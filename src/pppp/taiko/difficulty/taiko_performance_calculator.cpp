@@ -35,7 +35,6 @@ namespace pppp { namespace taiko { namespace difficulty {
                   estimated_unstable_rate(),
                   clock_rate(0.0),
                   great_hit_window(0.0),
-                  // NOLINTNEXTLINE(clang-analyzer-optin.cplusplus.UninitializedObject)
                   total_difficult_hits(0.0) {}
 
             int total_hits() const { return count_great + count_ok + count_meh + count_miss; }

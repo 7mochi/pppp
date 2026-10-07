@@ -21,6 +21,9 @@ target_include_directories(fosu
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
+set_target_properties(fosu PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
+
 add_library(fosu_warnings INTERFACE)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(fosu_warnings INTERFACE

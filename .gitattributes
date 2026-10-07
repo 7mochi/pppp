@@ -1,0 +1,41 @@
+# Autodetect text files and ensure that we normalise their
+# line endings to lf internally. When checked out they may
+# use different line endings.
+* text=auto
+
+# Check out with lf (UNIX) line endings
+*.c            text diff=cpp eol=lf
+*.cpp          text diff=cpp eol=lf
+*.h            text diff=cpp eol=lf
+*.hpp          text diff=cpp eol=lf
+*.py           text eol=lf
+*.pyi          text eol=lf
+*.js           text eol=lf
+*.mjs          text eol=lf
+*.ts           text eol=lf
+*.cs           text eol=lf
+*.csproj       text eol=lf
+*.targets      text eol=lf
+*.json         text eol=lf
+*.lock         text eol=lf
+*.toml         text eol=lf
+*.yml          text eol=lf
+*.md           text eol=lf
+*.txt          text eol=lf
+*.cmake        text eol=lf
+*.in           text eol=lf
+*.map          text eol=lf
+*.nix          text eol=lf
+*.patch        text eol=lf
+*.sh           text eol=lf
+CMakeLists.txt text eol=lf
+Makefile       text eol=lf
+.envrc         text eol=lf
+.clang-format  text eol=lf
+.clang-tidy    text eol=lf
+.clangd        text eol=lf
+.gitignore     text eol=lf
+
+*.osu                        -text
+LICENCE                      -text
+third_party/optional-bare/** -text

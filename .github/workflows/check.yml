@@ -15,7 +15,6 @@ jobs:
     name: Detect changes
     runs-on: ubuntu-latest
     outputs:
-      code: ${{ steps.filter.outputs.code }}
       core: ${{ steps.filter.outputs.core }}
       python: ${{ steps.filter.outputs.python }}
       node: ${{ steps.filter.outputs.node }}
@@ -26,10 +25,6 @@ jobs:
         id: filter
         with:
           filters: |
-            code:
-              - '**'
-              - '!docs/**'
-              - '!**.md'
             core:
               - 'src/**'
               - 'include/**'
@@ -38,10 +33,10 @@ jobs:
               - 'CMakeLists.txt'
               - 'CMakePresets.json'
               - 'cmake/**'
+              - 'Makefile'
               - 'capi.map'
               - 'flake.nix'
               - 'flake.lock'
-              - '.github/workflows/**'
             python:
               - 'python/**'
               - 'pyproject.toml'
@@ -68,7 +63,7 @@ jobs:
   check:
     name: Check on ${{ matrix.os }}
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.core == 'true' || needs.changes.outputs.python == 'true' || needs.changes.outputs.node == 'true' || needs.changes.outputs.csharp == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -105,7 +100,7 @@ jobs:
   check-windows:
     name: Check on windows-latest
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.core == 'true' || needs.changes.outputs.python == 'true' || needs.changes.outputs.node == 'true' || needs.changes.outputs.csharp == 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7.0.1

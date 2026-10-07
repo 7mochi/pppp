@@ -63,6 +63,7 @@ jobs:
       - uses: re-actors/alls-green@v1.3.0
         with:
           jobs: ${{ toJSON(needs) }}
+          allowed-skips: check,check-windows
 
   check:
     name: Check on ${{ matrix.os }}

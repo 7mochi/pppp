@@ -20,6 +20,7 @@ option(PPPP_INSTALL "Generate install rules" ${PROJECT_IS_TOP_LEVEL})
 option(PPPP_BUILD_PYTHON "Build the Python extension module" OFF)
 option(PPPP_BUILD_NODE "Build the Node bindings" OFF)
 option(PPPP_BUILD_CAPI "Build the C bindings" OFF)
+option(PPPP_WIN2K "Link the shim that keeps the produced binaries loadable on Windows 2000" OFF)
 
 if(PPPP_BUILD_PYTHON OR PPPP_BUILD_NODE OR PPPP_BUILD_CAPI)
   # The library is static and the extension is a shared object.

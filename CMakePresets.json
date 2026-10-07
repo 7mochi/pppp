@@ -22,12 +22,68 @@
       "cacheVariables": {
         "CMAKE_CXX_CLANG_TIDY": "clang-tidy;-p;${sourceDir}/build_clang_tidy"
       }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "PPPP_BUILD_CAPI": "ON",
+        "PPPP_BUILD_TESTS": "OFF",
+        "PPPP_BUILD_PYTHON": "OFF",
+        "PPPP_BUILD_NODE": "OFF"
+      }
+    },
+    {
+      "name": "win2k",
+      "displayName": "Windows 2000 and later (x86)",
+      "inherits": "release",
+      "binaryDir": "${sourceDir}/build/win2k",
+      "cacheVariables": {
+        "CMAKE_SYSTEM_NAME": "Windows",
+        "CMAKE_C_COMPILER": "i686-w64-mingw32-gcc",
+        "CMAKE_CXX_COMPILER": "i686-w64-mingw32-g++",
+        "CMAKE_C_FLAGS": "-D_WIN32_WINNT=0x0500 -DWINVER=0x0500",
+        "CMAKE_CXX_FLAGS": "-D_WIN32_WINNT=0x0500 -DWINVER=0x0500",
+        "CMAKE_SHARED_LINKER_FLAGS": "-static-libstdc++ -static-libgcc",
+        "PPPP_WIN2K": "ON",
+        "PPPP_INSTALL": "OFF"
+      }
+    },
+    {
+      "name": "winxp-x64",
+      "displayName": "Windows XP x64 and later (x64)",
+      "inherits": "release",
+      "binaryDir": "${sourceDir}/build/winxp-x64",
+      "cacheVariables": {
+        "CMAKE_SYSTEM_NAME": "Windows",
+        "CMAKE_C_COMPILER": "x86_64-w64-mingw32-gcc",
+        "CMAKE_CXX_COMPILER": "x86_64-w64-mingw32-g++",
+        "CMAKE_C_FLAGS": "-D_WIN32_WINNT=0x0502 -DWINVER=0x0502",
+        "CMAKE_CXX_FLAGS": "-D_WIN32_WINNT=0x0502 -DWINVER=0x0502",
+        "CMAKE_SHARED_LINKER_FLAGS": "-static-libstdc++ -static-libgcc",
+        "PPPP_INSTALL": "OFF"
+      }
     }
   ],
   "buildPresets": [
     {
       "name": "dev",
       "configurePreset": "dev"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "win2k",
+      "configurePreset": "win2k"
+    },
+    {
+      "name": "winxp-x64",
+      "configurePreset": "winxp-x64"
     }
   ]
 }

@@ -21,6 +21,10 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set_property(TARGET pppp_c APPEND PROPERTY LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/capi.map")
 endif()
 
+if(PPPP_WIN2K)
+  target_sources(pppp_c PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/win2k/get-thread-id.c)
+endif()
+
 enable_language(C)
 set(CMAKE_REQUIRED_INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/include")
 check_c_source_compiles(

@@ -1,7 +1,7 @@
 BUILD_DIR   := build
 NPROC := $(shell nproc 2>/dev/null || echo 4)
 
-.PHONY: all clean rebuild test configure format check-format check-tidy
+.PHONY: all clean rebuild test configure format check-format check-tidy build-windows-2k build-windows-xp-x64
 
 all: build
 
@@ -12,6 +12,16 @@ configure:
 build: configure
 	@echo "Building pppp:"
 	cmake --build $(BUILD_DIR) -j$(NPROC)
+
+build-windows-2k:
+	@echo "Run this in 'nix develop .#legacyWindows':"
+	cmake --preset win2k
+	cmake --build --preset win2k
+
+build-windows-xp-x64:
+	@echo "Run this in 'nix develop .#legacyWindows':"
+	cmake --preset winxp-x64
+	cmake --build --preset winxp-x64
 
 test: build
 	@echo "Running tests:"

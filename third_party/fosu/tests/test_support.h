@@ -1,10 +1,8 @@
 #ifndef FOSU_TESTS_SUPPORT_H
 #define FOSU_TESTS_SUPPORT_H
 
-// Shared helpers of the port's test suites (upstream: tests/support/test.h).
 
 #include <cstdio>
-#include <cstdlib>
 #include <string>
 
 #include <fosu/parser.h>
@@ -12,10 +10,7 @@
 #include "harness.h"
 
 inline fosu::Beatmap& require_parse(fosu::Result<fosu::Beatmap*> parsed) {
-    CHECK(parsed.ok());
-    if (parsed.failed()) {
-        std::abort();
-    }
+    REQUIRE(parsed.ok());
     return *parsed.value();
 }
 

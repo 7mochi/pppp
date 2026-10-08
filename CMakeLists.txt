@@ -367,6 +367,11 @@ if(PPPP_INSTALL)
   install(FILES third_party/optional-bare/LICENSE.txt DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nonstd)
 endif()
 
+# doctest
+if(PPPP_BUILD_TESTS)
+  include(cmake/Doctest.cmake)
+endif()
+
 # fosu
 if(PPPP_WITH_FOSU)
   set(FOSU_BUILD_TESTS ${PPPP_BUILD_TESTS})

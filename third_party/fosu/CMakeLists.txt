@@ -49,14 +49,20 @@ target_link_libraries(fosu PRIVATE $<BUILD_INTERFACE:fosu_warnings>)
 set_target_properties(fosu PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 
 if(FOSU_BUILD_TESTS)
+  if(NOT TARGET pppp_test_main)
+    message(FATAL_ERROR
+      "The fosu suites run on the project's doctest, which pppp brings up in cmake/Doctest.cmake "
+      "before adding this directory. Configure the project instead of this directory, or build the "
+      "parser alone with -DFOSU_BUILD_TESTS=OFF.")
+  endif()
   enable_testing()
-  set(FOSU_TEST_FIXTURES "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures")
+
   function(fosu_add_test name)
     add_executable(fosu_test_${name} tests/test_${name}.cpp)
     target_compile_features(fosu_test_${name} PRIVATE cxx_std_98)
-    target_link_libraries(fosu_test_${name} PRIVATE fosu fosu_warnings)
-    add_test(NAME fosu_${name} COMMAND fosu_test_${name} "${FOSU_TEST_FIXTURES}")
-    set_tests_properties(fosu_${name} PROPERTIES LABELS "core;parser")
+    target_link_libraries(fosu_test_${name} PRIVATE fosu fosu_warnings pppp_doctest pppp_test_main)
+    add_test(NAME fosu_${name} COMMAND fosu_test_${name})
+    set_tests_properties(fosu_${name} PROPERTIES LABELS "parser" TIMEOUT 300)
   endfunction()
   fosu_add_test(decimal)
   fosu_add_test(sections)

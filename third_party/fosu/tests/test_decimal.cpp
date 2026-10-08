@@ -179,19 +179,21 @@ PPPP_TEST(random_doubles_match_strtod) {
 
 PPPP_TEST(random_floats_match_strtof) {
     char buf[96];
+    int compared = 0;
     for (int iter = 0; iter < 400000; iter++) {
         size_t length;
         random_number(buf, length, true);
         // keep exponents in the float range most of the time
         DecimalNumber number;
         const char* q = scan_decimal(buf, buf + length, number);
-        if (q == buf) {
-            continue;
-        }
         errno = 0;
         char* next = 0;
         const float want = std::strtof(buf, &next);
         const bool want_overflow = errno == ERANGE && std::fabs(want) > 1.0f;
+        if (q == buf) {
+            CHECK_MSG(next == buf, buf);
+            continue;
+        }
         float got = 0;
         const bool ok = decimal_to_float(number, got);
         if (q - buf != next - buf || ok == want_overflow || (ok && !same_float(got, want))) {
@@ -199,8 +201,9 @@ PPPP_TEST(random_floats_match_strtof) {
             CHECK_MSG(false, "random float matches strtof");
             return;
         }
+        compared++;
     }
-    CHECK(true);
+    CHECK(compared > 300000);
 }
 
 PPPP_TEST(long_significands) {

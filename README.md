@@ -3,9 +3,9 @@
 Calculate osu! difficulty and performance attributes for all four gamemodes in ISO C++98.
 
 - All four gamemodes, with every mod the game lets each carry.
-- Ported from [osu!lazer](https://github.com/ppy/osu) at `4f649c51b1b911361244e253e3469b2fb456f00e`, and from
-[fosu](https://github.com/cmyui/fast-osu-beatmap-parser)
-`de01f188f2be7831f619ca09882cf2f55b0c9720` for the parser.
+- Ported from [osu!lazer](https://github.com/ppy/osu) and verified against its `2026.730.0` release, with the
+parser ported from [fosu](https://github.com/cmyui/fast-osu-beatmap-parser)
+`de01f188f2be7831f619ca09882cf2f55b0c9720`.
 - Python bindings written against CPython's stable ABI, so one `cp310-abi3` wheel serves every CPython from 3.10.
 - Node bindings written against Node-API, so one build runs on every Node.js that carries it.
 - C# bindings written against the library's flat C ABI, so one assembly serves .NET Framework 2.0 and

@@ -120,7 +120,7 @@ namespace {
     }
 } // namespace
 
-TEST_SUITE("CapiTest") {
+TEST_SUITE("the C ABI") {
     TEST_CASE("the version is a version") {
         const char* version = pppp_version();
 
@@ -570,7 +570,7 @@ TEST_SUITE("CapiTest") {
     }
 }
 
-TEST_SUITE("CapiTest") {
+TEST_SUITE("the C ABI") {
     TEST_CASE("the timed attributes match the library's") {
         const char* path = PPPP_TEST_RESOURCES "/osu/2785319.osu";
         pppp_beatmap* map = 0;

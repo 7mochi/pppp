@@ -162,49 +162,6 @@ TEST_CASE("bad input is rejected") {
 }
 
 namespace {
-    struct Decoded {
-        const char* map;
-        int mode;
-        int version;
-        float approach_rate;
-        float overall_difficulty;
-        float circle_size;
-        float drain_rate;
-        float slider_multiplier;
-        float slider_tick_rate;
-        size_t hit_objects;
-        int timing_points;
-        float stack_leniency;
-        size_t breaks;
-    };
-
-    int uninherited_lines(const pppp::beatmaps::Beatmap& beatmap) {
-        int count = 0;
-
-        for (size_t i = 0; i < beatmap.timing_points.size(); i++) {
-            count += beatmap.timing_points[i].uninherited ? 1 : 0;
-        }
-        return count;
-    }
-    void check(const Decoded& row) {
-        pppp::Beatmap beatmap;
-
-        pppp_test::load(beatmap, row.map);
-        INFO(row.map);
-        CHECK(beatmap.mode == row.mode);
-        CHECK(beatmap.format_version == row.version);
-        CHECK(static_cast<float>(beatmap.difficulty.approach_rate) == row.approach_rate);
-        CHECK(static_cast<float>(beatmap.difficulty.overall_difficulty) == row.overall_difficulty);
-        CHECK(static_cast<float>(beatmap.difficulty.circle_size) == row.circle_size);
-        CHECK(static_cast<float>(beatmap.difficulty.drain_rate) == row.drain_rate);
-        CHECK(static_cast<float>(beatmap.difficulty.slider_multiplier) == row.slider_multiplier);
-        CHECK(static_cast<float>(beatmap.difficulty.slider_tick_rate) == row.slider_tick_rate);
-        CHECK(beatmap.hit_objects.size() == row.hit_objects);
-        CHECK(uninherited_lines(beatmap) == row.timing_points);
-        CHECK(static_cast<float>(beatmap.stack_leniency) == row.stack_leniency);
-        CHECK(beatmap.breaks.size() == row.breaks);
-    }
-
     void load_empty(pppp::beatmaps::Beatmap& beatmap) {
         ::fosu::Parser parser;
         const ::fosu::Result< ::fosu::Beatmap*> parsed = parser.parse("", 0, ::fosu::ParseOptions());
@@ -214,46 +171,7 @@ namespace {
     }
 } // namespace
 
-TEST_CASE("osu") {
-    const Decoded row = {
-        PPPP_TEST_RESOURCES "/osu/2785319.osu", 0, 14, 9.3f, 8.8f, 4.5f, 5.0f, 1.7f, 1.0f, 601, 1, 0.5f, 1};
-
-    check(row);
-}
-
-TEST_CASE("taiko") {
-    const Decoded row = {
-        PPPP_TEST_RESOURCES "/taiko/1028484.osu", 1, 14, 8.0f, 5.0f, 2.0f, 6.0f, 1.4f, 1.0f, 295, 1, 0.7f, 0};
-
-    check(row);
-}
-
-TEST_CASE("catch") {
-    const Decoded row = {PPPP_TEST_RESOURCES "/fruits/2118524.osu",
-                         2,
-                         14,
-                         8.0f,
-                         8.0f,
-                         3.5f,
-                         5.0f,
-                         1.45f,
-                         1.0f,
-                         477,
-                         1,
-                         0.7f,
-                         0};
-
-    check(row);
-}
-
-TEST_CASE("mania") {
-    const Decoded row = {
-        PPPP_TEST_RESOURCES "/mania/1638954.osu", 3, 14, 5.0f, 8.0f, 4.0f, 8.0f, 1.4f, 1.0f, 594, 1, 0.7f, 0};
-
-    check(row);
-}
-
-TEST_CASE("empty_osu") {
+TEST_CASE("an empty map has default osu! attributes") {
     pppp::Beatmap beatmap;
 
     load_empty(beatmap);
@@ -262,7 +180,7 @@ TEST_CASE("empty_osu") {
     CHECK(pppp::osu::difficulty::calculate_difficulty(attrs, beatmap, 0, 0).ok());
 }
 
-TEST_CASE("empty_taiko") {
+TEST_CASE("an empty map has default taiko attributes") {
     pppp::Beatmap beatmap;
 
     load_empty(beatmap);
@@ -271,7 +189,7 @@ TEST_CASE("empty_taiko") {
     CHECK(pppp::taiko::difficulty::calculate_difficulty(attrs, beatmap, 0, 0).ok());
 }
 
-TEST_CASE("empty_catch") {
+TEST_CASE("an empty map has default osu!catch attributes") {
     pppp::Beatmap beatmap;
 
     load_empty(beatmap);
@@ -280,7 +198,7 @@ TEST_CASE("empty_catch") {
     CHECK(pppp::fruits::difficulty::calculate_difficulty(attrs, beatmap, 0, 0).ok());
 }
 
-TEST_CASE("empty_mania") {
+TEST_CASE("an empty map has default osu!mania attributes") {
     pppp::Beatmap beatmap;
 
     load_empty(beatmap);

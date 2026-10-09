@@ -13,9 +13,13 @@ function(pppp_add_test name label)
 endfunction()
 
 if(PPPP_WITH_FOSU)
-  pppp_add_test(decode library pppp_fosu fosu)
-  pppp_add_test(difficulty library pppp_fosu)
-  pppp_add_test(performance library pppp_fosu)
+  pppp_add_test(beatmap library pppp_fosu fosu)
+  pppp_add_test(timed_and_strains library pppp_fosu)
+  pppp_add_test(mod_behaviour library pppp_fosu)
+  
+  pppp_add_test(parity_decode library pppp_fosu)
+  pppp_add_test(parity_difficulty library pppp_fosu)
+  pppp_add_test(parity_performance library pppp_fosu)
 endif()
 
 if(PPPP_WITH_FOSU AND PPPP_BUILD_CAPI)

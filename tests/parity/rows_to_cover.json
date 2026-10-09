@@ -1,0 +1,741 @@
+[
+  {
+    "case": "the difficulty of each test map",
+    "map": "osu/diffcalc-test.osu",
+    "ruleset": 0,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map",
+    "map": "osu/zero-length-sliders.osu",
+    "ruleset": 0,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map",
+    "map": "osu/very-fast-slider.osu",
+    "ruleset": 0,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map",
+    "map": "osu/nan-slider.osu",
+    "ruleset": 0,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map",
+    "map": "osu/801165.osu",
+    "ruleset": 0,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map at a changed clock rate",
+    "map": "osu/diffcalc-test.osu",
+    "ruleset": 0,
+    "mods": [
+      "DT"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map at a changed clock rate",
+    "map": "osu/zero-length-sliders.osu",
+    "ruleset": 0,
+    "mods": [
+      "DT"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map at a changed clock rate",
+    "map": "osu/very-fast-slider.osu",
+    "ruleset": 0,
+    "mods": [
+      "DT"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map with the classic mod",
+    "map": "osu/diffcalc-test.osu",
+    "ruleset": 0,
+    "mods": [
+      "CL"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map with the classic mod",
+    "map": "osu/zero-length-sliders.osu",
+    "ruleset": 0,
+    "mods": [
+      "CL"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map with the classic mod",
+    "map": "osu/very-fast-slider.osu",
+    "ruleset": 0,
+    "mods": [
+      "CL"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map",
+    "map": "taiko/diffcalc-test.osu",
+    "ruleset": 1,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map",
+    "map": "taiko/diffcalc-test-strong.osu",
+    "ruleset": 1,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map at a changed clock rate",
+    "map": "taiko/diffcalc-test.osu",
+    "ruleset": 1,
+    "mods": [
+      "DT"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map at a changed clock rate",
+    "map": "taiko/diffcalc-test-strong.osu",
+    "ruleset": 1,
+    "mods": [
+      "DT"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map",
+    "map": "fruits/diffcalc-test.osu",
+    "ruleset": 2,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map at a changed clock rate",
+    "map": "fruits/diffcalc-test.osu",
+    "ruleset": 2,
+    "mods": [
+      "DT"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map",
+    "map": "mania/diffcalc-test.osu",
+    "ruleset": 3,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map at a changed clock rate",
+    "map": "mania/diffcalc-test.osu",
+    "ruleset": 3,
+    "mods": [
+      "DT"
+    ]
+  },
+  {
+    "case": "a basic osu! map",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": []
+  },
+  {
+    "case": "a basic taiko map",
+    "map": "taiko/1028484.osu",
+    "ruleset": 1,
+    "mods": [
+      "NM"
+    ],
+    "score": {
+      "count_great": 289
+    }
+  },
+  {
+    "case": "a basic taiko map",
+    "map": "taiko/1028484.osu",
+    "ruleset": 1,
+    "mods": [
+      "HR"
+    ],
+    "score": {
+      "count_great": 289
+    }
+  },
+  {
+    "case": "a basic taiko map",
+    "map": "taiko/1028484.osu",
+    "ruleset": 1,
+    "mods": [
+      "DT"
+    ],
+    "score": {
+      "count_great": 289
+    }
+  },
+  {
+    "case": "an osu! map converted to taiko",
+    "map": "osu/2785319.osu",
+    "ruleset": 1,
+    "mods": [
+      "NM"
+    ],
+    "score": {
+      "count_great": 908
+    }
+  },
+  {
+    "case": "an osu! map converted to taiko",
+    "map": "osu/2785319.osu",
+    "ruleset": 1,
+    "mods": [
+      "HR"
+    ],
+    "score": {
+      "count_great": 908
+    }
+  },
+  {
+    "case": "an osu! map converted to taiko",
+    "map": "osu/2785319.osu",
+    "ruleset": 1,
+    "mods": [
+      "DT"
+    ],
+    "score": {
+      "count_great": 908
+    }
+  },
+  {
+    "case": "osu!catch keeps a juice stream's ticks where osu! drops them",
+    "map": "osu/nan-slider.osu",
+    "ruleset": 2,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "osu!catch keeps a juice stream's ticks where osu! drops them",
+    "map": "osu/nan-slider.osu",
+    "ruleset": 2,
+    "mods": [
+      "DT"
+    ]
+  },
+  {
+    "case": "a basic osu!catch map",
+    "map": "fruits/2118524.osu",
+    "ruleset": 2,
+    "mods": [
+      "NM"
+    ],
+    "score": {
+      "count_great": 728,
+      "count_large_tick_hit": 2,
+      "count_small_tick_hit": 263
+    }
+  },
+  {
+    "case": "a basic osu!catch map",
+    "map": "fruits/2118524.osu",
+    "ruleset": 2,
+    "mods": [
+      "HR"
+    ]
+  },
+  {
+    "case": "a basic osu!catch map",
+    "map": "fruits/2118524.osu",
+    "ruleset": 2,
+    "mods": [
+      "EZ"
+    ]
+  },
+  {
+    "case": "a basic osu!catch map",
+    "map": "fruits/2118524.osu",
+    "ruleset": 2,
+    "mods": [
+      "DT"
+    ],
+    "score": {
+      "count_great": 728,
+      "count_large_tick_hit": 2,
+      "count_small_tick_hit": 263
+    }
+  },
+  {
+    "case": "an osu! map converted to osu!catch",
+    "map": "osu/2785319.osu",
+    "ruleset": 2,
+    "mods": [
+      "NM"
+    ],
+    "score": {
+      "count_great": 908,
+      "count_small_tick_hit": 159
+    }
+  },
+  {
+    "case": "an osu! map converted to osu!catch",
+    "map": "osu/2785319.osu",
+    "ruleset": 2,
+    "mods": [
+      "HR"
+    ]
+  },
+  {
+    "case": "an osu! map converted to osu!catch",
+    "map": "osu/2785319.osu",
+    "ruleset": 2,
+    "mods": [
+      "EZ"
+    ]
+  },
+  {
+    "case": "an osu! map converted to osu!catch",
+    "map": "osu/2785319.osu",
+    "ruleset": 2,
+    "mods": [
+      "DT"
+    ],
+    "score": {
+      "count_great": 908,
+      "count_small_tick_hit": 159
+    }
+  },
+  {
+    "case": "a basic osu!mania map",
+    "map": "mania/1638954.osu",
+    "ruleset": 3,
+    "mods": [
+      "NM"
+    ],
+    "score": {
+      "count_perfect": 715
+    }
+  },
+  {
+    "case": "a basic osu!mania map",
+    "map": "mania/1638954.osu",
+    "ruleset": 3,
+    "mods": [
+      "DT"
+    ],
+    "score": {
+      "count_perfect": 715
+    }
+  },
+  {
+    "case": "an osu! map converted to osu!mania",
+    "map": "osu/2785319.osu",
+    "ruleset": 3,
+    "mods": [
+      "NM"
+    ],
+    "score": {
+      "count_perfect": 1312
+    }
+  },
+  {
+    "case": "an osu! map converted to osu!mania",
+    "map": "osu/2785319.osu",
+    "ruleset": 3,
+    "mods": [
+      "DT"
+    ],
+    "score": {
+      "count_perfect": 1312
+    }
+  },
+  {
+    "case": "an osu! map at a changed clock rate with HD",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      "HD",
+      "DT"
+    ]
+  },
+  {
+    "case": "an osu! map converted to osu!mania with 4K",
+    "map": "osu/2785319.osu",
+    "ruleset": 3,
+    "mods": [
+      "4K"
+    ]
+  },
+  {
+    "case": "the difficulty of each test map",
+    "map": "taiko/diffcalc-test.osu",
+    "ruleset": 1,
+    "mods": []
+  },
+  {
+    "case": "the difficulty of each test map",
+    "map": "osu/diffcalc-test.osu",
+    "ruleset": 0,
+    "mods": []
+  },
+  {
+    "case": "the difficulty of each test map",
+    "map": "fruits/diffcalc-test.osu",
+    "ruleset": 2,
+    "mods": []
+  },
+  {
+    "case": "the difficulty of each test map",
+    "map": "mania/diffcalc-test.osu",
+    "ruleset": 3,
+    "mods": []
+  },
+  {
+    "case": "an osu! map converted to osu!mania",
+    "map": "osu/2785319.osu",
+    "ruleset": 3,
+    "mods": []
+  },
+  {
+    "case": "a basic osu! map",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      "NM"
+    ],
+    "score": {
+      "count_great": 601,
+      "max_combo": 909
+    }
+  },
+  {
+    "case": "a basic osu! map",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      "HD"
+    ],
+    "score": {
+      "count_great": 601,
+      "max_combo": 909
+    }
+  },
+  {
+    "case": "a basic osu! map",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      "EZ",
+      "HD"
+    ],
+    "score": {
+      "count_great": 601,
+      "max_combo": 909
+    }
+  },
+  {
+    "case": "a basic osu! map",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      "HR"
+    ],
+    "score": {
+      "count_great": 601,
+      "max_combo": 909
+    }
+  },
+  {
+    "case": "a basic osu! map",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      "DT"
+    ],
+    "score": {
+      "count_great": 601,
+      "max_combo": 909
+    }
+  },
+  {
+    "case": "a basic osu! map",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      "FL"
+    ],
+    "score": {
+      "count_great": 601,
+      "max_combo": 909
+    }
+  },
+  {
+    "case": "a basic osu! map",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      "HD",
+      "FL"
+    ],
+    "score": {
+      "count_great": 601,
+      "max_combo": 909
+    }
+  },
+  {
+    "case": "a basic taiko map",
+    "map": "taiko/1028484.osu",
+    "ruleset": 1,
+    "mods": [
+      "HD"
+    ],
+    "score": {
+      "count_great": 289
+    }
+  },
+  {
+    "case": "an osu! map converted to taiko",
+    "map": "osu/2785319.osu",
+    "ruleset": 1,
+    "mods": [
+      "HD"
+    ],
+    "score": {
+      "count_great": 908
+    }
+  },
+  {
+    "case": "a basic osu!catch map",
+    "map": "fruits/2118524.osu",
+    "ruleset": 2,
+    "mods": [
+      "HD"
+    ],
+    "score": {
+      "count_great": 728,
+      "count_large_tick_hit": 2,
+      "count_small_tick_hit": 263
+    }
+  },
+  {
+    "case": "a basic osu!catch map",
+    "map": "fruits/2118524.osu",
+    "ruleset": 2,
+    "mods": [
+      "HD",
+      "HR"
+    ],
+    "score": {
+      "count_great": 728,
+      "count_large_tick_hit": 2,
+      "count_small_tick_hit": 263
+    }
+  },
+  {
+    "case": "an osu! map converted to osu!catch",
+    "map": "osu/2785319.osu",
+    "ruleset": 2,
+    "mods": [
+      "HD"
+    ],
+    "score": {
+      "count_great": 908,
+      "count_small_tick_hit": 159
+    }
+  },
+  {
+    "case": "an osu! map converted to osu!catch",
+    "map": "osu/2785319.osu",
+    "ruleset": 2,
+    "mods": [
+      "HD",
+      "HR"
+    ],
+    "score": {
+      "count_great": 908,
+      "count_small_tick_hit": 159
+    }
+  },
+  {
+    "case": "a basic osu!mania map",
+    "map": "mania/1638954.osu",
+    "ruleset": 3,
+    "mods": [
+      "EZ"
+    ],
+    "score": {
+      "count_perfect": 715
+    }
+  },
+  {
+    "case": "an osu! map converted to osu!mania",
+    "map": "osu/2785319.osu",
+    "ruleset": 3,
+    "mods": [
+      "EZ"
+    ],
+    "score": {
+      "count_perfect": 1312
+    }
+  },
+  {
+    "case": "osu!standard scores with misses on 2785319.osu",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      "NM"
+    ],
+    "score": {
+      "count_great": 600,
+      "count_ok": 1,
+      "max_combo": 909,
+      "accuracy": 0.9995
+    }
+  },
+  {
+    "case": "osu!standard scores with misses on 2785319.osu",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      "HD",
+      "HR",
+      "DT",
+      "FL"
+    ],
+    "score": {
+      "count_great": 598,
+      "count_ok": 2,
+      "count_miss": 1,
+      "max_combo": 561,
+      "legacy_total_score": 5409000
+    }
+  },
+  {
+    "case": "osu!standard scores with misses on 2785319.osu",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      "CL"
+    ],
+    "score": {
+      "count_great": 598,
+      "count_ok": 2,
+      "count_miss": 1,
+      "max_combo": 561,
+      "legacy_total_score": 5409000
+    }
+  },
+  {
+    "case": "osu!taiko scores on v9.osu",
+    "map": "taiko/v9.osu",
+    "ruleset": 1,
+    "mods": [
+      "NM"
+    ],
+    "score": {
+      "count_great": 705,
+      "count_ok": 10,
+      "count_miss": 1,
+      "max_combo": 400
+    }
+  },
+  {
+    "case": "osu!taiko scores on v9.osu",
+    "map": "taiko/v9.osu",
+    "ruleset": 1,
+    "mods": [
+      "HD",
+      "FL"
+    ],
+    "score": {
+      "count_great": 705,
+      "count_ok": 10,
+      "count_miss": 1,
+      "max_combo": 400
+    }
+  },
+  {
+    "case": "osu!catch scores on v12.osu",
+    "map": "fruits/v12.osu",
+    "ruleset": 2,
+    "mods": [
+      "NM"
+    ],
+    "score": {
+      "count_great": 281,
+      "count_large_tick_hit": 10,
+      "count_small_tick_hit": 20,
+      "count_small_tick_miss": 2,
+      "count_miss": 1,
+      "max_combo": 300
+    }
+  },
+  {
+    "case": "osu!catch scores on v12.osu",
+    "map": "fruits/v12.osu",
+    "ruleset": 2,
+    "mods": [
+      "HD",
+      "HR"
+    ],
+    "score": {
+      "count_great": 281,
+      "count_large_tick_hit": 10,
+      "count_small_tick_hit": 20,
+      "count_small_tick_miss": 2,
+      "count_miss": 1,
+      "max_combo": 300
+    }
+  },
+  {
+    "case": "osu!mania scores on keys_4_holds.osu",
+    "map": "mania/keys_4_holds.osu",
+    "ruleset": 3,
+    "mods": [
+      "NM"
+    ],
+    "score": {
+      "count_perfect": 499,
+      "count_great": 10,
+      "count_good": 5,
+      "count_ok": 3,
+      "count_meh": 2,
+      "count_miss": 1,
+      "max_combo": 2000
+    }
+  },
+  {
+    "case": "osu!mania scores on keys_4_holds.osu",
+    "map": "mania/keys_4_holds.osu",
+    "ruleset": 3,
+    "mods": [
+      "NF",
+      "DT"
+    ],
+    "score": {
+      "count_perfect": 499,
+      "count_great": 10,
+      "count_good": 5,
+      "count_ok": 3,
+      "count_meh": 2,
+      "count_miss": 1,
+      "max_combo": 2000
+    }
+  }
+]

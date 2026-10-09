@@ -1,7 +1,7 @@
 BUILD_DIR   := build
 NPROC := $(shell nproc 2>/dev/null || echo 4)
 
-.PHONY: all clean rebuild test configure format check-format check-tidy build-windows-2k build-windows-xp-x64
+.PHONY: all clean rebuild test generate-parity-tests configure format check-format check-tidy build-windows-2k build-windows-xp-x64
 
 all: build
 
@@ -41,3 +41,7 @@ check-format: configure
 check-tidy:
 	cmake --preset clang_tidy
 	cmake --build build_clang_tidy -j$(NPROC) -- -k 0 || true
+
+generate-parity-tests:
+	python3 tests/parity/gen_parity.py
+	$(MAKE) format

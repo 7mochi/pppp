@@ -22,6 +22,7 @@ classifiers = [
 
 [tool.scikit-build]
 cmake.version = ">=3.26"
+cmake.build-type = "Release"
 ninja.make-fallback = true
 wheel.packages = ["python/pppp"]
 wheel.py-api = "cp310"

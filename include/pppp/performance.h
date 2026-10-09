@@ -39,7 +39,6 @@ namespace pppp {
     typedef pppp::fruits::difficulty::CatchPerformanceAttributes CatchPerformanceAttributes;
     typedef pppp::mania::difficulty::ManiaPerformanceAttributes ManiaPerformanceAttributes;
 
-    /// The four rulesets' performance attributes in one value: a tag plus the four mode structs.
     class PerformanceAttributes {
     public:
         PerformanceAttributes();
@@ -59,11 +58,9 @@ namespace pppp {
         double total() const;
 
     private:
-        Ruleset::Value tag;
-        OsuPerformanceAttributes osu_value;
-        TaikoPerformanceAttributes taiko_value;
-        CatchPerformanceAttributes fruits_value;
-        ManiaPerformanceAttributes mania_value;
+        nonstd::variant<OsuPerformanceAttributes, TaikoPerformanceAttributes, CatchPerformanceAttributes,
+                        ManiaPerformanceAttributes>
+            value;
     };
 
     /// Performance calculator on maps of any mode.
@@ -113,64 +110,46 @@ namespace pppp {
     };
 
     inline PerformanceAttributes::PerformanceAttributes()
-        : tag(Ruleset::OSU),
-          osu_value(),
-          taiko_value(),
-          fruits_value(),
-          mania_value() {}
+        : value() {}
 
     inline PerformanceAttributes::PerformanceAttributes(const OsuPerformanceAttributes& attributes)
-        : tag(Ruleset::OSU),
-          osu_value(attributes),
-          taiko_value(),
-          fruits_value(),
-          mania_value() {}
+        : value(attributes) {}
 
     inline PerformanceAttributes::PerformanceAttributes(const TaikoPerformanceAttributes& attributes)
-        : tag(Ruleset::TAIKO),
-          osu_value(),
-          taiko_value(attributes),
-          fruits_value(),
-          mania_value() {}
+        : value(attributes) {}
 
     inline PerformanceAttributes::PerformanceAttributes(const CatchPerformanceAttributes& attributes)
-        : tag(Ruleset::CATCH),
-          osu_value(),
-          taiko_value(),
-          fruits_value(attributes),
-          mania_value() {}
+        : value(attributes) {}
 
     inline PerformanceAttributes::PerformanceAttributes(const ManiaPerformanceAttributes& attributes)
-        : tag(Ruleset::MANIA),
-          osu_value(),
-          taiko_value(),
-          fruits_value(),
-          mania_value(attributes) {}
+        : value(attributes) {}
 
-    inline Ruleset::Value PerformanceAttributes::ruleset() const { return tag; }
+    inline Ruleset::Value PerformanceAttributes::ruleset() const {
+        return static_cast<Ruleset::Value>(value.index());
+    }
 
     inline const OsuPerformanceAttributes* PerformanceAttributes::osu() const {
-        return tag == Ruleset::OSU ? &osu_value : 0;
+        return nonstd::get_if<OsuPerformanceAttributes>(&value);
     }
 
     inline const TaikoPerformanceAttributes* PerformanceAttributes::taiko() const {
-        return tag == Ruleset::TAIKO ? &taiko_value : 0;
+        return nonstd::get_if<TaikoPerformanceAttributes>(&value);
     }
 
     inline const CatchPerformanceAttributes* PerformanceAttributes::fruits() const {
-        return tag == Ruleset::CATCH ? &fruits_value : 0;
+        return nonstd::get_if<CatchPerformanceAttributes>(&value);
     }
 
     inline const ManiaPerformanceAttributes* PerformanceAttributes::mania() const {
-        return tag == Ruleset::MANIA ? &mania_value : 0;
+        return nonstd::get_if<ManiaPerformanceAttributes>(&value);
     }
 
     inline double PerformanceAttributes::total() const {
-        switch (tag) {
-        case Ruleset::OSU: return osu_value.total;
-        case Ruleset::TAIKO: return taiko_value.total;
-        case Ruleset::CATCH: return fruits_value.total;
-        case Ruleset::MANIA: return mania_value.total;
+        switch (value.index()) {
+        case Ruleset::OSU: return nonstd::get<OsuPerformanceAttributes>(value).total;
+        case Ruleset::TAIKO: return nonstd::get<TaikoPerformanceAttributes>(value).total;
+        case Ruleset::CATCH: return nonstd::get<CatchPerformanceAttributes>(value).total;
+        case Ruleset::MANIA: return nonstd::get<ManiaPerformanceAttributes>(value).total;
         default: return 0.0;
         }
     }

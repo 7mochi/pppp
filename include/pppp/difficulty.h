@@ -32,8 +32,6 @@ namespace pppp {
         enum Value { OSU = 0, TAIKO, CATCH, MANIA };
     };
 
-    /// The four rulesets' difficulty attributes in one value: a tag plus the four mode structs.
-    /// C++98 has no variant, so all four are held and the tag says which one is live.
     class DifficultyAttributes {
     public:
         DifficultyAttributes();
@@ -56,11 +54,9 @@ namespace pppp {
         int max_combo() const;
 
     private:
-        Ruleset::Value tag;
-        OsuDifficultyAttributes osu_value;
-        TaikoDifficultyAttributes taiko_value;
-        CatchDifficultyAttributes fruits_value;
-        ManiaDifficultyAttributes mania_value;
+        nonstd::variant<OsuDifficultyAttributes, TaikoDifficultyAttributes, CatchDifficultyAttributes,
+                        ManiaDifficultyAttributes>
+            value;
     };
 
     /// Wraps a DifficultyAttributes object and adds a time value for which the attribute is valid.
@@ -97,11 +93,7 @@ namespace pppp {
         double section_length() const;
 
     private:
-        Ruleset::Value tag;
-        OsuStrains osu_value;
-        TaikoStrains taiko_value;
-        CatchStrains fruits_value;
-        ManiaStrains mania_value;
+        nonstd::variant<OsuStrains, TaikoStrains, CatchStrains, ManiaStrains> value;
     };
 
     /// Difficulty calculator on maps of any mode.
@@ -145,139 +137,101 @@ namespace pppp {
     };
 
     inline DifficultyAttributes::DifficultyAttributes()
-        : tag(Ruleset::OSU),
-          osu_value(),
-          taiko_value(),
-          fruits_value(),
-          mania_value() {}
+        : value() {}
 
     inline DifficultyAttributes::DifficultyAttributes(const OsuDifficultyAttributes& attributes)
-        : tag(Ruleset::OSU),
-          osu_value(attributes),
-          taiko_value(),
-          fruits_value(),
-          mania_value() {}
+        : value(attributes) {}
 
     inline DifficultyAttributes::DifficultyAttributes(const TaikoDifficultyAttributes& attributes)
-        : tag(Ruleset::TAIKO),
-          osu_value(),
-          taiko_value(attributes),
-          fruits_value(),
-          mania_value() {}
+        : value(attributes) {}
 
     inline DifficultyAttributes::DifficultyAttributes(const CatchDifficultyAttributes& attributes)
-        : tag(Ruleset::CATCH),
-          osu_value(),
-          taiko_value(),
-          fruits_value(attributes),
-          mania_value() {}
+        : value(attributes) {}
 
     inline DifficultyAttributes::DifficultyAttributes(const ManiaDifficultyAttributes& attributes)
-        : tag(Ruleset::MANIA),
-          osu_value(),
-          taiko_value(),
-          fruits_value(),
-          mania_value(attributes) {}
+        : value(attributes) {}
 
-    inline Ruleset::Value DifficultyAttributes::ruleset() const { return tag; }
+    inline Ruleset::Value DifficultyAttributes::ruleset() const {
+        return static_cast<Ruleset::Value>(value.index());
+    }
 
     inline const OsuDifficultyAttributes* DifficultyAttributes::osu() const {
-        return tag == Ruleset::OSU ? &osu_value : 0;
+        return nonstd::get_if<OsuDifficultyAttributes>(&value);
     }
 
     inline const TaikoDifficultyAttributes* DifficultyAttributes::taiko() const {
-        return tag == Ruleset::TAIKO ? &taiko_value : 0;
+        return nonstd::get_if<TaikoDifficultyAttributes>(&value);
     }
 
     inline const CatchDifficultyAttributes* DifficultyAttributes::fruits() const {
-        return tag == Ruleset::CATCH ? &fruits_value : 0;
+        return nonstd::get_if<CatchDifficultyAttributes>(&value);
     }
 
     inline const ManiaDifficultyAttributes* DifficultyAttributes::mania() const {
-        return tag == Ruleset::MANIA ? &mania_value : 0;
+        return nonstd::get_if<ManiaDifficultyAttributes>(&value);
     }
 
     inline double DifficultyAttributes::star_rating() const {
-        switch (tag) {
-        case Ruleset::OSU: return osu_value.star_rating;
-        case Ruleset::TAIKO: return taiko_value.star_rating;
-        case Ruleset::CATCH: return fruits_value.star_rating;
-        case Ruleset::MANIA: return mania_value.star_rating;
+        switch (value.index()) {
+        case Ruleset::OSU: return nonstd::get<OsuDifficultyAttributes>(value).star_rating;
+        case Ruleset::TAIKO: return nonstd::get<TaikoDifficultyAttributes>(value).star_rating;
+        case Ruleset::CATCH: return nonstd::get<CatchDifficultyAttributes>(value).star_rating;
+        case Ruleset::MANIA: return nonstd::get<ManiaDifficultyAttributes>(value).star_rating;
         default: return 0.0;
         }
     }
 
     inline int DifficultyAttributes::max_combo() const {
-        switch (tag) {
-        case Ruleset::OSU: return osu_value.max_combo;
-        case Ruleset::TAIKO: return taiko_value.max_combo;
-        case Ruleset::CATCH: return fruits_value.max_combo;
-        case Ruleset::MANIA: return mania_value.max_combo;
+        switch (value.index()) {
+        case Ruleset::OSU: return nonstd::get<OsuDifficultyAttributes>(value).max_combo;
+        case Ruleset::TAIKO: return nonstd::get<TaikoDifficultyAttributes>(value).max_combo;
+        case Ruleset::CATCH: return nonstd::get<CatchDifficultyAttributes>(value).max_combo;
+        case Ruleset::MANIA: return nonstd::get<ManiaDifficultyAttributes>(value).max_combo;
         default: return 0;
         }
     }
 
     inline Strains::Strains()
-        : tag(Ruleset::OSU),
-          osu_value(),
-          taiko_value(),
-          fruits_value(),
-          mania_value() {}
+        : value() {}
 
     inline Strains::Strains(const OsuStrains& strains)
-        : tag(Ruleset::OSU),
-          osu_value(strains),
-          taiko_value(),
-          fruits_value(),
-          mania_value() {}
+        : value(strains) {}
 
     inline Strains::Strains(const TaikoStrains& strains)
-        : tag(Ruleset::TAIKO),
-          osu_value(),
-          taiko_value(strains),
-          fruits_value(),
-          mania_value() {}
+        : value(strains) {}
 
     inline Strains::Strains(const CatchStrains& strains)
-        : tag(Ruleset::CATCH),
-          osu_value(),
-          taiko_value(),
-          fruits_value(strains),
-          mania_value() {}
+        : value(strains) {}
 
     inline Strains::Strains(const ManiaStrains& strains)
-        : tag(Ruleset::MANIA),
-          osu_value(),
-          taiko_value(),
-          fruits_value(),
-          mania_value(strains) {}
+        : value(strains) {}
 
-    inline Ruleset::Value Strains::ruleset() const { return tag; }
+    inline Ruleset::Value Strains::ruleset() const { return static_cast<Ruleset::Value>(value.index()); }
 
-    inline const OsuStrains* Strains::osu() const { return tag == Ruleset::OSU ? &osu_value : 0; }
+    inline const OsuStrains* Strains::osu() const { return nonstd::get_if<OsuStrains>(&value); }
 
-    inline const TaikoStrains* Strains::taiko() const { return tag == Ruleset::TAIKO ? &taiko_value : 0; }
+    inline const TaikoStrains* Strains::taiko() const { return nonstd::get_if<TaikoStrains>(&value); }
 
-    inline const CatchStrains* Strains::fruits() const { return tag == Ruleset::CATCH ? &fruits_value : 0; }
+    inline const CatchStrains* Strains::fruits() const { return nonstd::get_if<CatchStrains>(&value); }
 
-    inline const ManiaStrains* Strains::mania() const { return tag == Ruleset::MANIA ? &mania_value : 0; }
+    inline const ManiaStrains* Strains::mania() const { return nonstd::get_if<ManiaStrains>(&value); }
 
     inline double Strains::start_time() const {
-        switch (tag) {
-        case Ruleset::OSU: return osu_value.start_time;
-        case Ruleset::TAIKO: return taiko_value.start_time;
-        case Ruleset::CATCH: return fruits_value.start_time;
-        case Ruleset::MANIA: return mania_value.start_time;
+        switch (value.index()) {
+        case Ruleset::OSU: return nonstd::get<OsuStrains>(value).start_time;
+        case Ruleset::TAIKO: return nonstd::get<TaikoStrains>(value).start_time;
+        case Ruleset::CATCH: return nonstd::get<CatchStrains>(value).start_time;
+        case Ruleset::MANIA: return nonstd::get<ManiaStrains>(value).start_time;
         default: return 0.0;
         }
     }
 
     inline double Strains::section_length() const {
-        switch (tag) {
-        case Ruleset::OSU: return osu_value.section_length;
-        case Ruleset::TAIKO: return taiko_value.section_length;
-        case Ruleset::CATCH: return fruits_value.section_length;
-        case Ruleset::MANIA: return mania_value.section_length;
+        switch (value.index()) {
+        case Ruleset::OSU: return nonstd::get<OsuStrains>(value).section_length;
+        case Ruleset::TAIKO: return nonstd::get<TaikoStrains>(value).section_length;
+        case Ruleset::CATCH: return nonstd::get<CatchStrains>(value).section_length;
+        case Ruleset::MANIA: return nonstd::get<ManiaStrains>(value).section_length;
         default: return 0.0;
         }
     }

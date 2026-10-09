@@ -2,9 +2,15 @@
 #define PPPP_CONFIG_H
 
 #include <algorithm> // IWYU pragma: keep
+#include <exception> // IWYU pragma: keep
 
+#define optional_CONFIG_SELECT_OPTIONAL optional_OPTIONAL_NONSTD
 #define optional_CONFIG_NO_EXCEPTIONS 1
 #include "nonstd/optional.hpp" // IWYU pragma: keep
+
+#define variant_CONFIG_SELECT_VARIANT variant_VARIANT_NONSTD
+#define variant_CONFIG_NO_EXCEPTIONS 1
+#include "nonstd/variant.hpp" // IWYU pragma: keep
 
 #define PPPP_VERSION_MAJOR 0
 #define PPPP_VERSION_MINOR 0

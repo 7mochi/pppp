@@ -47,8 +47,11 @@ target_compile_features(pppp_options INTERFACE cxx_std_98)
 target_include_directories(pppp_options
   INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third_party/optional-bare/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+
+target_include_directories(pppp_options SYSTEM INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third_party/optional-bare/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third_party/variant-lite/include>)
 
 if(PPPP_BUILD_TESTS)
   enable_testing()
@@ -361,10 +364,14 @@ add_library(pppp::pppp ALIAS pppp)
 set_target_properties(pppp PROPERTIES EXPORT_NAME pppp)
 target_link_libraries(pppp INTERFACE pppp_api)
 
-# optional
+# nonstd headers (both install into include/nonstd; their licences are named apart)
 if(PPPP_INSTALL)
   install(DIRECTORY third_party/optional-bare/include/nonstd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-  install(FILES third_party/optional-bare/LICENSE.txt DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nonstd)
+  install(DIRECTORY third_party/variant-lite/include/nonstd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  install(FILES third_party/optional-bare/LICENSE.txt
+          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nonstd RENAME optional-bare-LICENSE.txt)
+  install(FILES third_party/variant-lite/LICENSE.txt
+          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nonstd RENAME variant-lite-LICENSE.txt)
 endif()
 
 # doctest

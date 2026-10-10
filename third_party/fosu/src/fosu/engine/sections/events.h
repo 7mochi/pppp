@@ -5,38 +5,38 @@
 
 #include <fosu/beatmap.h>
 #include <fosu/engine/parsing/lines.h>
+#include <fosu/format.h>
 #include <fosu/engine/parsing/numbers.h>
 #include <fosu/engine/parsing/string_lookup.h>
 #include <fosu/engine/primitives/byte_scan.h>
 
 namespace fosu { namespace internal {
-
-    inline StringView strip_quotes(StringView v) {
+    inline nonstd::string_view strip_quotes(nonstd::string_view v) {
         if (v.size() >= 2 && v.front() == '"' && v.back() == '"') {
             return v.substr(1, v.size() - 2);
         }
         return v;
     }
 
-    inline Optional<StringView> parse_event_filename(const char* rest, const char* end) {
+    inline nonstd::optional<nonstd::string_view> parse_event_filename(const char* rest, const char* end) {
         const char* comma = find_byte(',', rest, end);
         if (comma == end) {
-            return Optional<StringView>();
+            return nonstd::optional<nonstd::string_view>();
         }
         const char* filename = comma + 1;
         const char* next = find_byte(',', filename, end);
-        return Optional<StringView>(strip_quotes(trim(filename, next)));
+        return nonstd::optional<nonstd::string_view>(strip_quotes(trim(filename, next)));
     }
 
     inline void parse_background_event(Beatmap& bm, size_t&, const char* rest, const char* end, int) {
-        const Optional<StringView> filename = parse_event_filename(rest, end);
+        const nonstd::optional<nonstd::string_view> filename = parse_event_filename(rest, end);
         if (filename.has_value()) {
             bm.background = *filename;
         }
     }
 
     inline void parse_video_event(Beatmap& bm, size_t&, const char* rest, const char* end, int) {
-        const Optional<StringView> filename = parse_event_filename(rest, end);
+        const nonstd::optional<nonstd::string_view> filename = parse_event_filename(rest, end);
         if (filename.has_value()) {
             bm.video = *filename;
         }
@@ -50,8 +50,9 @@ namespace fosu { namespace internal {
             ++bm.stats.malformed_lines;
             return;
         }
+        // osu! ignores any fields after the end time.
         const char* r = parse_osu_double(q + 1, end, stop);
-        if (r == q + 1 || r != end) {
+        if (r == q + 1 || (r != end && *r != ',')) {
             ++bm.stats.malformed_lines;
             return;
         }
@@ -78,7 +79,7 @@ namespace fosu { namespace internal {
             ++bm.stats.storyboard_lines;
             return;
         }
-        const StringView f0(p, static_cast<size_t>(c1 - p));
+        const nonstd::string_view f0(p, static_cast<size_t>(c1 - p));
         const char* rest = c1 + 1;
         const EventHandler* handler = kEventHandlers.find(f0);
         if (handler) {
@@ -92,20 +93,19 @@ namespace fosu { namespace internal {
         Beatmap* beatmap;
         size_t* break_count;
         int time_offset;
-        void operator()(StringView line) {
+        void operator()(nonstd::string_view line) {
             parse_event_line(*beatmap, *break_count, line.data(), line.size(), time_offset);
         }
     };
 
     inline const char* parse_events_section(Beatmap& bm, size_t& break_count, const char* p,
-                                            const char* file_end, int time_offset = 0) {
+                                            const char* file_end, const ParseContext& context) {
         EventsSectionLine parse_line;
         parse_line.beatmap = &bm;
         parse_line.break_count = &break_count;
-        parse_line.time_offset = time_offset;
-        return for_each_section_line(p, file_end, parse_line);
+        parse_line.time_offset = context.format.time_offset;
+        return for_each_section_line(p, file_end, parse_line, context.client);
     }
-
 }} // namespace fosu::internal
 
 #endif

@@ -3,10 +3,9 @@
 
 #include <fosu/engine/parsing/numbers.h>
 #include <fosu/engine/primitives/byte_scan.h>
-#include <fosu/span.h>
+#include <fosu/nonstd_config.h>
 
 namespace fosu { namespace internal {
-
     // The common editor spelling "d:d:d:d:" (upstream tests the 8 bytes at once; the padding
     // contract makes reading them always safe).
     inline bool short_sample(const char* p) {
@@ -16,7 +15,7 @@ namespace fosu { namespace internal {
 
     // Only the fields read by the official legacy decoder affect acceptance.
     // Unknown trailing sample/edge columns are retained as raw text by callers.
-    inline bool valid_sample(StringView sample, bool banks_only = false) {
+    inline bool valid_sample(nonstd::string_view sample, bool banks_only = false) {
         if (sample.empty()) {
             return true;
         }
@@ -30,7 +29,7 @@ namespace fosu { namespace internal {
         const char* p = sample.data();
         const char* end = p + sample.size();
         for (int i = 0; i < (banks_only ? 2 : 4); ++i) {
-            fosu_int64 value;
+            fosu::i64 value;
             const char* q = parse_osu_int(p, end, value);
             if (q == p || (q < end && *q != ':')) {
                 return false;
@@ -43,7 +42,7 @@ namespace fosu { namespace internal {
         return true; // The fifth field is an arbitrary filename.
     }
 
-    inline bool valid_edge_sets(StringView sets, fosu_int32 slides) {
+    inline bool valid_edge_sets(nonstd::string_view sets, fosu::i32 slides) {
         if (sets.empty()) {
             return true;
         }
@@ -71,7 +70,7 @@ namespace fosu { namespace internal {
                 }
             }
             const char* next = find_byte('|', p, end);
-            if (!valid_sample(StringView(p, static_cast<size_t>(next - p)))) {
+            if (!valid_sample(nonstd::string_view(p, static_cast<size_t>(next - p)))) {
                 return false;
             }
             if (next == end) {
@@ -82,20 +81,19 @@ namespace fosu { namespace internal {
         return true;
     }
 
-    inline bool parse_hit_sample(const char* p, const char* end, StringView& out, bool banks_only = false) {
+    inline bool parse_hit_sample(const char* p, const char* end, nonstd::string_view& out, bool banks_only = false) {
         if (end - p == 8 && short_sample(p)) {
-            out = StringView(p, 8);
+            out = nonstd::string_view(p, 8);
             return true;
         }
         const char* sample_end = find_byte(',', p, end);
-        const StringView sample(p, static_cast<size_t>(sample_end - p));
+        const nonstd::string_view sample(p, static_cast<size_t>(sample_end - p));
         if (!valid_sample(sample, banks_only)) {
             return false;
         }
         out = sample;
         return true;
     }
-
 }} // namespace fosu::internal
 
 #endif

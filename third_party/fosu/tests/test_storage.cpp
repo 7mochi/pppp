@@ -7,9 +7,9 @@
 
 using namespace fosu;
 
-static bool padded(const char* text, FileBuffer& buffer) { return make_padded(StringView(text), buffer); }
+static bool padded(const char* text, FileBuffer& buffer) { return make_padded(nonstd::string_view(text), buffer); }
 static bool padded(const std::string& text, FileBuffer& buffer) {
-    return make_padded(StringView(text.data(), text.size()), buffer);
+    return make_padded(nonstd::string_view(text.data(), text.size()), buffer);
 }
 
 PPPP_TEST(mods_and_derived_options) {
@@ -20,7 +20,7 @@ PPPP_TEST(mods_and_derived_options) {
                      "OverallDifficulty:4\nApproachRate:4\n[TimingPoints]\n0,500\n"
                      "[HitObjects]\n100,100,1500,1,0\n",
                      input));
-        ParseOptions options;
+        ParseOptions options = lazer_options();
         options.mods = Mods::HardRock | Mods::DoubleTime;
         const Beatmap& map = require_parse(parser.parse(input, options));
         CHECK(map.hit_objects[0].time == 1000);
@@ -29,13 +29,13 @@ PPPP_TEST(mods_and_derived_options) {
         CHECK(map.cs == 4 * 1.3);
         CHECK(map.timing_points[0].beat_length == 500.0 / 1.5);
         options.mods = Mods::Easy | Mods::HardRock;
-        CHECK(parser.parse(input, options).failed());
+        CHECK(!parser.parse(input, options));
     }
     {
         Parser parser;
         FileBuffer input;
         CHECK(padded("osu file format v14\n[HitObjects]\n100,100,0,1,0\n100,100,10,1,0\n", input));
-        ParseOptions options;
+        ParseOptions options = lazer_options();
         options.apply_stacking = true;
         const Beatmap& map = require_parse(parser.parse(input, options));
         CHECK(map.stacking[0].stack_height == 1);
@@ -48,7 +48,7 @@ PPPP_TEST(mods_and_derived_options) {
         CHECK(copy.value().stacking.data() != map.stacking.data());
         FileBuffer empty;
         CHECK(padded("", empty));
-        require_parse(parser.parse(empty));
+        require_parse(parser.parse(empty, lazer_options()));
         CHECK(copy.value().stacking[0].stack_height == 1);
         CHECK(copy.value().hit_objects[0].raw_position(copy.value().stacking[0].stack_offset).first == 100);
         arena_release(destination);
@@ -59,7 +59,7 @@ PPPP_TEST(mods_and_derived_options) {
         CHECK(padded("[Difficulty]\nSliderMultiplier:1\n[TimingPoints]\n0,500\n"
                      "[HitObjects]\n0,0,0,2,0,L|400:0,2,400\n",
                      input));
-        ParseOptions options;
+        ParseOptions options = lazer_options();
         options.calculate_slider_events = true;
         const Beatmap& map = require_parse(parser.parse(input, options));
         CHECK(map.slider_events[0].size() == 10u);
@@ -77,7 +77,7 @@ PPPP_TEST(mods_and_derived_options) {
         CHECK(copy.value().slider_events[0].data() != map.slider_events[0].data());
         FileBuffer empty;
         CHECK(padded("", empty));
-        require_parse(parser.parse(empty));
+        require_parse(parser.parse(empty, lazer_options()));
         CHECK(copy.value().slider_events[0].back().time == 4000);
         arena_release(destination);
     }
@@ -85,7 +85,7 @@ PPPP_TEST(mods_and_derived_options) {
         Parser parser;
         FileBuffer input;
         CHECK(padded("[HitObjects]\n10,20,1000,2,0,L|110:20,1,150\n", input));
-        ParseOptions options;
+        ParseOptions options = lazer_options();
         options.calculate_slider_paths = true;
         const Beatmap& map = require_parse(parser.parse(input, options));
         CHECK(map.hit_objects[0].end_time == 0);
@@ -99,14 +99,14 @@ PPPP_TEST(mods_and_derived_options) {
         CHECK(copy.value().slider_paths[0].points.data() != map.slider_paths[0].points.data());
         FileBuffer empty;
         CHECK(padded("", empty));
-        require_parse(parser.parse(empty));
+        require_parse(parser.parse(empty, lazer_options()));
         CHECK(slider_position_at(copy.value().slider_paths[0], 1).x == 150);
         arena_release(arena);
     }
     {
         Parser parser;
         const std::string input = "[HitObjects]\n0,0,1000,2,0,L|100:0,1,140\n";
-        ParseOptions options;
+        ParseOptions options = lazer_options();
         options.calculate_slider_end_times = false;
         const Beatmap& skipped = require_parse(parser.parse(input.data(), input.size(), options));
         CHECK(skipped.hit_objects[0].end_time == 0);
@@ -114,7 +114,7 @@ PPPP_TEST(mods_and_derived_options) {
         CHECK(destination);
         Result<Beatmap> copy = skipped.copy(*destination);
         CHECK(copy.ok());
-        CHECK(require_parse(parser.parse(input.data(), input.size())).hit_objects[0].end_time == 0);
+        CHECK(require_parse(parser.parse(input.data(), input.size(), lazer_options())).hit_objects[0].end_time == 0);
         options.calculate_slider_end_times = true;
         const Beatmap& calculated = require_parse(parser.parse(input.data(), input.size(), options));
         CHECK(calculated.hit_objects[0].end_time > calculated.hit_objects[0].time);
@@ -127,14 +127,14 @@ PPPP_TEST(reparse_reuses_arena_memory) {
     FileBuffer input;
     CHECK(padded("[HitObjects]\n16,32,100,1,0\n32,64,200,1,0\n", input));
     Parser parser;
-    const Beatmap& first = require_parse(parser.parse(input));
+    const Beatmap& first = require_parse(parser.parse(input, lazer_options()));
     const HitObject* allocation = first.hit_objects.data();
 
-    const Beatmap& second = require_parse(parser.parse(input));
+    const Beatmap& second = require_parse(parser.parse(input, lazer_options()));
     CHECK(second.hit_objects.size() == 2u);
     CHECK(second.hit_objects.data() == allocation);
     Parser expected;
-    CHECK(canonical(second) == canonical(require_parse(expected.parse(input))));
+    CHECK(canonical(second) == canonical(require_parse(expected.parse(input, lazer_options()))));
 }
 
 PPPP_TEST(reparse_accepts_larger_arrays) {
@@ -148,11 +148,11 @@ PPPP_TEST(reparse_accepts_larger_arrays) {
     CHECK(padded(text, replacement));
 
     Parser parser;
-    require_parse(parser.parse(initial));
-    const Beatmap& beatmap = require_parse(parser.parse(replacement));
+    require_parse(parser.parse(initial, lazer_options()));
+    const Beatmap& beatmap = require_parse(parser.parse(replacement, lazer_options()));
     CHECK(beatmap.hit_objects.size() == 5000u);
     Parser expected;
-    CHECK(canonical(beatmap) == canonical(require_parse(expected.parse(replacement))));
+    CHECK(canonical(beatmap) == canonical(require_parse(expected.parse(replacement, lazer_options()))));
 }
 
 PPPP_TEST(reparse_clears_omitted_sections) {
@@ -169,11 +169,11 @@ PPPP_TEST(reparse_clears_omitted_sections) {
     FileBuffer replacement;
     CHECK(padded("[Metadata]\nTitle:Replacement title\n", replacement));
     Parser parser;
-    const Beatmap& initial_map = require_parse(parser.parse(initial));
+    const Beatmap& initial_map = require_parse(parser.parse(initial, lazer_options()));
     CHECK(!initial_map.sliders.empty() && !initial_map.timing_points.empty());
 
-    const Beatmap& beatmap = require_parse(parser.parse(replacement));
-    CHECK(beatmap.title == StringView("Replacement title"));
+    const Beatmap& beatmap = require_parse(parser.parse(replacement, lazer_options()));
+    CHECK(beatmap.title == nonstd::string_view("Replacement title"));
     CHECK(beatmap.beatmap_id == -1);
     CHECK(beatmap.audio_filename.empty() && beatmap.background.empty());
     CHECK(beatmap.sample_set == SampleSet::Normal);
@@ -184,7 +184,7 @@ PPPP_TEST(reparse_clears_omitted_sections) {
     CHECK(beatmap.timing_points.empty() && beatmap.hit_objects.empty());
     CHECK(beatmap.sliders.empty() && beatmap.slider_points.empty());
     Parser expected;
-    CHECK(canonical(beatmap) == canonical(require_parse(expected.parse(replacement))));
+    CHECK(canonical(beatmap) == canonical(require_parse(expected.parse(replacement, lazer_options()))));
 }
 
 PPPP_TEST(empty_reparse_resets_defaults) {
@@ -196,10 +196,10 @@ PPPP_TEST(empty_reparse_resets_defaults) {
     FileBuffer empty;
     CHECK(padded("", empty));
     Parser parser;
-    const Beatmap& initial_map = require_parse(parser.parse(initial));
+    const Beatmap& initial_map = require_parse(parser.parse(initial, lazer_options()));
     CHECK(initial_map.stats.malformed_lines == 1u);
 
-    const Beatmap& beatmap = require_parse(parser.parse(empty));
+    const Beatmap& beatmap = require_parse(parser.parse(empty, lazer_options()));
     CHECK(beatmap.title.empty() && beatmap.hit_objects.empty());
     CHECK(beatmap.stats.malformed_lines == 0u);
     CHECK(beatmap.stats.fast_path_lines == 0u);
@@ -207,7 +207,7 @@ PPPP_TEST(empty_reparse_resets_defaults) {
     CHECK(beatmap.stack_leniency == double(0.7f));
     CHECK(beatmap.sample_set == SampleSet::Normal);
     Parser expected;
-    CHECK(canonical(beatmap) == canonical(require_parse(expected.parse(empty))));
+    CHECK(canonical(beatmap) == canonical(require_parse(expected.parse(empty, lazer_options()))));
 }
 
 PPPP_TEST(large_arena_arrays) {
@@ -234,13 +234,13 @@ PPPP_TEST(large_arena_arrays) {
     CHECK(padded(timing, timing_input));
 
     Parser parser;
-    const Beatmap& circles_map = require_parse(parser.parse(circle_input));
+    const Beatmap& circles_map = require_parse(parser.parse(circle_input, lazer_options()));
     CHECK(circles_map.hit_objects.size() == 3000u);
     CHECK(circles_map.sliders.empty() && circles_map.slider_points.empty());
     CHECK(circles_map.hit_objects.back().slider == HitObject::kNoSlider);
     CHECK(circles_map.hit_objects.back().hit_sample.empty());
 
-    const Beatmap& sliders_map = require_parse(parser.parse(slider_input));
+    const Beatmap& sliders_map = require_parse(parser.parse(slider_input, lazer_options()));
     CHECK(sliders_map.hit_objects.size() == 3000u);
     CHECK(sliders_map.sliders.size() == 3000u);
     CHECK(sliders_map.slider_points.size() == 9000u);
@@ -254,7 +254,7 @@ PPPP_TEST(large_arena_arrays) {
     }
     CHECK(sliders_ok);
 
-    const Beatmap& timing_map = require_parse(parser.parse(timing_input));
+    const Beatmap& timing_map = require_parse(parser.parse(timing_input, lazer_options()));
     CHECK(timing_map.timing_points.size() == 3000u);
     CHECK(timing_map.timing_points.back().beat_length == 500);
     CHECK(timing_map.hit_objects.empty());
@@ -270,7 +270,7 @@ PPPP_TEST(rejected_slider_points) {
         CHECK(
             padded(std::string("[HitObjects]\n1,2,3,2,0,") + cases[i] + "\n1,2,4,2,0,L|11:12,1,10\n", input));
         Parser parser;
-        const Beatmap& beatmap = require_parse(parser.parse(input));
+        const Beatmap& beatmap = require_parse(parser.parse(input, lazer_options()));
         CHECK_MSG(beatmap.stats.malformed_lines == 1u, cases[i]);
         CHECK_MSG(beatmap.hit_objects.size() == 1u, cases[i]);
         CHECK_MSG(beatmap.sliders.size() == 1u, cases[i]);
@@ -299,7 +299,7 @@ static bool canonical_detects(Beatmap& map, T& field, T replacement, const std::
 
 PPPP_TEST(canonical_dump_covers_parsed_values) {
     Parser parser;
-    ParseOptions options;
+    ParseOptions options = lazer_options();
     options.calculate_slider_events = true;
     options.apply_stacking = true;
     const std::string text = "osu file format v128\n[Editor]\nVelocityPresets:1,2\n"
@@ -326,11 +326,11 @@ PPPP_TEST(option_combinations_on_reused_parser) {
                               "SliderMultiplier:1\nSliderTickRate:1\n[TimingPoints]\n0,500\n"
                               "[HitObjects]\n100,100,1000,1,0\n100,100,1100,2,0,"
                               "L|200:100,2,100\n";
-    const fosu_uint32 mods = Mods::HardRock | Mods::DoubleTime;
+    const fosu::u32 mods = Mods::HardRock | Mods::DoubleTime;
     Parser parser;
     Parser fresh;
 
-    ParseOptions full;
+    ParseOptions full = lazer_options();
     full.calculate_slider_events = true;
     full.apply_stacking = true;
     full.mods = mods;
@@ -341,7 +341,7 @@ PPPP_TEST(option_combinations_on_reused_parser) {
     CHECK(canonical(with_events) == canonical(require_parse(fresh.parse(input.data(), input.size(), full))));
     const double end_time = with_events.hit_objects[1].end_time;
 
-    ParseOptions end_times;
+    ParseOptions end_times = lazer_options();
     end_times.calculate_slider_end_times = true;
     end_times.mods = mods;
     const Beatmap& duration = require_parse(parser.parse(input.data(), input.size(), end_times));
@@ -351,7 +351,7 @@ PPPP_TEST(option_combinations_on_reused_parser) {
     CHECK(canonical(duration) ==
           canonical(require_parse(fresh.parse(input.data(), input.size(), end_times))));
 
-    ParseOptions partial_options;
+    ParseOptions partial_options = lazer_options();
     partial_options.sections = kSectionHitObjects;
     partial_options.calculate_slider_events = true;
     partial_options.apply_stacking = true;
@@ -363,11 +363,11 @@ PPPP_TEST(option_combinations_on_reused_parser) {
     CHECK(canonical(partial) ==
           canonical(require_parse(fresh.parse(input.data(), input.size(), partial_options))));
 
-    const Beatmap& raw = require_parse(parser.parse(input.data(), input.size()));
+    const Beatmap& raw = require_parse(parser.parse(input.data(), input.size(), lazer_options()));
     CHECK(raw.slider_paths.empty() && raw.slider_events.empty());
     CHECK(raw.stacking.empty());
     CHECK(raw.hit_objects[1].end_time == 0);
-    CHECK(canonical(raw) == canonical(require_parse(fresh.parse(input.data(), input.size()))));
+    CHECK(canonical(raw) == canonical(require_parse(fresh.parse(input.data(), input.size(), lazer_options()))));
 }
 
 PPPP_TEST(event_budget_failure_and_reuse) {
@@ -376,12 +376,12 @@ PPPP_TEST(event_budget_failure_and_reuse) {
                                   "0,0,1000,2,0,L|100000:0,9000,100000\n";
     const std::string small = "[TimingPoints]\n0,500\n[HitObjects]\n"
                               "0,0,1000,2,0,L|100:0,1,100\n";
-    ParseOptions options;
+    ParseOptions options = lazer_options();
     options.calculate_slider_events = true;
     Parser parser;
-    const Result<Beatmap*> failed = parser.parse(oversized.data(), oversized.size(), options);
-    CHECK(failed.failed());
-    CHECK(failed.error().code == ErrorCode::AllocationFailure);
+    const Beatmap* failed = parser.parse(oversized.data(), oversized.size(), options);
+    CHECK(!failed);
+    CHECK(parser.error().code == ParseErrorCode::OutOfMemory);
     const Beatmap& recovered = require_parse(parser.parse(small.data(), small.size(), options));
     CHECK(recovered.slider_events.size() == 1u);
     CHECK(recovered.hit_objects.size() == 1u);
@@ -393,7 +393,7 @@ PPPP_TEST(tick_endpoint_exclusion) {
         size_t ticks;
     };
     static const Case cases[] = {{"14.49", 0u}, {"14.5", 0u}, {"14.51", 1u}};
-    ParseOptions options;
+    ParseOptions options = lazer_options();
     options.calculate_slider_events = true;
     Parser parser;
     for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
@@ -414,7 +414,7 @@ PPPP_TEST(tick_endpoint_exclusion) {
 PPPP_TEST(multisegment_path_trim) {
     const std::string input = "osu file format v128\n[HitObjects]\n"
                               "0,0,1000,2,0,L|100:0|L|100:100,1,50\n";
-    ParseOptions options;
+    ParseOptions options = lazer_options();
     options.calculate_slider_paths = true;
     Parser parser;
     const Beatmap& map = require_parse(parser.parse(input.data(), input.size(), options));
@@ -444,7 +444,7 @@ PPPP_TEST(copy_owns_all_data) {
                      "1:2:3:4:slider.wav\n",
                      input));
         Parser parser;
-        const Beatmap& parsed = require_parse(parser.parse(input));
+        const Beatmap& parsed = require_parse(parser.parse(input, lazer_options()));
         expected = canonical(parsed);
         Result<Beatmap> copied = parsed.copy(*program_arena);
         CHECK(copied.ok());
@@ -458,7 +458,7 @@ PPPP_TEST(copy_owns_all_data) {
         CHECK(canonical(parsed) == expected);
         FileBuffer replacement;
         CHECK(padded("[Metadata]\nTitle:Replacement\n[HitObjects]\n1,2,5,1,0\n", replacement));
-        require_parse(parser.parse(replacement));
+        require_parse(parser.parse(replacement, lazer_options()));
     }
     CHECK(canonical(owned) == expected);
     arena_release(program_arena);
@@ -468,19 +468,19 @@ PPPP_TEST(failed_parse_resets_and_parser_remains_reusable) {
     Parser parser;
     FileBuffer input;
     CHECK(padded("[Metadata]\nTitle:Before failure\n", input));
-    CHECK(parser.parse(input).ok());
+    CHECK(!!parser.parse(input, lazer_options()));
 
-    const Result<Beatmap*> failed = parser.parse(0, 1);
-    CHECK(failed.failed());
-    CHECK(failed.error().code == ErrorCode::InvalidInput);
+    const Beatmap* failed = parser.parse(0, 1, lazer_options());
+    CHECK(!failed);
+    CHECK(parser.error().code == ParseErrorCode::InvalidOptions);
     const internal::ParserStorage storage = internal::parser_storage(parser);
     CHECK(storage.input == 0);
     CHECK(storage.result_arena != storage.scratch_arena);
     CHECK(arena_pos(storage.result_arena) == kArenaHeaderSize);
     CHECK(arena_pos(storage.scratch_arena) == kArenaHeaderSize);
 
-    const Beatmap& recovered = require_parse(parser.parse(input));
-    CHECK(recovered.title == StringView("Before failure"));
+    const Beatmap& recovered = require_parse(parser.parse(input, lazer_options()));
+    CHECK(recovered.title == nonstd::string_view("Before failure"));
 }
 
 PPPP_TEST(failed_copy_rewinds_destination) {
@@ -491,7 +491,7 @@ PPPP_TEST(failed_copy_rewinds_destination) {
     FileBuffer input;
     CHECK(padded(text, input));
     Parser parser;
-    const Beatmap& beatmap = require_parse(parser.parse(input));
+    const Beatmap& beatmap = require_parse(parser.parse(input, lazer_options()));
 
     // A single 4 KiB block that cannot chain.
     ArenaParams params;
@@ -499,7 +499,7 @@ PPPP_TEST(failed_copy_rewinds_destination) {
     params.flags = 0;
     Arena* destination = arena_alloc(params);
     CHECK(destination != 0);
-    fosu_uint32* existing = arena_push_array<fosu_uint32>(destination, 1);
+    fosu::u32* existing = arena_push_array<fosu::u32>(destination, 1);
     CHECK(existing != 0);
     *existing = 0x12345678;
     const size_t checkpoint = arena_pos(destination);
@@ -520,13 +520,13 @@ PPPP_TEST(arena_interface) {
     CHECK(arena != 0);
     CHECK(arena_push(arena, 1, kMaxArenaAlignment * 2) == 0);
     const size_t initial = arena_pos(arena);
-    fosu_uint32* first = arena_push_array<fosu_uint32>(arena, 16);
+    fosu::u32* first = arena_push_array<fosu::u32>(arena, 16);
     CHECK(first != 0);
     size_t checkpoint;
     {
         const TempArena temp(arena);
         checkpoint = temp.position();
-        CHECK(arena_push(arena, 96u << 10, AlignmentOf<fosu_uint64>::value) != 0);
+        CHECK(arena_push(arena, 96u << 10, AlignmentOf<fosu::u64>::value) != 0);
         CHECK(arena->current != arena);
         // positions stay monotonic across chained blocks
         CHECK(arena_pos(arena) > checkpoint + (96u << 10));
@@ -539,8 +539,8 @@ PPPP_TEST(arena_interface) {
 
     // AlignmentOf agrees with the natural alignment of the fundamental types.
     CHECK(AlignmentOf<char>::value == 1);
-    CHECK(AlignmentOf<fosu_uint16>::value == 2);
-    CHECK(AlignmentOf<fosu_uint32>::value == 4);
+    CHECK(AlignmentOf<fosu::u16>::value == 2);
+    CHECK(AlignmentOf<fosu::u32>::value == 4);
     CHECK(AlignmentOf<double>::value == sizeof(double) || AlignmentOf<double>::value == 4);
 }
 
@@ -575,19 +575,20 @@ PPPP_TEST(read_into_reuse) {
     std::remove(path);
 
     Parser parser;
-    CHECK(parser.parse_file("fosu_missing_file.osu").failed());
-    CHECK(parser.parse_file("fosu_missing_file.osu").error().code == ErrorCode::IoFailure);
+    CHECK(!parser.parse_file("fosu_missing_file.osu"));
+    CHECK(parser.parse_file("fosu_missing_file.osu") == 0 &&
+          parser.error().code == ParseErrorCode::ReadFailed);
 }
 
 PPPP_TEST(input_size_overflow) {
     char byte = 0;
     Parser parser;
-    const Result<Beatmap*> memory_result = parser.parse(&byte, std::numeric_limits<size_t>::max());
-    CHECK(memory_result.failed());
-    CHECK(memory_result.error().code == ErrorCode::InputTooLarge);
-    ParseOptions options;
+    const Beatmap* memory_result = parser.parse(&byte, std::numeric_limits<size_t>::max(), lazer_options());
+    CHECK(!memory_result);
+    CHECK(parser.error().code == ParseErrorCode::OutOfMemory);
+    ParseOptions options = lazer_options();
     options.sections = 1;
-    CHECK(parser.parse(&byte, 0, options).failed());
+    CHECK(!parser.parse(&byte, 0, options));
 }
 
 PPPP_TEST_MAIN()

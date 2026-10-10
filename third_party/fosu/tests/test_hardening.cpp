@@ -8,16 +8,16 @@
 using namespace fosu;
 
 static Beatmap must_parse(Parser& parser, const FileBuffer& input,
-                          const ParseOptions& options = ParseOptions()) {
+                          const ParseOptions& options = lazer_options()) {
     return require_parse(parser.parse(input, options));
 }
 
 // Every input, however truncated or malformed, parses without failing.
 static void check(const std::string& text) {
     FileBuffer input;
-    CHECK(make_padded(StringView(text.data(), text.size()), input));
+    CHECK(make_padded(nonstd::string_view(text.data(), text.size()), input));
     Parser parser;
-    CHECK(parser.parse(input).ok());
+    CHECK(!!parser.parse(input, lazer_options()));
 }
 
 PPPP_TEST(short_sample_shape) {
@@ -29,7 +29,7 @@ PPPP_TEST(short_sample_shape) {
             std::string sample = "0:1:2:3:";
             sample[pos] = static_cast<char>(byte);
             FileBuffer padded;
-            CHECK(make_padded(StringView(sample.data(), sample.size()), padded));
+            CHECK(make_padded(nonstd::string_view(sample.data(), sample.size()), padded));
             const bool exact_shape = pos % 2 ? byte == ':' : byte >= '0' && byte <= '9';
             shapes_ok = shapes_ok && internal::short_sample(padded.data) == exact_shape;
             check("[HitObjects]\n1,2,3,1,0," + sample);
@@ -45,22 +45,22 @@ PPPP_TEST(short_sample_shape) {
             check(line + endings[e]);
             const Beatmap map = parse_str(line + endings[e]);
             CHECK(map.hit_objects.size() == 1u && map.hit_objects[0].is_circle());
-            CHECK(map.hit_objects[0].hit_sample == StringView("0:1:2:3:"));
+            CHECK(map.hit_objects[0].hit_sample == nonstd::string_view("0:1:2:3:"));
         }
     }
 }
 
 PPPP_TEST(framing_and_combo_state) {
     Parser parser;
-    const Result<Beatmap*> empty = parser.parse(0, 0);
-    CHECK(empty.ok() && empty.value()->hit_objects.empty());
+    const Beatmap* empty = parser.parse(0, 0, lazer_options());
+    CHECK(empty && empty->hit_objects.empty());
     FileBuffer empty_input;
-    CHECK(make_padded(StringView(), empty_input));
+    CHECK(make_padded(nonstd::string_view(), empty_input));
     CHECK(must_parse(parser, empty_input).hit_objects.empty());
     FileBuffer embedded;
-    CHECK(make_padded(StringView("[Metadata]\nTitle:[HitObjects]\n1,2,3,1,0\n[HitObjects]\n1,2,4,1,0\n"),
+    CHECK(make_padded(nonstd::string_view("[Metadata]\nTitle:[HitObjects]\n1,2,3,1,0\n[HitObjects]\n1,2,4,1,0\n"),
                       embedded));
-    ParseOptions hit_objects_only;
+    ParseOptions hit_objects_only = lazer_options();
     hit_objects_only.sections = kSectionHitObjects;
     const Beatmap selected = must_parse(parser, embedded, hit_objects_only);
     CHECK(selected.hit_objects.size() == 1 && selected.hit_objects[0].time == 4);
@@ -68,7 +68,7 @@ PPPP_TEST(framing_and_combo_state) {
     // repeated HitObjects sections, including after a spinner.
     {
         FileBuffer input;
-        CHECK(make_padded(StringView("[HitObjects]\n256,192,100,8,0,150\n0,0,160,8,0,bad\n"
+        CHECK(make_padded(nonstd::string_view("[HitObjects]\n256,192,100,8,0,150\n0,0,160,8,0,bad\n"
                                      "[Metadata]\nTitle:gap\n[HitObjects]\n"
                                      "100,100,200,1,0\n101,100,201,1,0\n"
                                      "1.5,2,250,8,0,300\n1,2,310,1,0\n"),
@@ -81,7 +81,7 @@ PPPP_TEST(framing_and_combo_state) {
         CHECK(map.hit_objects[4].new_combo);
     }
     FileBuffer point_input;
-    CHECK(make_padded(StringView("[HitObjects]\n1,2,3,2,0,B|1:2.5|3:4e1,1,10\n"), point_input));
+    CHECK(make_padded(nonstd::string_view("[HitObjects]\n1,2,3,2,0,B|1:2.5|3:4e1,1,10\n"), point_input));
     const Beatmap points = must_parse(parser, point_input);
     CHECK(points.sliders.size() == 1 && points.slider_points.size() == 2);
     CHECK(points.slider_points[0].y == 2 && points.slider_points[1].y == 40);
@@ -123,7 +123,7 @@ PPPP_TEST(slider_tails) {
     }
     {
         const Beatmap m = parse_str("[HitObjects]\n1,2,3,2,0,L|1:2,1,100,0|0,0:0|0:0,0:0:0:0:a,b\n");
-        CHECK(m.hit_objects.size() == 1 && m.hit_objects[0].hit_sample == StringView("0:0:0:0:a"));
+        CHECK(m.hit_objects.size() == 1 && m.hit_objects[0].hit_sample == nonstd::string_view("0:0:0:0:a"));
     }
 }
 
@@ -146,7 +146,7 @@ PPPP_TEST(decimal_boundaries) {
                                     "[HitObjects]\n256.5,192,1000.5,1,0\n1,2,2000.25,8,0,3000.75\n"
                                     "1,2,4000,2,0,B|1.5:2.5,1,2.5e2\n"
                                     "[Events]\n2,1e309,100\n2,1.25,9.75\n");
-        CHECK(m.title == StringView("real") && m.beatmap_id == -1);
+        CHECK(m.title == nonstd::string_view("real") && m.beatmap_id == -1);
         CHECK(m.ar == 5 && m.stats.malformed_lines == 4);
         CHECK(m.timing_points.size() == 2 &&
               m.timing_points[1].beat_length != m.timing_points[1].beat_length);
@@ -181,10 +181,24 @@ PPPP_TEST(truncated_inputs) {
     }
     // Explicit logical end must bound the slow numeric fallback too.
     FileBuffer input;
-    CHECK(make_padded(StringView("1.234567890123456789e2junk"), input));
+    CHECK(make_padded(nonstd::string_view("1.234567890123456789e2junk"), input));
     double value;
     const char* start = input.data;
     CHECK(internal::parse_double(start, start + 20, value) <= start + 20);
+}
+
+// A map the target client refuses to load fails the parse with Unloadable and the
+// line that made it unloadable, so the adapter can map it to a parse error.
+PPPP_TEST(unloadable_map_reports_the_line) {
+    const std::string input =
+        "osu file format vx\n[TimingPoints]\n0,500\n[HitObjects]\n64,64,100,1,0\n";
+    Parser parser;
+    CHECK(!parser.parse(input.data(), input.size(), lazer_options()));
+    CHECK(parser.error().code == ParseErrorCode::Unloadable);
+    CHECK(parser.error().line == 1u);
+    // The parser stays usable after an unloadable map.
+    const std::string recovery = "[HitObjects]\n1,2,3,1,0\n";
+    CHECK(parser.parse(recovery.data(), recovery.size(), lazer_options()));
 }
 
 PPPP_TEST_MAIN()

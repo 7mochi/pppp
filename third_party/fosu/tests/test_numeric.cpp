@@ -23,13 +23,13 @@ static const char* reference_parse_double(const char* p, const char* end, double
     return finite ? p + (next - bounded.c_str()) : p;
 }
 
-static fosu_uint64 rng_state = (static_cast<fosu_uint64>(0x243F6A88u) << 32) | 0x85A308D3u;
-static fosu_uint64 rng() {
+static fosu::u64 rng_state = (static_cast<fosu::u64>(0x243F6A88u) << 32) | 0x85A308D3u;
+static fosu::u64 rng() {
     // splitmix64
-    rng_state += (static_cast<fosu_uint64>(0x9E3779B9u) << 32) | 0x7F4A7C15u;
-    fosu_uint64 z = rng_state;
-    z = (z ^ (z >> 30)) * ((static_cast<fosu_uint64>(0xBF58476Du) << 32) | 0x1CE4E5B9u);
-    z = (z ^ (z >> 27)) * ((static_cast<fosu_uint64>(0x94D049BBu) << 32) | 0x133111EBu);
+    rng_state += (static_cast<fosu::u64>(0x9E3779B9u) << 32) | 0x7F4A7C15u;
+    fosu::u64 z = rng_state;
+    z = (z ^ (z >> 30)) * ((static_cast<fosu::u64>(0xBF58476Du) << 32) | 0x1CE4E5B9u);
+    z = (z ^ (z >> 27)) * ((static_cast<fosu::u64>(0x94D049BBu) << 32) | 0x133111EBu);
     return z ^ (z >> 31);
 }
 
@@ -81,8 +81,8 @@ PPPP_TEST(fuzz_parse_double) {
 }
 
 static float random_coordinate() {
-    const fosu_uint32 bits =
-        static_cast<fosu_uint32>(rng() & 0x807fffffu) | (static_cast<fosu_uint32>(126 + rng() % 10) << 23);
+    const fosu::u32 bits =
+        static_cast<fosu::u32>(rng() & 0x807fffffu) | (static_cast<fosu::u32>(126 + rng() % 10) << 23);
     float value;
     std::memcpy(&value, &bits, sizeof(value));
     return value;
@@ -136,7 +136,7 @@ PPPP_TEST(bezier_subdivision) {
                 points[i] = CurvePoint::make(random_coordinate(), random_coordinate());
             }
             CurvePoint left[10], right[10], midpoints[10];
-            subdivide_bezier(Span<const CurvePoint>(points, count), left, right, midpoints);
+            subdivide_bezier(nonstd::span<const CurvePoint>(points, count), left, right, midpoints);
 
             CurvePoint expected_left[10], expected_right[10], work[10];
             std::copy(points, points + count, work);

@@ -7,14 +7,13 @@
 #include <fosu/beatmap.h>
 
 namespace fosu { namespace internal {
-
     struct HitObjectTimeLess {
         bool operator()(const HitObject& a, const HitObject& b) const { return a.time < b.time; }
     };
 
     // The parsing engines do not allocate. Only an out-of-order map needs this
     // temporary merge buffer; equal timestamps retain their original input order.
-    inline bool sort_hit_objects(Span<HitObject> objects, Arena* scratch_arena) {
+    inline bool sort_hit_objects(nonstd::span<HitObject> objects, Arena* scratch_arena) {
         const size_t checkpoint = arena_pos(scratch_arena);
         HitObject* scratch = arena_push_array<HitObject>(scratch_arena, objects.size());
         if (!scratch) {
@@ -38,7 +37,7 @@ namespace fosu { namespace internal {
         return true;
     }
 
-    inline bool hit_objects_ordered(Span<const HitObject> objects) {
+    inline bool hit_objects_ordered(nonstd::span<const HitObject> objects) {
         for (size_t i = 1; i < objects.size(); i++) {
             if (objects[i].time < objects[i - 1].time) {
                 return false;
@@ -81,7 +80,6 @@ namespace fosu { namespace internal {
         }
         return true;
     }
-
 }} // namespace fosu::internal
 
 #endif

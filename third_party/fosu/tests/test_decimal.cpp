@@ -12,13 +12,13 @@
 using namespace fosu;
 using namespace fosu::internal;
 
-static fosu_uint64 rng_state = 0x243F6A88u;
-static fosu_uint64 rng() {
+static fosu::u64 rng_state = 0x243F6A88u;
+static fosu::u64 rng() {
     // xorshift64*
     rng_state ^= rng_state >> 12;
     rng_state ^= rng_state << 25;
     rng_state ^= rng_state >> 27;
-    return rng_state * (static_cast<fosu_uint64>(0x2545F491u) << 32 | 0x4F6CDD1Du);
+    return rng_state * (static_cast<fosu::u64>(0x2545F491u) << 32 | 0x4F6CDD1Du);
 }
 
 static bool same_double(double a, double b) { return std::memcmp(&a, &b, sizeof(a)) == 0; }
@@ -236,7 +236,7 @@ PPPP_TEST(osu_number_acceptance) {
     std::memset(buf, 0, sizeof(buf));
     double d = 0;
     float f = 0;
-    fosu_int64 i = 0;
+    fosu::i64 i = 0;
     std::strcpy(buf, " 12.5 ,");
     CHECK(parse_osu_double(buf, buf + 7, d) == buf + 6 && d == 12.5); // surrounding spaces consumed
     std::strcpy(buf, "+5");

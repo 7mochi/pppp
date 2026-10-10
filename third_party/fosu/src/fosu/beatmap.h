@@ -10,33 +10,34 @@
 #include <fosu/result.h>
 #include <fosu/slider_event.h>
 #include <fosu/slider_path.h>
-#include <fosu/span.h>
+#include <fosu/nonstd_config.h>
 
 namespace fosu {
-
     struct HitObject {
         float x;
         float y;
-        fosu_uint32 type;
-        fosu_uint32 hitsound;
+        fosu::u32 type;
+        fosu::u32 hitsound;
         double time;
         double end_time; // milliseconds; 0 for sliders unless calculation is requested
-        fosu_uint32 slider; // index into Beatmap::sliders, or kNoSlider
+        fosu::u32 slider; // index into Beatmap::sliders, or kNoSlider
         bool new_combo;
-        fosu_uint8 combo_skip;
-        StringView hit_sample;
+        fosu::u8 combo_skip;
+        nonstd::string_view hit_sample;
 
         // The position before stacking moved it (Beatmap::raw_positions holds the exact values).
         std::pair<float, float> raw_position(PathPoint stack_offset = PathPoint::zero()) const {
             return std::make_pair(x - stack_offset.x, y - stack_offset.y);
         }
 
-        static const fosu_uint32 kNoSlider = 0xFFFFFFFFu;
+        static const fosu::u32 kNoSlider = 0xFFFFFFFFu;
 
+        // A type value may carry several kind bits; these mask them the way the
+        // official decoder resolves one kind, so 130 (slider|hold) is a slider.
         bool is_circle() const { return (type & 1) != 0; }
-        bool is_slider() const { return (type & 2) != 0; }
-        bool is_spinner() const { return (type & 8) != 0; }
-        bool is_hold() const { return (type & 128) != 0; }
+        bool is_slider() const { return (type & 3) == 2; }
+        bool is_spinner() const { return (type & 11) == 8; }
+        bool is_hold() const { return (type & 139) == 128; }
         bool is_new_combo() const { return new_combo; }
     };
 
@@ -50,35 +51,35 @@ namespace fosu {
         // Present only for an explicit lazer B-spline degree (for example, B2).
         // An absent degree on Bezier means an ordinary Bezier segment.
         bool has_degree;
-        fosu_uint32 degree;
+        fosu::u32 degree;
         // Range relative to the owning Slider's control-point range.
-        fosu_uint32 point_begin;
-        fosu_uint32 point_count;
+        fosu::u32 point_begin;
+        fosu::u32 point_count;
     };
 
     struct Slider {
-        fosu_uint32 point_begin; // range into Beatmap::slider_points
-        fosu_uint32 point_count;
-        fosu_uint32 segment_begin; // range into Beatmap::slider_segments
-        fosu_uint32 segment_count;
-        fosu_int32 slides; // 1 = no repeats
+        fosu::u32 point_begin; // range into Beatmap::slider_points
+        fosu::u32 point_count;
+        fosu::u32 segment_begin; // range into Beatmap::slider_segments
+        fosu::u32 segment_count;
+        fosu::i32 slides; // 1 = no repeats
         // The only path type for legacy sliders, and the first type for a modern
         // multi-segment path.
         CurveType::Value curve_type;
         double length; // declared pixel length; zero uses the natural path for duration
-        StringView edge_sounds;
-        StringView edge_sets;
+        nonstd::string_view edge_sounds;
+        nonstd::string_view edge_sets;
     };
 
     struct TimingPoint {
         double time;
         double beat_length;
-        fosu_int32 meter;
+        fosu::i32 meter;
         SampleSet::Value sample_set;
-        fosu_int32 sample_index;
-        fosu_int32 volume;
+        fosu::i32 sample_index;
+        fosu::i32 volume;
         bool uninherited;
-        fosu_uint32 effects;
+        fosu::u32 effects;
     };
 
     struct Break {
@@ -87,10 +88,10 @@ namespace fosu {
     };
 
     struct ParseStats {
-        fosu_uint32 fast_path_lines;
-        fosu_uint32 slow_path_lines;
-        fosu_uint32 malformed_lines;
-        fosu_uint32 storyboard_lines;
+        fosu::u32 fast_path_lines;
+        fosu::u32 slow_path_lines;
+        fosu::u32 malformed_lines;
+        fosu::u32 storyboard_lines;
 
         ParseStats()
             : fast_path_lines(0),
@@ -100,29 +101,29 @@ namespace fosu {
     };
 
     struct Stacking {
-        fosu_int32 stack_height;
+        fosu::i32 stack_height;
         PathPoint stack_offset;
     };
 
     struct Beatmap : BeatmapHeader {
-        Span<Break> breaks;
-        Span<fosu_uint32> combo_colours;
-        Span<TimingPoint> timing_points;
-        Span<HitObject> hit_objects;
-        Span<Slider> sliders;
-        Span<CurveSegment> slider_segments;
-        Span<SliderPoint> slider_points;
-        Span<double> velocity_presets;
+        nonstd::span<Break> breaks;
+        nonstd::span<fosu::u32> combo_colours;
+        nonstd::span<TimingPoint> timing_points;
+        nonstd::span<HitObject> hit_objects;
+        nonstd::span<Slider> sliders;
+        nonstd::span<CurveSegment> slider_segments;
+        nonstd::span<SliderPoint> slider_points;
+        nonstd::span<double> velocity_presets;
         // Empty unless requested; otherwise indexed identically to sliders.
-        Span<SliderPath> slider_paths;
-        Span<Span<SliderEvent> > slider_events;
-        Span<Span<SliderEvent> > catch_slider_events;
+        nonstd::span<SliderPath> slider_paths;
+        nonstd::span<nonstd::span<SliderEvent> > slider_events;
+        nonstd::span<nonstd::span<SliderEvent> > catch_slider_events;
         // Empty unless osu!standard stacking was requested; indexed by hit object.
-        Span<Stacking> stacking;
+        nonstd::span<Stacking> stacking;
         // Positions / control points as parsed, before stacking shifted them (empty unless
         // stacking ran). Exact values matter to consumers recomputing slider geometry.
-        Span<PathPoint> raw_positions;
-        Span<SliderPoint> raw_slider_points;
+        nonstd::span<PathPoint> raw_positions;
+        nonstd::span<SliderPoint> raw_slider_points;
         ParseStats stats;
 
         // Deep copy into `destination` (arrays and strings). Fails with AllocationFailure and
@@ -131,7 +132,7 @@ namespace fosu {
 
     private:
         template <typename T>
-        static bool copy_array(Arena& destination, Span<T>& span) {
+        static bool copy_array(Arena& destination, nonstd::span<T>& span) {
             if (span.empty()) {
                 return true;
             }
@@ -140,11 +141,11 @@ namespace fosu {
                 return false;
             }
             std::memcpy(values, span.data(), span.size_bytes());
-            span = Span<T>(values, span.size());
+            span = nonstd::span<T>(values, span.size());
             return true;
         }
 
-        static bool copy_string(Arena& destination, StringView& text) {
+        static bool copy_string(Arena& destination, nonstd::string_view& text) {
             if (text.empty()) {
                 return true;
             }
@@ -153,7 +154,7 @@ namespace fosu {
                 return false;
             }
             std::memcpy(bytes, text.data(), text.size());
-            text = StringView(bytes, text.size());
+            text = nonstd::string_view(bytes, text.size());
             return true;
         }
     };
@@ -204,7 +205,6 @@ namespace fosu {
         }
         return result;
     }
-
 } // namespace fosu
 
 #endif

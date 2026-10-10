@@ -11,17 +11,16 @@
 #include <fosu/engine/parsing/decimal.h>
 
 namespace fosu { namespace internal {
-
     inline bool is_digit(char c) { return static_cast<unsigned char>(c - '0') <= 9; }
 
     // All parse_* helpers return the advanced pointer, or `p` unchanged on failure.
 
-    inline const char* parse_u64(const char* p, const char* end, fosu_uint64& out) {
+    inline const char* parse_u64(const char* p, const char* end, fosu::u64& out) {
         const char* start = p;
-        fosu_uint64 v = 0;
-        const fosu_uint64 max = uint64_max();
+        fosu::u64 v = 0;
+        const fosu::u64 max = uint64_max();
         while (p < end && is_digit(*p)) {
-            const fosu_uint64 digit = static_cast<unsigned>(*p - '0');
+            const fosu::u64 digit = static_cast<unsigned>(*p - '0');
             if (v > max / 10 || (v == max / 10 && digit > max % 10)) {
                 do {
                     ++p;
@@ -39,36 +38,36 @@ namespace fosu { namespace internal {
         return p;
     }
 
-    inline const char* parse_i64(const char* p, const char* end, fosu_int64& out) {
+    inline const char* parse_i64(const char* p, const char* end, fosu::i64& out) {
         const char* start = p;
         bool neg = false;
         if (p < end && (*p == '-' || *p == '+')) {
             neg = *p == '-';
             ++p;
         }
-        fosu_uint64 mag;
+        fosu::u64 mag;
         const char* q = parse_u64(p, end, mag);
         if (q == p) {
             return start;
         }
         // Convert only representable magnitudes; negating INT64_MIN is undefined.
-        const fosu_uint64 max_positive = static_cast<fosu_uint64>(int64_max());
+        const fosu::u64 max_positive = static_cast<fosu::u64>(int64_max());
         if (neg) {
-            out = mag >= max_positive + 1 ? int64_min() : -static_cast<fosu_int64>(mag);
+            out = mag >= max_positive + 1 ? int64_min() : -static_cast<fosu::i64>(mag);
         } else {
-            out = mag > max_positive ? int64_max() : static_cast<fosu_int64>(mag);
+            out = mag > max_positive ? int64_max() : static_cast<fosu::i64>(mag);
         }
         return q;
     }
 
-    inline fosu_int32 clamp_i32(fosu_int64 v) {
+    inline fosu::i32 clamp_i32(fosu::i64 v) {
         if (v > kInt32Max) {
             return kInt32Max;
         }
         if (v < kInt32Min) {
             return kInt32Min;
         }
-        return static_cast<fosu_int32>(v);
+        return static_cast<fosu::i32>(v);
     }
 
     // std::clamp (C++17): `low` when v < low, `high` when high < v, otherwise v (so NaN stays NaN).
@@ -122,10 +121,10 @@ namespace fosu { namespace internal {
 
     // Numeric acceptance follows osu.Game Parsing, independently of gameplay clamping or our
     // raw-field storage types.
-    inline const char* parse_osu_int(const char* p, const char* end, fosu_int64& out) {
+    inline const char* parse_osu_int(const char* p, const char* end, fosu::i64& out) {
         const char* first = skip_numeric_space(p, end);
         const char* q = parse_i64(first, end, out);
-        if (q == first || out < -static_cast<fosu_int64>(kInt32Max) || out > kInt32Max) {
+        if (q == first || out < -static_cast<fosu::i64>(kInt32Max) || out > kInt32Max) {
             return p;
         }
         return skip_numeric_space(q, end);
@@ -161,7 +160,6 @@ namespace fosu { namespace internal {
         }
         return skip_numeric_space(q, end);
     }
-
 }} // namespace fosu::internal
 
 #endif

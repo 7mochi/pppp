@@ -13,7 +13,6 @@
 #include <fosu/compiler.h>
 
 namespace fosu {
-
     const size_t kCacheLineSize = 64;
     const size_t kDefaultArenaBlockSize = static_cast<size_t>(4) << 20;
     const size_t kMaxArenaPush = static_cast<size_t>(1) << 30;
@@ -27,12 +26,12 @@ namespace fosu {
         size_t base_pos; // logical position of this block's start
         size_t capacity; // usable bytes after the header
         size_t pos; // next free byte, relative to the block start (>= kArenaHeaderSize)
-        fosu_uint32 flags;
+        fosu::u32 flags;
     };
 
     struct ArenaParams {
         size_t block_size;
-        fosu_uint32 flags;
+        fosu::u32 flags;
     };
 
     inline size_t align_up(size_t value, size_t alignment) {
@@ -178,7 +177,6 @@ namespace fosu {
         Arena* arena_;
         size_t pos_;
     };
-
 } // namespace fosu
 
 #endif

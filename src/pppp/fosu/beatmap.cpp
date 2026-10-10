@@ -14,16 +14,17 @@ namespace pppp { namespace beatmaps {
             opts.calculate_slider_events = true;
             opts.apply_stacking = true;
             opts.mods = ::fosu::Mods::None;
+            opts.client = ::fosu::Client::Lazer;
 
             return opts;
         }
 
-        Status to_status(const ::fosu::Result< ::fosu::Beatmap*>& result) {
-            if (result.ok()) {
+        Status to_status(const ::fosu::Beatmap* map, const ::fosu::ParseError& error) {
+            if (map) {
                 return StatusCode::OK;
             }
-            return result.error().code == ::fosu::ErrorCode::AllocationFailure ? StatusCode::ALLOCATION
-                                                                               : StatusCode::PARSE;
+            return error.code == ::fosu::ParseErrorCode::OutOfMemory ? StatusCode::ALLOCATION
+                                                                     : StatusCode::PARSE;
         }
 
         SliderEventType to_slider_event_type(::fosu::SliderEventType::Value type) {
@@ -114,7 +115,7 @@ namespace pppp { namespace beatmaps {
 
         void release(void* ctx) { delete static_cast<SliderPathOpsContext*>(ctx); }
 
-        void parse_node_sounds(std::vector<unsigned>& out, const ::fosu::StringView& text) {
+        void parse_node_sounds(std::vector<unsigned>& out, const ::nonstd::string_view& text) {
             out.clear();
 
             const char* p = text.data();
@@ -170,7 +171,7 @@ namespace pppp { namespace beatmaps {
         }
 
         void copy_events(std::vector<SliderEventDescriptor>& out,
-                         const ::fosu::Span< ::fosu::SliderEvent> group) {
+                         const ::nonstd::span< ::fosu::SliderEvent> group) {
             out.resize(group.size());
             for (size_t k = 0; k < group.size(); k++) {
                 const ::fosu::SliderEvent& e = group[k];
@@ -187,10 +188,10 @@ namespace pppp { namespace beatmaps {
         void copy_sliders(Beatmap& out, const ::fosu::Beatmap& map) {
             out.sliders.resize(map.sliders.size());
 
-            const ::fosu::Span<const ::fosu::SliderPoint> points =
+            const ::nonstd::span<const ::fosu::SliderPoint> points =
                 map.raw_slider_points.empty()
-                    ? ::fosu::Span<const ::fosu::SliderPoint>(map.slider_points)
-                    : ::fosu::Span<const ::fosu::SliderPoint>(map.raw_slider_points);
+                    ? ::nonstd::span<const ::fosu::SliderPoint>(map.slider_points)
+                    : ::nonstd::span<const ::fosu::SliderPoint>(map.raw_slider_points);
 
             for (size_t i = 0; i < map.hit_objects.size(); i++) {
                 const ::fosu::HitObject& ho = map.hit_objects[i];
@@ -307,13 +308,13 @@ namespace pppp { namespace beatmaps {
                 return StatusCode::ALLOCATION;
             }
 
-            const ::fosu::Result< ::fosu::Beatmap*> result = parser->parse_file(path, parse_options());
-            if (result.failed()) {
-                const Status status = to_status(result);
+            const ::fosu::Beatmap* result = parser->parse_file(path, parse_options());
+            if (!result) {
+                const Status status = to_status(result, parser->error());
                 delete parser;
                 return status;
             }
-            return create_beatmap(out, result.value(), parser);
+            return create_beatmap(out, result, parser);
         }
 
         Status from_bytes(Beatmap& out, const void* data, size_t size) {
@@ -322,14 +323,14 @@ namespace pppp { namespace beatmaps {
                 return StatusCode::ALLOCATION;
             }
 
-            const ::fosu::Result< ::fosu::Beatmap*> result =
+            const ::fosu::Beatmap* result =
                 parser->parse(static_cast<const char*>(data), size, parse_options());
-            if (result.failed()) {
-                const Status status = to_status(result);
+            if (!result) {
+                const Status status = to_status(result, parser->error());
                 delete parser;
                 return status;
             }
-            return create_beatmap(out, result.value(), parser);
+            return create_beatmap(out, result, parser);
         }
     } // namespace
 

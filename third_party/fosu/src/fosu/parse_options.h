@@ -5,7 +5,6 @@
 #include <fosu/mods.h>
 
 namespace fosu {
-
     enum SectionBits {
         kSectionGeneral = 1u << 1,
         kSectionEditor = 1u << 2,
@@ -19,14 +18,44 @@ namespace fosu {
                        kSectionEvents | kSectionTimingPoints | kSectionColours | kSectionHitObjects
     };
 
+    // Whose behaviour to follow where osu!stable and osu!lazer parse a map
+    // differently. This is independent of the map's format version; see
+    // docs/compatibility.md for the rules each client changes.
+    struct Client {
+        enum Value { Stable, Lazer };
+    };
+
+    // Why a parse returned no beatmap.
+    struct ParseErrorCode {
+        enum Value {
+            None,
+            InvalidOptions,
+            OutOfMemory,
+            ReadFailed, // parse_file could not read the file; errno has the cause.
+            Unloadable  // The target client would refuse to load this map.
+        };
+    };
+
+    struct ParseError {
+        ParseErrorCode::Value code;
+        fosu::u32 line; // 1-based line that makes the map unloadable.
+
+        ParseError()
+            : code(ParseErrorCode::None),
+              line(0) {}
+        explicit ParseError(ParseErrorCode::Value c, fosu::u32 l = 0)
+            : code(c),
+              line(l) {}
+    };
+
     struct ParseOptions {
-        fosu_uint32 sections;
+        fosu::u32 sections;
         bool calculate_slider_end_times;
         bool calculate_slider_paths;
         bool calculate_slider_events;
         bool apply_stacking;
-        bool apply_offsets;
-        fosu_uint32 mods; // Mods::Value bits
+        fosu::u32 mods; // Mods::Value bits
+        Client::Value client;
 
         ParseOptions()
             : sections(kAllSections),
@@ -34,10 +63,9 @@ namespace fosu {
               calculate_slider_paths(false),
               calculate_slider_events(false),
               apply_stacking(false),
-              apply_offsets(true),
-              mods(Mods::None) {}
+              mods(Mods::None),
+              client(Client::Stable) {}
     };
-
 } // namespace fosu
 
 #endif

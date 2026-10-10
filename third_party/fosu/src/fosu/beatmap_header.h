@@ -3,50 +3,49 @@
 
 #include <fosu/compiler.h>
 #include <fosu/enums.h>
-#include <fosu/span.h>
+#include <fosu/nonstd_config.h>
 
 namespace fosu {
-
     struct BeatmapHeader {
         int format_version;
 
         // [General]
-        StringView audio_filename;
-        fosu_int32 audio_lead_in;
-        fosu_int32 preview_time;
-        fosu_int32 countdown;
+        nonstd::string_view audio_filename;
+        fosu::i32 audio_lead_in;
+        fosu::i32 preview_time;
+        fosu::i32 countdown;
         SampleSet::Value sample_set;
-        fosu_int32 sample_volume;
+        fosu::i32 sample_volume;
         double stack_leniency;
-        fosu_int32 mode;
+        fosu::i32 mode;
         bool letterbox_in_breaks;
         bool widescreen_storyboard;
         bool epilepsy_warning;
         bool special_style;
         bool use_skin_sprites;
         bool samples_match_playback_rate;
-        fosu_int32 countdown_offset;
-        StringView overlay_position;
-        StringView skin_preference;
+        fosu::i32 countdown_offset;
+        nonstd::string_view overlay_position;
+        nonstd::string_view skin_preference;
 
         // [Editor]
-        StringView bookmarks; // raw comma list
+        nonstd::string_view bookmarks; // raw comma list
         double distance_spacing;
-        fosu_int32 beat_divisor;
-        fosu_int32 grid_size;
+        fosu::i32 beat_divisor;
+        fosu::i32 grid_size;
         double timeline_zoom;
 
         // [Metadata]
-        StringView title;
-        StringView title_unicode;
-        StringView artist;
-        StringView artist_unicode;
-        StringView creator;
-        StringView version;
-        StringView source;
-        StringView tags;
-        fosu_int64 beatmap_id;
-        fosu_int64 beatmap_set_id;
+        nonstd::string_view title;
+        nonstd::string_view title_unicode;
+        nonstd::string_view artist;
+        nonstd::string_view artist_unicode;
+        nonstd::string_view creator;
+        nonstd::string_view version;
+        nonstd::string_view source;
+        nonstd::string_view tags;
+        fosu::i64 beatmap_id;
+        fosu::i64 beatmap_set_id;
 
         // [Difficulty]
         double hp;
@@ -57,8 +56,8 @@ namespace fosu {
         double slider_tick_rate;
 
         // [Events]
-        StringView background;
-        StringView video;
+        nonstd::string_view background;
+        nonstd::string_view video;
 
         BeatmapHeader()
             : format_version(14),
@@ -89,7 +88,6 @@ namespace fosu {
               slider_multiplier(1.4),
               slider_tick_rate(1) {}
     };
-
 } // namespace fosu
 
 #endif

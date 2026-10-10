@@ -4,17 +4,17 @@
 #include <fosu/beatmap.h>
 #include <fosu/engine/parsing/lines.h>
 #include <fosu/engine/parsing/string_lookup.h>
+#include <fosu/format.h>
 
 namespace fosu { namespace internal {
-
     struct KeyValue {
-        StringView key;
-        StringView value;
+        nonstd::string_view key;
+        nonstd::string_view value;
     };
 
     // UTF-8 spellings of the whitespace trimmed by .NET String.Trim. The common
     // ASCII case does not decode Unicode or allocate a replacement string.
-    inline size_t field_space_width(StringView text) {
+    inline size_t field_space_width(nonstd::string_view text) {
         if (text.empty()) {
             return 0;
         }
@@ -36,7 +36,7 @@ namespace fosu { namespace internal {
         return 0;
     }
 
-    inline StringView trim_field(StringView text) {
+    inline nonstd::string_view trim_field(nonstd::string_view text) {
         for (;;) {
             const size_t width = field_space_width(text);
             if (!width) {
@@ -49,33 +49,33 @@ namespace fosu { namespace internal {
             while (last && (static_cast<unsigned char>(text[last]) & 0xC0) == 0x80) {
                 --last;
             }
-            if (field_space_width(StringView(text.data() + last, text.size() - last)) != text.size() - last) {
+            if (field_space_width(nonstd::string_view(text.data() + last, text.size() - last)) != text.size() - last) {
                 break;
             }
-            text = StringView(text.data(), last);
+            text = nonstd::string_view(text.data(), last);
         }
         return text;
     }
 
-    inline bool split_key_value(StringView line, KeyValue& out) {
+    inline bool split_key_value(nonstd::string_view line, KeyValue& out) {
         const char* p = line.data();
         const char* end = p + line.size();
         const char* colon = find_byte(':', p, end);
         if (colon == end) {
             return false;
         }
-        out.key = trim_field(StringView(p, static_cast<size_t>(colon - p)));
-        out.value = trim_field(StringView(colon + 1, static_cast<size_t>(end - colon - 1)));
+        out.key = trim_field(nonstd::string_view(p, static_cast<size_t>(colon - p)));
+        out.value = trim_field(nonstd::string_view(colon + 1, static_cast<size_t>(end - colon - 1)));
         return true;
     }
 
-    typedef bool (*FieldParser)(BeatmapHeader&, StringView);
+    typedef bool (*FieldParser)(BeatmapHeader&, nonstd::string_view, const ParseContext&);
 
     // Parses `input` with `ParseValue` and stores the result in `Member` (upstream: a template on
     // `auto` non-type parameters; C++98 needs the member type spelled out).
-    template <typename T, T BeatmapHeader::* Member, Optional<T> (*ParseValue)(StringView)>
-    inline bool assign_field_value(BeatmapHeader& header, StringView input) {
-        const Optional<T> value = ParseValue(input);
+    template <typename T, T BeatmapHeader::* Member, nonstd::optional<T> (*ParseValue)(nonstd::string_view)>
+    inline bool assign_field_value(BeatmapHeader& header, nonstd::string_view input, const ParseContext&) {
+        const nonstd::optional<T> value = ParseValue(input);
         if (!value.has_value()) {
             return false;
         }
@@ -84,9 +84,9 @@ namespace fosu { namespace internal {
     }
 
     // The same with a widening store (an int32 field value into an int64 member).
-    template <typename T, T BeatmapHeader::* Member, typename V, Optional<V> (*ParseValue)(StringView)>
-    inline bool assign_field_widened(BeatmapHeader& header, StringView input) {
-        const Optional<V> value = ParseValue(input);
+    template <typename T, T BeatmapHeader::* Member, typename V, nonstd::optional<V> (*ParseValue)(nonstd::string_view)>
+    inline bool assign_field_widened(BeatmapHeader& header, nonstd::string_view input, const ParseContext&) {
+        const nonstd::optional<V> value = ParseValue(input);
         if (!value.has_value()) {
             return false;
         }
@@ -94,17 +94,17 @@ namespace fosu { namespace internal {
         return true;
     }
 
-    template <StringView BeatmapHeader::* Member>
-    inline bool assign_field_text(BeatmapHeader& header, StringView input) {
+    template <nonstd::string_view BeatmapHeader::* Member>
+    inline bool assign_field_text(BeatmapHeader& header, nonstd::string_view input, const ParseContext&) {
         header.*Member = input;
         return true;
     }
 
     inline void parse_key_value(Beatmap& beatmap, const StringLookup<FieldParser>& fields,
-                                const KeyValue& field) {
+                                const KeyValue& field, const ParseContext& context) {
         const FieldParser* parse = fields.find(field.key);
         if (parse) {
-            if (!(*parse)(beatmap, field.value)) {
+            if (!(*parse)(beatmap, field.value, context)) {
                 ++beatmap.stats.malformed_lines;
             }
         }
@@ -113,22 +113,24 @@ namespace fosu { namespace internal {
     struct KeyValueSectionLine {
         Beatmap* beatmap;
         const StringLookup<FieldParser>* fields;
-        void operator()(StringView line) {
+        const ParseContext* context;
+        void operator()(nonstd::string_view line) {
             KeyValue field;
             if (split_key_value(line, field)) {
-                parse_key_value(*beatmap, *fields, field);
+                parse_key_value(*beatmap, *fields, field, *context);
             }
         }
     };
 
     inline const char* parse_key_value_section(Beatmap& beatmap, const StringLookup<FieldParser>& fields,
-                                               const char* p, const char* end) {
+                                               const char* p, const char* end,
+                                               const ParseContext& context) {
         KeyValueSectionLine parse_line;
         parse_line.beatmap = &beatmap;
         parse_line.fields = &fields;
-        return for_each_section_line(p, end, parse_line);
+        parse_line.context = &context;
+        return for_each_section_line(p, end, parse_line, context.client);
     }
-
 }} // namespace fosu::internal
 
 #endif

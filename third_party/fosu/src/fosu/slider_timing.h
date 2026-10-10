@@ -4,10 +4,13 @@
 #include <algorithm>
 #include <limits>
 
+#include <fosu/compiler.h>
 #include <fosu/engine/parsing/numbers.h>
+#include <fosu/format.h>
 #include <fosu/slider_geometry.h>
 
 namespace fosu { namespace internal {
+    FOSU_FP_CONTRACT_OFF_BEGIN
 
     struct SliderTimingChange {
         double time;
@@ -33,9 +36,9 @@ namespace fosu { namespace internal {
         }
     };
 
-    inline bool set_slider_end_times(Beatmap& map, Arena* scratch_arena,
-                                     Span<SliderTiming> timings = Span<SliderTiming>(),
-                                     Span<double> stacking_end_times = Span<double>()) {
+    inline bool set_slider_end_times(Beatmap& map, Client::Value client, Arena* scratch_arena,
+                                     nonstd::span<SliderTiming> timings = nonstd::span<SliderTiming>(),
+                                     nonstd::span<double> stacking_end_times = nonstd::span<double>()) {
         if (map.sliders.empty()) {
             return true;
         }
@@ -130,16 +133,21 @@ namespace fosu { namespace internal {
                 ++next;
             }
             const Slider& slider = map.sliders[object.slider];
-            const Span<const SliderPoint> control_points =
+            const nonstd::span<const SliderPoint> control_points =
                 map.slider_points.subspan(slider.point_begin, slider.point_count);
-            const Span<const CurveSegment> segments =
+            const nonstd::span<const CurveSegment> segments =
                 map.slider_segments.subspan(slider.segment_begin, slider.segment_count);
-            const Result<double> distance = !map.slider_paths.empty()
-                                                ? Result<double>(map.slider_paths[object.slider].distance())
-                                                : slider_distance(object, slider, control_points, segments,
-                                                                  scratch_arena, map.format_version >= 128);
-            if (distance.failed()) {
-                return false;
+            double distance;
+            if (!map.slider_paths.empty()) {
+                distance = map.slider_paths[object.slider].distance();
+            } else {
+                const Result<double> computed =
+                    slider_distance(object, slider, control_points, segments, scratch_arena,
+                                    reads_lazer_format(map.format_version, client));
+                if (computed.failed()) {
+                    return false;
+                }
+                distance = computed.value();
             }
             // osu!/catch (lazer Slider.ApplyDefaultsToSelf): Velocity = 100 * SliderMultiplier /
             // GetPrecisionAdjustedBeatLength(), where the slider-velocity beat length goes through a
@@ -154,8 +162,8 @@ namespace fosu { namespace internal {
             }
             // osu! suppresses repeats on effectively zero-length paths. Keep the
             // encoded span count on Slider, but use the effective count for duration.
-            const int spans = distance.value() <= 1e-7 ? 1 : slider.slides;
-            object.end_time = object.time + spans * distance.value() / pixels_per_millisecond;
+            const int spans = distance <= 1e-7 ? 1 : slider.slides;
+            object.end_time = object.time + spans * distance / pixels_per_millisecond;
             if (!stacking_end_times.empty()) {
                 // Standard stacking uses the osu! ruleset slider velocity, including its
                 // legacy float precision adjustment. Keep the public end time as the
@@ -164,8 +172,7 @@ namespace fosu { namespace internal {
                     clamp_value(static_cast<float>(100 / velocity), 10.0f, 1000.0f) / 100.0;
                 const double adjusted_beat_length = beat_length * adjusted_multiplier;
                 const double stacking_velocity = 100 * map.slider_multiplier / adjusted_beat_length;
-                stacking_end_times[object.slider] =
-                    object.time + spans * distance.value() / stacking_velocity;
+                stacking_end_times[object.slider] = object.time + spans * distance / stacking_velocity;
             }
             if (!timings.empty()) {
                 const double catch_tick_distance = pixels_per_millisecond * beat_length /
@@ -178,13 +185,14 @@ namespace fosu { namespace internal {
                 timing.velocity = pixels_per_millisecond;
                 timing.tick_distance = tick_distance;
                 timing.catch_tick_distance = catch_tick_distance;
-                timing.span_duration = (spans * distance.value() / pixels_per_millisecond) / spans;
+                timing.span_duration = (spans * distance / pixels_per_millisecond) / spans;
                 timing.spans = spans;
             }
         }
         return true;
     }
 
+    FOSU_FP_CONTRACT_OFF_END
 }} // namespace fosu::internal
 
 #endif

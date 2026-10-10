@@ -5,14 +5,13 @@
 #include <fosu/engine/primitives/packed_digits.h>
 
 namespace fosu { namespace internal {
-
     struct HitObjectKind {
         enum Value { Circle, Slider, Spinner, Hold, Invalid };
     };
 
     // A type value may contain several kind bits. The official decoder resolves
     // them in this order while leaving combo and colour-skip bits untouched.
-    inline HitObjectKind::Value classify_hitobject_kind(fosu_uint32 type) {
+    inline HitObjectKind::Value classify_hitobject_kind(fosu::u32 type) {
         if (type & 1) {
             return HitObjectKind::Circle;
         }
@@ -29,11 +28,11 @@ namespace fosu { namespace internal {
     }
 
     struct CircleDetails {
-        StringView hit_sample;
+        nonstd::string_view hit_sample;
     };
 
     inline bool parse_circle_details(const char* p, const char* end, CircleDetails& out) {
-        out.hit_sample = StringView();
+        out.hit_sample = nonstd::string_view();
         if (p == end) {
             return true;
         }
@@ -45,7 +44,7 @@ namespace fosu { namespace internal {
 
     struct TimedHitObjectDetails {
         double end_time;
-        StringView hit_sample;
+        nonstd::string_view hit_sample;
     };
 
     // Raw timestamps remain unshifted and unclamped.
@@ -58,7 +57,7 @@ namespace fosu { namespace internal {
         if (next == p + 1 || (next < end && *next != ',')) {
             return false;
         }
-        StringView sample;
+        nonstd::string_view sample;
         if (!parse_hit_sample(next < end ? next + 1 : end, end, sample)) {
             return false;
         }
@@ -71,7 +70,7 @@ namespace fosu { namespace internal {
     inline bool parse_hold_details(double start_time, const char* p, const char* end,
                                    TimedHitObjectDetails& out) {
         out.end_time = start_time;
-        out.hit_sample = StringView();
+        out.hit_sample = nonstd::string_view();
         if (p == end || (p + 1 == end && *p == ',')) {
             return true;
         }
@@ -81,11 +80,11 @@ namespace fosu { namespace internal {
         double end_time = 0;
         const char* field = p + 1;
         const char* next = field;
-        const fosu_uint32 digits = digit_run8(field);
+        const fosu::u32 digits = digit_run8(field);
         if (digits && digits <= static_cast<size_t>(end - field) &&
             (field + digits == end || field[digits] == ',' || field[digits] == ':')) {
-            const fosu_uint64 value = swar_parse_u64(field, digits);
-            if (value <= static_cast<fosu_uint64>(kInt32Max)) {
+            const fosu::u64 value = swar_parse_u64(field, digits);
+            if (value <= static_cast<fosu::u64>(kInt32Max)) {
                 end_time = static_cast<double>(value);
                 next = field + digits;
             }
@@ -104,7 +103,6 @@ namespace fosu { namespace internal {
         }
         return parse_hit_sample(next < end ? next + 1 : end, end, out.hit_sample);
     }
-
 }} // namespace fosu::internal
 
 #endif

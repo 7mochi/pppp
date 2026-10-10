@@ -9,15 +9,23 @@
 
 #include "harness.h"
 
-inline fosu::Beatmap& require_parse(fosu::Result<fosu::Beatmap*> parsed) {
-    REQUIRE(parsed.ok());
-    return *parsed.value();
+inline fosu::Beatmap& require_parse(fosu::Beatmap* parsed) {
+    REQUIRE(parsed != static_cast<fosu::Beatmap*>(0));
+    return *parsed;
+}
+
+// pppp drives the parser as osu!lazer, so the parser tests use that client by default even though
+// fosu's own ParseOptions defaults to Client::Stable (matching upstream).
+inline fosu::ParseOptions lazer_options() {
+    fosu::ParseOptions options;
+    options.client = fosu::Client::Lazer;
+    return options;
 }
 
 // Parses with a parser that lives as long as the test binary: the returned beatmap is a shallow
 // copy whose strings and arrays stay valid until the next parse_str call.
 inline fosu::Beatmap parse_str(const std::string& s,
-                               const fosu::ParseOptions& options = fosu::ParseOptions()) {
+                               const fosu::ParseOptions& options = lazer_options()) {
     static fosu::Parser parser;
     return require_parse(parser.parse(s.data(), s.size(), options));
 }
@@ -28,8 +36,8 @@ inline std::string to_str(long value) {
     return buffer;
 }
 
-inline bool operator==(fosu::StringView a, const std::string& b) {
-    return a == fosu::StringView(b.data(), b.size());
+inline bool operator==(nonstd::string_view a, const std::string& b) {
+    return a == nonstd::string_view(b.data(), b.size());
 }
 
 // Canonical text form of every field of a Beatmap (floating point as bit patterns), so that
@@ -40,10 +48,10 @@ struct Canonical {
     void raw(const void* p, size_t n) { out.append(static_cast<const char*>(p), n); }
     void f64(double v) { raw(&v, sizeof(v)); }
     void f32(float v) { raw(&v, sizeof(v)); }
-    void i64(fosu_int64 v) { raw(&v, sizeof(v)); }
-    void u32(fosu_uint32 v) { raw(&v, sizeof(v)); }
-    void str(fosu::StringView v) {
-        u32(static_cast<fosu_uint32>(v.size()));
+    void i64(fosu::i64 v) { raw(&v, sizeof(v)); }
+    void u32(fosu::u32 v) { raw(&v, sizeof(v)); }
+    void str(nonstd::string_view v) {
+        u32(static_cast<fosu::u32>(v.size()));
         raw(v.data(), v.size());
     }
     void point(fosu::PathPoint p) {
@@ -54,7 +62,7 @@ struct Canonical {
 
 inline std::string canonical(const fosu::Beatmap& bm) {
     Canonical c;
-    c.u32(static_cast<fosu_uint32>(bm.format_version));
+    c.u32(static_cast<fosu::u32>(bm.format_version));
     c.str(bm.audio_filename);
     c.u32(bm.audio_lead_in);
     c.u32(bm.preview_time);
@@ -91,16 +99,16 @@ inline std::string canonical(const fosu::Beatmap& bm) {
     c.f64(bm.slider_tick_rate);
     c.str(bm.background);
     c.str(bm.video);
-    c.u32(static_cast<fosu_uint32>(bm.breaks.size()));
+    c.u32(static_cast<fosu::u32>(bm.breaks.size()));
     for (size_t i = 0; i < bm.breaks.size(); i++) {
         c.f64(bm.breaks[i].start);
         c.f64(bm.breaks[i].end);
     }
-    c.u32(static_cast<fosu_uint32>(bm.combo_colours.size()));
+    c.u32(static_cast<fosu::u32>(bm.combo_colours.size()));
     for (size_t i = 0; i < bm.combo_colours.size(); i++) {
         c.u32(bm.combo_colours[i]);
     }
-    c.u32(static_cast<fosu_uint32>(bm.timing_points.size()));
+    c.u32(static_cast<fosu::u32>(bm.timing_points.size()));
     for (size_t i = 0; i < bm.timing_points.size(); i++) {
         const fosu::TimingPoint& t = bm.timing_points[i];
         c.f64(t.time);
@@ -112,7 +120,7 @@ inline std::string canonical(const fosu::Beatmap& bm) {
         c.u32(t.uninherited);
         c.u32(t.effects);
     }
-    c.u32(static_cast<fosu_uint32>(bm.hit_objects.size()));
+    c.u32(static_cast<fosu::u32>(bm.hit_objects.size()));
     for (size_t i = 0; i < bm.hit_objects.size(); i++) {
         const fosu::HitObject& h = bm.hit_objects[i];
         c.f32(h.x);
@@ -125,7 +133,7 @@ inline std::string canonical(const fosu::Beatmap& bm) {
         c.u32(h.new_combo | h.combo_skip << 1);
         c.str(h.hit_sample);
     }
-    c.u32(static_cast<fosu_uint32>(bm.sliders.size()));
+    c.u32(static_cast<fosu::u32>(bm.sliders.size()));
     for (size_t i = 0; i < bm.sliders.size(); i++) {
         const fosu::Slider& s = bm.sliders[i];
         c.u32(s.point_begin);
@@ -138,7 +146,7 @@ inline std::string canonical(const fosu::Beatmap& bm) {
         c.str(s.edge_sounds);
         c.str(s.edge_sets);
     }
-    c.u32(static_cast<fosu_uint32>(bm.slider_segments.size()));
+    c.u32(static_cast<fosu::u32>(bm.slider_segments.size()));
     for (size_t i = 0; i < bm.slider_segments.size(); i++) {
         const fosu::CurveSegment& s = bm.slider_segments[i];
         c.u32(s.type);
@@ -146,27 +154,27 @@ inline std::string canonical(const fosu::Beatmap& bm) {
         c.u32(s.point_begin);
         c.u32(s.point_count);
     }
-    c.u32(static_cast<fosu_uint32>(bm.slider_points.size()));
+    c.u32(static_cast<fosu::u32>(bm.slider_points.size()));
     for (size_t i = 0; i < bm.slider_points.size(); i++) {
         c.f32(bm.slider_points[i].x);
         c.f32(bm.slider_points[i].y);
     }
-    c.u32(static_cast<fosu_uint32>(bm.velocity_presets.size()));
+    c.u32(static_cast<fosu::u32>(bm.velocity_presets.size()));
     for (size_t i = 0; i < bm.velocity_presets.size(); i++) {
         c.f64(bm.velocity_presets[i]);
     }
-    c.u32(static_cast<fosu_uint32>(bm.slider_paths.size()));
+    c.u32(static_cast<fosu::u32>(bm.slider_paths.size()));
     for (size_t i = 0; i < bm.slider_paths.size(); i++) {
         const fosu::SliderPath& path = bm.slider_paths[i];
-        c.u32(static_cast<fosu_uint32>(path.points.size()));
+        c.u32(static_cast<fosu::u32>(path.points.size()));
         for (size_t j = 0; j < path.points.size(); j++) {
             c.point(path.points[j]);
             c.f64(path.cumulative_lengths[j]);
         }
     }
-    c.u32(static_cast<fosu_uint32>(bm.slider_events.size()));
+    c.u32(static_cast<fosu::u32>(bm.slider_events.size()));
     for (size_t i = 0; i < bm.slider_events.size(); i++) {
-        c.u32(static_cast<fosu_uint32>(bm.slider_events[i].size()));
+        c.u32(static_cast<fosu::u32>(bm.slider_events[i].size()));
         for (size_t j = 0; j < bm.slider_events[i].size(); j++) {
             const fosu::SliderEvent& e = bm.slider_events[i][j];
             c.u32(e.type);
@@ -177,16 +185,16 @@ inline std::string canonical(const fosu::Beatmap& bm) {
             c.point(e.position);
         }
     }
-    c.u32(static_cast<fosu_uint32>(bm.stacking.size()));
+    c.u32(static_cast<fosu::u32>(bm.stacking.size()));
     for (size_t i = 0; i < bm.stacking.size(); i++) {
         c.u32(bm.stacking[i].stack_height);
         c.point(bm.stacking[i].stack_offset);
     }
-    c.u32(static_cast<fosu_uint32>(bm.raw_positions.size()));
+    c.u32(static_cast<fosu::u32>(bm.raw_positions.size()));
     for (size_t i = 0; i < bm.raw_positions.size(); i++) {
         c.point(bm.raw_positions[i]);
     }
-    c.u32(static_cast<fosu_uint32>(bm.raw_slider_points.size()));
+    c.u32(static_cast<fosu::u32>(bm.raw_slider_points.size()));
     for (size_t i = 0; i < bm.raw_slider_points.size(); i++) {
         c.f32(bm.raw_slider_points[i].x);
         c.f32(bm.raw_slider_points[i].y);

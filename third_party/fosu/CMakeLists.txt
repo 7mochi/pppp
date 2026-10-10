@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(fosu VERSION 0.2.1 LANGUAGES CXX)
+project(fosu VERSION 0.8.0 LANGUAGES CXX)
 
 option(FOSU_BUILD_TESTS "Build the fosu test suites" ${PROJECT_IS_TOP_LEVEL})
 option(FOSU_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
@@ -19,6 +19,9 @@ target_compile_features(fosu PUBLIC cxx_std_98)
 target_include_directories(fosu
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../optional-bare/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../span-lite/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../string-view-lite/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 set_target_properties(fosu PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
@@ -70,4 +73,10 @@ if(FOSU_BUILD_TESTS)
   fosu_add_test(storage)
   fosu_add_test(hardening)
   fosu_add_test(numeric)
+  fosu_add_test(string_lookup)
+  fosu_add_test(mods)
+  fosu_add_test(stacking)
+  fosu_add_test(slider_paths)
+  fosu_add_test(slider_timing)
+  fosu_add_test(clients)
 endif()

@@ -5,9 +5,12 @@
 // Copyright (c) ppy Pty Ltd <contact@ppy.sh>; MIT licence in slider_geometry.h.
 #include <algorithm>
 
+#include <fosu/compiler.h>
+#include <fosu/parse_options.h>
 #include <fosu/slider_timing.h>
 
 namespace fosu { namespace internal {
+    FOSU_FP_CONTRACT_OFF_BEGIN
 
     // Builds the events of one slider (upstream: a lambda capturing the object, timing and path).
     struct SliderEventFactory {
@@ -29,7 +32,7 @@ namespace fosu { namespace internal {
 
     inline bool build_slider_events(const HitObject& object, const SliderTiming& timing,
                                     const SliderPath& path, double raw_tick_distance, Arena* result_arena,
-                                    size_t& remaining, Span<SliderEvent>& out) {
+                                    size_t& remaining, nonstd::span<SliderEvent>& out) {
         const double length = std::min(100000.0, path.distance());
         const double tick_distance = clamp_value(raw_tick_distance, 0.0, length);
         const double minimum_from_end = timing.velocity * 10;
@@ -92,22 +95,24 @@ namespace fosu { namespace internal {
         // by an ulp, enough to move a catch strain time off its neighbours'.
         events[next++] = event(SliderEventType::Tail, object.time + timing.spans * timing.span_duration,
                                final_span, timing.spans % 2);
-        out = Span<SliderEvent>(events, count);
+        out = nonstd::span<SliderEvent>(events, count);
         return true;
     }
 
-    inline bool set_slider_events(Beatmap& map, Arena* result_arena, Arena* scratch_arena,
-                                  Span<double> stacking_end_times = Span<double>()) {
+    inline bool set_slider_events(Beatmap& map, Client::Value client, Arena* result_arena,
+                                  Arena* scratch_arena,
+                                  nonstd::span<double> stacking_end_times = nonstd::span<double>()) {
         if (map.sliders.empty()) {
             return true;
         }
         const TempArena temp(scratch_arena);
         SliderTiming* timings = arena_push_array<SliderTiming>(scratch_arena, map.sliders.size());
-        Span<SliderEvent>* ranges = arena_push_array<Span<SliderEvent> >(result_arena, map.sliders.size());
-        Span<SliderEvent>* catch_ranges =
-            arena_push_array<Span<SliderEvent> >(result_arena, map.sliders.size());
+        nonstd::span<SliderEvent>* ranges = arena_push_array<nonstd::span<SliderEvent> >(result_arena, map.sliders.size());
+        nonstd::span<SliderEvent>* catch_ranges =
+            arena_push_array<nonstd::span<SliderEvent> >(result_arena, map.sliders.size());
         if (!timings || !ranges || !catch_ranges ||
-            !set_slider_end_times(map, scratch_arena, Span<SliderTiming>(timings, map.sliders.size()),
+            !set_slider_end_times(map, client, scratch_arena,
+                                  nonstd::span<SliderTiming>(timings, map.sliders.size()),
                                   stacking_end_times)) {
             return false;
         }
@@ -123,18 +128,19 @@ namespace fosu { namespace internal {
                                      ranges[object.slider])) {
                 return false;
             }
-            catch_ranges[object.slider] = Span<SliderEvent>();
+            catch_ranges[object.slider] = nonstd::span<SliderEvent>();
             if (timing.catch_tick_distance != timing.tick_distance &&
                 !build_slider_events(object, timing, path, timing.catch_tick_distance, result_arena,
                                      remaining, catch_ranges[object.slider])) {
                 return false;
             }
         }
-        map.slider_events = Span<Span<SliderEvent> >(ranges, map.sliders.size());
-        map.catch_slider_events = Span<Span<SliderEvent> >(catch_ranges, map.sliders.size());
+        map.slider_events = nonstd::span<nonstd::span<SliderEvent> >(ranges, map.sliders.size());
+        map.catch_slider_events = nonstd::span<nonstd::span<SliderEvent> >(catch_ranges, map.sliders.size());
         return true;
     }
 
+    FOSU_FP_CONTRACT_OFF_END
 }} // namespace fosu::internal
 
 #endif

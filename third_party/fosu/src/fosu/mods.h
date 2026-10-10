@@ -7,7 +7,6 @@
 #include <fosu/compiler.h>
 
 namespace fosu {
-
     struct Mods {
         enum Value {
             None = 0,
@@ -45,29 +44,28 @@ namespace fosu {
         };
     };
 
-    inline bool has_mod(fosu_uint32 mods, Mods::Value mod) {
-        return (mods & static_cast<fosu_uint32>(mod)) != 0;
+    inline bool has_mod(fosu::u32 mods, Mods::Value mod) {
+        return (mods & static_cast<fosu::u32>(mod)) != 0;
     }
 
     namespace internal {
+        const fosu::u32 kKnownMods =
+            static_cast<fosu::u32>(Mods::Easy) | static_cast<fosu::u32>(Mods::HardRock) |
+            static_cast<fosu::u32>(Mods::DoubleTime) | static_cast<fosu::u32>(Mods::HalfTime) |
+            static_cast<fosu::u32>(Mods::Nightcore);
 
-        const fosu_uint32 kKnownMods =
-            static_cast<fosu_uint32>(Mods::Easy) | static_cast<fosu_uint32>(Mods::HardRock) |
-            static_cast<fosu_uint32>(Mods::DoubleTime) | static_cast<fosu_uint32>(Mods::HalfTime) |
-            static_cast<fosu_uint32>(Mods::Nightcore);
-
-        inline bool invalid_mods(fosu_uint32 mods) {
+        inline bool invalid_mods(fosu::u32 mods) {
             const bool speed_up = has_mod(mods, Mods::DoubleTime) || has_mod(mods, Mods::Nightcore);
             return (mods & ~kKnownMods) != 0 ||
                    (has_mod(mods, Mods::Easy) && has_mod(mods, Mods::HardRock)) ||
                    (speed_up && has_mod(mods, Mods::HalfTime));
         }
 
-        inline bool has_difficulty_mod(fosu_uint32 mods) {
+        inline bool has_difficulty_mod(fosu::u32 mods) {
             return has_mod(mods, Mods::Easy) || has_mod(mods, Mods::HardRock);
         }
 
-        inline double clock_rate(fosu_uint32 mods) {
+        inline double clock_rate(fosu::u32 mods) {
             if (has_mod(mods, Mods::DoubleTime) || has_mod(mods, Mods::Nightcore)) {
                 return 1.5;
             }
@@ -77,7 +75,7 @@ namespace fosu {
             return 1;
         }
 
-        inline bool apply_mods_before_calculations(Beatmap& map, fosu_uint32 mods) {
+        inline bool apply_mods_before_calculations(Beatmap& map, fosu::u32 mods) {
             const bool easy = has_mod(mods, Mods::Easy);
             const bool hard_rock = has_mod(mods, Mods::HardRock);
             if (!easy && !hard_rock) {
@@ -115,7 +113,7 @@ namespace fosu {
             return true;
         }
 
-        inline void apply_clock_rate(Beatmap& map, fosu_uint32 mods) {
+        inline void apply_clock_rate(Beatmap& map, fosu::u32 mods) {
             const double rate = clock_rate(mods);
             if (rate == 1) {
                 return;
@@ -135,21 +133,20 @@ namespace fosu {
                 map.breaks[i].end /= rate;
             }
             for (size_t s = 0; s < map.slider_events.size(); s++) {
-                Span<SliderEvent> events = map.slider_events[s];
+                nonstd::span<SliderEvent> events = map.slider_events[s];
                 for (size_t e = 0; e < events.size(); e++) {
                     events[e].time /= rate;
                     events[e].span_start_time /= rate;
                 }
             }
             for (size_t s = 0; s < map.catch_slider_events.size(); s++) {
-                Span<SliderEvent> events = map.catch_slider_events[s];
+                nonstd::span<SliderEvent> events = map.catch_slider_events[s];
                 for (size_t e = 0; e < events.size(); e++) {
                     events[e].time /= rate;
                     events[e].span_start_time /= rate;
                 }
             }
         }
-
     } // namespace internal
 } // namespace fosu
 

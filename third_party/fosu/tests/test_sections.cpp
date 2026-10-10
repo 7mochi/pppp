@@ -75,27 +75,27 @@ PPPP_TEST(all_sections) {
                         "77,406,17068,1,2\r\n";
     const Beatmap bm = parse_str(input);
     CHECK(bm.format_version == 14);
-    CHECK(bm.audio_filename == StringView("audio.mp3"));
+    CHECK(bm.audio_filename == nonstd::string_view("audio.mp3"));
     CHECK(bm.preview_time == 53342);
     CHECK(bm.sample_set == SampleSet::Soft);
     CHECK(bm.sample_volume == 73);
     CHECK(bm.widescreen_storyboard);
     CHECK(!bm.letterbox_in_breaks);
-    CHECK(bm.bookmarks == StringView("11240,22540"));
+    CHECK(bm.bookmarks == nonstd::string_view("11240,22540"));
     CHECK(bm.grid_size == 32);
     CHECK(bm.velocity_presets.size() == 3u);
     CHECK(bm.velocity_presets[0] == 1);
     CHECK(bm.velocity_presets[1] == 1.5);
     CHECK(bm.velocity_presets[2] == 2);
-    CHECK(bm.title == StringView("Painters of the Tempest"));
-    CHECK(bm.creator == StringView("cmyui"));
+    CHECK(bm.title == nonstd::string_view("Painters of the Tempest"));
+    CHECK(bm.creator == nonstd::string_view("cmyui"));
     CHECK(bm.beatmap_id == 1193177);
     CHECK(bm.beatmap_set_id == 562454);
     CHECK(std::fabs(bm.hp - 5.5) < 1e-9);
     CHECK(bm.ar == double(9.3f));
     CHECK(std::fabs(bm.slider_multiplier - 1.8) < 1e-9);
-    CHECK(bm.background == StringView("bg.jpg"));
-    CHECK(bm.video == StringView("intro.mp4"));
+    CHECK(bm.background == nonstd::string_view("bg.jpg"));
+    CHECK(bm.video == nonstd::string_view("intro.mp4"));
     CHECK(bm.breaks.size() == 1u);
     CHECK(bm.breaks[0].start == 133342);
     CHECK(bm.breaks[0].end == 140010);
@@ -118,7 +118,7 @@ PPPP_TEST(all_sections) {
     CHECK(circ.time == 11240);
     CHECK(circ.type == 1u);
     CHECK(circ.hitsound == 0u);
-    CHECK(circ.hit_sample == StringView("0:0:0:0:"));
+    CHECK(circ.hit_sample == nonstd::string_view("0:0:0:0:"));
     CHECK(bm.hit_objects[1].hitsound == 12u); // 2-digit hitsound
 
     const HitObject& sl = bm.hit_objects[2];
@@ -132,9 +132,9 @@ PPPP_TEST(all_sections) {
     CHECK(bm.slider_points[s.point_begin + 1].x == 292);
     CHECK(s.slides == 1);
     CHECK(std::fabs(s.length - 240) < 1e-9);
-    CHECK(s.edge_sounds == StringView("2|0"));
-    CHECK(s.edge_sets == StringView("0:0|0:0"));
-    CHECK(sl.hit_sample == StringView("0:0:0:0:"));
+    CHECK(s.edge_sounds == nonstd::string_view("2|0"));
+    CHECK(s.edge_sets == nonstd::string_view("0:0|0:0"));
+    CHECK(sl.hit_sample == nonstd::string_view("0:0:0:0:"));
 
     const HitObject& sp = bm.hit_objects[3];
     CHECK(sp.is_spinner());
@@ -202,7 +202,7 @@ PPPP_TEST(mania_hold) {
     const HitObject& h = bm.hit_objects[0];
     CHECK(h.is_hold());
     CHECK(h.end_time == 16999);
-    CHECK(h.hit_sample == StringView("0:0:0:0:"));
+    CHECK(h.hit_sample == nonstd::string_view("0:0:0:0:"));
 }
 
 PPPP_TEST(aspire_edge_cases) {
@@ -217,9 +217,11 @@ PPPP_TEST(aspire_edge_cases) {
                                  "100,100,5000,2,0,B|-64:-32|700:512,1,600\n"); // negative ctrl points
     CHECK(bm.hit_objects.size() == 6u);
     CHECK(bm.hit_objects[0].time == -1000);
-    CHECK(bm.hit_objects[1].x == -48);
-    CHECK(bm.hit_objects[2].y == -24);
-    CHECK(bm.hit_objects[3].x == 5120);
+    // Object positions clamp to [0, 512]; slider control points do not.
+    CHECK(bm.hit_objects[1].x == 0);
+    CHECK(bm.hit_objects[2].x == 512);
+    CHECK(bm.hit_objects[2].y == 0);
+    CHECK(bm.hit_objects[3].x == 512);
     CHECK(bm.hit_objects[4].x == 256); // truncated
     CHECK(bm.hit_objects[4].y == 112);
     const Slider& s = bm.sliders[bm.hit_objects[5].slider];
@@ -301,7 +303,7 @@ PPPP_TEST(invalid_byte_in_hitobjects) {
             if (!map.hit_objects.empty()) {
                 CHECK_MSG(map.hit_objects[map.hit_objects.size() - 1].time == 300, damaged.c_str());
             }
-            CHECK_MSG(map.title == StringView("sentinel"), damaged.c_str());
+            CHECK_MSG(map.title == nonstd::string_view("sentinel"), damaged.c_str());
             if (map.hit_objects.size() == 1) {
                 CHECK_MSG(map.stats.malformed_lines == 1u, damaged.c_str());
             }
@@ -328,7 +330,7 @@ PPPP_TEST(invalid_byte_in_timing_points) {
         if (!map.timing_points.empty()) {
             CHECK_MSG(map.timing_points[map.timing_points.size() - 1].time == 200, damaged.c_str());
         }
-        CHECK_MSG(map.title == StringView("sentinel"), damaged.c_str());
+        CHECK_MSG(map.title == nonstd::string_view("sentinel"), damaged.c_str());
         if (map.timing_points.size() == 1) {
             CHECK_MSG(map.stats.malformed_lines == 1u, damaged.c_str());
         }
@@ -370,7 +372,7 @@ PPPP_TEST(bracketed_records_do_not_change_section) {
     CHECK(bracketed.hit_objects.size() == 1u);
     CHECK(bracketed.timing_points.size() == 1u);
     CHECK(bracketed.stats.malformed_lines == 2u);
-    CHECK(bracketed.title == StringView("sentinel"));
+    CHECK(bracketed.title == nonstd::string_view("sentinel"));
 }
 
 PPPP_TEST(unknown_section_does_not_resume_hitobjects) {
@@ -402,7 +404,7 @@ PPPP_TEST(line_endings) {
         }
         const Beatmap map = parse_str(input);
         CHECK(map.grid_size == 32);
-        CHECK(map.title == StringView("sentinel"));
+        CHECK(map.title == nonstd::string_view("sentinel"));
         CHECK(map.breaks.size() == 1u);
         CHECK(map.timing_points.size() == 1u);
         CHECK(map.combo_colours.size() == 1u);
@@ -421,7 +423,7 @@ static void check_crlf_recovery(const char* header_and_first, size_t hit_objects
                                   "[Metadata]\r\nTitle:after\r\n");
     CHECK(map.hit_objects.size() == hit_objects);
     CHECK(map.timing_points.size() == timing_points);
-    CHECK(map.title == StringView("after"));
+    CHECK(map.title == nonstd::string_view("after"));
     CHECK(map.stats.malformed_lines == 1u);
 }
 
@@ -471,7 +473,7 @@ PPPP_TEST(invalid_byte_replaces_hitobject_lf) {
 
 PPPP_TEST(omitted_sections_use_defaults) {
     const Beatmap bm = parse_str("[Metadata]\nTitle:Only metadata\n");
-    CHECK(bm.title == StringView("Only metadata"));
+    CHECK(bm.title == nonstd::string_view("Only metadata"));
     CHECK(bm.audio_filename.empty());
     CHECK(bm.sample_set == SampleSet::Normal);
     CHECK(bm.preview_time == -1);
@@ -491,8 +493,8 @@ PPPP_TEST(omitted_sections_use_defaults) {
     CHECK(bm.stats.malformed_lines == 0u);
 }
 
-static ParseOptions sections_only(fosu_uint32 sections) {
-    ParseOptions options;
+static ParseOptions sections_only(fosu::u32 sections) {
+    ParseOptions options = lazer_options();
     options.sections = sections;
     return options;
 }
@@ -520,7 +522,7 @@ PPPP_TEST(metadata_and_difficulty_selection) {
                                  "[Difficulty]\nOverallDifficulty:6\n"
                                  "[HitObjects]\n128,192,2000,1,0\n",
                                  sections_only(kSectionMetadata | kSectionDifficulty));
-    CHECK(bm.title == StringView("Selected metadata"));
+    CHECK(bm.title == nonstd::string_view("Selected metadata"));
     CHECK(bm.beatmap_id == 42);
     CHECK(bm.od == 6);
     CHECK(bm.ar == 6);
@@ -564,7 +566,8 @@ PPPP_TEST(all_section_mask_matches_default) {
     Parser default_parser;
     const Beatmap& explicit_mask =
         require_parse(explicit_parser.parse(input.data(), input.size(), sections_only(kAllSections)));
-    const Beatmap& default_mask = require_parse(default_parser.parse(input.data(), input.size()));
+    const Beatmap& default_mask =
+        require_parse(default_parser.parse(input.data(), input.size(), lazer_options()));
     CHECK(explicit_mask.mode == default_mask.mode);
     CHECK(explicit_mask.title == default_mask.title);
     CHECK(explicit_mask.breaks.size() == 1u && default_mask.breaks.size() == 1u);
@@ -586,10 +589,10 @@ PPPP_TEST(exact_keys_and_event_aliases) {
                                   "2,10,20\nBreak,30,40\nVideoExtra,0,\"ignored.mp4\"\n");
     CHECK(map.countdown == 3);
     CHECK(map.sample_set == SampleSet::Soft);
-    CHECK(map.title == StringView("final: title"));
-    CHECK(map.title_unicode == StringView("unicode"));
-    CHECK(map.background == StringView("background.jpg"));
-    CHECK(map.video == StringView("new.mp4"));
+    CHECK(map.title == nonstd::string_view("final: title"));
+    CHECK(map.title_unicode == nonstd::string_view("unicode"));
+    CHECK(map.background == nonstd::string_view("background.jpg"));
+    CHECK(map.video == nonstd::string_view("new.mp4"));
     CHECK(map.breaks.size() == 2u);
     CHECK(map.breaks[0].start == 10);
     CHECK(map.breaks[1].end == 40);
@@ -616,7 +619,7 @@ PPPP_TEST(long_event_lines) {
         const Beatmap map =
             parse_str("[Events]\n " + std::string(length, 'x') + "\n[Metadata]\nTitle:after events\n");
         CHECK(map.stats.storyboard_lines == 1u);
-        CHECK(map.title == StringView("after events"));
+        CHECK(map.title == nonstd::string_view("after events"));
     }
 }
 
@@ -640,7 +643,7 @@ PPPP_TEST(timing_integer_widths) {
         CHECK(point.sample_index == values[i]);
         CHECK(point.volume == values[i]);
         CHECK(!point.uninherited);
-        CHECK(point.effects == static_cast<fosu_uint32>(values[i]));
+        CHECK(point.effects == static_cast<fosu::u32>(values[i]));
     }
 }
 
@@ -691,7 +694,7 @@ PPPP_TEST(byte_scan_boundaries) {
                         text[alignment + position] = delimiters[d];
                     }
                     FileBuffer input;
-                    CHECK(make_padded(StringView(text.data(), text.size()), input));
+                    CHECK(make_padded(nonstd::string_view(text.data(), text.size()), input));
                     const char* p = input.data + alignment;
                     CHECK(internal::find_byte(delimiters[d], p, p + length) == p + position);
                 }
@@ -716,7 +719,7 @@ static void check_line_end_scan_boundaries(char ending) {
                     text[alignment + position] = ending;
                 }
                 FileBuffer input;
-                CHECK(make_padded(StringView(text.data(), text.size()), input));
+                CHECK(make_padded(nonstd::string_view(text.data(), text.size()), input));
                 const char* p = input.data + alignment;
                 CHECK(internal::find_line_end(p, p + length) == p + position);
             }
@@ -752,7 +755,7 @@ PPPP_TEST(section_skip_boundaries) {
         const std::string text = "[Unknown]\nvalue:" + std::string(paddings[i], 'x') +
                                  "[Metadata]\nTitle:ignored\n[Metadata]\nTitle:retained";
         Beatmap& map = require_parse(parser.parse(text.data(), text.size(), sections_only(kSectionMetadata)));
-        CHECK(map.title == StringView("retained"));
+        CHECK(map.title == nonstd::string_view("retained"));
         const std::string missing = "[Unknown]\nvalue:[Metadata]";
         Beatmap& empty =
             require_parse(parser.parse(missing.data(), missing.size(), sections_only(kSectionMetadata)));
@@ -786,18 +789,21 @@ PPPP_TEST(enum_contracts) {
         CHECK(map.timing_points.size() == 1u);
         CHECK(map.timing_points[0].sample_set == SampleSet::Soft);
     }
+    // Both clients read an unknown curve letter as Catmull. stable also ignores another
+    // one-character marker, which lazer rejects. The parser tests drive the lazer client.
     static const char curve_types[] = {'B', 'C', 'L', 'P', 'X', 'b', '0'};
     for (size_t i = 0; i < 7; i++) {
         const char value = curve_types[i];
         const Beatmap map =
             parse_str(std::string("[HitObjects]\n0,0,1,2,0,") + value + "|1:2,1,30\n0,0,2,1,0\n");
-        const bool valid = value == 'B' || value == 'C' || value == 'L' || value == 'P';
-        CHECK(map.stats.malformed_lines == (valid ? 0u : 1u));
-        CHECK(map.hit_objects.size() == (valid ? 2u : 1u));
-        CHECK(map.sliders.size() == (valid ? 1u : 0u));
-        CHECK(map.slider_points.size() == (valid ? 1u : 0u));
-        if (valid) {
-            CHECK(static_cast<char>(map.sliders[0].curve_type) == value);
+        const bool known = value == 'B' || value == 'C' || value == 'L' || value == 'P';
+        const bool read = value != '0';
+        CHECK(map.stats.malformed_lines == (read ? 0u : 1u));
+        CHECK(map.hit_objects.size() == (read ? 2u : 1u));
+        CHECK(map.sliders.size() == (read ? 1u : 0u));
+        CHECK(map.slider_points.size() == (read ? 1u : 0u));
+        if (read) {
+            CHECK(static_cast<char>(map.sliders[0].curve_type) == (known ? value : 'C'));
         }
     }
 }
@@ -817,7 +823,7 @@ PPPP_TEST(header_field_failures_preserve_values) {
     CHECK(map.countdown == 3);
     CHECK(map.use_skin_sprites);
     CHECK(!map.letterbox_in_breaks);
-    CHECK(map.title == StringView("text:with:colons"));
+    CHECK(map.title == nonstd::string_view("text:with:colons"));
     CHECK(map.beatmap_id == kInt32Max);
     CHECK(map.ar == 8.5);
     CHECK(map.od == 7);
@@ -848,10 +854,10 @@ PPPP_TEST(repeated_section_bodies) {
             input += text[i];
         }
         const Beatmap map = parse_str(input);
-        CHECK(map.audio_filename == StringView("first.mp3"));
+        CHECK(map.audio_filename == nonstd::string_view("first.mp3"));
         CHECK(map.grid_size == 8);
-        CHECK(map.title == StringView("literal [Difficulty]"));
-        CHECK(map.artist == StringView("final"));
+        CHECK(map.title == nonstd::string_view("literal [Difficulty]"));
+        CHECK(map.artist == nonstd::string_view("final"));
         CHECK(map.ar == 7);
         CHECK(map.breaks.size() == 2u);
         CHECK(map.timing_points.size() == 2u);
@@ -917,7 +923,7 @@ PPPP_TEST(legacy_rules) {
                                   "[HitObjects]\n10,20,200,1,0\n30,40,0,8,0,-10\n"
                                   "50,60,50,2,0,B|100:100,0,0\n70,80,100,53,0\n"
                                   "90,100,100,49,0\n110,120,20,128,0,10\n130,140,201,1,0\n");
-    CHECK(map.title == StringView("trimmed"));
+    CHECK(map.title == nonstd::string_view("trimmed"));
     CHECK(map.hp == 10);
     CHECK(map.cs == 18);
     CHECK(map.ar == double(9.3f));
@@ -930,7 +936,7 @@ PPPP_TEST(legacy_rules) {
     CHECK(map.timing_points[0].time == 24);
     CHECK(map.breaks[0].start == 174);
     CHECK(map.breaks[0].end == 174);
-    const Span<HitObject> objects = map.hit_objects;
+    const nonstd::span<HitObject> objects = map.hit_objects;
     CHECK(objects[0].time == 24);
     CHECK(objects[0].end_time == 24);
     CHECK(objects[0].x == 256);

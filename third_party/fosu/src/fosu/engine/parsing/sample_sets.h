@@ -3,17 +3,15 @@
 
 #include <fosu/compiler.h>
 #include <fosu/enums.h>
-#include <fosu/span.h>
+#include <fosu/nonstd_config.h>
 
 namespace fosu { namespace internal {
-
-    inline Optional<SampleSet::Value> parse_sample_set(fosu_int64 value) {
+    inline nonstd::optional<SampleSet::Value> parse_sample_set(fosu::i64 value) {
         if (value < 0 || value > 3) {
-            return Optional<SampleSet::Value>();
+            return nonstd::optional<SampleSet::Value>();
         }
-        return Optional<SampleSet::Value>(static_cast<SampleSet::Value>(value));
+        return nonstd::optional<SampleSet::Value>(static_cast<SampleSet::Value>(value));
     }
-
 }} // namespace fosu::internal
 
 #endif

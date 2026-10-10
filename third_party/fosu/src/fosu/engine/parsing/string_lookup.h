@@ -5,13 +5,12 @@
 #include <cstddef>
 
 #include <fosu/compiler.h>
-#include <fosu/span.h>
+#include <fosu/nonstd_config.h>
 
 namespace fosu { namespace internal {
-
     // FNV-1a over the key bytes.
-    inline fosu_uint32 string_hash(StringView key) {
-        fosu_uint32 hash = 2166136261u;
+    inline fosu::u32 string_hash(nonstd::string_view key) {
+        fosu::u32 hash = 2166136261u;
         for (size_t i = 0; i < key.size(); i++) {
             hash ^= static_cast<unsigned char>(key[i]);
             hash *= 16777619u;
@@ -42,7 +41,7 @@ namespace fosu { namespace internal {
                 slots_[s] = 0;
             }
             for (size_t i = 0; i < count; i++) {
-                const StringView key(entries[i].key);
+                const nonstd::string_view key(entries[i].key);
                 if (key.size() > max_key_size_) {
                     max_key_size_ = key.size();
                 }
@@ -55,16 +54,16 @@ namespace fosu { namespace internal {
             }
         }
 
-        const Value* find(StringView key) const {
+        const Value* find(nonstd::string_view key) const {
             if (key.size() > max_key_size_) {
                 return 0;
             }
-            const fosu_uint32 hash = string_hash(key);
+            const fosu::u32 hash = string_hash(key);
             size_t slot = hash & kMask;
             while (slots_[slot]) {
                 const size_t index = slots_[slot] - 1;
                 // Full equality is required even when the entire hash matches.
-                if (hashes_[index] == hash && StringView(entries_[index].key) == key) {
+                if (hashes_[index] == hash && nonstd::string_view(entries_[index].key) == key) {
                     return &entries_[index].value;
                 }
                 slot = (slot + 1) & kMask;
@@ -74,11 +73,10 @@ namespace fosu { namespace internal {
 
     private:
         const StringEntry<Value>* entries_;
-        fosu_uint32 hashes_[kMaxEntries];
+        fosu::u32 hashes_[kMaxEntries];
         size_t slots_[kCapacity];
         size_t max_key_size_;
     };
-
 }} // namespace fosu::internal
 
 #endif

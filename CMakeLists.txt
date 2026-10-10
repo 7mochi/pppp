@@ -364,7 +364,9 @@ add_library(pppp::pppp ALIAS pppp)
 set_target_properties(pppp PROPERTIES EXPORT_NAME pppp)
 target_link_libraries(pppp INTERFACE pppp_api)
 
-# nonstd headers (both install into include/nonstd; their licences are named apart)
+# nonstd headers (they install into include/nonstd; their licences are named apart). optional-bare
+# backs pppp/config.h and the parser; variant-lite backs pppp/config.h; span/string-view back the
+# installed fosu headers alone, so they follow PPPP_WITH_FOSU.
 if(PPPP_INSTALL)
   install(DIRECTORY third_party/optional-bare/include/nonstd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
   install(DIRECTORY third_party/variant-lite/include/nonstd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
@@ -372,6 +374,14 @@ if(PPPP_INSTALL)
           DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nonstd RENAME optional-bare-LICENSE.txt)
   install(FILES third_party/variant-lite/LICENSE.txt
           DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nonstd RENAME variant-lite-LICENSE.txt)
+  if(PPPP_WITH_FOSU)
+    install(DIRECTORY third_party/span-lite/include/nonstd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    install(DIRECTORY third_party/string-view-lite/include/nonstd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    install(FILES third_party/span-lite/LICENSE.txt
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nonstd RENAME span-lite-LICENSE.txt)
+    install(FILES third_party/string-view-lite/LICENSE.txt
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nonstd RENAME string-view-lite-LICENSE.txt)
+  endif()
 endif()
 
 # doctest

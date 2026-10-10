@@ -8,7 +8,6 @@
 #include <fosu/engine/timing_points/beat_length.h>
 
 namespace fosu { namespace internal {
-
     // Parse a timing point, including omitted legacy fields. A present field must parse
     // completely; NaN is meaningful only when inherited. Invalid lines return false.
     inline bool parse_timing_point(const char* p, const char* end, int time_offset, TimingPoint& out) {
@@ -23,7 +22,7 @@ namespace fosu { namespace internal {
             return false;
         }
         p = q;
-        fosu_int64 rest[6] = {4, 0, 0, 100, 1, 0};
+        fosu::i64 rest[6] = {4, 0, 0, 100, 1, 0};
         for (int i = 0; i < 6 && p < end; ++i) {
             if (*p++ != ',') {
                 return false;
@@ -53,7 +52,7 @@ namespace fosu { namespace internal {
         if ((p < end && *p != ',') || (rest[4] != 0 && beat_length != beat_length)) {
             return false;
         }
-        const Optional<SampleSet::Value> sample_set = parse_sample_set(rest[1]);
+        const nonstd::optional<SampleSet::Value> sample_set = parse_sample_set(rest[1]);
         if (!sample_set.has_value()) {
             return false;
         }
@@ -64,10 +63,9 @@ namespace fosu { namespace internal {
         out.sample_index = clamp_i32(rest[2]);
         out.volume = clamp_i32(rest[3]);
         out.uninherited = rest[4] != 0;
-        out.effects = static_cast<fosu_uint32>(rest[5]);
+        out.effects = static_cast<fosu::u32>(rest[5]);
         return true;
     }
-
 }} // namespace fosu::internal
 
 #endif

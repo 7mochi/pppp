@@ -159,6 +159,9 @@ TEST_CASE("bad input is rejected") {
     CHECK(beatmap.load_file(0).code() == pppp::StatusCode::INVALID_ARGUMENT);
     CHECK(beatmap.load_buffer(0, 1).code() == pppp::StatusCode::PARSE);
     CHECK(pppp::beatmaps::from_parsed(beatmap, 0).code() == pppp::StatusCode::INVALID_ARGUMENT);
+
+    const char unloadable[] = "osu file format vx\n[HitObjects]\n1,2,3,1,0\n";
+    CHECK(beatmap.load_buffer(unloadable, sizeof(unloadable) - 1).code() == pppp::StatusCode::PARSE);
 }
 
 namespace {

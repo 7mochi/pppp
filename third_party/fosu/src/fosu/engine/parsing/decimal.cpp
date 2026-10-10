@@ -9,11 +9,9 @@
 // with more digits than the fast path below handles.
 
 namespace fosu { namespace internal {
-
     namespace {
-
         const int kMaxDecimalDigits = 800;
-        const fosu_uint32 kMaxShift = 60; // 2^60 * 9 fits an unsigned 64-bit accumulator
+        const fosu::u32 kMaxShift = 60; // 2^60 * 9 fits an unsigned 64-bit accumulator
 
         struct Decimal {
             unsigned char d[kMaxDecimalDigits]; // digits '0'..'9'
@@ -24,8 +22,8 @@ namespace fosu { namespace internal {
         };
 
         struct FloatInfo {
-            fosu_uint32 mantbits;
-            fosu_uint32 expbits;
+            fosu::u32 mantbits;
+            fosu::u32 expbits;
             int bias;
         };
 
@@ -80,7 +78,7 @@ namespace fosu { namespace internal {
             char cutoff[64];
         };
 
-        const LeftCheat& left_cheat(fosu_uint32 k) {
+        const LeftCheat& left_cheat(fosu::u32 k) {
             static LeftCheat table[kMaxShift + 1];
             static bool built = false;
             if (!built) {
@@ -90,7 +88,7 @@ namespace fosu { namespace internal {
                 digits[0] = 1;
                 table[0].delta = 0;
                 table[0].cutoff[0] = 0;
-                for (fosu_uint32 k2 = 1; k2 <= kMaxShift; k2++) {
+                for (fosu::u32 k2 = 1; k2 <= kMaxShift; k2++) {
                     int carry = 0;
                     for (int i = 0; i < count; i++) {
                         const int value = digits[i] * 5 + carry;
@@ -125,7 +123,7 @@ namespace fosu { namespace internal {
         }
 
         // Multiply by 2^k (0 < k <= kMaxShift).
-        void left_shift(Decimal& a, fosu_uint32 k) {
+        void left_shift(Decimal& a, fosu::u32 k) {
             const LeftCheat& cheat = left_cheat(k);
             int delta = cheat.delta;
             if (prefix_is_less_than(a.d, a.nd, cheat.cutoff)) {
@@ -134,11 +132,11 @@ namespace fosu { namespace internal {
 
             int r = a.nd; // read index
             int w = a.nd + delta; // write index
-            fosu_uint64 n = 0;
+            fosu::u64 n = 0;
             for (r--; r >= 0; r--) {
-                n += static_cast<fosu_uint64>(a.d[r] - '0') << k;
-                const fosu_uint64 quo = n / 10;
-                const fosu_uint64 rem = n - 10 * quo;
+                n += static_cast<fosu::u64>(a.d[r] - '0') << k;
+                const fosu::u64 quo = n / 10;
+                const fosu::u64 rem = n - 10 * quo;
                 w--;
                 if (w < kMaxDecimalDigits) {
                     a.d[w] = static_cast<unsigned char>(rem + '0');
@@ -148,8 +146,8 @@ namespace fosu { namespace internal {
                 n = quo;
             }
             while (n > 0) {
-                const fosu_uint64 quo = n / 10;
-                const fosu_uint64 rem = n - 10 * quo;
+                const fosu::u64 quo = n / 10;
+                const fosu::u64 rem = n - 10 * quo;
                 w--;
                 if (w < kMaxDecimalDigits) {
                     a.d[w] = static_cast<unsigned char>(rem + '0');
@@ -167,10 +165,10 @@ namespace fosu { namespace internal {
         }
 
         // Divide by 2^k (0 < k <= kMaxShift).
-        void right_shift(Decimal& a, fosu_uint32 k) {
+        void right_shift(Decimal& a, fosu::u32 k) {
             int r = 0; // read pointer
             int w = 0; // write pointer
-            fosu_uint64 n = 0;
+            fosu::u64 n = 0;
             for (; (n >> k) == 0; r++) {
                 if (r >= a.nd) {
                     if (n == 0) { // a == 0
@@ -183,20 +181,20 @@ namespace fosu { namespace internal {
                     }
                     break;
                 }
-                n = n * 10 + static_cast<fosu_uint64>(a.d[r] - '0');
+                n = n * 10 + static_cast<fosu::u64>(a.d[r] - '0');
             }
             a.dp -= r - 1;
-            const fosu_uint64 mask = (static_cast<fosu_uint64>(1) << k) - 1;
+            const fosu::u64 mask = (static_cast<fosu::u64>(1) << k) - 1;
             for (; r < a.nd; r++) {
-                const fosu_uint64 c = static_cast<fosu_uint64>(a.d[r] - '0');
-                const fosu_uint64 dig = n >> k;
+                const fosu::u64 c = static_cast<fosu::u64>(a.d[r] - '0');
+                const fosu::u64 dig = n >> k;
                 n &= mask;
                 a.d[w] = static_cast<unsigned char>(dig + '0');
                 w++;
                 n = n * 10 + c;
             }
             while (n > 0) {
-                const fosu_uint64 dig = n >> k;
+                const fosu::u64 dig = n >> k;
                 n &= mask;
                 if (w < kMaxDecimalDigits) {
                     a.d[w] = static_cast<unsigned char>(dig + '0');
@@ -219,13 +217,13 @@ namespace fosu { namespace internal {
                     left_shift(a, kMaxShift);
                     k -= static_cast<int>(kMaxShift);
                 }
-                left_shift(a, static_cast<fosu_uint32>(k));
+                left_shift(a, static_cast<fosu::u32>(k));
             } else if (k < 0) {
                 while (k < -static_cast<int>(kMaxShift)) {
                     right_shift(a, kMaxShift);
                     k += static_cast<int>(kMaxShift);
                 }
-                right_shift(a, static_cast<fosu_uint32>(-k));
+                right_shift(a, static_cast<fosu::u32>(-k));
             }
         }
 
@@ -245,14 +243,14 @@ namespace fosu { namespace internal {
         }
 
         // Integer part rounded to nearest-even (the decimal is scaled so it fits 64 bits).
-        fosu_uint64 rounded_integer(const Decimal& a) {
+        fosu::u64 rounded_integer(const Decimal& a) {
             if (a.dp > 20) {
                 return uint64_max();
             }
             int i;
-            fosu_uint64 n = 0;
+            fosu::u64 n = 0;
             for (i = 0; i < a.dp && i < a.nd; i++) {
-                n = n * 10 + static_cast<fosu_uint64>(a.d[i] - '0');
+                n = n * 10 + static_cast<fosu::u64>(a.d[i] - '0');
             }
             for (; i < a.dp; i++) {
                 n *= 10;
@@ -267,9 +265,9 @@ namespace fosu { namespace internal {
         const int kPowTabSize = 9;
 
         // Bits of the nearest floating-point value of `d`; returns false on overflow.
-        bool float_bits(Decimal& d, const FloatInfo& flt, fosu_uint64& bits) {
+        bool float_bits(Decimal& d, const FloatInfo& flt, fosu::u64& bits) {
             int exp = 0;
-            fosu_uint64 mant = 0;
+            fosu::u64 mant = 0;
             bool overflow = false;
 
             if (d.nd == 0) {
@@ -308,7 +306,7 @@ namespace fosu { namespace internal {
                     shift(d, static_cast<int>(1 + flt.mantbits));
                     mant = rounded_integer(d);
                     // Rounding might have added a bit; shift down.
-                    if (mant == (static_cast<fosu_uint64>(2) << flt.mantbits)) {
+                    if (mant == (static_cast<fosu::u64>(2) << flt.mantbits)) {
                         mant >>= 1;
                         exp++;
                         if (exp - flt.bias >= (1 << flt.expbits) - 1) {
@@ -316,7 +314,7 @@ namespace fosu { namespace internal {
                         }
                     }
                     // Denormalized?
-                    if ((mant & (static_cast<fosu_uint64>(1) << flt.mantbits)) == 0) {
+                    if ((mant & (static_cast<fosu::u64>(1) << flt.mantbits)) == 0) {
                         exp = flt.bias;
                     }
                 }
@@ -325,10 +323,10 @@ namespace fosu { namespace internal {
                 return false;
             }
 
-            bits = mant & ((static_cast<fosu_uint64>(1) << flt.mantbits) - 1);
-            bits |= static_cast<fosu_uint64>((exp - flt.bias) & ((1 << flt.expbits) - 1)) << flt.mantbits;
+            bits = mant & ((static_cast<fosu::u64>(1) << flt.mantbits) - 1);
+            bits |= static_cast<fosu::u64>((exp - flt.bias) & ((1 << flt.expbits) - 1)) << flt.mantbits;
             if (d.neg) {
-                bits |= static_cast<fosu_uint64>(1) << flt.mantbits << flt.expbits;
+                bits |= static_cast<fosu::u64>(1) << flt.mantbits << flt.expbits;
             }
             return true;
         }
@@ -343,7 +341,7 @@ namespace fosu { namespace internal {
         // Significant digits as an integer (at most 19 digits), with the decimal exponent that makes
         // mantissa * 10^exponent the value. Returns false when there are more than 19 significant
         // digits (the slow path handles those).
-        bool significand(const DecimalNumber& number, fosu_uint64& mantissa, fosu_int64& exponent) {
+        bool significand(const DecimalNumber& number, fosu::u64& mantissa, fosu::i64& exponent) {
             mantissa = 0;
             int digits = 0;
             int fraction_digits = 0;
@@ -361,7 +359,7 @@ namespace fosu { namespace internal {
                     if (digits == 19) {
                         return false;
                     }
-                    mantissa = mantissa * 10 + static_cast<fosu_uint64>(c - '0');
+                    mantissa = mantissa * 10 + static_cast<fosu::u64>(c - '0');
                     digits++;
                 }
             }
@@ -412,7 +410,7 @@ namespace fosu { namespace internal {
             if (p >= end || static_cast<unsigned char>(*p - '0') > 9) {
                 p = location_of_e; // not an exponent after all
             } else {
-                fosu_int64 exp_number = 0;
+                fosu::i64 exp_number = 0;
                 while (p < end && static_cast<unsigned char>(*p - '0') <= 9) {
                     if (exp_number < 0x10000) {
                         exp_number = 10 * exp_number + (*p - '0');
@@ -426,14 +424,14 @@ namespace fosu { namespace internal {
     }
 
     bool decimal_to_double(const DecimalNumber& number, double& out) {
-        fosu_uint64 mantissa;
-        fosu_int64 exponent;
+        fosu::u64 mantissa;
+        fosu::i64 exponent;
         if (significand(number, mantissa, exponent)) {
             if (mantissa == 0) {
                 out = number.negative ? -0.0 : 0.0;
                 return true;
             }
-            if (mantissa <= (static_cast<fosu_uint64>(1) << 53) && exponent >= -22 && exponent <= 22) {
+            if (mantissa <= (static_cast<fosu::u64>(1) << 53) && exponent >= -22 && exponent <= 22) {
                 double value = static_cast<double>(mantissa);
                 if (exponent < 0) {
                     value /= kPow10Double[-exponent];
@@ -450,7 +448,7 @@ namespace fosu { namespace internal {
         info.mantbits = 52;
         info.expbits = 11;
         info.bias = -1023;
-        fosu_uint64 bits;
+        fosu::u64 bits;
         if (!float_bits(d, info, bits)) {
             return false;
         }
@@ -459,14 +457,14 @@ namespace fosu { namespace internal {
     }
 
     bool decimal_to_float(const DecimalNumber& number, float& out) {
-        fosu_uint64 mantissa;
-        fosu_int64 exponent;
+        fosu::u64 mantissa;
+        fosu::i64 exponent;
         if (significand(number, mantissa, exponent)) {
             if (mantissa == 0) {
                 out = number.negative ? -0.0f : 0.0f;
                 return true;
             }
-            if (mantissa <= (static_cast<fosu_uint64>(1) << 24) && exponent >= -10 && exponent <= 10) {
+            if (mantissa <= (static_cast<fosu::u64>(1) << 24) && exponent >= -10 && exponent <= 10) {
                 float value = static_cast<float>(mantissa);
                 if (exponent < 0) {
                     value /= kPow10Float[-exponent];
@@ -483,13 +481,12 @@ namespace fosu { namespace internal {
         info.mantbits = 23;
         info.expbits = 8;
         info.bias = -127;
-        fosu_uint64 bits;
+        fosu::u64 bits;
         if (!float_bits(d, info, bits)) {
             return false;
         }
-        const fosu_uint32 bits32 = static_cast<fosu_uint32>(bits);
+        const fosu::u32 bits32 = static_cast<fosu::u32>(bits);
         std::memcpy(&out, &bits32, sizeof(out));
         return true;
     }
-
 }} // namespace fosu::internal

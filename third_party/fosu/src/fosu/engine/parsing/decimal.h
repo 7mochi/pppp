@@ -10,14 +10,13 @@
 #include <fosu/compiler.h>
 
 namespace fosu { namespace internal {
-
     // A scanned decimal number: [-]integer_digits[.fraction_digits][(e|E)[+|-]exponent_digits].
     struct DecimalNumber {
         const char* integer_begin;
         size_t integer_length;
         const char* fraction_begin;
         size_t fraction_length;
-        fosu_int64 exponent; // explicit exponent (0 when absent), magnitude capped like fast_float
+        fosu::i64 exponent; // explicit exponent (0 when absent), magnitude capped like fast_float
         bool negative;
     };
 
@@ -30,7 +29,6 @@ namespace fosu { namespace internal {
     // that rounds to zero is accepted as ±0 (true).
     bool decimal_to_double(const DecimalNumber& number, double& out);
     bool decimal_to_float(const DecimalNumber& number, float& out);
-
 }} // namespace fosu::internal
 
 #endif

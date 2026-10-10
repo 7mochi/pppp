@@ -6,8 +6,10 @@
 #include <cmath>
 
 #include <fosu/beatmap.h>
+#include <fosu/compiler.h>
 
 namespace fosu { namespace internal {
+    FOSU_FP_CONTRACT_OFF_BEGIN
 
     // std::trunc (C99): round towards zero.
     inline double truncate_toward_zero(double value) {
@@ -32,11 +34,11 @@ namespace fosu { namespace internal {
 
     inline bool within_stack_distance(PathPoint a, PathPoint b) { return (a - b).length() < 3; }
 
-    inline double stacking_end_time(const HitObject& object, Span<const double> slider_end_times) {
+    inline double stacking_end_time(const HitObject& object, nonstd::span<const double> slider_end_times) {
         return object.slider == HitObject::kNoSlider ? object.end_time : slider_end_times[object.slider];
     }
 
-    inline void calculate_modern_stacks(Beatmap& map, float threshold, Span<const double> slider_end_times) {
+    inline void calculate_modern_stacks(Beatmap& map, float threshold, nonstd::span<const double> slider_end_times) {
         for (size_t i = map.hit_objects.size(); i-- > 1;) {
             size_t current = i;
             if (map.stacking[i].stack_height != 0 || map.hit_objects[i].is_spinner() ||
@@ -83,7 +85,7 @@ namespace fosu { namespace internal {
         }
     }
 
-    inline void calculate_legacy_stacks(Beatmap& map, float threshold, Span<const double> slider_end_times) {
+    inline void calculate_legacy_stacks(Beatmap& map, float threshold, nonstd::span<const double> slider_end_times) {
         for (size_t i = 0; i < map.hit_objects.size(); ++i) {
             const HitObject& object = map.hit_objects[i];
             if (map.stacking[i].stack_height != 0 && !object.is_slider()) {
@@ -109,7 +111,7 @@ namespace fosu { namespace internal {
         }
     }
 
-    inline bool apply_stacking(Beatmap& map, Arena* result_arena, Span<const double> slider_end_times) {
+    inline bool apply_stacking(Beatmap& map, Arena* result_arena, nonstd::span<const double> slider_end_times) {
         if (map.mode != 0 || map.hit_objects.empty()) {
             return true;
         }
@@ -121,7 +123,7 @@ namespace fosu { namespace internal {
             stacking[i].stack_height = 0;
             stacking[i].stack_offset = PathPoint::zero();
         }
-        map.stacking = Span<Stacking>(stacking, map.hit_objects.size());
+        map.stacking = nonstd::span<Stacking>(stacking, map.hit_objects.size());
         // Difficulty is finalized and unmodded, so these are constant for the map.
         const double ar = static_cast<float>(map.ar);
         const double preempt = 1200 + (ar > 5 ? -750 : -600) * ((ar - 5) / 5);
@@ -157,8 +159,8 @@ namespace fosu { namespace internal {
         for (size_t i = 0; i < map.slider_points.size(); ++i) {
             raw_points[i] = map.slider_points[i];
         }
-        map.raw_positions = Span<PathPoint>(raw_positions, map.hit_objects.size());
-        map.raw_slider_points = Span<SliderPoint>(raw_points, map.slider_points.size());
+        map.raw_positions = nonstd::span<PathPoint>(raw_positions, map.hit_objects.size());
+        map.raw_slider_points = nonstd::span<SliderPoint>(raw_points, map.slider_points.size());
         // Calculate every height against unstacked geometry before moving anything.
         for (size_t i = 0; i < map.hit_objects.size(); ++i) {
             HitObject& object = map.hit_objects[i];
@@ -169,7 +171,7 @@ namespace fosu { namespace internal {
                 continue;
             }
             const Slider& slider = map.sliders[object.slider];
-            const Span<SliderPoint> points =
+            const nonstd::span<SliderPoint> points =
                 map.slider_points.subspan(slider.point_begin, slider.point_count);
             for (size_t p = 0; p < points.size(); ++p) {
                 points[p].x += offset.x;
@@ -179,6 +181,7 @@ namespace fosu { namespace internal {
         return true;
     }
 
+    FOSU_FP_CONTRACT_OFF_END
 }} // namespace fosu::internal
 
 #endif

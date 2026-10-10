@@ -125,7 +125,7 @@ PPPP_TEST(slider_point_pairs_resume_after_fallback) {
 PPPP_TEST(slider_repeats_and_length) {
     struct Case {
         const char* tail;
-        fosu_int32 slides;
+        fosu::i32 slides;
         double length;
     };
     static const Case cases[] = {
@@ -162,14 +162,14 @@ PPPP_TEST(slider_sounds) {
             continue;
         }
         CHECK(map.sliders[0].edge_sounds == edge_sounds);
-        CHECK(map.sliders[0].edge_sets == StringView("0:0|0:0|0:0"));
-        CHECK(map.hit_objects[0].hit_sample == StringView("1:2"));
+        CHECK(map.sliders[0].edge_sets == nonstd::string_view("0:0|0:0|0:0"));
+        CHECK(map.hit_objects[0].hit_sample == nonstd::string_view("1:2"));
     }
 }
 
 PPPP_TEST(hitobject_details) {
     struct Case {
-        fosu_uint32 type;
+        fosu::u32 type;
         const char* text;
         double end_time;
         const char* sample;
@@ -189,39 +189,39 @@ PPPP_TEST(hitobject_details) {
     };
     for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
         FileBuffer input;
-        CHECK(make_padded(StringView(cases[i].text), input));
+        CHECK(make_padded(nonstd::string_view(cases[i].text), input));
         const char* begin = input.data;
         const char* end = input.data + input.size;
         const internal::HitObjectKind::Value kind = internal::classify_hitobject_kind(cases[i].type);
         if (kind == internal::HitObjectKind::Circle) {
             internal::CircleDetails details;
             CHECK_MSG(internal::parse_circle_details(begin, end, details), cases[i].text);
-            CHECK_MSG(details.hit_sample == StringView(cases[i].sample), cases[i].text);
+            CHECK_MSG(details.hit_sample == nonstd::string_view(cases[i].sample), cases[i].text);
         } else if (kind == internal::HitObjectKind::Spinner) {
-            internal::TimedHitObjectDetails details = {0, StringView()};
+            internal::TimedHitObjectDetails details = {0, nonstd::string_view()};
             CHECK_MSG(internal::parse_spinner_details(begin, end, details), cases[i].text);
             CHECK_MSG(details.end_time == cases[i].end_time, cases[i].text);
-            CHECK_MSG(details.hit_sample == StringView(cases[i].sample), cases[i].text);
+            CHECK_MSG(details.hit_sample == nonstd::string_view(cases[i].sample), cases[i].text);
         } else {
-            internal::TimedHitObjectDetails details = {0, StringView()};
+            internal::TimedHitObjectDetails details = {0, nonstd::string_view()};
             CHECK_MSG(internal::parse_hold_details(10, begin, end, details), cases[i].text);
             CHECK_MSG(details.end_time == cases[i].end_time, cases[i].text);
-            CHECK_MSG(details.hit_sample == StringView(cases[i].sample), cases[i].text);
+            CHECK_MSG(details.hit_sample == nonstd::string_view(cases[i].sample), cases[i].text);
         }
     }
     static const char* const bad_spinners[] = {"", ",", ",bad", ",12:0:0", ",12,/:0"};
     for (size_t i = 0; i < 5; i++) {
         FileBuffer input;
-        CHECK(make_padded(StringView(bad_spinners[i]), input));
-        internal::TimedHitObjectDetails details = {0, StringView()};
+        CHECK(make_padded(nonstd::string_view(bad_spinners[i]), input));
+        internal::TimedHitObjectDetails details = {0, nonstd::string_view()};
         CHECK_MSG(!internal::parse_spinner_details(input.data, input.data + input.size, details),
                   bad_spinners[i]);
     }
     static const char* const bad_holds[] = {",2147483648:0:0:0:0:", ",12x:0:0:0:0:"};
     for (size_t i = 0; i < 2; i++) {
         FileBuffer input;
-        CHECK(make_padded(StringView(bad_holds[i]), input));
-        internal::TimedHitObjectDetails details = {0, StringView()};
+        CHECK(make_padded(nonstd::string_view(bad_holds[i]), input));
+        internal::TimedHitObjectDetails details = {0, nonstd::string_view()};
         CHECK_MSG(!internal::parse_hold_details(10, input.data, input.data + input.size, details),
                   bad_holds[i]);
     }

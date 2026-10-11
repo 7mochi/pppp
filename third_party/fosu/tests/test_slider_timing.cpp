@@ -75,7 +75,7 @@ namespace {
         return v;
     }
 
-    bool near(double a, double b, double tolerance) { return std::fabs(a - b) <= tolerance; }
+    bool close_to(double a, double b, double tolerance) { return std::fabs(a - b) <= tolerance; }
 } // namespace
 
 PPPP_TEST(slider_timing_end_time_covers_every_span) {
@@ -318,12 +318,12 @@ PPPP_TEST(slider_timing_events_cover_head_ticks_repeats_and_tail) {
     CHECK(events[2].position == PathPoint::make(400, 0));
     CHECK(events[5].position == PathPoint::make(0, 0));
     // 36 ms before the end, on the way back: 3.6% of the path from the head.
-    CHECK(near(events[4].path_progress, 0.036, 1e-9));
-    CHECK(near(events[4].position.x, 14.4f, 1e-4f));
+    CHECK(close_to(events[4].path_progress, 0.036, 1e-9));
+    CHECK(close_to(events[4].position.x, 14.4f, 1e-4f));
     for (size_t i = 0; i < events.size(); i++) {
         const PathPoint position = slider_position_at(map.slider_paths[0], events[i].path_progress);
-        CHECK(near(events[i].position.x, position.x, 1e-4f));
-        CHECK(near(events[i].position.y, position.y, 1e-4f));
+        CHECK(close_to(events[i].position.x, position.x, 1e-4f));
+        CHECK(close_to(events[i].position.y, position.y, 1e-4f));
     }
 }
 

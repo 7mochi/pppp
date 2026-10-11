@@ -289,9 +289,7 @@ namespace nonstd { namespace atomic_lite {
 // Implementation:
 //
 
-#ifdef __GNUC__
-# include <xmmintrin.h>
-#else
+#ifndef __GNUC__
 # include <Windows.h>
 #endif
 

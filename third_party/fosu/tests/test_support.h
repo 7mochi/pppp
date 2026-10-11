@@ -69,8 +69,11 @@ inline std::string canonical(const fosu::Beatmap& bm) {
     c.u32(bm.sample_volume);
     c.f64(bm.stack_leniency);
     c.u32(bm.mode);
-    c.u32(bm.letterbox_in_breaks | bm.widescreen_storyboard << 1 | bm.epilepsy_warning << 2 |
-          bm.special_style << 3 | bm.use_skin_sprites << 4 | bm.samples_match_playback_rate << 5);
+    c.u32(static_cast<fosu::u32>(bm.letterbox_in_breaks) |
+          static_cast<fosu::u32>(bm.widescreen_storyboard) << 1 |
+          static_cast<fosu::u32>(bm.epilepsy_warning) << 2 | static_cast<fosu::u32>(bm.special_style) << 3 |
+          static_cast<fosu::u32>(bm.use_skin_sprites) << 4 |
+          static_cast<fosu::u32>(bm.samples_match_playback_rate) << 5);
     c.u32(bm.countdown_offset);
     c.str(bm.overlay_position);
     c.str(bm.skin_preference);
@@ -128,7 +131,7 @@ inline std::string canonical(const fosu::Beatmap& bm) {
         c.f64(h.time);
         c.f64(h.end_time);
         c.u32(h.slider);
-        c.u32(h.new_combo | h.combo_skip << 1);
+        c.u32(static_cast<fosu::u32>(h.new_combo) | static_cast<fosu::u32>(h.combo_skip) << 1);
         c.str(h.hit_sample);
     }
     c.u32(static_cast<fosu::u32>(bm.sliders.size()));

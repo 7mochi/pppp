@@ -41,6 +41,13 @@ string resourcesRoot = args.Length > 1 ? args[1] : "";
 string output = args.Length > 2 ? args[2] : null;
 JsonArray rows = JsonNode.Parse(File.ReadAllText(rowsPath))!.AsArray();
 
+JsonObject schema = new JsonObject
+{
+    ["decode"] = decodeSchema(),
+    ["difficulty"] = new JsonObject(),
+    ["performance"] = new JsonObject(),
+};
+
 foreach (JsonNode node in rows)
 {
     JsonObject row = node.AsObject();
@@ -59,15 +66,19 @@ foreach (JsonNode node in rows)
     using var cts = new CancellationTokenSource();
     DifficultyAttributes difficulty = ruleset.CreateDifficultyCalculator(working).Calculate(mods, cts.Token);
     row["difficulty"] = attributes(difficulty);
+    schema["difficulty"][mode.ToString(CultureInfo.InvariantCulture)] = schemaOf(difficulty);
 
     if (row["score"] is JsonObject score)
     {
         ScoreInfo info = buildScore(score, ruleset, working, mods, difficulty, mode);
-        row["performance"] = attributes(ruleset.CreatePerformanceCalculator()!.Calculate(info, difficulty));
+        var performance = ruleset.CreatePerformanceCalculator()!.Calculate(info, difficulty);
+        row["performance"] = attributes(performance);
+        schema["performance"][mode.ToString(CultureInfo.InvariantCulture)] = schemaOf(performance);
     }
 }
 
-string json = rows.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) + "\n";
+JsonObject document = new JsonObject { ["schema"] = schema, ["rows"] = rows };
+string json = document.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) + "\n";
 if (output is null)
     Console.Out.Write(json);
 else
@@ -106,23 +117,29 @@ static Mod[] parseMods(JsonNode modsNode, Ruleset ruleset)
     return parsed.ToArray();
 }
 
+static IEnumerable<(string Name, string Type, Func<Beatmap, JsonNode> Value)> decodeDescriptors()
+{
+    yield return ("format", "int", map => map.BeatmapVersion);
+    yield return ("mode", "int", map => map.BeatmapInfo.Ruleset.OnlineID);
+    yield return ("ar", "double", map => (double)map.Difficulty.ApproachRate);
+    yield return ("od", "double", map => (double)map.Difficulty.OverallDifficulty);
+    yield return ("cs", "double", map => (double)map.Difficulty.CircleSize);
+    yield return ("hp", "double", map => (double)map.Difficulty.DrainRate);
+    yield return ("slider_multiplier", "double", map => map.Difficulty.SliderMultiplier);
+    yield return ("slider_tick_rate", "double", map => map.Difficulty.SliderTickRate);
+    yield return ("hit_objects", "int", map => map.HitObjects.Count);
+    yield return ("uninherited_points", "int", map => map.ControlPointInfo.TimingPoints.Count);
+    yield return ("breaks", "int", map => map.Breaks.Count);
+    yield return ("stack_leniency", "double", map => (double)map.StackLeniency);
+}
+
 static JsonObject decodeFields(Beatmap map)
 {
-    return new JsonObject
-    {
-        ["format"] = map.BeatmapVersion,
-        ["mode"] = map.BeatmapInfo.Ruleset.OnlineID,
-        ["ar"] = (double)map.Difficulty.ApproachRate,
-        ["od"] = (double)map.Difficulty.OverallDifficulty,
-        ["cs"] = (double)map.Difficulty.CircleSize,
-        ["hp"] = (double)map.Difficulty.DrainRate,
-        ["slider_multiplier"] = map.Difficulty.SliderMultiplier,
-        ["slider_tick_rate"] = map.Difficulty.SliderTickRate,
-        ["hit_objects"] = map.HitObjects.Count,
-        ["uninherited_points"] = map.ControlPointInfo.TimingPoints.Count,
-        ["breaks"] = map.Breaks.Count,
-        ["stack_leniency"] = (double)map.StackLeniency,
-    };
+    var result = new JsonObject();
+    foreach (var descriptor in decodeDescriptors())
+        result[descriptor.Name] = descriptor.Value(map);
+
+    return result;
 }
 
 static JsonObject attributes(object value)
@@ -144,6 +161,54 @@ static JsonObject attributes(object value)
     }
 
     return result;
+}
+
+static JsonArray schemaOf(object value)
+{
+    var result = new JsonArray();
+    foreach (Type type in hierarchy(value.GetType()))
+    {
+        foreach (PropertyInfo property in type.GetProperties(
+                     BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+        {
+            Type propertyType = property.PropertyType;
+            string kind = propertyType == typeof(double) ? "double"
+                : propertyType == typeof(int) ? "int"
+                : propertyType == typeof(long) ? "long"
+                : propertyType == typeof(double?) ? "double?"
+                : null;
+            if (kind is null)
+                continue;
+
+            result.Add(schemaField(property.Name.ToSnakeCase(), kind));
+        }
+    }
+
+    return result;
+}
+
+static IEnumerable<Type> hierarchy(Type type)
+{
+    var chain = new List<Type>();
+    for (Type current = type; current is not null && current != typeof(object); current = current.BaseType)
+        chain.Add(current);
+
+    chain.Reverse();
+    return chain;
+}
+
+static JsonArray decodeSchema()
+{
+    var result = new JsonArray();
+    foreach (var descriptor in decodeDescriptors())
+        result.Add(schemaField(descriptor.Name, descriptor.Type));
+
+    return result;
+}
+
+static JsonObject schemaField(string name, string type)
+{
+    return new JsonObject { ["name"] = name, ["type"] = type };
 }
 
 static ScoreInfo buildScore(JsonObject input, Ruleset ruleset, FlatWorkingBeatmap working, Mod[] mods,

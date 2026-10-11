@@ -108,6 +108,7 @@
                     scikit-build-core
                     typing-extensions
                     pip
+                    jinja2
                   ]
                 ))
               ])

@@ -74,18 +74,20 @@ TEST_CASE("osu! performance matches upstream") {
         CHECK(pp->flashlight == pppp_test::pp_approx(row.pp_flashlight));
         CHECK(pp->reading == pppp_test::pp_approx(row.pp_reading));
         CHECK(pp->effective_miss_count == pppp_test::pp_approx(row.pp_effective_miss_count));
-        CHECK(pp->combo_based_estimated_miss_count == pppp_test::pp_approx(row.pp_combo_miss));
-        if (absent(row.pp_score_miss)) {
+        CHECK(pp->combo_based_estimated_miss_count ==
+              pppp_test::pp_approx(row.pp_combo_based_estimated_miss_count));
+        if (absent(row.pp_score_based_estimated_miss_count)) {
             CHECK(!pp->score_based_estimated_miss_count.has_value());
         } else {
-            CHECK(matches(pp->score_based_estimated_miss_count, row.pp_score_miss));
+            CHECK(matches(pp->score_based_estimated_miss_count, row.pp_score_based_estimated_miss_count));
         }
-        CHECK(pp->aim_estimated_slider_breaks == pppp_test::pp_approx(row.pp_aim_sb));
-        CHECK(pp->speed_estimated_slider_breaks == pppp_test::pp_approx(row.pp_speed_sb));
-        if (absent(row.pp_speed_dev)) {
+        CHECK(pp->aim_estimated_slider_breaks == pppp_test::pp_approx(row.pp_aim_estimated_slider_breaks));
+        CHECK(pp->speed_estimated_slider_breaks ==
+              pppp_test::pp_approx(row.pp_speed_estimated_slider_breaks));
+        if (absent(row.pp_speed_deviation)) {
             CHECK(!pp->speed_deviation.has_value());
         } else {
-            CHECK(matches(pp->speed_deviation, row.pp_speed_dev));
+            CHECK(matches(pp->speed_deviation, row.pp_speed_deviation));
         }
     }
 }
@@ -121,10 +123,10 @@ TEST_CASE("taiko performance matches upstream") {
         CHECK(pp->total == pppp_test::pp_approx(row.pp_total));
         CHECK(pp->difficulty == pppp_test::pp_approx(row.pp_difficulty));
         CHECK(pp->accuracy == pppp_test::pp_approx(row.pp_accuracy));
-        if (absent(row.pp_estimated_ur)) {
+        if (absent(row.pp_estimated_unstable_rate)) {
             CHECK(!pp->estimated_unstable_rate.has_value());
         } else {
-            CHECK(matches(pp->estimated_unstable_rate, row.pp_estimated_ur));
+            CHECK(matches(pp->estimated_unstable_rate, row.pp_estimated_unstable_rate));
         }
     }
 }
@@ -194,5 +196,6 @@ TEST_CASE("osu!mania performance matches upstream") {
         REQUIRE_UNARY(pp != 0);
 
         CHECK(pp->total == pppp_test::pp_approx(row.pp_total));
+        CHECK(pp->difficulty == pppp_test::pp_approx(row.pp_difficulty));
     }
 }

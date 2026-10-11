@@ -78,12 +78,12 @@ namespace {
     bool close_to(double a, double b, double tolerance) { return std::fabs(a - b) <= tolerance; }
 } // namespace
 
-PPPP_TEST(slider_timing_end_time_covers_every_span) {
+TEST_CASE("the end time covers every span") {
     const std::string input = beatmap("0,500\n", "0,0,1000,2,0,L|100:0,2,100\n");
     CHECK(end_time(input) == 2000);
 }
 
-PPPP_TEST(slider_timing_omitted_or_nonpositive_length_uses_path_distance) {
+TEST_CASE("an omitted or nonpositive length uses the path distance") {
     static const char* const tails[] = {"", ",0", ",-5"};
     for (size_t i = 0; i < 3; i++) {
         const std::string input = beatmap("0,500\n", std::string("0,0,1000,2,0,L|200:0,1") + tails[i] + "\n");
@@ -91,7 +91,7 @@ PPPP_TEST(slider_timing_omitted_or_nonpositive_length_uses_path_distance) {
     }
 }
 
-PPPP_TEST(slider_timing_slide_count_below_one_is_one_slide) {
+TEST_CASE("a slide count below one is one slide") {
     const std::string input = beatmap("0,500\n", "0,0,1000,2,0,L|100:0,0,100\n");
     CHECK(end_time(input) == 1500);
     CHECK(timed_events(input) == events3(SliderEventType::Head, 1000, SliderEventType::LegacyLastTick, 1464,
@@ -99,7 +99,7 @@ PPPP_TEST(slider_timing_slide_count_below_one_is_one_slide) {
 }
 
 // The generic decoder's end time; rulesets convert sliders afterwards.
-PPPP_TEST(slider_timing_end_time_does_not_depend_on_game_mode) {
+TEST_CASE("the end time does not depend on the game mode") {
     static const char* const modes[] = {"0", "1", "2"};
     for (size_t i = 0; i < 3; i++) {
         const std::string input = std::string("osu file format v14\n[General]\nMode:") + modes[i] +
@@ -109,12 +109,12 @@ PPPP_TEST(slider_timing_end_time_does_not_depend_on_game_mode) {
     }
 }
 
-PPPP_TEST(slider_timing_inherited_point_scales_velocity) {
+TEST_CASE("an inherited point scales velocity") {
     const std::string input = beatmap("0,500\n0,-50,4,1,0,100,0,0\n", "0,0,1000,2,0,L|100:0,1,100\n");
     CHECK(end_time(input) == 1250);
 }
 
-PPPP_TEST(slider_timing_velocity_multiplier_is_clamped_from_tenth_to_tenfold) {
+TEST_CASE("the velocity multiplier is clamped from a tenth to tenfold") {
     // -1 asks for 100x and -10000 for 0.01x.
     const std::string fast = beatmap("0,500\n0,-1,4,1,0,100,0,0\n", "0,0,1000,2,0,L|100:0,1,100\n");
     const std::string slow = beatmap("0,500\n0,-10000,4,1,0,100,0,0\n", "0,0,1000,2,0,L|100:0,1,100\n");
@@ -122,19 +122,19 @@ PPPP_TEST(slider_timing_velocity_multiplier_is_clamped_from_tenth_to_tenfold) {
     CHECK(end_time(slow) == 6000);
 }
 
-PPPP_TEST(slider_timing_nan_inherited_point_keeps_default_velocity) {
+TEST_CASE("a NaN inherited point keeps the default velocity") {
     const std::string input = beatmap("0,500\n0,NaN,4,1,0,100,0,0\n", "0,0,1000,2,0,L|100:0,1,100\n");
     CHECK(end_time(input) == 1500);
 }
 
-PPPP_TEST(slider_timing_beat_length_is_clamped_from_6_to_60000_ms) {
+TEST_CASE("the beat length is clamped from 6 to 60000 ms") {
     const std::string short_beat = beatmap("0,1\n", "0,0,1000,2,0,L|100:0,1,100\n");
     const std::string long_beat = beatmap("0,100000\n", "0,0,1000,2,0,L|100:0,1,1\n");
     CHECK(end_time(short_beat) == 1006);
     CHECK(end_time(long_beat) == 1600);
 }
 
-PPPP_TEST(slider_timing_uninherited_point_resets_velocity) {
+TEST_CASE("an uninherited point resets velocity") {
     const std::string input =
         beatmap("0,500\n0,-50,4,1,0,100,0,0\n1000,500\n", "0,0,1000,2,0,L|100:0,1,100\n");
     CHECK(end_time(input) == 1500);
@@ -143,18 +143,18 @@ PPPP_TEST(slider_timing_uninherited_point_resets_velocity) {
 // Consecutive lines at one time form a group. Within it, the first
 // uninherited line sets the beat length and the last inherited line sets the
 // velocity, overriding the uninherited lines' 1x.
-PPPP_TEST(slider_timing_first_uninherited_point_in_a_group_wins) {
+TEST_CASE("the first uninherited point in a group wins") {
     const std::string input = beatmap("0,500\n0,250\n", "0,0,1000,2,0,L|100:0,1,100\n");
     CHECK(end_time(input) == 1500);
 }
 
-PPPP_TEST(slider_timing_last_inherited_point_in_a_group_wins) {
+TEST_CASE("the last inherited point in a group wins") {
     const std::string input =
         beatmap("0,500\n0,-50,4,1,0,100,0,0\n0,-25,4,1,0,100,0,0\n", "0,0,1000,2,0,L|100:0,1,100\n");
     CHECK(end_time(input) == 1125);
 }
 
-PPPP_TEST(slider_timing_inherited_point_overrides_reset_in_its_group) {
+TEST_CASE("an inherited point overrides a reset in its group") {
     const std::string inherited_first =
         beatmap("0,-50,4,1,0,100,0,0\n0,500\n", "0,0,1000,2,0,L|100:0,1,100\n");
     const std::string inherited_last =
@@ -163,7 +163,7 @@ PPPP_TEST(slider_timing_inherited_point_overrides_reset_in_its_group) {
     CHECK(end_time(inherited_last) == 1250);
 }
 
-PPPP_TEST(slider_timing_points_apply_in_time_order_not_file_order) {
+TEST_CASE("points apply in time order, not file order") {
     const std::string input =
         beatmap("0,500\n2000,-50,4,1,0,100,0,0\n1000,-25,4,1,0,100,0,0\n", "0,0,1500,2,0,L|100:0,1,100\n");
     CHECK(end_time(input) == 1625);
@@ -172,7 +172,7 @@ PPPP_TEST(slider_timing_points_apply_in_time_order_not_file_order) {
 // osu! drops an inherited point that matches the velocity in effect when it
 // is read. Here the 2x at 1000 matches the 2x at 0, so the 4x line read later
 // for 500 still applies at 1000.
-PPPP_TEST(slider_timing_unchanged_inherited_point_is_dropped_when_read) {
+TEST_CASE("an unchanged inherited point is dropped when read") {
     const std::string input = beatmap("0,500\n0,-50,4,1,0,100,0,0\n1000,-50,4,1,0,100,0,0\n"
                                       "500,-25,4,1,0,100,0,0\n",
                                       "0,0,1000,2,0,L|100:0,1,100\n");
@@ -180,7 +180,7 @@ PPPP_TEST(slider_timing_unchanged_inherited_point_is_dropped_when_read) {
 }
 
 // Unlike a repeat within one group, a separate later group replaces it.
-PPPP_TEST(slider_timing_later_group_at_the_same_time_replaces_earlier_one) {
+TEST_CASE("a later group at the same time replaces the earlier one") {
     const std::string input =
         beatmap("0,500\n1000,-50,4,1,0,100,0,0\n0,250\n", "0,0,500,2,0,L|100:0,1,100\n");
     CHECK(end_time(input) == 750);
@@ -188,7 +188,7 @@ PPPP_TEST(slider_timing_later_group_at_the_same_time_replaces_earlier_one) {
 
 // The first uninherited point's beat length applies before it; inherited
 // points never apply before their time.
-PPPP_TEST(slider_timing_objects_before_the_first_point_use_its_beat_length) {
+TEST_CASE("objects before the first point use its beat length") {
     const std::string uninherited = beatmap("1000,250\n", "0,0,500,2,0,L|100:0,1,100\n");
     const std::string inherited =
         beatmap("1000,250\n1000,-50,4,1,0,100,0,0\n", "0,0,500,2,0,L|100:0,1,100\n");
@@ -196,7 +196,7 @@ PPPP_TEST(slider_timing_objects_before_the_first_point_use_its_beat_length) {
     CHECK(end_time(inherited) == 750);
 }
 
-PPPP_TEST(slider_timing_without_timing_points_sliders_use_60_bpm) {
+TEST_CASE("without timing points sliders use 60 BPM") {
     // The default slider multiplier is 1.4 and the default beat 1000 ms.
     const std::string input = "osu file format v14\n[Difficulty]\nSliderMultiplier:1\n"
                               "[TimingPoints]\n0,500\n[HitObjects]\n0,0,0,2,0,L|100:0,1,140\n";
@@ -209,7 +209,7 @@ PPPP_TEST(slider_timing_without_timing_points_sliders_use_60_bpm) {
 
 // lazer removes the repeats of a path no longer than 1e-7 px. Stable creates
 // them but never judges them.
-PPPP_TEST(slider_timing_zero_length_path_drops_repeats) {
+TEST_CASE("a zero length path drops repeats") {
     static const char* const sliders[] = {"B|0:0,3,200",     "L|0:0,2,100", "C|0:0,2,100",
                                           "P|0:0|0:0,2,100", "B,3072,-1",   "L,1,100"};
     for (size_t i = 0; i < 6; i++) {
@@ -223,7 +223,7 @@ PPPP_TEST(slider_timing_zero_length_path_drops_repeats) {
     CHECK(map.sliders[0].slides == 3072);
 }
 
-PPPP_TEST(slider_timing_repeats_need_a_path_longer_than_1e7_px) {
+TEST_CASE("repeats need a path longer than 1e-7 px") {
     const std::string short_len = beatmap("0,500\n", "0,0,1000,2,0,L|100:0,5,0.00000001\n");
     const std::string long_len = beatmap("0,500\n", "0,0,1000,2,0,L|100:0,5,0.000001\n");
     size_t short_repeats = 0;
@@ -236,17 +236,17 @@ PPPP_TEST(slider_timing_repeats_need_a_path_longer_than_1e7_px) {
     for (size_t i = 0; i < long_events.size(); i++) {
         long_repeats += long_events[i].type == SliderEventType::Repeat;
     }
-    CHECK(short_repeats == 0u);
+    CHECK_UNARY(short_repeats == 0u);
     CHECK(long_repeats == 4u);
 }
 
 // Stacking needs end times, so it calculates them; paths alone do not.
-PPPP_TEST(slider_timing_end_times_are_calculated_only_when_needed) {
+TEST_CASE("end times are calculated only when needed") {
     const std::string input = beatmap("0,500\n", "0,0,1000,2,0,L|100:0,1,100\n");
-    CHECK(parse_str(input, lazer_options()).hit_objects[0].end_time == 0);
+    CHECK_UNARY(parse_str(input, lazer_options()).hit_objects[0].end_time == 0);
     ParseOptions paths = lazer_options();
     paths.calculate_slider_paths = true;
-    CHECK(parse_str(input, paths).hit_objects[0].end_time == 0);
+    CHECK_UNARY(parse_str(input, paths).hit_objects[0].end_time == 0);
     ParseOptions stacked = lazer_options();
     stacked.apply_stacking = true;
     const Beatmap map = parse_str(input, stacked);
@@ -254,7 +254,7 @@ PPPP_TEST(slider_timing_end_times_are_calculated_only_when_needed) {
     CHECK(map.slider_events.empty());
 }
 
-PPPP_TEST(slider_timing_end_time_is_independent_of_requested_outputs) {
+TEST_CASE("the end time is independent of the requested outputs") {
     static const char* const inputs[] = {"osu file format "
                                          "v14\n[Difficulty]\nSliderMultiplier:1\n[TimingPoints]\n0,500\n0,-"
                                          "50,4,1,0,100,0,0\n[HitObjects]\n0,0,1000,2,0,L|100:0,2,100\n",
@@ -304,7 +304,7 @@ PPPP_TEST(slider_timing_end_time_is_independent_of_requested_outputs) {
     }
 }
 
-PPPP_TEST(slider_timing_events_cover_head_ticks_repeats_and_tail) {
+TEST_CASE("events cover head, ticks, repeats and tail") {
     const std::string input = "osu file format v8\n[Difficulty]\nSliderMultiplier:1\n"
                               "[TimingPoints]\n0,500\n0,-50,4,0,0,100,0,0\n"
                               "[HitObjects]\n0,0,1000,2,0,L|400:0,2,400\n";
@@ -328,7 +328,7 @@ PPPP_TEST(slider_timing_events_cover_head_ticks_repeats_and_tail) {
 }
 
 // Before v8, tick spacing ignores the inherited velocity multiplier.
-PPPP_TEST(slider_timing_ticks_before_v8_ignore_velocity_multiplier) {
+TEST_CASE("ticks before v8 ignore the velocity multiplier") {
     const std::string input = "osu file format v7\n[Difficulty]\nSliderMultiplier:1\n"
                               "[TimingPoints]\n0,500\n0,-50,4,0,0,100,0,0\n"
                               "[HitObjects]\n0,0,1000,2,0,L|400:0,2,400\n";
@@ -343,7 +343,7 @@ PPPP_TEST(slider_timing_ticks_before_v8_ignore_velocity_multiplier) {
     CHECK(ticks == std::vector<double>(expected, expected + 6));
 }
 
-PPPP_TEST(slider_timing_legacy_last_tick_is_at_least_halfway) {
+TEST_CASE("the legacy last tick is at least halfway") {
     const std::string input = beatmap("0,500\n", "0,0,1000,2,0,L|10:0,1,10\n");
     ParseOptions options = lazer_options();
     options.calculate_slider_events = true;
@@ -351,11 +351,11 @@ PPPP_TEST(slider_timing_legacy_last_tick_is_at_least_halfway) {
     const SliderEvent& legacy = map.slider_events[0][1];
     CHECK(legacy.type == SliderEventType::LegacyLastTick);
     CHECK(legacy.time == 1025);
-    CHECK(legacy.path_progress == 0.5);
+    CHECK_UNARY(legacy.path_progress == 0.5);
     CHECK(legacy.position.x == 5);
 }
 
-PPPP_TEST(slider_timing_nan_inherited_point_suppresses_ticks) {
+TEST_CASE("a NaN inherited point suppresses ticks") {
     const std::string input = beatmap("0,500\n0,NaN,4,0,0,100,0,0\n", "0,0,0,2,0,L|300:0,1,300\n");
     const std::string zero_length = beatmap("0,500\n0,NaN,4,0,0,100,0,0\n", "0,0,0,2,0,B|0:0,1,0\n");
     CHECK(timed_events(input) == events3(SliderEventType::Head, 0, SliderEventType::LegacyLastTick, 1464,
@@ -365,7 +365,7 @@ PPPP_TEST(slider_timing_nan_inherited_point_suppresses_ticks) {
     const Beatmap map = parse_str(zero_length, options);
     CHECK(map.slider_events[0].size() == 3u);
     for (size_t i = 0; i < map.slider_events[0].size(); i++) {
-        CHECK(std::isfinite(map.slider_events[0][i].time) &&
-              std::isfinite(map.slider_events[0][i].path_progress));
+        CHECK_UNARY(std::isfinite(map.slider_events[0][i].time) &&
+                    std::isfinite(map.slider_events[0][i].path_progress));
     }
 }

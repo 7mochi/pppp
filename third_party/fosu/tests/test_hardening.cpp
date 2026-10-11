@@ -20,7 +20,7 @@ static void check(const std::string& text) {
     CHECK(!!parser.parse(input, lazer_options()));
 }
 
-PPPP_TEST(short_sample_shape) {
+TEST_CASE("a short sample shape") {
     // The short sample shortcut must reject every non-digit/separator byte, including
     // high-bit bytes. Full parsing may accept other spellings via its bounded fallback.
     bool shapes_ok = true;
@@ -44,16 +44,16 @@ PPPP_TEST(short_sample_shape) {
         for (size_t e = 0; e < 3; e++) {
             check(line + endings[e]);
             const Beatmap map = parse_str(line + endings[e]);
-            CHECK(map.hit_objects.size() == 1u && map.hit_objects[0].is_circle());
+            CHECK_UNARY(map.hit_objects.size() == 1u && map.hit_objects[0].is_circle());
             CHECK(map.hit_objects[0].hit_sample == nonstd::string_view("0:1:2:3:"));
         }
     }
 }
 
-PPPP_TEST(framing_and_combo_state) {
+TEST_CASE("framing and combo state") {
     Parser parser;
     const Beatmap* empty = parser.parse(0, 0, lazer_options());
-    CHECK(empty && empty->hit_objects.empty());
+    CHECK_UNARY(empty && empty->hit_objects.empty());
     FileBuffer empty_input;
     CHECK(make_padded(nonstd::string_view(), empty_input));
     CHECK(must_parse(parser, empty_input).hit_objects.empty());
@@ -64,7 +64,7 @@ PPPP_TEST(framing_and_combo_state) {
     ParseOptions hit_objects_only = lazer_options();
     hit_objects_only.sections = kSectionHitObjects;
     const Beatmap selected = must_parse(parser, embedded, hit_objects_only);
-    CHECK(selected.hit_objects.size() == 1 && selected.hit_objects[0].time == 4);
+    CHECK_UNARY(selected.hit_objects.size() == 1 && selected.hit_objects[0].time == 4);
     // Only accepted objects carry combo state across malformed lines and
     // repeated HitObjects sections, including after a spinner.
     {
@@ -84,15 +84,15 @@ PPPP_TEST(framing_and_combo_state) {
     FileBuffer point_input;
     CHECK(make_padded(nonstd::string_view("[HitObjects]\n1,2,3,2,0,B|1:2.5|3:4e1,1,10\n"), point_input));
     const Beatmap points = must_parse(parser, point_input);
-    CHECK(points.sliders.size() == 1 && points.slider_points.size() == 2);
-    CHECK(points.slider_points[0].y == 2 && points.slider_points[1].y == 40);
+    CHECK_UNARY(points.sliders.size() == 1 && points.slider_points.size() == 2);
+    CHECK_UNARY(points.slider_points[0].y == 2 && points.slider_points[1].y == 40);
     check("[TimingPoints]\n\r\r// comment\n0,500\n[HitObjects]\n\r\r// comment\n1,2,3,1,0");
     check("[Events]\n\n \n\t// comment\n");
     check("[HitObjects]\n0,2,3,3,0\r,");
     check("[HitObjects]\n1,2,3,2,0,B|1:2\v|3:4,1,10");
 }
 
-PPPP_TEST(slider_tails) {
+TEST_CASE("slider tails") {
     static const char* const tails[] = {
         "B|1:2,1,10",
         "B|1:2,1",
@@ -124,11 +124,12 @@ PPPP_TEST(slider_tails) {
     }
     {
         const Beatmap m = parse_str("[HitObjects]\n1,2,3,2,0,L|1:2,1,100,0|0,0:0|0:0,0:0:0:0:a,b\n");
-        CHECK(m.hit_objects.size() == 1 && m.hit_objects[0].hit_sample == nonstd::string_view("0:0:0:0:a"));
+        CHECK_UNARY(m.hit_objects.size() == 1 &&
+                    m.hit_objects[0].hit_sample == nonstd::string_view("0:0:0:0:a"));
     }
 }
 
-PPPP_TEST(decimal_boundaries) {
+TEST_CASE("decimal boundaries") {
     static const char* const decimals[] = {"111.99999999999987", "999.9999999999999", "99999.9999999999999"};
     for (size_t i = 0; i < 3; i++) {
         const std::string decimal = decimals[i];
@@ -147,19 +148,19 @@ PPPP_TEST(decimal_boundaries) {
                                     "[HitObjects]\n256.5,192,1000.5,1,0\n1,2,2000.25,8,0,3000.75\n"
                                     "1,2,4000,2,0,B|1.5:2.5,1,2.5e2\n"
                                     "[Events]\n2,1e309,100\n2,1.25,9.75\n");
-        CHECK(m.title == nonstd::string_view("real") && m.beatmap_id == -1);
-        CHECK(m.ar == 5 && m.stats.malformed_lines == 4);
-        CHECK(m.timing_points.size() == 2 &&
-              m.timing_points[1].beat_length != m.timing_points[1].beat_length);
+        CHECK_UNARY(m.title == nonstd::string_view("real") && m.beatmap_id == -1);
+        CHECK_UNARY(m.ar == 5 && m.stats.malformed_lines == 4);
+        CHECK_UNARY(m.timing_points.size() == 2 &&
+                    m.timing_points[1].beat_length != m.timing_points[1].beat_length);
         CHECK(!m.timing_points[1].uninherited);
-        CHECK(m.hit_objects.size() == 3 && m.hit_objects[0].x == 256);
-        CHECK(m.hit_objects[0].time == 1000.5 && m.hit_objects[1].end_time == 3000.75);
-        CHECK(m.sliders[0].length == 250 && m.slider_points[0].x == 1);
-        CHECK(m.breaks.size() == 1 && m.breaks[0].start == 1.25 && m.breaks[0].end == 9.75);
+        CHECK_UNARY(m.hit_objects.size() == 3 && m.hit_objects[0].x == 256);
+        CHECK_UNARY(m.hit_objects[0].time == 1000.5 && m.hit_objects[1].end_time == 3000.75);
+        CHECK_UNARY(m.sliders[0].length == 250 && m.slider_points[0].x == 1);
+        CHECK_UNARY(m.breaks.size() == 1 && m.breaks[0].start == 1.25 && m.breaks[0].end == 9.75);
     }
 }
 
-PPPP_TEST(truncated_inputs) {
+TEST_CASE("truncated inputs") {
     // Long digit runs and every truncation point, including EOF without LF.
     const std::string lines[] = {
         "[HitObjects]\n1,2,3,2,0,B|" + std::string(150, '9'),
@@ -190,7 +191,7 @@ PPPP_TEST(truncated_inputs) {
 
 // A map the target client refuses to load fails the parse with Unloadable and the
 // line that made it unloadable, so the adapter can map it to a parse error.
-PPPP_TEST(unloadable_map_reports_the_line) {
+TEST_CASE("an unloadable map reports the line") {
     const std::string input = "osu file format vx\n[TimingPoints]\n0,500\n[HitObjects]\n64,64,100,1,0\n";
     Parser parser;
     CHECK(!parser.parse(input.data(), input.size(), lazer_options()));
@@ -200,5 +201,3 @@ PPPP_TEST(unloadable_map_reports_the_line) {
     const std::string recovery = "[HitObjects]\n1,2,3,1,0\n";
     CHECK(parser.parse(recovery.data(), recovery.size(), lazer_options()));
 }
-
-PPPP_TEST_MAIN()

@@ -6,7 +6,7 @@
 
 #include <fosu/parser.h>
 
-#include "harness.h"
+#include <doctest.h>
 
 inline fosu::Beatmap& require_parse(fosu::Beatmap* parsed) {
     REQUIRE(parsed != static_cast<fosu::Beatmap*>(0));

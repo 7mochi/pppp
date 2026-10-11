@@ -5,7 +5,7 @@
 
 using namespace fosu;
 
-PPPP_TEST(all_sections) {
+TEST_CASE("all sections") {
     const char* input = "\xEF\xBB\xBFosu file format v14\r\n"
                         "\r\n"
                         "[General]\r\n"
@@ -117,13 +117,13 @@ PPPP_TEST(all_sections) {
     CHECK(circ.y == 192);
     CHECK(circ.time == 11240);
     CHECK(circ.type == 1u);
-    CHECK(circ.hitsound == 0u);
+    CHECK_UNARY(circ.hitsound == 0u);
     CHECK(circ.hit_sample == nonstd::string_view("0:0:0:0:"));
     CHECK(bm.hit_objects[1].hitsound == 12u); // 2-digit hitsound
 
     const HitObject& sl = bm.hit_objects[2];
     CHECK(sl.is_slider());
-    CHECK(sl.slider != HitObject::kNoSlider);
+    CHECK_UNARY(sl.slider != HitObject::kNoSlider);
     const Slider& s = bm.sliders[sl.slider];
     CHECK(s.curve_type == CurveType::Bezier);
     CHECK(s.point_count == 2u);
@@ -150,11 +150,11 @@ PPPP_TEST(all_sections) {
     CHECK(bare.hitsound == 2u);
     CHECK(bare.hit_sample.empty());
 
-    CHECK(bm.stats.malformed_lines == 0u);
+    CHECK_UNARY(bm.stats.malformed_lines == 0u);
     CHECK(bm.stats.slow_path_lines == 6u);
 }
 
-PPPP_TEST(old_format) {
+TEST_CASE("the old format") {
     const Beatmap bm = parse_str("osu file format v3\n"
                                  "[General]\n"
                                  "AudioFilename: old.mp3\n"
@@ -179,7 +179,7 @@ PPPP_TEST(old_format) {
     CHECK(bm.hit_objects[0].hitsound == 4u);
 }
 
-PPPP_TEST(long_timing_offsets) {
+TEST_CASE("long timing offsets") {
     // Offsets past an 8-byte digit window (>27h marathons) must not vanish as malformed.
     const Beatmap bm = parse_str("osu file format v14\n"
                                  "[TimingPoints]\n"
@@ -189,10 +189,10 @@ PPPP_TEST(long_timing_offsets) {
     CHECK(bm.timing_points[0].time == 123456789.0);
     CHECK(bm.timing_points[1].time == 2123456789.0);
     CHECK(bm.timing_points[0].volume == 60);
-    CHECK(bm.stats.malformed_lines == 0u);
+    CHECK_UNARY(bm.stats.malformed_lines == 0u);
 }
 
-PPPP_TEST(mania_hold) {
+TEST_CASE("mania hold") {
     const Beatmap bm = parse_str("osu file format v14\n"
                                  "[General]\n"
                                  "Mode: 3\n"
@@ -205,7 +205,7 @@ PPPP_TEST(mania_hold) {
     CHECK(h.hit_sample == nonstd::string_view("0:0:0:0:"));
 }
 
-PPPP_TEST(aspire_edge_cases) {
+TEST_CASE("aspire edge cases") {
     const Beatmap bm = parse_str("osu file format v14\n"
                                  "[HitObjects]\n"
                                  "-48,192,1000,1,0\n" // negative x
@@ -218,9 +218,9 @@ PPPP_TEST(aspire_edge_cases) {
     CHECK(bm.hit_objects.size() == 6u);
     CHECK(bm.hit_objects[0].time == -1000);
     // Object positions clamp to [0, 512]; slider control points do not.
-    CHECK(bm.hit_objects[1].x == 0);
+    CHECK_UNARY(bm.hit_objects[1].x == 0);
     CHECK(bm.hit_objects[2].x == 512);
-    CHECK(bm.hit_objects[2].y == 0);
+    CHECK_UNARY(bm.hit_objects[2].y == 0);
     CHECK(bm.hit_objects[3].x == 512);
     CHECK(bm.hit_objects[4].x == 256); // truncated
     CHECK(bm.hit_objects[4].y == 112);
@@ -230,7 +230,7 @@ PPPP_TEST(aspire_edge_cases) {
     CHECK(bm.stats.malformed_lines == 1u);
 }
 
-PPPP_TEST(modern_curve_segments) {
+TEST_CASE("modern curve segments") {
     const Beatmap modern = parse_str("osu file format v128\n[HitObjects]\n"
                                      "10,20,100,2,0,B2|30.5:40.25|50:60|L|70.75:80.5,1,100\n");
     CHECK(modern.hit_objects.size() == 1u);
@@ -239,7 +239,7 @@ PPPP_TEST(modern_curve_segments) {
     const CurveSegment first = modern.slider_segments[slider.segment_begin];
     const CurveSegment second = modern.slider_segments[slider.segment_begin + 1];
     CHECK(first.type == CurveType::Bezier);
-    CHECK(first.has_degree && first.degree == 2u);
+    CHECK_UNARY(first.has_degree && first.degree == 2u);
     CHECK(first.point_count == 3u);
     CHECK(second.type == CurveType::Linear);
     CHECK(!second.has_degree);
@@ -254,7 +254,7 @@ PPPP_TEST(modern_curve_segments) {
     CHECK(degree_slider.segment_count == 1u);
     const CurveSegment degree_segment = degree.slider_segments[degree_slider.segment_begin];
     CHECK(degree_segment.type == CurveType::Bezier);
-    CHECK(degree_segment.has_degree && degree_segment.degree == 2u);
+    CHECK_UNARY(degree_segment.has_degree && degree_segment.degree == 2u);
     CHECK(degree_segment.point_count == 3u);
 
     const Beatmap coordinates = parse_str("osu file format v128\n[HitObjects]\n"
@@ -265,12 +265,12 @@ PPPP_TEST(modern_curve_segments) {
     const Beatmap legacy = parse_str("osu file format v14\n[HitObjects]\n"
                                      "10,20,100,2,0,B|30.5:40.25,1,100\n");
     const Slider& legacy_slider = legacy.sliders[legacy.hit_objects[0].slider];
-    CHECK(legacy_slider.segment_count == 0u);
+    CHECK_UNARY(legacy_slider.segment_count == 0u);
     CHECK(legacy.slider_points[legacy_slider.point_begin].x == 30.0f);
     CHECK(legacy.slider_points[legacy_slider.point_begin].y == 40.0f);
 }
 
-PPPP_TEST(malformed) {
+TEST_CASE("malformed input") {
     const Beatmap bm = parse_str("osu file format v14\n"
                                  "[HitObjects]\n"
                                  "\n"
@@ -285,7 +285,7 @@ PPPP_TEST(malformed) {
     CHECK(bm.stats.malformed_lines == 5u);
 }
 
-PPPP_TEST(invalid_byte_in_hitobjects) {
+TEST_CASE("an invalid byte in hit objects") {
     static const char* const records[] = {
         "256,192,100,1,0,0:0:0:0:",
         "256,192,100,2,0,B|100:100|200:200,1,100",
@@ -299,50 +299,62 @@ PPPP_TEST(invalid_byte_in_hitobjects) {
             damaged.insert(position, 1, '\x01');
             const Beatmap map = parse_str("osu file format v14\n[HitObjects]\n" + damaged +
                                           "\n300,100,300,1,0\n[Metadata]\nTitle:sentinel\n");
-            CHECK_MSG(!map.hit_objects.empty(), damaged.c_str());
+            INFO(damaged);
+            CHECK(!map.hit_objects.empty());
             if (!map.hit_objects.empty()) {
-                CHECK_MSG(map.hit_objects[map.hit_objects.size() - 1].time == 300, damaged.c_str());
+                INFO(damaged);
+                CHECK(map.hit_objects[map.hit_objects.size() - 1].time == 300);
             }
-            CHECK_MSG(map.title == nonstd::string_view("sentinel"), damaged.c_str());
+            INFO(damaged);
+            CHECK(map.title == nonstd::string_view("sentinel"));
             if (map.hit_objects.size() == 1) {
-                CHECK_MSG(map.stats.malformed_lines == 1u, damaged.c_str());
+                INFO(damaged);
+                CHECK(map.stats.malformed_lines == 1u);
             }
             size_t required_end = 0;
             for (int field = 0; field < 5; ++field) {
                 required_end = record.find(',', required_end) + 1;
             }
             if (position < required_end) {
-                CHECK_MSG(map.hit_objects.size() == 1u, damaged.c_str());
-                CHECK_MSG(map.stats.malformed_lines == 1u, damaged.c_str());
+                INFO(damaged);
+                CHECK(map.hit_objects.size() == 1u);
+                INFO(damaged);
+                CHECK(map.stats.malformed_lines == 1u);
             }
         }
     }
 }
 
-PPPP_TEST(invalid_byte_in_timing_points) {
+TEST_CASE("an invalid byte in timing points") {
     const std::string timing = "100,500,4,2,1,60,1,0";
     for (size_t position = 0; position <= timing.size(); ++position) {
         std::string damaged(timing);
         damaged.insert(position, 1, '\x01');
         const Beatmap map = parse_str("osu file format v14\n[TimingPoints]\n" + damaged +
                                       "\n200,500,4,2,1,60,1,0\n[Metadata]\nTitle:sentinel\n");
-        CHECK_MSG(!map.timing_points.empty(), damaged.c_str());
+        INFO(damaged);
+        CHECK(!map.timing_points.empty());
         if (!map.timing_points.empty()) {
-            CHECK_MSG(map.timing_points[map.timing_points.size() - 1].time == 200, damaged.c_str());
+            INFO(damaged);
+            CHECK(map.timing_points[map.timing_points.size() - 1].time == 200);
         }
-        CHECK_MSG(map.title == nonstd::string_view("sentinel"), damaged.c_str());
+        INFO(damaged);
+        CHECK(map.title == nonstd::string_view("sentinel"));
         if (map.timing_points.size() == 1) {
-            CHECK_MSG(map.stats.malformed_lines == 1u, damaged.c_str());
+            INFO(damaged);
+            CHECK(map.stats.malformed_lines == 1u);
         }
         const size_t required_end = timing.find(',', timing.find(',') + 1) + 1;
         if (position < required_end) {
-            CHECK_MSG(map.timing_points.size() == 1u, damaged.c_str());
-            CHECK_MSG(map.stats.malformed_lines == 1u, damaged.c_str());
+            INFO(damaged);
+            CHECK(map.timing_points.size() == 1u);
+            INFO(damaged);
+            CHECK(map.stats.malformed_lines == 1u);
         }
     }
 }
 
-PPPP_TEST(invalid_byte_in_other_sections) {
+TEST_CASE("an invalid byte in other sections") {
     const Beatmap map = parse_str("osu file format v14\n"
                                   "[General]\nMode:\x01\nMode:0\n"
                                   "[Editor]\nGridSize:3\x01\nGridSize:32\n"
@@ -352,7 +364,7 @@ PPPP_TEST(invalid_byte_in_other_sections) {
                                   "[Metadata]\nTitle:a\x01"
                                   "b\nBeatmapID:1\x01\nBeatmapID:42\n"
                                   "[HitObjects]\n1,2,100,1,0\n");
-    CHECK(map.mode == 0);
+    CHECK_UNARY(map.mode == 0);
     CHECK(map.grid_size == 32);
     CHECK(map.slider_multiplier == 1.4);
     CHECK(map.breaks.size() == 1u);
@@ -365,7 +377,7 @@ PPPP_TEST(invalid_byte_in_other_sections) {
     CHECK(map.stats.malformed_lines == 6u);
 }
 
-PPPP_TEST(bracketed_records_do_not_change_section) {
+TEST_CASE("bracketed records do not change section") {
     const Beatmap bracketed = parse_str("osu file format v14\n[HitObjects]\n[256,192,100,1,0\n"
                                         "300,100,300,1,0\n[TimingPoints]\n[100,500,4,2,1,60,1,0\n"
                                         "200,500,4,2,1,60,1,0\n[Metadata]\nTitle:sentinel\n");
@@ -375,14 +387,14 @@ PPPP_TEST(bracketed_records_do_not_change_section) {
     CHECK(bracketed.title == nonstd::string_view("sentinel"));
 }
 
-PPPP_TEST(unknown_section_does_not_resume_hitobjects) {
+TEST_CASE("an unknown section does not resume hit objects") {
     const Beatmap unknown = parse_str("[HitObjects]\n1,2,100,1,0\n[Unknown]\n1,2,200,1,0\n"
                                       "[HitObjects]\n1,2,300,1,0\n");
     CHECK(unknown.hit_objects.size() == 2u);
-    CHECK(unknown.stats.malformed_lines == 0u);
+    CHECK_UNARY(unknown.stats.malformed_lines == 0u);
 }
 
-PPPP_TEST(line_endings) {
+TEST_CASE("line endings") {
     const std::string lines = "osu file format v14\n"
                               "[General]\nMode:0\n"
                               "[Editor]\nGridSize:32\n"
@@ -409,7 +421,7 @@ PPPP_TEST(line_endings) {
         CHECK(map.timing_points.size() == 1u);
         CHECK(map.combo_colours.size() == 1u);
         CHECK(map.hit_objects.size() == 1u);
-        CHECK(map.stats.malformed_lines == 0u);
+        CHECK_UNARY(map.stats.malformed_lines == 0u);
     }
 }
 
@@ -427,70 +439,70 @@ static void check_crlf_recovery(const char* header_and_first, size_t hit_objects
     CHECK(map.stats.malformed_lines == 1u);
 }
 
-PPPP_TEST(invalid_byte_before_header_cr) {
+TEST_CASE("an invalid byte before the header CR") {
     check_crlf_recovery("[HitObjects]\x01\r\n256,192,1000,1,0\r\n", 0, 4);
 }
 
-PPPP_TEST(invalid_byte_between_header_cr_lf) {
+TEST_CASE("an invalid byte between header CR and LF") {
     check_crlf_recovery("[HitObjects]\r\x01\n256,192,1000,1,0\r\n", 2, 2);
 }
 
-PPPP_TEST(invalid_byte_after_header_lf) {
+TEST_CASE("an invalid byte after the header LF") {
     check_crlf_recovery("[HitObjects]\r\n\x01"
                         "256,192,1000,1,0\r\n",
                         1, 2);
 }
 
-PPPP_TEST(invalid_byte_replaces_header_cr) {
+TEST_CASE("an invalid byte replaces header CR") {
     check_crlf_recovery("[HitObjects]\x01\n256,192,1000,1,0\r\n", 0, 4);
 }
 
-PPPP_TEST(invalid_byte_replaces_header_lf) {
+TEST_CASE("an invalid byte replaces header LF") {
     check_crlf_recovery("[HitObjects]\r\x01"
                         "256,192,1000,1,0\r\n",
                         1, 2);
 }
 
-PPPP_TEST(invalid_byte_before_hitobject_cr) {
+TEST_CASE("an invalid byte before a hit object CR") {
     check_crlf_recovery("[HitObjects]\r\n256,192,1000,1,0\x01\r\n", 1, 2);
 }
 
-PPPP_TEST(invalid_byte_between_hitobject_cr_lf) {
+TEST_CASE("an invalid byte between hit object CR and LF") {
     check_crlf_recovery("[HitObjects]\r\n256,192,1000,1,0\r\x01\n", 2, 2);
 }
 
-PPPP_TEST(invalid_byte_after_hitobject_lf) {
+TEST_CASE("an invalid byte after a hit object LF") {
     check_crlf_recovery("[HitObjects]\r\n256,192,1000,1,0\r\n\x01", 1, 2);
 }
 
-PPPP_TEST(invalid_byte_replaces_hitobject_cr) {
+TEST_CASE("an invalid byte replaces hit object CR") {
     check_crlf_recovery("[HitObjects]\r\n256,192,1000,1,0\x01\n", 1, 2);
 }
 
-PPPP_TEST(invalid_byte_replaces_hitobject_lf) {
+TEST_CASE("an invalid byte replaces hit object LF") {
     check_crlf_recovery("[HitObjects]\r\n256,192,1000,1,0\r\x01", 1, 2);
 }
 
-PPPP_TEST(omitted_sections_use_defaults) {
+TEST_CASE("omitted sections use defaults") {
     const Beatmap bm = parse_str("[Metadata]\nTitle:Only metadata\n");
     CHECK(bm.title == nonstd::string_view("Only metadata"));
     CHECK(bm.audio_filename.empty());
     CHECK(bm.sample_set == SampleSet::Normal);
     CHECK(bm.preview_time == -1);
-    CHECK(bm.grid_size == 0);
+    CHECK_UNARY(bm.grid_size == 0);
     CHECK(bm.hp == 5);
     CHECK(bm.cs == 5);
     CHECK(bm.od == 5);
     CHECK(bm.ar == 5);
-    CHECK(bm.background.empty() && bm.video.empty());
-    CHECK(bm.timing_points.empty() && bm.breaks.empty());
-    CHECK(bm.combo_colours.empty() && bm.hit_objects.empty());
-    CHECK(bm.sliders.empty() && bm.slider_points.empty());
+    CHECK_UNARY(bm.background.empty() && bm.video.empty());
+    CHECK_UNARY(bm.timing_points.empty() && bm.breaks.empty());
+    CHECK_UNARY(bm.combo_colours.empty() && bm.hit_objects.empty());
+    CHECK_UNARY(bm.sliders.empty() && bm.slider_points.empty());
     CHECK(bm.velocity_presets.size() == 3u);
-    CHECK(bm.velocity_presets[0] == 0.75);
+    CHECK_UNARY(bm.velocity_presets[0] == 0.75);
     CHECK(bm.velocity_presets[1] == 1);
     CHECK(bm.velocity_presets[2] == 1.5);
-    CHECK(bm.stats.malformed_lines == 0u);
+    CHECK_UNARY(bm.stats.malformed_lines == 0u);
 }
 
 static ParseOptions sections_only(fosu::u32 sections) {
@@ -499,7 +511,7 @@ static ParseOptions sections_only(fosu::u32 sections) {
     return options;
 }
 
-PPPP_TEST(difficulty_selection_skips_other_sections) {
+TEST_CASE("difficulty selection skips other sections") {
     const Beatmap bm =
         parse_str("[Metadata]\nTitle:Unrequested\n"
                   "[Difficulty]\nHPDrainRate:3\nCircleSize:4\nOverallDifficulty:7\nApproachRate:8\n"
@@ -512,11 +524,11 @@ PPPP_TEST(difficulty_selection_skips_other_sections) {
     CHECK(bm.od == 7);
     CHECK(bm.ar == 8);
     CHECK(bm.title.empty());
-    CHECK(bm.timing_points.empty() && bm.combo_colours.empty());
+    CHECK_UNARY(bm.timing_points.empty() && bm.combo_colours.empty());
     CHECK(bm.hit_objects.empty());
 }
 
-PPPP_TEST(metadata_and_difficulty_selection) {
+TEST_CASE("metadata and difficulty selection") {
     const Beatmap bm = parse_str("[General]\nAudioFilename:unrequested.mp3\n"
                                  "[Metadata]\nTitle:Selected metadata\nBeatmapID:42\n"
                                  "[Difficulty]\nOverallDifficulty:6\n"
@@ -530,12 +542,12 @@ PPPP_TEST(metadata_and_difficulty_selection) {
     CHECK(bm.hit_objects.empty());
 }
 
-PPPP_TEST(hitobject_selection_skips_preceding_sections) {
+TEST_CASE("hit object selection skips preceding sections") {
     const Beatmap bm = parse_str("[Metadata]\nTitle:Skipped metadata\n"
                                  "[TimingPoints]\n100,400\n"
                                  "[HitObjects]\n32,48,3000,1,2\n256,192,4000,8,0,5000\n",
                                  sections_only(kSectionHitObjects));
-    CHECK(bm.title.empty() && bm.timing_points.empty());
+    CHECK_UNARY(bm.title.empty() && bm.timing_points.empty());
     CHECK(bm.hit_objects.size() == 2u);
     CHECK(bm.hit_objects[0].x == 32);
     CHECK(bm.hit_objects[0].time == 3000);
@@ -544,7 +556,7 @@ PPPP_TEST(hitobject_selection_skips_preceding_sections) {
     CHECK(bm.hit_objects[1].end_time == 5000);
 }
 
-PPPP_TEST(selected_missing_section_uses_defaults) {
+TEST_CASE("a selected missing section uses defaults") {
     const Beatmap bm = parse_str("[Metadata]\nTitle:No difficulty section\n"
                                  "[HitObjects]\n96,64,6000,1,0\n",
                                  sections_only(kSectionDifficulty));
@@ -552,11 +564,11 @@ PPPP_TEST(selected_missing_section_uses_defaults) {
     CHECK(bm.cs == 5);
     CHECK(bm.od == 5);
     CHECK(bm.ar == 5);
-    CHECK(bm.title.empty() && bm.hit_objects.empty());
-    CHECK(bm.stats.malformed_lines == 0u);
+    CHECK_UNARY(bm.title.empty() && bm.hit_objects.empty());
+    CHECK_UNARY(bm.stats.malformed_lines == 0u);
 }
 
-PPPP_TEST(all_section_mask_matches_default) {
+TEST_CASE("the all-sections mask matches the default") {
     const std::string input = "[General]\nMode:3\n"
                               "[Metadata]\nTitle:Explicit all sections\n"
                               "[Events]\n2,100.25,200.75\n"
@@ -570,16 +582,16 @@ PPPP_TEST(all_section_mask_matches_default) {
         require_parse(default_parser.parse(input.data(), input.size(), lazer_options()));
     CHECK(explicit_mask.mode == default_mask.mode);
     CHECK(explicit_mask.title == default_mask.title);
-    CHECK(explicit_mask.breaks.size() == 1u && default_mask.breaks.size() == 1u);
+    CHECK_UNARY(explicit_mask.breaks.size() == 1u && default_mask.breaks.size() == 1u);
     CHECK(explicit_mask.breaks[0].end == default_mask.breaks[0].end);
     CHECK(explicit_mask.timing_points.size() == default_mask.timing_points.size());
-    CHECK(explicit_mask.hit_objects.size() == 1u && default_mask.hit_objects.size() == 1u);
+    CHECK_UNARY(explicit_mask.hit_objects.size() == 1u && default_mask.hit_objects.size() == 1u);
     CHECK(explicit_mask.hit_objects[0].end_time == default_mask.hit_objects[0].end_time);
     CHECK(explicit_mask.hit_objects[0].hit_sample == default_mask.hit_objects[0].hit_sample);
     CHECK(parse_str("[General]\nCountdown:DoubleSpeed\n").countdown == 3);
 }
 
-PPPP_TEST(exact_keys_and_event_aliases) {
+TEST_CASE("exact keys and event aliases") {
     const Beatmap map = parse_str("[General]\nCountdown:Normal,HalfSpeed\nSampleSet:Soft\n"
                                   "[Metadata]\nTitle:\tkept \nTitleUnicode : unicode\n"
                                   "TitleExtra:ignored\n Title:ignored\nTitle\t: final: title \n"
@@ -599,14 +611,14 @@ PPPP_TEST(exact_keys_and_event_aliases) {
     CHECK(map.stats.storyboard_lines == 1u);
 }
 
-PPPP_TEST(malformed_events) {
+TEST_CASE("malformed events") {
     const Beatmap map = parse_str("[Events]\n2,10,bad\nStoryboardLine\n");
     CHECK(map.breaks.empty());
     CHECK(map.stats.malformed_lines == 1u);
     CHECK(map.stats.storyboard_lines == 1u);
 }
 
-PPPP_TEST(long_event_lines) {
+TEST_CASE("long event lines") {
     static const size_t lengths[] = {63, 64, 65, 95, 96, 97, 200};
     static const char* const endings[] = {"", "\n", "\r\n"};
     for (size_t l = 0; l < 7; l++) {
@@ -623,7 +635,7 @@ PPPP_TEST(long_event_lines) {
     }
 }
 
-PPPP_TEST(timing_integer_widths) {
+TEST_CASE("timing integer widths") {
     static const long values[] = {9, 99, 999, 9999, 10000, 99999999, 2147483647L};
     for (size_t i = 0; i < 7; i++) {
         const std::string field = to_str(values[i]);
@@ -631,12 +643,12 @@ PPPP_TEST(timing_integer_widths) {
             "[TimingPoints]\n0,-100," + field + ",2," + field + "," + field + ",0," + field;
         const Beatmap map = parse_str(input);
         CHECK(map.timing_points.size() == 1u);
-        CHECK(map.stats.malformed_lines == 0u);
+        CHECK_UNARY(map.stats.malformed_lines == 0u);
         if (map.timing_points.size() != 1) {
             continue;
         }
         const TimingPoint& point = map.timing_points[0];
-        CHECK(point.time == 0.0);
+        CHECK_UNARY(point.time == 0.0);
         CHECK(point.beat_length == -100.0);
         CHECK(point.meter == values[i]);
         CHECK(point.sample_set == SampleSet::Soft);
@@ -647,7 +659,7 @@ PPPP_TEST(timing_integer_widths) {
     }
 }
 
-PPPP_TEST(timing_point_spellings) {
+TEST_CASE("timing point spellings") {
     // The general numeric rules (upstream compares its masked fast path against these).
     struct Case {
         const char* line;
@@ -668,19 +680,21 @@ PPPP_TEST(timing_point_spellings) {
     };
     for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
         const Beatmap map = parse_str(std::string("[TimingPoints]\n") + cases[i].line + "\n");
-        CHECK_MSG(map.timing_points.size() == (cases[i].accepted ? 1u : 0u), cases[i].line);
-        CHECK_MSG(map.stats.malformed_lines == (cases[i].accepted ? 0u : 1u), cases[i].line);
+        INFO(cases[i].line);
+        CHECK(map.timing_points.size() == (cases[i].accepted ? 1u : 0u));
+        INFO(cases[i].line);
+        CHECK(map.stats.malformed_lines == (cases[i].accepted ? 0u : 1u));
     }
     const Beatmap meter = parse_str("[TimingPoints]\n0,500,0meter,0,0,100,1,0\n0,500,0,0,0,100,1,0\n");
     CHECK(meter.timing_points.size() == 2u);
     CHECK(meter.timing_points[0].meter == 4);
-    CHECK(meter.timing_points[1].meter == 0);
+    CHECK_UNARY(meter.timing_points[1].meter == 0);
     const Beatmap nan = parse_str("[TimingPoints]\n0,NaN,4,0,0,100,0,0\n");
-    CHECK(nan.timing_points.size() == 1u &&
-          nan.timing_points[0].beat_length != nan.timing_points[0].beat_length);
+    CHECK_UNARY(nan.timing_points.size() == 1u &&
+                nan.timing_points[0].beat_length != nan.timing_points[0].beat_length);
 }
 
-PPPP_TEST(byte_scan_boundaries) {
+TEST_CASE("byte scan boundaries") {
     static const char delimiters[] = {',', ':', '\n', '\0'};
     for (size_t d = 0; d < 4; d++) {
         for (size_t alignment = 0; alignment < 32; alignment += 7) {
@@ -727,11 +741,11 @@ static void check_line_end_scan_boundaries(char ending) {
     }
 }
 
-PPPP_TEST(cr_scan_boundaries) { check_line_end_scan_boundaries('\r'); }
+TEST_CASE("CR scan boundaries") { check_line_end_scan_boundaries('\r'); }
 
-PPPP_TEST(lf_scan_boundaries) { check_line_end_scan_boundaries('\n'); }
+TEST_CASE("LF scan boundaries") { check_line_end_scan_boundaries('\n'); }
 
-PPPP_TEST(event_filename_boundaries) {
+TEST_CASE("event filename boundaries") {
     static const size_t timestamp_lengths[] = {0, 30, 31, 32, 64};
     static const size_t filename_lengths[] = {0, 1, 30, 31, 32, 63, 64, 96};
     static const char* const suffixes[] = {"", ",0,0", "\nVideo,0"};
@@ -748,7 +762,7 @@ PPPP_TEST(event_filename_boundaries) {
     }
 }
 
-PPPP_TEST(section_skip_boundaries) {
+TEST_CASE("section skip boundaries") {
     static const size_t paddings[] = {0, 30, 31, 32, 63, 64, 95};
     for (size_t i = 0; i < 7; i++) {
         Parser parser;
@@ -763,23 +777,27 @@ PPPP_TEST(section_skip_boundaries) {
     }
 }
 
-PPPP_TEST(enum_contracts) {
+TEST_CASE("enum contracts") {
     static const char* const names[] = {"None", "Normal", "Soft", "Drum"};
     for (int value = 0; value < 4; ++value) {
         const std::string spellings[] = {names[value], to_str(value), " +" + to_str(value) + " ",
                                          "0" + to_str(value)};
         for (size_t s = 0; s < 4; s++) {
             const Beatmap map = parse_str("[General]\nSampleSet:" + spellings[s] + "\n");
-            CHECK_MSG(map.stats.malformed_lines == 0u, spellings[s].c_str());
-            CHECK_MSG(map.sample_set == static_cast<SampleSet::Value>(value), spellings[s].c_str());
+            INFO(spellings[s]);
+            CHECK_UNARY(map.stats.malformed_lines == 0u);
+            INFO(spellings[s]);
+            CHECK(map.sample_set == static_cast<SampleSet::Value>(value));
         }
     }
     static const char* const invalid[] = {"-1", "4", "99", "2147483647", "Unknown", "Normal,Soft"};
     for (size_t i = 0; i < 6; i++) {
         const Beatmap map =
             parse_str(std::string("[General]\nSampleSet:Soft\nSampleSet:") + invalid[i] + "\n");
-        CHECK_MSG(map.sample_set == SampleSet::Soft, invalid[i]);
-        CHECK_MSG(map.stats.malformed_lines == 1u, invalid[i]);
+        INFO(invalid[i]);
+        CHECK(map.sample_set == SampleSet::Soft);
+        INFO(invalid[i]);
+        CHECK(map.stats.malformed_lines == 1u);
     }
     static const char* const invalid_points[] = {"-1", "4", "9", "99", "2147483647"};
     for (size_t i = 0; i < 5; i++) {
@@ -808,7 +826,7 @@ PPPP_TEST(enum_contracts) {
     }
 }
 
-PPPP_TEST(header_field_failures_preserve_values) {
+TEST_CASE("header field failures preserve values") {
     const Beatmap map = parse_str("[General]\nPreviewTime:17\nPreviewTime:2147483648\n"
                                   "Mode:3\nMode:4\nSampleSet:Soft\nSampleSet:Normal,Soft\n"
                                   "Countdown:Normal,HalfSpeed\nUseSkinSprites:1suffix\n"
@@ -836,7 +854,7 @@ PPPP_TEST(header_field_failures_preserve_values) {
     CHECK(missing_ar.stats.malformed_lines == 1u);
 }
 
-PPPP_TEST(repeated_section_bodies) {
+TEST_CASE("repeated section bodies") {
     const std::string text = "osu file format v14\n"
                              "[General]\nAudioFilename:first.mp3\n[Editor]\nGridSize:8\n"
                              "[Metadata]\nTitle:literal [Difficulty]\n[Difficulty]\nOverallDifficulty:7\n"
@@ -866,11 +884,11 @@ PPPP_TEST(repeated_section_bodies) {
         if (map.hit_objects.size() == 2) {
             CHECK(map.hit_objects[1].time == 6);
         }
-        CHECK(map.stats.malformed_lines == 0u);
+        CHECK_UNARY(map.stats.malformed_lines == 0u);
     }
 }
 
-PPPP_TEST(repeated_lazer_velocity_presets) {
+TEST_CASE("repeated lazer velocity presets") {
     const Beatmap map = parse_str("osu file format v128\n[Editor]\nVelocityPresets:1,2\n"
                                   "[Metadata]\nTitle:test\n[Editor]\nVelocityPresets:3,4,5,6,7\n");
     CHECK(map.velocity_presets.size() == 5u);
@@ -879,10 +897,10 @@ PPPP_TEST(repeated_lazer_velocity_presets) {
     CHECK(map.velocity_presets[2] == 5);
     CHECK(map.velocity_presets[3] == 6);
     CHECK(map.velocity_presets[4] == 7);
-    CHECK(map.stats.malformed_lines == 0u);
+    CHECK_UNARY(map.stats.malformed_lines == 0u);
 }
 
-PPPP_TEST(combo_colour_domain) {
+TEST_CASE("the combo colour domain") {
     const Beatmap map = parse_str("[Colours]\nCombo1:1,2,3\nCombo0:4,5,6\nCombo9:7,8,9\n"
                                   "Combo:10,11,12\nCombo1suffix:13,14,15\nCombo-1:16,17,18\n"
                                   "Combo+8:19,20,21\nCombo01:22,23,24\nSliderBorder:25,26,27\n");
@@ -890,7 +908,7 @@ PPPP_TEST(combo_colour_domain) {
     CHECK(map.combo_colours[0] == 0x010203u);
     CHECK(map.combo_colours[1] == 0x131415u);
     CHECK(map.combo_colours[2] == 0x161718u);
-    CHECK(map.stats.malformed_lines == 0u);
+    CHECK_UNARY(map.stats.malformed_lines == 0u);
 
     const Beatmap malformed = parse_str("[Colours]\nCombo1:256,0,0\nCombo2:-1,0,0\nCombo3:1,2,3junk\n"
                                         "Combo4:1,2\nCombo5:1,2,3,4,5\nSliderBorder:no colour\n"
@@ -901,7 +919,7 @@ PPPP_TEST(combo_colour_domain) {
     CHECK(malformed.stats.malformed_lines == 6u);
 }
 
-PPPP_TEST(legacy_rules) {
+TEST_CASE("legacy rules") {
     const Beatmap late_mode =
         parse_str("[Difficulty]\nCircleSize:18\nOverallDifficulty:20\nApproachRate:bad\n"
                   "[General]\nMode:0\n[General]\nMode:3\n");
@@ -928,9 +946,9 @@ PPPP_TEST(legacy_rules) {
     CHECK(map.cs == 18);
     CHECK(map.ar == double(9.3f));
     CHECK(map.slider_multiplier == 3.6);
-    CHECK(map.slider_tick_rate == 0.5);
-    CHECK(map.distance_spacing == 0);
-    CHECK(map.timeline_zoom == 0);
+    CHECK_UNARY(map.slider_tick_rate == 0.5);
+    CHECK_UNARY(map.distance_spacing == 0);
+    CHECK_UNARY(map.timeline_zoom == 0);
     CHECK(map.beat_divisor == 64);
     CHECK(map.preview_time == 124);
     CHECK(map.timing_points[0].time == 24);
@@ -948,7 +966,7 @@ PPPP_TEST(legacy_rules) {
     CHECK(objects[3].x == 70); // Equal timestamps preserve input order.
     CHECK(objects[4].x == 90);
     CHECK(objects[3].combo_skip == 3);
-    CHECK(objects[4].combo_skip == 0);
+    CHECK_UNARY(objects[4].combo_skip == 0);
     CHECK(!objects[4].new_combo);
     CHECK(objects[5].new_combo); // First source object and first after break.
     CHECK(!objects[6].new_combo);
@@ -961,5 +979,3 @@ PPPP_TEST(legacy_rules) {
     CHECK(breaks.hit_objects[2].new_combo); // Earlier breaks cannot move backward.
     CHECK(breaks.hit_objects[3].new_combo);
 }
-
-PPPP_TEST_MAIN()

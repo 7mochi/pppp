@@ -65,7 +65,7 @@ namespace {
     }
 } // namespace
 
-PPPP_TEST(slider_paths_declared_length_trims_or_extends_the_path) {
+TEST_CASE("the declared length trims or extends the path") {
     const Path trimmed = path(beatmap("10,20,1000,2,0,L|110:20,2,50\n"));
     CHECK(trimmed.distance == 50);
     CHECK(trimmed.points.back() == PathPoint::make(50, 0));
@@ -74,7 +74,7 @@ PPPP_TEST(slider_paths_declared_length_trims_or_extends_the_path) {
     CHECK(extended.points.back() == PathPoint::make(150, 0));
 }
 
-PPPP_TEST(slider_paths_each_curve_type_honours_the_declared_length) {
+TEST_CASE("each curve type honours the declared length") {
     static const char* const curves[] = {"B|110:120|210:20", "P|110:120|210:20", "C|110:120|210:20"};
     for (size_t i = 0; i < 3; i++) {
         const std::string input = beatmap(std::string("10,20,1000,2,0,") + curves[i] + ",2,200\n");
@@ -83,7 +83,7 @@ PPPP_TEST(slider_paths_each_curve_type_honours_the_declared_length) {
 }
 
 // A path only extends along a final segment with a direction.
-PPPP_TEST(slider_paths_repeated_end_point_prevents_extension) {
+TEST_CASE("a repeated end point prevents extension") {
     CHECK(path(beatmap("10,20,1000,2,0,L|110:20|110:20,2,150\n")).distance == 100);
     // lazer's duplicate-last-position-slider.osu.
     CHECK(path(beatmap("261,171,1000,2,0,B|262:171|262:171|262:171,1,2\n")).distance == 1);
@@ -91,23 +91,23 @@ PPPP_TEST(slider_paths_repeated_end_point_prevents_extension) {
 
 // A repeated last point ends a Bezier segment instead, so the path still
 // extends along the curve's final direction.
-PPPP_TEST(slider_paths_repeated_bezier_end_point_still_extends) {
+TEST_CASE("a repeated bezier end point still extends") {
     CHECK(path_as("B|100:100|200:0|200:0,1,500").distance == 500);
 }
 
-PPPP_TEST(slider_paths_point_at_the_head_makes_a_zero_length_path) {
-    CHECK(path(beatmap("10,20,1000,2,0,B|10:20,2,100\n")).distance == 0);
+TEST_CASE("a point at the head makes a zero length path") {
+    CHECK_UNARY(path(beatmap("10,20,1000,2,0,B|10:20,2,100\n")).distance == 0);
 }
 
 // A repeated point ends one Bezier segment and starts the next; repeating it
 // again changes nothing.
-PPPP_TEST(slider_paths_repeated_point_splits_bezier_segments) {
+TEST_CASE("a repeated point splits bezier segments") {
     CHECK(path_as("B|100:0|100:0|100:100,1,0") == path_as("L|100:0|100:100,1,0"));
     CHECK(path_as("B|1:1|2:2|3:3|3:3|3:3|3:3|4:4,2,200") == path_as("B|1:1|2:2|3:3|3:3|4:4,2,200"));
 }
 
 // A perfect curve needs exactly three points that are not collinear.
-PPPP_TEST(slider_paths_perfect_curve_falls_back_for_unusable_points) {
+TEST_CASE("the perfect curve falls back for unusable points") {
     CHECK(path_as("P|100:100,1,0") == path_as("L|100:100,1,0"));
     CHECK(path_as("P|100:0|200:0,1,0") == path_as("L|100:0|200:0,1,0"));
     CHECK(path_as("P|100:100|200:0|300:100,1,0") == path_as("B|100:100|200:0|300:100,1,0"));
@@ -120,7 +120,7 @@ PPPP_TEST(slider_paths_perfect_curve_falls_back_for_unusable_points) {
     CHECK(nearly.distance == 200);
 }
 
-PPPP_TEST(slider_paths_perfect_curve_follows_a_circular_arc) {
+TEST_CASE("the perfect curve follows a circular arc") {
     const Path arc = path_as("P|100:100|200:0,1,0");
     // A semicircle of radius 100 approximated by chords.
     CHECK(std::fabs(arc.distance - 314.05381774902344) <= 1e-3);
@@ -129,7 +129,7 @@ PPPP_TEST(slider_paths_perfect_curve_follows_a_circular_arc) {
 }
 
 // lazer's catmull-duplicate-initial-controlpoint.osu.
-PPPP_TEST(slider_paths_catmull_point_at_the_head_is_merged) {
+TEST_CASE("a catmull point at the head is merged") {
     CHECK(path(beatmap("200,304,1000,2,0,C|200:304|288:304|288:208|352:208,1,260\n")) ==
           path(beatmap("200,304,1000,2,0,C|288:304|288:208|352:208,1,260\n")));
 }
@@ -137,7 +137,7 @@ PPPP_TEST(slider_paths_catmull_point_at_the_head_is_merged) {
 // lazer's adjacent-catmull-segments.osu. Stable-format maps keep one Catmull
 // curve through the repeated points. Lazer-format maps split there, and a
 // two-point Catmull segment is straight.
-PPPP_TEST(slider_paths_repeated_catmull_points_split_only_in_lazer_format) {
+TEST_CASE("repeated catmull points split only in lazer format") {
     const std::string slider = "200,304,1000,2,0,C|288:304|288:304|288:208|288:208|352:208,1,0\n";
     const Path lazer = path(beatmap(slider, 128), 0, Client::Lazer);
     CHECK(std::fabs(lazer.distance - (88 + 96 + 64)) <= 1e-3);
@@ -148,7 +148,7 @@ PPPP_TEST(slider_paths_repeated_catmull_points_split_only_in_lazer_format) {
 
 // lazer's multi-segment-slider.osu: a letter starts a segment at the
 // preceding point.
-PPPP_TEST(slider_paths_lazer_format_letters_start_new_segments) {
+TEST_CASE("lazer format letters start new segments") {
     const std::string input =
         beatmap("63,301,1000,2,0,P|224:57|B|439:298|131:316|322:169|155:194,1,1040\n", 128);
     const Beatmap map = parse_str(input, path_options(Client::Lazer));
@@ -168,7 +168,7 @@ PPPP_TEST(slider_paths_lazer_format_letters_start_new_segments) {
 // Before v128, lazer also starts a segment at each letter, then applies the
 // legacy rules to each segment, ending at the next one's first point. stable
 // gives the whole slider the last type instead; see test_clients.
-PPPP_TEST(slider_paths_lazer_letters_start_legacy_segments) {
+TEST_CASE("lazer letters start legacy segments") {
     CHECK(lazer_path_as("L|100:0|B|100:100|0:100,1,0").points == points4(0, 0, 100, 0, 100, 100, 0, 100));
     // A perfect curve needs exactly three points, counting that end point,
     // and draws a line through collinear ones.
@@ -189,7 +189,7 @@ PPPP_TEST(slider_paths_lazer_letters_start_legacy_segments) {
           1e-3);
 }
 
-PPPP_TEST(slider_paths_bspline_degree_shapes_the_curve) {
+TEST_CASE("the bspline degree shapes the curve") {
     // Degree 1 joins the control points with straight lines.
     const Path linear = path_as("B1|100:0|200:50|300:0,1,0", 128);
     CHECK(linear.points == points4(0, 0, 100, 0, 200, 50, 300, 0));
@@ -202,11 +202,11 @@ PPPP_TEST(slider_paths_bspline_degree_shapes_the_curve) {
     CHECK(std::fabs(distant.points.back().y - 11.9145603) <= 1e-3);
 }
 
-PPPP_TEST(slider_paths_segments_of_different_types_join) {
+TEST_CASE("segments of different types join") {
     CHECK(path_as("L|100:0|B3|100:100|0:100,1,300", 128).points == points4(0, 0, 100, 0, 100, 100, 0, 100));
 }
 
-PPPP_TEST(slider_paths_position_query_clamps_and_interpolates) {
+TEST_CASE("the position query clamps and interpolates") {
     const Beatmap map = parse_str(beatmap("10,20,1000,2,0,L|110:20,1,100\n"), path_options(Client::Stable));
     const SliderPath& slider_path = map.slider_paths[0];
     CHECK(slider_position_at(slider_path, 0.5) == PathPoint::make(50, 0));

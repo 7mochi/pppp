@@ -14,7 +14,7 @@ static bool padded(const std::string& text, FileBuffer& buffer) {
     return make_padded(nonstd::string_view(text.data(), text.size()), buffer);
 }
 
-PPPP_TEST(mods_and_derived_options) {
+TEST_CASE("mods and derived options") {
     {
         Parser parser;
         FileBuffer input;
@@ -43,7 +43,7 @@ PPPP_TEST(mods_and_derived_options) {
         CHECK(map.stacking[0].stack_height == 1);
         CHECK(map.hit_objects[0].x < 100);
         CHECK(map.hit_objects[0].raw_position(map.stacking[0].stack_offset).first == 100);
-        CHECK(map.raw_positions.size() == 2u && map.raw_positions[0].x == 100);
+        CHECK_UNARY(map.raw_positions.size() == 2u && map.raw_positions[0].x == 100);
         Arena* destination = arena_alloc();
         Result<Beatmap> copy = map.copy(*destination);
         CHECK(copy.ok());
@@ -90,7 +90,7 @@ PPPP_TEST(mods_and_derived_options) {
         ParseOptions options = lazer_options();
         options.calculate_slider_paths = true;
         const Beatmap& map = require_parse(parser.parse(input, options));
-        CHECK(map.hit_objects[0].end_time == 0);
+        CHECK_UNARY(map.hit_objects[0].end_time == 0);
         CHECK(map.slider_paths.size() == 1u);
         CHECK(map.slider_paths[0].distance() == 150);
         CHECK(slider_position_at(map.slider_paths[0], 0.5).x == 75);
@@ -111,23 +111,23 @@ PPPP_TEST(mods_and_derived_options) {
         ParseOptions options = lazer_options();
         options.calculate_slider_end_times = false;
         const Beatmap& skipped = require_parse(parser.parse(input.data(), input.size(), options));
-        CHECK(skipped.hit_objects[0].end_time == 0);
+        CHECK_UNARY(skipped.hit_objects[0].end_time == 0);
         Arena* destination = arena_alloc();
         CHECK(destination);
         Result<Beatmap> copy = skipped.copy(*destination);
         CHECK(copy.ok());
-        CHECK(require_parse(parser.parse(input.data(), input.size(), lazer_options()))
-                  .hit_objects[0]
-                  .end_time == 0);
+        CHECK_UNARY(require_parse(parser.parse(input.data(), input.size(), lazer_options()))
+                        .hit_objects[0]
+                        .end_time == 0);
         options.calculate_slider_end_times = true;
         const Beatmap& calculated = require_parse(parser.parse(input.data(), input.size(), options));
         CHECK(calculated.hit_objects[0].end_time > calculated.hit_objects[0].time);
-        CHECK(copy.value().hit_objects[0].end_time == 0);
+        CHECK_UNARY(copy.value().hit_objects[0].end_time == 0);
         arena_release(destination);
     }
 }
 
-PPPP_TEST(reparse_reuses_arena_memory) {
+TEST_CASE("a reparse reuses arena memory") {
     FileBuffer input;
     CHECK(padded("[HitObjects]\n16,32,100,1,0\n32,64,200,1,0\n", input));
     Parser parser;
@@ -141,7 +141,7 @@ PPPP_TEST(reparse_reuses_arena_memory) {
     CHECK(canonical(second) == canonical(require_parse(expected.parse(input, lazer_options()))));
 }
 
-PPPP_TEST(reparse_accepts_larger_arrays) {
+TEST_CASE("a reparse accepts larger arrays") {
     FileBuffer initial;
     CHECK(padded("[HitObjects]\n24,48,500,1,0\n", initial));
     std::string text = "[HitObjects]\n";
@@ -159,7 +159,7 @@ PPPP_TEST(reparse_accepts_larger_arrays) {
     CHECK(canonical(beatmap) == canonical(require_parse(expected.parse(replacement, lazer_options()))));
 }
 
-PPPP_TEST(reparse_clears_omitted_sections) {
+TEST_CASE("a reparse clears omitted sections") {
     FileBuffer initial;
     CHECK(padded("[General]\nAudioFilename:previous.mp3\nSampleSet:Soft\n"
                  "[Editor]\nGridSize:16\n"
@@ -174,24 +174,24 @@ PPPP_TEST(reparse_clears_omitted_sections) {
     CHECK(padded("[Metadata]\nTitle:Replacement title\n", replacement));
     Parser parser;
     const Beatmap& initial_map = require_parse(parser.parse(initial, lazer_options()));
-    CHECK(!initial_map.sliders.empty() && !initial_map.timing_points.empty());
+    CHECK_UNARY(!initial_map.sliders.empty() && !initial_map.timing_points.empty());
 
     const Beatmap& beatmap = require_parse(parser.parse(replacement, lazer_options()));
     CHECK(beatmap.title == nonstd::string_view("Replacement title"));
     CHECK(beatmap.beatmap_id == -1);
-    CHECK(beatmap.audio_filename.empty() && beatmap.background.empty());
+    CHECK_UNARY(beatmap.audio_filename.empty() && beatmap.background.empty());
     CHECK(beatmap.sample_set == SampleSet::Normal);
-    CHECK(beatmap.grid_size == 0);
+    CHECK_UNARY(beatmap.grid_size == 0);
     CHECK(beatmap.od == 5);
     CHECK(beatmap.ar == 5);
-    CHECK(beatmap.breaks.empty() && beatmap.combo_colours.empty());
-    CHECK(beatmap.timing_points.empty() && beatmap.hit_objects.empty());
-    CHECK(beatmap.sliders.empty() && beatmap.slider_points.empty());
+    CHECK_UNARY(beatmap.breaks.empty() && beatmap.combo_colours.empty());
+    CHECK_UNARY(beatmap.timing_points.empty() && beatmap.hit_objects.empty());
+    CHECK_UNARY(beatmap.sliders.empty() && beatmap.slider_points.empty());
     Parser expected;
     CHECK(canonical(beatmap) == canonical(require_parse(expected.parse(replacement, lazer_options()))));
 }
 
-PPPP_TEST(empty_reparse_resets_defaults) {
+TEST_CASE("an empty reparse resets defaults") {
     FileBuffer initial;
     CHECK(padded("[General]\nStackLeniency:0.2\nSampleSet:Drum\n"
                  "[Metadata]\nTitle:Before empty input\n"
@@ -204,17 +204,17 @@ PPPP_TEST(empty_reparse_resets_defaults) {
     CHECK(initial_map.stats.malformed_lines == 1u);
 
     const Beatmap& beatmap = require_parse(parser.parse(empty, lazer_options()));
-    CHECK(beatmap.title.empty() && beatmap.hit_objects.empty());
-    CHECK(beatmap.stats.malformed_lines == 0u);
-    CHECK(beatmap.stats.fast_path_lines == 0u);
-    CHECK(beatmap.stats.slow_path_lines == 0u);
+    CHECK_UNARY(beatmap.title.empty() && beatmap.hit_objects.empty());
+    CHECK_UNARY(beatmap.stats.malformed_lines == 0u);
+    CHECK_UNARY(beatmap.stats.fast_path_lines == 0u);
+    CHECK_UNARY(beatmap.stats.slow_path_lines == 0u);
     CHECK(beatmap.stack_leniency == double(0.7f));
     CHECK(beatmap.sample_set == SampleSet::Normal);
     Parser expected;
     CHECK(canonical(beatmap) == canonical(require_parse(expected.parse(empty, lazer_options()))));
 }
 
-PPPP_TEST(large_arena_arrays) {
+TEST_CASE("large arena arrays") {
     std::string circles = "[HitObjects]\n";
     std::string sliders = "[HitObjects]\n";
     std::string timing = "[TimingPoints]\n";
@@ -240,8 +240,8 @@ PPPP_TEST(large_arena_arrays) {
     Parser parser;
     const Beatmap& circles_map = require_parse(parser.parse(circle_input, lazer_options()));
     CHECK(circles_map.hit_objects.size() == 3000u);
-    CHECK(circles_map.sliders.empty() && circles_map.slider_points.empty());
-    CHECK(circles_map.hit_objects.back().slider == HitObject::kNoSlider);
+    CHECK_UNARY(circles_map.sliders.empty() && circles_map.slider_points.empty());
+    CHECK_UNARY(circles_map.hit_objects.back().slider == HitObject::kNoSlider);
     CHECK(circles_map.hit_objects.back().hit_sample.empty());
 
     const Beatmap& sliders_map = require_parse(parser.parse(slider_input, lazer_options()));
@@ -264,7 +264,7 @@ PPPP_TEST(large_arena_arrays) {
     CHECK(timing_map.hit_objects.empty());
 }
 
-PPPP_TEST(rejected_slider_points) {
+TEST_CASE("rejected slider points") {
     static const char* const cases[] = {
         "B|7:8|bad,1,10",      "B|7:8|9:10",           "B|7:8|9:10,bad,10",
         "B|7:8|9:10,1,131073", "B|7:8|9:10,1,10,,/:0", "B|7:8|9:10,1,10,,,/:0",
@@ -275,12 +275,18 @@ PPPP_TEST(rejected_slider_points) {
             padded(std::string("[HitObjects]\n1,2,3,2,0,") + cases[i] + "\n1,2,4,2,0,L|11:12,1,10\n", input));
         Parser parser;
         const Beatmap& beatmap = require_parse(parser.parse(input, lazer_options()));
-        CHECK_MSG(beatmap.stats.malformed_lines == 1u, cases[i]);
-        CHECK_MSG(beatmap.hit_objects.size() == 1u, cases[i]);
-        CHECK_MSG(beatmap.sliders.size() == 1u, cases[i]);
-        CHECK_MSG(beatmap.slider_points.size() == 1u, cases[i]);
-        CHECK_MSG(beatmap.sliders[0].point_begin == 0u, cases[i]);
-        CHECK_MSG(beatmap.slider_points[0].x == 11, cases[i]);
+        INFO(cases[i]);
+        CHECK(beatmap.stats.malformed_lines == 1u);
+        INFO(cases[i]);
+        CHECK(beatmap.hit_objects.size() == 1u);
+        INFO(cases[i]);
+        CHECK(beatmap.sliders.size() == 1u);
+        INFO(cases[i]);
+        CHECK(beatmap.slider_points.size() == 1u);
+        INFO(cases[i]);
+        CHECK_UNARY(beatmap.sliders[0].point_begin == 0u);
+        INFO(cases[i]);
+        CHECK(beatmap.slider_points[0].x == 11);
     }
     const Beatmap map = parse_str("osu file format v128\n[HitObjects]\n"
                                   "1,2,3,2,0,B|7:8|L|9:10,1,bad\n"
@@ -301,7 +307,7 @@ static bool canonical_detects(Beatmap& map, T& field, T replacement, const std::
     return detected;
 }
 
-PPPP_TEST(canonical_dump_covers_parsed_values) {
+TEST_CASE("the canonical dump covers parsed values") {
     Parser parser;
     ParseOptions options = lazer_options();
     options.calculate_slider_events = true;
@@ -325,7 +331,7 @@ PPPP_TEST(canonical_dump_covers_parsed_values) {
     CHECK(canonical_detects(map, map.stacking[0].stack_height, 42, original));
 }
 
-PPPP_TEST(option_combinations_on_reused_parser) {
+TEST_CASE("option combinations on a reused parser") {
     const std::string input = "osu file format v14\n[General]\nMode:0\n[Difficulty]\n"
                               "SliderMultiplier:1\nSliderTickRate:1\n[TimingPoints]\n0,500\n"
                               "[HitObjects]\n100,100,1000,1,0\n100,100,1100,2,0,"
@@ -350,7 +356,7 @@ PPPP_TEST(option_combinations_on_reused_parser) {
     end_times.mods = mods;
     const Beatmap& duration = require_parse(parser.parse(input.data(), input.size(), end_times));
     CHECK(duration.hit_objects[1].end_time == end_time);
-    CHECK(duration.slider_paths.empty() && duration.slider_events.empty());
+    CHECK_UNARY(duration.slider_paths.empty() && duration.slider_events.empty());
     CHECK(duration.stacking.empty());
     CHECK(canonical(duration) ==
           canonical(require_parse(fresh.parse(input.data(), input.size(), end_times))));
@@ -368,14 +374,14 @@ PPPP_TEST(option_combinations_on_reused_parser) {
           canonical(require_parse(fresh.parse(input.data(), input.size(), partial_options))));
 
     const Beatmap& raw = require_parse(parser.parse(input.data(), input.size(), lazer_options()));
-    CHECK(raw.slider_paths.empty() && raw.slider_events.empty());
+    CHECK_UNARY(raw.slider_paths.empty() && raw.slider_events.empty());
     CHECK(raw.stacking.empty());
-    CHECK(raw.hit_objects[1].end_time == 0);
+    CHECK_UNARY(raw.hit_objects[1].end_time == 0);
     CHECK(canonical(raw) ==
           canonical(require_parse(fresh.parse(input.data(), input.size(), lazer_options()))));
 }
 
-PPPP_TEST(event_budget_failure_and_reuse) {
+TEST_CASE("event budget failure and reuse") {
     const std::string oversized = "[Difficulty]\nSliderMultiplier:1\nSliderTickRate:8\n"
                                   "[TimingPoints]\n0,500\n[HitObjects]\n"
                                   "0,0,1000,2,0,L|100000:0,9000,100000\n";
@@ -392,7 +398,7 @@ PPPP_TEST(event_budget_failure_and_reuse) {
     CHECK(recovered.hit_objects.size() == 1u);
 }
 
-PPPP_TEST(tick_endpoint_exclusion) {
+TEST_CASE("tick endpoint exclusion") {
     struct Case {
         const char* length;
         size_t ticks;
@@ -407,16 +413,18 @@ PPPP_TEST(tick_endpoint_exclusion) {
                                               "0,0,1000,2,0,L|100:0,1,") +
                                   cases[i].length + "\n";
         const Beatmap& map = require_parse(parser.parse(input.data(), input.size(), options));
-        CHECK_MSG(map.slider_events.size() == 1u, cases[i].length);
+        INFO(cases[i].length);
+        CHECK(map.slider_events.size() == 1u);
         size_t ticks = 0;
         for (size_t e = 0; e < map.slider_events[0].size(); e++) {
             ticks += map.slider_events[0][e].type == SliderEventType::Tick;
         }
-        CHECK_MSG(ticks == cases[i].ticks, cases[i].length);
+        INFO(cases[i].length);
+        CHECK(ticks == cases[i].ticks);
     }
 }
 
-PPPP_TEST(multisegment_path_trim) {
+TEST_CASE("multisegment path trim") {
     const std::string input = "osu file format v128\n[HitObjects]\n"
                               "0,0,1000,2,0,L|100:0|L|100:100,1,50\n";
     ParseOptions options = lazer_options();
@@ -428,12 +436,12 @@ PPPP_TEST(multisegment_path_trim) {
     CHECK(map.slider_paths[0].distance() == 50);
     const PathPoint end = slider_position_at(map.slider_paths[0], 1);
     CHECK(end.x == 50);
-    CHECK(end.y == 0);
+    CHECK_UNARY(end.y == 0);
 }
 
-PPPP_TEST(copy_owns_all_data) {
+TEST_CASE("a copy owns all data") {
     Arena* program_arena = arena_alloc();
-    CHECK(program_arena != 0);
+    CHECK_UNARY(program_arena != 0);
     Beatmap owned;
     std::string expected;
     {
@@ -469,7 +477,7 @@ PPPP_TEST(copy_owns_all_data) {
     arena_release(program_arena);
 }
 
-PPPP_TEST(failed_parse_resets_and_parser_remains_reusable) {
+TEST_CASE("a failed parse resets and the parser remains reusable") {
     Parser parser;
     FileBuffer input;
     CHECK(padded("[Metadata]\nTitle:Before failure\n", input));
@@ -479,7 +487,7 @@ PPPP_TEST(failed_parse_resets_and_parser_remains_reusable) {
     CHECK(!failed);
     CHECK(parser.error().code == ParseErrorCode::InvalidOptions);
     const internal::ParserStorage storage = internal::parser_storage(parser);
-    CHECK(storage.input == 0);
+    CHECK_UNARY(storage.input == 0);
     CHECK(storage.result_arena != storage.scratch_arena);
     CHECK(arena_pos(storage.result_arena) == kArenaHeaderSize);
     CHECK(arena_pos(storage.scratch_arena) == kArenaHeaderSize);
@@ -488,7 +496,7 @@ PPPP_TEST(failed_parse_resets_and_parser_remains_reusable) {
     CHECK(recovered.title == nonstd::string_view("Before failure"));
 }
 
-PPPP_TEST(failed_copy_rewinds_destination) {
+TEST_CASE("a failed copy rewinds the destination") {
     std::string text = "[HitObjects]\n";
     for (size_t i = 0; i < 2000; ++i) {
         text += "1,2,3,1,0,1:2:3:4:sample.wav\n";
@@ -503,9 +511,9 @@ PPPP_TEST(failed_copy_rewinds_destination) {
     params.block_size = 4096;
     params.flags = 0;
     Arena* destination = arena_alloc(params);
-    CHECK(destination != 0);
+    CHECK_UNARY(destination != 0);
     fosu::u32* existing = arena_push_array<fosu::u32>(destination, 1);
-    CHECK(existing != 0);
+    CHECK_UNARY(existing != 0);
     *existing = 0x12345678;
     const size_t checkpoint = arena_pos(destination);
 
@@ -517,21 +525,21 @@ PPPP_TEST(failed_copy_rewinds_destination) {
     arena_release(destination);
 }
 
-PPPP_TEST(arena_interface) {
+TEST_CASE("the arena interface") {
     ArenaParams params;
     params.block_size = 4u << 10;
     params.flags = ArenaFlagChain;
     Arena* arena = arena_alloc(params);
-    CHECK(arena != 0);
-    CHECK(arena_push(arena, 1, kMaxArenaAlignment * 2) == 0);
+    CHECK_UNARY(arena != 0);
+    CHECK_UNARY(arena_push(arena, 1, kMaxArenaAlignment * 2) == 0);
     const size_t initial = arena_pos(arena);
     fosu::u32* first = arena_push_array<fosu::u32>(arena, 16);
-    CHECK(first != 0);
+    CHECK_UNARY(first != 0);
     size_t checkpoint;
     {
         const TempArena temp(arena);
         checkpoint = temp.position();
-        CHECK(arena_push(arena, 96u << 10, AlignmentOf<fosu::u64>::value) != 0);
+        CHECK_UNARY(arena_push(arena, 96u << 10, AlignmentOf<fosu::u64>::value) != 0);
         CHECK(arena->current != arena);
         // positions stay monotonic across chained blocks
         CHECK(arena_pos(arena) > checkpoint + (96u << 10));
@@ -546,17 +554,17 @@ PPPP_TEST(arena_interface) {
     CHECK(AlignmentOf<char>::value == 1);
     CHECK(AlignmentOf<fosu::u16>::value == 2);
     CHECK(AlignmentOf<fosu::u32>::value == 4);
-    CHECK(AlignmentOf<double>::value == sizeof(double) || AlignmentOf<double>::value == 4);
+    CHECK_UNARY(AlignmentOf<double>::value == sizeof(double) || AlignmentOf<double>::value == 4);
 }
 
-PPPP_TEST(default_arena_uses_reservation) {
+TEST_CASE("the default arena uses reservation") {
     Arena* arena = arena_alloc();
-    CHECK(arena != 0);
+    CHECK_UNARY(arena != 0);
     CHECK(arena->reserved > 0);
     CHECK(arena_pos(arena) == kArenaHeaderSize);
 
     fosu::u32* value = arena_push_array<fosu::u32>(arena, 4);
-    CHECK(value != 0);
+    CHECK_UNARY(value != 0);
     value[0] = 0x12345678u;
     value[3] = 0x9abcdef0u;
     const size_t checkpoint = arena_pos(arena);
@@ -565,7 +573,7 @@ PPPP_TEST(default_arena_uses_reservation) {
     {
         const TempArena temp(arena);
         CHECK(temp.position() == checkpoint);
-        CHECK(arena_push(arena, 64u << 10, AlignmentOf<fosu::u64>::value) != 0);
+        CHECK_UNARY(arena_push(arena, 64u << 10, AlignmentOf<fosu::u64>::value) != 0);
         CHECK(arena_pos(arena) > checkpoint);
         CHECK(arena->committed > committed_before);
     }
@@ -575,21 +583,21 @@ PPPP_TEST(default_arena_uses_reservation) {
     arena_release(arena);
 }
 
-PPPP_TEST(default_arena_falls_back_when_reserve_unavailable) {
+TEST_CASE("the default arena falls back when reserve is unavailable") {
     const size_t saved = internal::arena_reserve_limit();
     internal::arena_reserve_limit() = 0;
     Arena* arena = arena_alloc();
     internal::arena_reserve_limit() = saved;
-    CHECK(arena != 0);
-    CHECK(arena->reserved == 0);
+    CHECK_UNARY(arena != 0);
+    CHECK_UNARY(arena->reserved == 0);
 
     fosu::u32* value = arena_push_array<fosu::u32>(arena, 4);
-    CHECK(value != 0);
+    CHECK_UNARY(value != 0);
     value[0] = 0x0badf00du;
     const size_t checkpoint = arena_pos(arena);
     {
         const TempArena temp(arena);
-        CHECK(arena_push(arena, 96u << 10, AlignmentOf<fosu::u64>::value) != 0);
+        CHECK_UNARY(arena_push(arena, 96u << 10, AlignmentOf<fosu::u64>::value) != 0);
         CHECK(arena_pos(arena) > checkpoint);
     }
     CHECK(arena_pos(arena) == checkpoint);
@@ -599,7 +607,7 @@ PPPP_TEST(default_arena_falls_back_when_reserve_unavailable) {
     arena_release(arena);
 }
 
-PPPP_TEST(parse_falls_back_when_reserve_unavailable) {
+TEST_CASE("a parse falls back when reserve is unavailable") {
     const size_t saved = internal::arena_reserve_limit();
     internal::arena_reserve_limit() = 0;
     Parser parser;
@@ -612,12 +620,12 @@ PPPP_TEST(parse_falls_back_when_reserve_unavailable) {
     CHECK(map.sliders.size() == 1u);
 }
 
-PPPP_TEST(read_into_reuse) {
+TEST_CASE("read_into reuse") {
     const char* path = "fosu_read_into_test.osu";
     const std::string big(10000, 'A');
     const std::string little(100, 'B');
     std::FILE* file = std::fopen(path, "wb");
-    CHECK(file != 0);
+    CHECK_UNARY(file != 0);
     if (!file) {
         return;
     }
@@ -630,7 +638,7 @@ PPPP_TEST(read_into_reuse) {
     const size_t capacity = buffer.capacity;
 
     file = std::fopen(path, "wb");
-    CHECK(file != 0);
+    CHECK_UNARY(file != 0);
     if (!file) {
         return;
     }
@@ -639,16 +647,16 @@ PPPP_TEST(read_into_reuse) {
     CHECK(read_into(path, buffer));
     CHECK(buffer.data == allocation);
     CHECK(buffer.capacity == capacity);
-    CHECK(std::memcmp(buffer.data, little.data(), little.size()) == 0);
+    CHECK_UNARY(std::memcmp(buffer.data, little.data(), little.size()) == 0);
     std::remove(path);
 
     Parser parser;
     CHECK(!parser.parse_file("fosu_missing_file.osu"));
-    CHECK(parser.parse_file("fosu_missing_file.osu") == 0 &&
-          parser.error().code == ParseErrorCode::ReadFailed);
+    CHECK_UNARY(parser.parse_file("fosu_missing_file.osu") == 0 &&
+                parser.error().code == ParseErrorCode::ReadFailed);
 }
 
-PPPP_TEST(input_size_overflow) {
+TEST_CASE("input size overflow") {
     char byte = 0;
     Parser parser;
     const Beatmap* memory_result = parser.parse(&byte, std::numeric_limits<size_t>::max(), lazer_options());
@@ -658,5 +666,3 @@ PPPP_TEST(input_size_overflow) {
     options.sections = 1;
     CHECK(!parser.parse(&byte, 0, options));
 }
-
-PPPP_TEST_MAIN()

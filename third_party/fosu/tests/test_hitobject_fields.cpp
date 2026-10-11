@@ -8,7 +8,7 @@ static std::string slider_document(const std::string& slider) {
     return "osu file format v14\n[HitObjects]\n0,0,0,2,0," + slider + '\n';
 }
 
-PPPP_TEST(slider_points) {
+TEST_CASE("slider points") {
     struct Case {
         const char* points;
         float x;
@@ -36,12 +36,14 @@ PPPP_TEST(slider_points) {
     static const char* const malformed[] = {"|", "|1", "|1:", "|:2", "|bad:2", "|1:bad", "|131073:2"};
     for (size_t i = 0; i < 7; i++) {
         const Beatmap map = parse_str(slider_document("B" + std::string(malformed[i]) + ",1,10"));
-        CHECK_MSG(map.hit_objects.empty(), malformed[i]);
-        CHECK_MSG(map.stats.malformed_lines == 1u, malformed[i]);
+        INFO(malformed[i]);
+        CHECK(map.hit_objects.empty());
+        INFO(malformed[i]);
+        CHECK(map.stats.malformed_lines == 1u);
     }
 }
 
-PPPP_TEST(slider_pool_indices_after_rejected_record) {
+TEST_CASE("slider pool indices after a rejected record") {
     static const int versions[] = {14, 128};
     for (size_t v = 0; v < 2; v++) {
         const int version = versions[v];
@@ -61,8 +63,8 @@ PPPP_TEST(slider_pool_indices_after_rejected_record) {
         if (map.hit_objects.size() != 3 || map.sliders.size() != 2 || map.slider_points.size() != 2) {
             continue;
         }
-        CHECK(map.hit_objects[0].slider == HitObject::kNoSlider);
-        CHECK(map.hit_objects[1].slider == 0u);
+        CHECK_UNARY(map.hit_objects[0].slider == HitObject::kNoSlider);
+        CHECK_UNARY(map.hit_objects[1].slider == 0u);
         CHECK(map.hit_objects[2].slider == 1u);
         for (size_t i = 0; i < 2; ++i) {
             CHECK(map.sliders[i].point_begin == i);
@@ -77,7 +79,7 @@ PPPP_TEST(slider_pool_indices_after_rejected_record) {
     }
 }
 
-PPPP_TEST(slider_point_digit_widths) {
+TEST_CASE("slider point digit widths") {
     static const int first_xs[] = {1, 12, 123, 1234};
     static const int first_ys[] = {5, 56, 567, 5678};
     static const int second_xs[] = {9, 98, 987, 9876};
@@ -105,7 +107,7 @@ PPPP_TEST(slider_point_digit_widths) {
     }
 }
 
-PPPP_TEST(slider_point_pairs_resume_after_fallback) {
+TEST_CASE("slider point pairs resume after a fallback") {
     const std::string input =
         slider_document("B|123:456|789:123|12.5:7.5|123:456|789:123|123:45|678:90|1:2|3:4,1,10");
     static const float expected[9][2] = {
@@ -122,7 +124,7 @@ PPPP_TEST(slider_point_pairs_resume_after_fallback) {
     }
 }
 
-PPPP_TEST(slider_repeats_and_length) {
+TEST_CASE("slider repeats and length") {
     struct Case {
         const char* tail;
         fosu::i32 slides;
@@ -134,23 +136,28 @@ PPPP_TEST(slider_repeats_and_length) {
     };
     for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
         const Beatmap map = parse_str(slider_document("B|1:2" + std::string(cases[i].tail)));
-        CHECK_MSG(map.sliders.size() == 1u, cases[i].tail);
+        INFO(cases[i].tail);
+        CHECK(map.sliders.size() == 1u);
         if (map.sliders.empty()) {
             continue;
         }
-        CHECK_MSG(map.sliders[0].slides == cases[i].slides, cases[i].tail);
-        CHECK_MSG(map.sliders[0].length == cases[i].length, cases[i].tail);
+        INFO(cases[i].tail);
+        CHECK(map.sliders[0].slides == cases[i].slides);
+        INFO(cases[i].tail);
+        CHECK(map.sliders[0].length == cases[i].length);
     }
     static const char* const malformed[] = {"",          ",",          ",1,",        ",9001,10",
                                             ",1,131073", ",1,10,,/:0", ",1,10,,,/:0"};
     for (size_t i = 0; i < 7; i++) {
         const Beatmap map = parse_str(slider_document("B|1:2" + std::string(malformed[i])));
-        CHECK_MSG(map.hit_objects.empty(), malformed[i]);
-        CHECK_MSG(map.stats.malformed_lines == 1u, malformed[i]);
+        INFO(malformed[i]);
+        CHECK(map.hit_objects.empty());
+        INFO(malformed[i]);
+        CHECK(map.stats.malformed_lines == 1u);
     }
 }
 
-PPPP_TEST(slider_sounds) {
+TEST_CASE("slider sounds") {
     // Extra columns after the hit sample do not belong to the Slider or HitObject models.
     static const size_t sizes[] = {0, 21, 22, 23, 80};
     for (size_t i = 0; i < 5; i++) {
@@ -167,7 +174,7 @@ PPPP_TEST(slider_sounds) {
     }
 }
 
-PPPP_TEST(hitobject_details) {
+TEST_CASE("hit object details") {
     struct Case {
         fosu::u32 type;
         const char* text;
@@ -195,18 +202,26 @@ PPPP_TEST(hitobject_details) {
         const internal::HitObjectKind::Value kind = internal::classify_hitobject_kind(cases[i].type);
         if (kind == internal::HitObjectKind::Circle) {
             internal::CircleDetails details;
-            CHECK_MSG(internal::parse_circle_details(begin, end, details), cases[i].text);
-            CHECK_MSG(details.hit_sample == nonstd::string_view(cases[i].sample), cases[i].text);
+            INFO(cases[i].text);
+            CHECK(internal::parse_circle_details(begin, end, details));
+            INFO(cases[i].text);
+            CHECK(details.hit_sample == nonstd::string_view(cases[i].sample));
         } else if (kind == internal::HitObjectKind::Spinner) {
             internal::TimedHitObjectDetails details = {0, nonstd::string_view()};
-            CHECK_MSG(internal::parse_spinner_details(begin, end, details), cases[i].text);
-            CHECK_MSG(details.end_time == cases[i].end_time, cases[i].text);
-            CHECK_MSG(details.hit_sample == nonstd::string_view(cases[i].sample), cases[i].text);
+            INFO(cases[i].text);
+            CHECK(internal::parse_spinner_details(begin, end, details));
+            INFO(cases[i].text);
+            CHECK(details.end_time == cases[i].end_time);
+            INFO(cases[i].text);
+            CHECK(details.hit_sample == nonstd::string_view(cases[i].sample));
         } else {
             internal::TimedHitObjectDetails details = {0, nonstd::string_view()};
-            CHECK_MSG(internal::parse_hold_details(10, begin, end, details), cases[i].text);
-            CHECK_MSG(details.end_time == cases[i].end_time, cases[i].text);
-            CHECK_MSG(details.hit_sample == nonstd::string_view(cases[i].sample), cases[i].text);
+            INFO(cases[i].text);
+            CHECK(internal::parse_hold_details(10, begin, end, details));
+            INFO(cases[i].text);
+            CHECK(details.end_time == cases[i].end_time);
+            INFO(cases[i].text);
+            CHECK(details.hit_sample == nonstd::string_view(cases[i].sample));
         }
     }
     static const char* const bad_spinners[] = {"", ",", ",bad", ",12:0:0", ",12,/:0"};
@@ -214,17 +229,15 @@ PPPP_TEST(hitobject_details) {
         FileBuffer input;
         CHECK(make_padded(nonstd::string_view(bad_spinners[i]), input));
         internal::TimedHitObjectDetails details = {0, nonstd::string_view()};
-        CHECK_MSG(!internal::parse_spinner_details(input.data, input.data + input.size, details),
-                  bad_spinners[i]);
+        INFO(bad_spinners[i]);
+        CHECK(!internal::parse_spinner_details(input.data, input.data + input.size, details));
     }
     static const char* const bad_holds[] = {",2147483648:0:0:0:0:", ",12x:0:0:0:0:"};
     for (size_t i = 0; i < 2; i++) {
         FileBuffer input;
         CHECK(make_padded(nonstd::string_view(bad_holds[i]), input));
         internal::TimedHitObjectDetails details = {0, nonstd::string_view()};
-        CHECK_MSG(!internal::parse_hold_details(10, input.data, input.data + input.size, details),
-                  bad_holds[i]);
+        INFO(bad_holds[i]);
+        CHECK(!internal::parse_hold_details(10, input.data, input.data + input.size, details));
     }
 }
-
-PPPP_TEST_MAIN()

@@ -40,7 +40,7 @@ namespace {
     }
 } // namespace
 
-PPPP_TEST(clients_version_line_position) {
+TEST_CASE("where each client reads the version line") {
     static const char* const starts[] = {" \r\nosu file format v9\r\n", "\nosu file format v9\n",
                                          " osu file format v9\n"};
     for (size_t i = 0; i < 3; i++) {
@@ -52,7 +52,7 @@ PPPP_TEST(clients_version_line_position) {
 
 // An unreadable version number fails the map, wherever the client looks for
 // it. stable reads Int32.Parse's full range; lazer its symmetric one.
-PPPP_TEST(clients_unreadable_version_fails_the_map) {
+TEST_CASE("an unreadable version fails the map") {
     static const Client::Value clients[] = {Client::Stable, Client::Lazer};
     for (size_t i = 0; i < 2; i++) {
         CHECK(unloadable_line(std::string("osu file format vx\n") + kTimingAndCircle, clients[i]) == 1u);
@@ -60,7 +60,7 @@ PPPP_TEST(clients_unreadable_version_fails_the_map) {
     }
     const std::string later = std::string("\n\nosu file format v1x\n") + kTimingAndCircle;
     CHECK(unloadable_line(later, Client::Lazer) == 3u);
-    CHECK(unloadable_line(later, Client::Stable) == 0u);
+    CHECK_UNARY(unloadable_line(later, Client::Stable) == 0u);
 
     const std::string minimum = std::string("osu file format v-2147483648\n") + kTimingAndCircle;
     CHECK(parse_str(minimum, stable_options()).format_version == INT_MIN);
@@ -70,9 +70,9 @@ PPPP_TEST(clients_unreadable_version_fails_the_map) {
 // stable consumes the first line as its version line even when it is a
 // section header. Its header reader then never enters that section, though
 // the object reader does.
-PPPP_TEST(clients_first_line_header) {
+TEST_CASE("the first line header of each client") {
     const std::string general = std::string("[General]\nMode:1\n") + kTimingAndCircle;
-    CHECK(parse_str(general, stable_options()).mode == 0);
+    CHECK_UNARY(parse_str(general, stable_options()).mode == 0);
     CHECK(parse_str(general, lazer_options()).mode == 1);
     const std::string objects = "[HitObjects]\n64,64,100,1,0\n";
     CHECK(parse_str(objects, stable_options()).hit_objects.size() == 1u);
@@ -81,7 +81,7 @@ PPPP_TEST(clients_first_line_header) {
 
 // Lazer reads lines before the first header as [General]; stable ignores
 // them.
-PPPP_TEST(clients_lines_before_the_first_header) {
+TEST_CASE("lines before the first header") {
     const std::string input = std::string("osu file format v14\nStackLeniency:0.2\n") + kTimingAndCircle;
     CHECK(parse_str(input, stable_options()).stack_leniency == double(0.7f));
     CHECK(parse_str(input, lazer_options()).stack_leniency == double(0.2f));
@@ -91,7 +91,7 @@ PPPP_TEST(clients_lines_before_the_first_header) {
 // current section in effect in stable. Each also knows names fosu ignores:
 // lazer Variables, Fonts, CatchTheBeat and Mania; stable Variables, Unknown
 // and All.
-PPPP_TEST(clients_unknown_section_names) {
+TEST_CASE("unknown section names") {
     struct Case {
         const char* header;
         double stable_od;
@@ -122,7 +122,7 @@ PPPP_TEST(clients_unknown_section_names) {
 // bracket from both ends. fosu follows its object reader in trimming no
 // whitespace; its header reader also accepts "[Difficulty] ". Lazer needs
 // "[name]" after trimming the line's end.
-PPPP_TEST(clients_header_spelling) {
+TEST_CASE("header spelling") {
     struct Case {
         const char* header;
         double stable_od;
@@ -145,7 +145,7 @@ PPPP_TEST(clients_header_spelling) {
 // stable's header reader never leaves [HitObjects], so later General,
 // Metadata, Difficulty and TimingPoints sections are ignored. Its object
 // reader still reads later Events, Colours and HitObjects.
-PPPP_TEST(clients_header_sections_after_hit_objects) {
+TEST_CASE("header sections after hit objects") {
     const std::string input = std::string("osu file format v14\n") + kTimingAndCircle +
                               "[Difficulty]\nOverallDifficulty:4\n"
                               "[TimingPoints]\n50,250\n[Metadata]\nTitle:late\n"
@@ -167,7 +167,7 @@ PPPP_TEST(clients_header_sections_after_hit_objects) {
 
 // stable cannot load a map with a hit object it fails to read; lazer skips
 // the line.
-PPPP_TEST(clients_unreadable_hit_object_fails_stable) {
+TEST_CASE("an unreadable hit object fails stable") {
     static const char* const lines[] = {"64,64,x,1,0", "64,64,200,1,0,bad", "64,64,200,2,0,L|1:x,1,10",
                                         "64,64,200,8,0,x", "64,64"};
     static const char* const endings[] = {"\n", "\r\n", "\r"};
@@ -199,7 +199,7 @@ PPPP_TEST(clients_unreadable_hit_object_fails_stable) {
 // indented with ' ' or '_' and lines starting with '['. fosu still counts
 // the first as malformed. Lazer reads an indented line and rejects the
 // others.
-PPPP_TEST(clients_hit_object_lines_stable_skips) {
+TEST_CASE("hit object lines stable skips") {
     struct Case {
         const char* line;
         size_t stable_objects, stable_malformed;
@@ -228,7 +228,7 @@ PPPP_TEST(clients_hit_object_lines_stable_skips) {
 // Catmull. stable also ignores any other one-character marker; lazer reads
 // one as a point, which fails. A slider that ends at its type is one stable
 // cannot read: its repeat count is missing.
-PPPP_TEST(clients_unknown_curve_types) {
+TEST_CASE("unknown curve types") {
     static const char* const curves[] = {"X|100:100,1,50", "b,1,50"};
     for (size_t c = 0; c < 2; c++) {
         for (size_t o = 0; o < 2; o++) {
@@ -238,7 +238,7 @@ PPPP_TEST(clients_unknown_curve_types) {
             const Beatmap map = parse_str(input, o == 0 ? stable_options() : lazer_options());
             CHECK(map.hit_objects.size() == 2u);
             CHECK(map.sliders[0].curve_type == CurveType::Catmull);
-            CHECK(map.stats.malformed_lines == 0u);
+            CHECK_UNARY(map.stats.malformed_lines == 0u);
         }
     }
     const std::string digit = std::string("osu file format v14\n[TimingPoints]\n0,500\n[HitObjects]\n"
@@ -252,7 +252,7 @@ PPPP_TEST(clients_unknown_curve_types) {
 
 // Like storyboard commands, stable skips colour lines indented with ' ' or
 // '_'. Lazer trims them.
-PPPP_TEST(clients_indented_colours) {
+TEST_CASE("indented colours") {
     const std::string input = std::string("osu file format v14\n[Colours]\n Combo1 : 1,2,3\n"
                                           "Combo2:4,5,6\n") +
                               kTimingAndCircle;
@@ -264,7 +264,7 @@ PPPP_TEST(clients_indented_colours) {
 // the last one winning, and ignores one naming no type; a longer token must
 // be a point. Lazer starts a segment at each letter (see test_slider_paths)
 // and rejects a one-character token that is not a letter.
-PPPP_TEST(clients_curve_type_tokens) {
+TEST_CASE("curve type tokens") {
     const std::string base = "osu file format v14\n[TimingPoints]\n0,500\n[HitObjects]\n0,0,1000,2,0,";
     const std::string stable_input = base + "B|100:0|L|100:100|0:100,1,0\n";
     const Beatmap stable = parse_str(stable_input, paths_options(Client::Stable));
@@ -294,13 +294,13 @@ PPPP_TEST(clients_curve_type_tokens) {
     static const char* const unloadable[] = {"B|100:0|LL|100:100", "B|100:0|B2|100:100"};
     for (size_t i = 0; i < 2; i++) {
         CHECK(unloadable_line(base + unloadable[i] + ",1,0\n", Client::Stable) == 5u);
-        CHECK(unloadable_line(base + unloadable[i] + ",1,0\n", Client::Lazer) == 0u);
+        CHECK_UNARY(unloadable_line(base + unloadable[i] + ",1,0\n", Client::Lazer) == 0u);
     }
 }
 
 // Lazer rejects coordinates and slider lengths beyond +-131072; stable reads
 // them. Ranked maps have control points and lengths past that bound.
-PPPP_TEST(clients_coordinate_and_length_bounds) {
+TEST_CASE("coordinate and length bounds") {
     const std::string input = "osu file format v14\n[TimingPoints]\n0,500\n[HitObjects]\n"
                               "200000,64,100,1,0\n"
                               "64,64,200,2,0,L|262144:-460440,1,140000\n"
@@ -311,7 +311,7 @@ PPPP_TEST(clients_coordinate_and_length_bounds) {
     CHECK(stable.slider_points[0].x == 262144);
     CHECK(stable.slider_points[0].y == -460440);
     CHECK(stable.sliders[0].length == 140000);
-    CHECK(stable.sliders[1].length == 0);
+    CHECK_UNARY(stable.sliders[1].length == 0);
     const Beatmap lazer = parse_str(input, lazer_options());
     CHECK(lazer.hit_objects.empty());
     CHECK(lazer.stats.malformed_lines == 3u);
@@ -320,7 +320,7 @@ PPPP_TEST(clients_coordinate_and_length_bounds) {
 // stable has no rules past v14, its latest format, so it reads a v128 map
 // like a v14 one: it truncates coordinates, reads curve types as markers and
 // uses the legacy path rules. The map still reports v128.
-PPPP_TEST(clients_v128_maps_in_stable) {
+TEST_CASE("v128 maps in stable") {
     const std::string stable_input =
         "osu file format "
         "v128\n[TimingPoints]\n0,500\n[HitObjects]\n10.75,20.5,100,2,0,B|100.5:0|L|100:100,1,0\n";
@@ -350,7 +350,7 @@ PPPP_TEST(clients_v128_maps_in_stable) {
 }
 
 // stable clamps stack leniency to [0, 1]; lazer keeps it.
-PPPP_TEST(clients_stack_leniency_range) {
+TEST_CASE("the stack leniency range") {
     const std::string input =
         "osu file format v14\n[General]\nStackLeniency:3\n" + std::string(kTimingAndCircle);
     CHECK(parse_str(input, stable_options()).stack_leniency == 1);
@@ -359,7 +359,7 @@ PPPP_TEST(clients_stack_leniency_range) {
 
 // Before v13, stable reads HP, CS, OD and AR as integer bytes; lazer reads
 // floats in every version.
-PPPP_TEST(clients_difficulty_bytes_before_v13) {
+TEST_CASE("difficulty bytes before v13") {
     struct Case {
         const char* line;
         double stable, lazer;
@@ -384,7 +384,7 @@ PPPP_TEST(clients_difficulty_bytes_before_v13) {
 // stable clamps circle size as it reads it, to mania's key range only when
 // [General] already set mania and the map is v13+. Lazer clamps with the
 // final mode.
-PPPP_TEST(clients_circle_size_range_follows_mode_order) {
+TEST_CASE("the circle size range follows the mode order") {
     const std::string before_mode = "osu file format v14\n[Difficulty]\nCircleSize:14\n[General]\nMode:3\n" +
                                     std::string(kTimingAndCircle);
     CHECK(parse_str(before_mode, stable_options()).cs == 10);

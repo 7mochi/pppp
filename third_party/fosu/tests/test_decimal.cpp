@@ -1,11 +1,11 @@
 // Exact decimal conversion: syntax of the scanner and a differential check of the values
 // against the C library (glibc's strtod/strtof are correctly rounded) on random inputs.
-#include "harness.h"
 #include <cerrno>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <doctest.h>
 #include <fosu/engine/parsing/decimal.h>
 #include <fosu/engine/parsing/numbers.h>
 
@@ -24,7 +24,7 @@ static fosu::u64 rng() {
 static bool same_double(double a, double b) { return std::memcmp(&a, &b, sizeof(a)) == 0; }
 static bool same_float(float a, float b) { return std::memcmp(&a, &b, sizeof(a)) == 0; }
 
-PPPP_TEST(scanner_syntax) {
+TEST_CASE("the decimal scanner's syntax") {
     struct Case {
         const char* text;
         int consumed; // -1 = rejected
@@ -45,16 +45,21 @@ PPPP_TEST(scanner_syntax) {
         DecimalNumber number;
         const char* q = scan_decimal(buf, buf + std::strlen(buf), number);
         if (cases[i].consumed < 0) {
-            CHECK_MSG(q == buf, cases[i].text);
+            INFO(cases[i].text);
+            CHECK(q == buf);
             continue;
         }
-        CHECK_MSG(q - buf == cases[i].consumed, cases[i].text);
+        INFO(cases[i].text);
+        CHECK(q - buf == cases[i].consumed);
         double value = 0;
-        CHECK_MSG(decimal_to_double(number, value), cases[i].text);
+        INFO(cases[i].text);
+        CHECK(decimal_to_double(number, value));
         if (i < 17) {
-            CHECK_MSG(same_double(value, cases[i].value), cases[i].text);
+            INFO(cases[i].text);
+            CHECK(same_double(value, cases[i].value));
         } else {
-            CHECK_MSG(same_double(value, std::strtod(cases[i].text, 0)), cases[i].text);
+            INFO(cases[i].text);
+            CHECK(same_double(value, std::strtod(cases[i].text, 0)));
         }
     }
     // -0 keeps its sign
@@ -66,7 +71,7 @@ PPPP_TEST(scanner_syntax) {
     CHECK(same_double(value, -0.0));
 }
 
-PPPP_TEST(overflow_and_underflow) {
+TEST_CASE("overflow and underflow") {
     const char* overflow[] = {"1e309", "1.8e308", "1e400",
                               "179769313486231580793728971405303415079934132710037826936173778980444968292764"
                               "750946649017977587207096330286416692887910946555547851940402630657488671505820"
@@ -76,25 +81,29 @@ PPPP_TEST(overflow_and_underflow) {
         DecimalNumber number;
         scan_decimal(overflow[i], overflow[i] + std::strlen(overflow[i]), number);
         double value;
-        CHECK_MSG(!decimal_to_double(number, value), overflow[i]);
+        INFO(overflow[i]);
+        CHECK(!decimal_to_double(number, value));
     }
     const char* underflow[] = {"1e-400", "-1e-400", "4.9e-325"};
     for (size_t i = 0; i < sizeof(underflow) / sizeof(underflow[0]); i++) {
         DecimalNumber number;
         scan_decimal(underflow[i], underflow[i] + std::strlen(underflow[i]), number);
         double value = 5;
-        CHECK_MSG(decimal_to_double(number, value) && value == 0.0, underflow[i]);
-        CHECK_MSG(same_double(value, std::strtod(underflow[i], 0)), underflow[i]);
+        INFO(underflow[i]);
+        CHECK_UNARY(decimal_to_double(number, value) && value == 0.0);
+        INFO(underflow[i]);
+        CHECK(same_double(value, std::strtod(underflow[i], 0)));
     }
     // the largest finite double and the smallest denormal parse exactly
     DecimalNumber number;
     const char* max = "1.7976931348623157e308";
     scan_decimal(max, max + std::strlen(max), number);
     double value;
-    CHECK(decimal_to_double(number, value) && same_double(value, std::strtod(max, 0)));
+    CHECK_UNARY(decimal_to_double(number, value) && same_double(value, std::strtod(max, 0)));
     const char* denormal = "4.9406564584124654e-324";
     scan_decimal(denormal, denormal + std::strlen(denormal), number);
-    CHECK(decimal_to_double(number, value) && same_double(value, std::strtod(denormal, 0)) && value > 0);
+    CHECK_UNARY(decimal_to_double(number, value) && same_double(value, std::strtod(denormal, 0)) &&
+                value > 0);
     // float
     const char* float_overflow = "3.5e38";
     scan_decimal(float_overflow, float_overflow + std::strlen(float_overflow), number);
@@ -102,13 +111,13 @@ PPPP_TEST(overflow_and_underflow) {
     CHECK(!decimal_to_float(number, f));
     const char* float_max = "3.4028235e38";
     scan_decimal(float_max, float_max + std::strlen(float_max), number);
-    CHECK(decimal_to_float(number, f) && same_float(f, std::strtof(float_max, 0)));
+    CHECK_UNARY(decimal_to_float(number, f) && same_float(f, std::strtof(float_max, 0)));
     const char* float_denormal = "1.4e-45";
     scan_decimal(float_denormal, float_denormal + std::strlen(float_denormal), number);
-    CHECK(decimal_to_float(number, f) && same_float(f, std::strtof(float_denormal, 0)) && f > 0);
+    CHECK_UNARY(decimal_to_float(number, f) && same_float(f, std::strtof(float_denormal, 0)) && f > 0);
     const char* float_underflow = "1e-46";
     scan_decimal(float_underflow, float_underflow + std::strlen(float_underflow), number);
-    CHECK(decimal_to_float(number, f) && f == 0.0f);
+    CHECK_UNARY(decimal_to_float(number, f) && f == 0.0f);
 }
 
 // Random decimal strings of every shape .osu files (and worse) contain, compared bit for bit
@@ -148,7 +157,7 @@ static void random_number(char* buf, size_t& length, bool with_exponent) {
     buf[length] = 0;
 }
 
-PPPP_TEST(random_doubles_match_strtod) {
+TEST_CASE("random doubles match strtod") {
     char buf[96];
     int compared = 0;
     for (int iter = 0; iter < 400000; iter++) {
@@ -161,7 +170,8 @@ PPPP_TEST(random_doubles_match_strtod) {
         const double want = std::strtod(buf, &next);
         const bool want_overflow = errno == ERANGE && std::fabs(want) > 1.0;
         if (q == buf) {
-            CHECK_MSG(next == buf, buf);
+            INFO(buf);
+            CHECK(next == buf);
             continue;
         }
         double got = 0;
@@ -169,7 +179,8 @@ PPPP_TEST(random_doubles_match_strtod) {
         if (q - buf != next - buf || ok == want_overflow || (ok && !same_double(got, want))) {
             std::printf("  mismatch: %s (consumed %d vs %d, ok=%d, got %.17g want %.17g)\n", buf,
                         (int)(q - buf), (int)(next - buf), ok ? 1 : 0, got, want);
-            CHECK_MSG(false, "random double matches strtod");
+            INFO("random double matches strtod");
+            CHECK(false);
             return;
         }
         compared++;
@@ -177,7 +188,7 @@ PPPP_TEST(random_doubles_match_strtod) {
     CHECK(compared > 300000);
 }
 
-PPPP_TEST(random_floats_match_strtof) {
+TEST_CASE("random floats match strtof") {
     char buf[96];
     int compared = 0;
     for (int iter = 0; iter < 400000; iter++) {
@@ -191,14 +202,16 @@ PPPP_TEST(random_floats_match_strtof) {
         const float want = std::strtof(buf, &next);
         const bool want_overflow = errno == ERANGE && std::fabs(want) > 1.0f;
         if (q == buf) {
-            CHECK_MSG(next == buf, buf);
+            INFO(buf);
+            CHECK(next == buf);
             continue;
         }
         float got = 0;
         const bool ok = decimal_to_float(number, got);
         if (q - buf != next - buf || ok == want_overflow || (ok && !same_float(got, want))) {
             std::printf("  mismatch: %s (ok=%d, got %.9g want %.9g)\n", buf, ok ? 1 : 0, got, want);
-            CHECK_MSG(false, "random float matches strtof");
+            INFO("random float matches strtof");
+            CHECK(false);
             return;
         }
         compared++;
@@ -206,7 +219,7 @@ PPPP_TEST(random_floats_match_strtof) {
     CHECK(compared > 300000);
 }
 
-PPPP_TEST(long_significands) {
+TEST_CASE("long significands") {
     const char* cases[] = {
         "342.857142857142857142857",
         "123456789012345678901",
@@ -223,24 +236,28 @@ PPPP_TEST(long_significands) {
         std::strcpy(padded, cases[i]);
         double got = 0;
         const char* q = parse_double(padded, padded + std::strlen(cases[i]), got);
-        CHECK_MSG(q == padded + std::strlen(cases[i]), cases[i]);
-        CHECK_MSG(same_double(got, std::strtod(cases[i], 0)), cases[i]);
+        INFO(cases[i]);
+        CHECK(q == padded + std::strlen(cases[i]));
+        INFO(cases[i]);
+        CHECK(same_double(got, std::strtod(cases[i], 0)));
         float gotf = 0;
-        CHECK_MSG(parse_osu_float(padded, padded + std::strlen(cases[i]), gotf, 1e38f) != padded, cases[i]);
-        CHECK_MSG(same_float(gotf, std::strtof(cases[i], 0)), cases[i]);
+        INFO(cases[i]);
+        CHECK(parse_osu_float(padded, padded + std::strlen(cases[i]), gotf, 1e38f) != padded);
+        INFO(cases[i]);
+        CHECK(same_float(gotf, std::strtof(cases[i], 0)));
     }
 }
 
-PPPP_TEST(osu_number_acceptance) {
+TEST_CASE("the osu! number acceptance rules") {
     char buf[64];
     std::memset(buf, 0, sizeof(buf));
     double d = 0;
     float f = 0;
     fosu::i64 i = 0;
     std::strcpy(buf, " 12.5 ,");
-    CHECK(parse_osu_double(buf, buf + 7, d) == buf + 6 && d == 12.5); // surrounding spaces consumed
+    CHECK_UNARY(parse_osu_double(buf, buf + 7, d) == buf + 6 && d == 12.5); // surrounding spaces consumed
     std::strcpy(buf, "+5");
-    CHECK(parse_osu_double(buf, buf + 2, d) == buf + 2 && d == 5.0);
+    CHECK_UNARY(parse_osu_double(buf, buf + 2, d) == buf + 2 && d == 5.0);
     std::strcpy(buf, "++5");
     CHECK(parse_osu_double(buf, buf + 3, d) == buf);
     std::strcpy(buf, "+-5");
@@ -253,19 +270,17 @@ PPPP_TEST(osu_number_acceptance) {
     std::strcpy(buf, "-2147483648");
     CHECK(parse_osu_int(buf, buf + 11, i) == buf); // symmetric osu! bound
     std::strcpy(buf, "2147483647");
-    CHECK(parse_osu_int(buf, buf + 10, i) == buf + 10 && i == 2147483647);
+    CHECK_UNARY(parse_osu_int(buf, buf + 10, i) == buf + 10 && i == 2147483647);
     std::strcpy(buf, "131072.5");
     CHECK(parse_osu_float(buf, buf + 8, f, 131072.0f) == buf);
     std::strcpy(buf, "131072");
-    CHECK(parse_osu_float(buf, buf + 6, f, 131072.0f) == buf + 6 && f == 131072.0f);
+    CHECK_UNARY(parse_osu_float(buf, buf + 6, f, 131072.0f) == buf + 6 && f == 131072.0f);
     std::strcpy(buf, "1e-50");
-    CHECK(parse_osu_float(buf, buf + 5, f) == buf + 5 && f == 0.0f); // underflow to zero accepted
+    CHECK_UNARY(parse_osu_float(buf, buf + 5, f) == buf + 5 && f == 0.0f); // underflow to zero accepted
     std::strcpy(buf, "-1e-400");
-    CHECK(parse_osu_double(buf, buf + 7, d) == buf + 7 && same_double(d, -0.0));
+    CHECK_UNARY(parse_osu_double(buf, buf + 7, d) == buf + 7 && same_double(d, -0.0));
     std::strcpy(buf, "1e400");
     CHECK(parse_osu_double(buf, buf + 5, d) == buf);
     std::strcpy(buf, "0.7");
-    CHECK(parse_osu_float(buf, buf + 3, f) == buf + 3 && f == 0.7f);
+    CHECK_UNARY(parse_osu_float(buf, buf + 3, f) == buf + 3 && f == 0.7f);
 }
-
-PPPP_TEST_MAIN()

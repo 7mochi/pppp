@@ -2,11 +2,11 @@
 // Bézier subdivision against the general one
 // (upstream tests/test_numeric.cc without its SIMD cases; tests/test_decimal.cpp covers the
 // conversion itself).
-#include "harness.h"
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <doctest.h>
 #include <fosu/engine/parsing/numbers.h>
 #include <fosu/slider_geometry.h>
 #include <string>
@@ -33,7 +33,7 @@ static fosu::u64 rng() {
     return z ^ (z >> 31);
 }
 
-PPPP_TEST(fuzz_parse_double) {
+TEST_CASE("fuzzed parse_double matches libc") {
     char buf[96];
     int failures = 0;
     for (int iter = 0; iter < 300000 && !failures; ++iter) {
@@ -67,7 +67,7 @@ PPPP_TEST(fuzz_parse_double) {
             failures++;
         }
     }
-    CHECK(failures == 0);
+    CHECK_UNARY(failures == 0);
     // Long significands must agree with the independent libc result.
     static const char* const long_cases[] = {"342.857142857142857142857", "123456789012345678901",
                                              "0.6999999999999999556"};
@@ -76,7 +76,8 @@ PPPP_TEST(fuzz_parse_double) {
         padded.append(64, '\0');
         double got = 0;
         parse_double(padded.data(), padded.data() + std::strlen(long_cases[i]), got);
-        CHECK_MSG(got == std::strtod(long_cases[i], 0), long_cases[i]);
+        INFO(long_cases[i]);
+        CHECK(got == std::strtod(long_cases[i], 0));
     }
 }
 
@@ -90,7 +91,7 @@ static float random_coordinate() {
 
 // parse_osu_float on integer spellings. An integer of at most ten digits is exact in a double,
 // so narrowing that double to float is the single correctly rounded conversion strtof would do.
-PPPP_TEST(fuzz_parse_osu_float_integers) {
+TEST_CASE("fuzzed parse_osu_float integers match the reference") {
     char buf[96];
     for (int iter = 0; iter < 100000; ++iter) {
         int len = 0;
@@ -120,14 +121,16 @@ PPPP_TEST(fuzz_parse_osu_float_integers) {
         const float want = static_cast<float>(negative ? -magnitude : magnitude);
         const bool valid = (want < 0 ? -want : want) <= static_cast<float>(2147483647);
         const std::string text(buf, static_cast<size_t>(len));
-        CHECK_MSG(next - buf == (valid ? comma : 0), text.c_str());
+        INFO(text);
+        CHECK(next - buf == (valid ? comma : 0));
         if (valid) {
-            CHECK_MSG(std::memcmp(&got, &want, sizeof(float)) == 0, text.c_str());
+            INFO(text);
+            CHECK_UNARY(std::memcmp(&got, &want, sizeof(float)) == 0);
         }
     }
 }
 
-PPPP_TEST(bezier_subdivision) {
+TEST_CASE("the bezier subdivision matches the general one") {
     int mismatches = 0;
     for (size_t count = 4; count <= 10; ++count) {
         for (int sample = 0; sample < 1000; ++sample) {
@@ -153,7 +156,5 @@ PPPP_TEST(bezier_subdivision) {
             }
         }
     }
-    CHECK(mismatches == 0);
+    CHECK_UNARY(mismatches == 0);
 }
-
-PPPP_TEST_MAIN()

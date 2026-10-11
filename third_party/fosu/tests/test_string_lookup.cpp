@@ -18,29 +18,29 @@ namespace {
     int handler_two() { return 2; }
 } // namespace
 
-PPPP_TEST(string_lookup_collisions) {
+TEST_CASE("string lookup collisions") {
     CHECK(string_hash("costarring") == string_hash("liquid"));
     StringLookup<int> collisions(collision_entries, 3);
-    CHECK(collisions.find("costarring") != 0 && *collisions.find("costarring") == 1);
-    CHECK(collisions.find("liquid") != 0 && *collisions.find("liquid") == 2);
-    CHECK(collisions.find("") != 0 && *collisions.find("") == 3);
-    CHECK(collisions.find("Costarring") == 0);
+    CHECK_UNARY(collisions.find("costarring") != 0 && *collisions.find("costarring") == 1);
+    CHECK_UNARY(collisions.find("liquid") != 0 && *collisions.find("liquid") == 2);
+    CHECK_UNARY(collisions.find("") != 0 && *collisions.find("") == 3);
+    CHECK_UNARY(collisions.find("Costarring") == 0);
 }
 
-PPPP_TEST(string_lookup_runtime_misses) {
+TEST_CASE("string lookup runtime misses") {
     StringEntry<int> single_entry[] = {{"costarring", 1}};
     StringLookup<int> single(single_entry, 1);
-    CHECK(single.find("liquid") == 0);
+    CHECK_UNARY(single.find("liquid") == 0);
     StringLookup<int> collisions(collision_entries, 3);
     static const char* const keys[] = {"cost", "costarring-extra", "unknown"};
     for (size_t i = 0; i < 3; i++) {
-        CHECK(collisions.find(keys[i]) == 0);
+        CHECK_UNARY(collisions.find(keys[i]) == 0);
     }
     CHECK(*collisions.find("costarring") == 1);
     CHECK(*collisions.find("liquid") == 2);
 }
 
-PPPP_TEST(string_lookup_function_pointer_values) {
+TEST_CASE("string lookup function pointer values") {
     StringEntry<int (*)()> handlers[] = {{"one", &handler_one}, {"two", &handler_two}};
     StringLookup<int (*)()> lookup(handlers, 2);
     CHECK((*lookup.find("two"))() == 2);

@@ -21,6 +21,8 @@ option(PPPP_BUILD_PYTHON "Build the Python extension module" OFF)
 option(PPPP_BUILD_NODE "Build the Node bindings" OFF)
 option(PPPP_BUILD_CAPI "Build the C bindings" OFF)
 option(PPPP_WIN2K "Link the shim that keeps the produced binaries loadable on Windows 2000" OFF)
+set(PPPP_ISA auto CACHE STRING "Native targets: auto, scalar, avx2, neon")
+set_property(CACHE PPPP_ISA PROPERTY STRINGS auto scalar avx2 neon)
 
 if(PPPP_BUILD_PYTHON OR PPPP_BUILD_NODE OR PPPP_BUILD_CAPI)
   # The library is static and the extension is a shared object.
@@ -377,10 +379,13 @@ if(PPPP_INSTALL)
   if(PPPP_WITH_FOSU)
     install(DIRECTORY third_party/span-lite/include/nonstd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
     install(DIRECTORY third_party/string-view-lite/include/nonstd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    install(DIRECTORY third_party/atomic-lite/include/nonstd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
     install(FILES third_party/span-lite/LICENSE.txt
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nonstd RENAME span-lite-LICENSE.txt)
     install(FILES third_party/string-view-lite/LICENSE.txt
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nonstd RENAME string-view-lite-LICENSE.txt)
+    install(FILES third_party/atomic-lite/LICENSE.txt
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nonstd RENAME atomic-lite-LICENSE.txt)
   endif()
 endif()
 
@@ -393,6 +398,7 @@ endif()
 if(PPPP_WITH_FOSU)
   set(FOSU_BUILD_TESTS ${PPPP_BUILD_TESTS})
   set(FOSU_WARNINGS_AS_ERRORS ${PPPP_WARNINGS_AS_ERRORS})
+  set(FOSU_ISA ${PPPP_ISA})
 
   add_subdirectory(third_party/fosu)
   get_property(PPPP_FOSU_TARGETS DIRECTORY third_party/fosu PROPERTY BUILDSYSTEM_TARGETS)
@@ -400,7 +406,7 @@ if(PPPP_WITH_FOSU)
 
   set_target_properties(fosu PROPERTIES EXPORT_NAME fosu_parser)
 
-  add_library(pppp_fosu src/pppp/fosu/beatmap.cpp)
+  add_library(pppp_fosu src/pppp/fosu/beatmap.cpp src/pppp/fosu/backend.cpp)
   add_library(pppp::fosu ALIAS pppp_fosu)
 
   target_compile_features(pppp_fosu PUBLIC cxx_std_98)
@@ -410,7 +416,7 @@ if(PPPP_WITH_FOSU)
   set_target_properties(pppp_fosu PROPERTIES EXPORT_NAME fosu VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
   target_sources(pppp_fosu PUBLIC FILE_SET HEADERS
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
-    FILES include/pppp/beatmap.h)
+    FILES include/pppp/beatmap.h include/pppp/backend.h)
 endif()
 
 add_library(pppp_internal INTERFACE)
@@ -444,6 +450,14 @@ if(PPPP_INSTALL)
     pppp_taiko_base pppp_taiko_difficulty pppp_taiko_performance pppp_taiko)
   if(PPPP_WITH_FOSU)
     list(APPEND PPPP_INSTALL_TARGETS pppp_fosu fosu)
+    # The loader anchors its engine search on the consumer executable (the core is static), so an
+    # installed consumer must copy fosu_engine_* beside its own binary; this rule puts it in
+    # ${CMAKE_INSTALL_LIBDIR} for packaging. D12 owns the bindings' engine placement.
+    if(TARGET fosu_engine_avx2)
+      list(APPEND PPPP_INSTALL_TARGETS fosu_engine_avx2)
+    elseif(TARGET fosu_engine_neon)
+      list(APPEND PPPP_INSTALL_TARGETS fosu_engine_neon)
+    endif()
     if(PPPP_BUILD_CAPI)
       list(APPEND PPPP_INSTALL_TARGETS pppp_c)
     endif()
@@ -470,5 +484,6 @@ if(PPPP_INSTALL)
   install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/ppppConfig.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/ppppConfigVersion.cmake
+    cmake/ppppPlaceEngine.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/pppp)
 endif()

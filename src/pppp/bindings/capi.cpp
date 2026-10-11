@@ -3,6 +3,8 @@
 #include <pppp/config.h>
 #include <pppp/pppp.h>
 
+#include <fosu/engine/runtime/loader.h>
+
 #include <cstddef>
 #include <cstring>
 #include <new>
@@ -427,6 +429,10 @@ namespace {
 } // namespace
 
 const char* pppp_version(void) { return PPPP_VERSION_STRING; }
+
+const char* pppp_backend(void) {
+    return fosu::internal::engine_name(fosu::internal::selected_engine()->kind);
+}
 
 const char* pppp_result_message(pppp_result result) {
     return pppp::Status(static_cast<pppp::StatusCode::Value>(result)).message();

@@ -50,6 +50,21 @@
           Condition="Exists('native/osx-arm64/pppp_c.dylib')" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="native/win-x64/fosu_engine_avx2.dll" Pack="true" PackagePath="runtimes/win-x64/native/"
+          Condition="Exists('native/win-x64/fosu_engine_avx2.dll')" />
+    <None Include="native/win-arm64/fosu_engine_neon.dll" Pack="true" PackagePath="runtimes/win-arm64/native/"
+          Condition="Exists('native/win-arm64/fosu_engine_neon.dll')" />
+    <None Include="native/linux-x64/libfosu_engine_avx2.so" Pack="true" PackagePath="runtimes/linux-x64/native/"
+          Condition="Exists('native/linux-x64/libfosu_engine_avx2.so')" />
+    <None Include="native/linux-arm64/libfosu_engine_neon.so" Pack="true" PackagePath="runtimes/linux-arm64/native/"
+          Condition="Exists('native/linux-arm64/libfosu_engine_neon.so')" />
+    <None Include="native/osx-x64/libfosu_engine_avx2.dylib" Pack="true" PackagePath="runtimes/osx-x64/native/"
+          Condition="Exists('native/osx-x64/libfosu_engine_avx2.dylib')" />
+    <None Include="native/osx-arm64/libfosu_engine_neon.dylib" Pack="true" PackagePath="runtimes/osx-arm64/native/"
+          Condition="Exists('native/osx-arm64/libfosu_engine_neon.dylib')" />
+  </ItemGroup>
+
   <Target Name="PpppPackageAssemblies">
     <ItemGroup Condition="'$(TargetFramework)' == 'net20'">
       <TfmSpecificPackageFile Include="$(TargetPath)">

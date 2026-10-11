@@ -1,0 +1,58 @@
+#ifndef FOSU_OS_H
+#define FOSU_OS_H
+
+#include <cstddef>
+
+#if defined(_WIN32)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#else
+#include <sys/mman.h>
+#endif
+
+namespace fosu {
+    namespace internal {
+        inline void* os_reserve(size_t size) {
+#if defined(_WIN32)
+            return VirtualAlloc(0, size, MEM_RESERVE, PAGE_NOACCESS);
+#else
+            int flags = MAP_PRIVATE | MAP_ANONYMOUS;
+#if defined(MAP_NORESERVE)
+            flags |= MAP_NORESERVE;
+#endif
+            void* memory = mmap(0, size, PROT_NONE, flags, -1, 0);
+            if (memory == MAP_FAILED) {
+                return 0;
+            }
+#if defined(MADV_HUGEPAGE)
+            madvise(memory, size, MADV_HUGEPAGE);
+#endif
+            return memory;
+#endif
+        }
+
+        inline bool os_commit(void* memory, size_t size) {
+#if defined(_WIN32)
+            return VirtualAlloc(memory, size, MEM_COMMIT, PAGE_READWRITE) == memory;
+#else
+            return mprotect(memory, size, PROT_READ | PROT_WRITE) == 0;
+#endif
+        }
+
+        inline void os_release(void* memory, size_t size) {
+#if defined(_WIN32)
+            (void)size;
+            VirtualFree(memory, 0, MEM_RELEASE);
+#else
+            munmap(memory, size);
+#endif
+        }
+    } // namespace internal
+} // namespace fosu
+
+#endif

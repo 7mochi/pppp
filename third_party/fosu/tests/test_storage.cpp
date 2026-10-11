@@ -544,6 +544,69 @@ PPPP_TEST(arena_interface) {
     CHECK(AlignmentOf<double>::value == sizeof(double) || AlignmentOf<double>::value == 4);
 }
 
+PPPP_TEST(default_arena_uses_reservation) {
+    Arena* arena = arena_alloc();
+    CHECK(arena != 0);
+    CHECK(arena->reserved > 0);
+    CHECK(arena_pos(arena) == kArenaHeaderSize);
+
+    fosu::u32* value = arena_push_array<fosu::u32>(arena, 4);
+    CHECK(value != 0);
+    value[0] = 0x12345678u;
+    value[3] = 0x9abcdef0u;
+    const size_t checkpoint = arena_pos(arena);
+    CHECK(checkpoint > kArenaHeaderSize);
+    const size_t committed_before = arena->committed;
+    {
+        const TempArena temp(arena);
+        CHECK(temp.position() == checkpoint);
+        CHECK(arena_push(arena, 64u << 10, AlignmentOf<fosu::u64>::value) != 0);
+        CHECK(arena_pos(arena) > checkpoint);
+        CHECK(arena->committed > committed_before);
+    }
+    CHECK(arena_pos(arena) == checkpoint);
+    CHECK(value[0] == 0x12345678u);
+    CHECK(value[3] == 0x9abcdef0u);
+    arena_release(arena);
+}
+
+PPPP_TEST(default_arena_falls_back_when_reserve_unavailable) {
+    const size_t saved = internal::arena_reserve_limit();
+    internal::arena_reserve_limit() = 0;
+    Arena* arena = arena_alloc();
+    internal::arena_reserve_limit() = saved;
+    CHECK(arena != 0);
+    CHECK(arena->reserved == 0);
+
+    fosu::u32* value = arena_push_array<fosu::u32>(arena, 4);
+    CHECK(value != 0);
+    value[0] = 0x0badf00du;
+    const size_t checkpoint = arena_pos(arena);
+    {
+        const TempArena temp(arena);
+        CHECK(arena_push(arena, 96u << 10, AlignmentOf<fosu::u64>::value) != 0);
+        CHECK(arena_pos(arena) > checkpoint);
+    }
+    CHECK(arena_pos(arena) == checkpoint);
+    CHECK(value[0] == 0x0badf00du);
+    arena_clear(arena);
+    CHECK(arena_pos(arena) == kArenaHeaderSize);
+    arena_release(arena);
+}
+
+PPPP_TEST(parse_falls_back_when_reserve_unavailable) {
+    const size_t saved = internal::arena_reserve_limit();
+    internal::arena_reserve_limit() = 0;
+    Parser parser;
+    FileBuffer input;
+    CHECK(padded("[HitObjects]\n1,2,3,1,0\n1,2,4,2,0,L|9:10,2,10\n", input));
+    Beatmap* parsed = parser.parse(input, lazer_options());
+    internal::arena_reserve_limit() = saved;
+    const Beatmap& map = require_parse(parsed);
+    CHECK(map.hit_objects.size() == 2u);
+    CHECK(map.sliders.size() == 1u);
+}
+
 PPPP_TEST(read_into_reuse) {
     const char* path = "fosu_read_into_test.osu";
     const std::string big(10000, 'A');

@@ -8,9 +8,14 @@
     <PpppNativeArch Condition="'$(PpppNativeArch)' == ''">x64</PpppNativeArch>
 
     <PpppNativePath>$(MSBuildThisFileDirectory)..\..\runtimes\win-$(PpppNativeArch)\native\pppp_c.dll</PpppNativePath>
+
+    <PpppEngineName Condition="'$(PpppNativeArch)' == 'x64'">fosu_engine_avx2.dll</PpppEngineName>
+    <PpppEngineName Condition="'$(PpppNativeArch)' == 'arm64'">fosu_engine_neon.dll</PpppEngineName>
+    <PpppEnginePath Condition="'$(PpppEngineName)' != ''">$(MSBuildThisFileDirectory)..\..\runtimes\win-$(PpppNativeArch)\native\$(PpppEngineName)</PpppEnginePath>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(PpppNativeArch)' != ''">
     <Content Include="$(PpppNativePath)" Link="pppp_c.dll" CopyToOutputDirectory="PreserveNewest" Pack="false" />
+    <Content Include="$(PpppEnginePath)" Link="$(PpppEngineName)" CopyToOutputDirectory="PreserveNewest" Pack="false" Condition="'$(PpppEngineName)' != '' AND Exists('$(PpppEnginePath)')" />
   </ItemGroup>
 </Project>

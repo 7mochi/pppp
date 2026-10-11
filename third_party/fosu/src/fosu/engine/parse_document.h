@@ -6,6 +6,7 @@
 #include <fosu/engine/parsing/lines.h>
 #include <fosu/engine/parsing/numbers.h>
 #include <fosu/engine/parsing/section_names.h>
+#include <fosu/engine/parsing_engine.h>
 #include <fosu/engine/sections/colours.h>
 #include <fosu/engine/sections/difficulty.h>
 #include <fosu/engine/sections/editor.h>
@@ -160,7 +161,7 @@ namespace fosu { namespace internal {
     // fallbacks stay inside the section. Input has kBufferPadding readable zero bytes; string views
     // refer into it.
     inline ParseError parse_document(const char* data, size_t size, Beatmap& beatmap,
-                                     const ParseOptions& options) {
+                                     ParseOptions options) {
         apply_client_defaults(beatmap, options.client);
         size_t velocity_preset_count = 0;
         bool velocity_presets_seen = false;
@@ -248,6 +249,11 @@ namespace fosu { namespace internal {
         beatmap.velocity_presets = beatmap.velocity_presets.first(velocity_preset_count);
         return ParseError();
     }
+
+    // The ISA this code was compiled for, not a runtime choice based on the host CPU. C++98 has no
+    // inline variables, so the definition lives in one TU per module (the scalar engine in the
+    // core, the SIMD engine in an engine library); see engine/parse_document.cpp.
+    extern const ParsingEngine compiled_engine;
 }} // namespace fosu::internal
 
 #endif

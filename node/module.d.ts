@@ -8,6 +8,7 @@ export declare const Ruleset: {
 export type Ruleset = (typeof Ruleset)[keyof typeof Ruleset];
 
 export declare const version: string;
+export declare const backend: string;
 
 export interface Vector2 {
   x: number;

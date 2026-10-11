@@ -3,6 +3,9 @@ import dataclasses
 import gc
 import os
 import pickle
+import platform
+import subprocess
+import sys
 import weakref
 from pathlib import Path
 
@@ -405,3 +408,35 @@ def test_strain_graphs_match_by_pattern():
             assert flashlight == []
         case _:
             pytest.fail("expected osu! strains")
+
+
+def _backend_with(variant: str) -> str:
+    out = subprocess.run(
+        [sys.executable, "-c", "import pppp; print(pppp.backend)"],
+        env={**os.environ, "FOSU_BACKEND": variant},
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return out.stdout.strip()
+
+
+def test_backend_reports_the_engine():
+    if os.environ.get("FOSU_BACKEND") == "scalar":
+        assert pppp.backend == "scalar"
+        return
+    runnable = next((variant for variant in ("avx2", "neon") if _backend_with(variant) == variant), "scalar")
+    assert pppp.backend == runnable
+
+
+def test_backend_ships_beside_the_extension():
+    import pppp._core as core
+
+    here = Path(core.__file__).resolve().parent
+    engines = list(here.glob("*fosu_engine_*"))
+    if platform.machine().lower() in {"x86_64", "amd64", "arm64", "aarch64"}:
+        assert engines, f"no engine beside {here}"
+
+
+def test_backend_scalar_override():
+    assert _backend_with("scalar") == "scalar"

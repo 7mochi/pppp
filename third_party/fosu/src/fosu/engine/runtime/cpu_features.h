@@ -1,0 +1,118 @@
+#ifndef FOSU_ENGINE_RUNTIME_CPU_FEATURES_H
+#define FOSU_ENGINE_RUNTIME_CPU_FEATURES_H
+
+#include <fosu/types.h>
+
+#if defined(_MSC_VER) && defined(_M_X64)
+#include <intrin.h>
+#elif defined(__x86_64__)
+#include <cpuid.h>
+#endif
+
+#if defined(__aarch64__) && defined(__linux__)
+#include <asm/hwcap.h>
+#include <elf.h>
+#include <sys/auxv.h>
+#endif
+
+namespace fosu_dispatch {
+    using fosu::u32;
+    using fosu::u64;
+
+    inline bool host_supports_neon() {
+#if defined(__aarch64__) && defined(__APPLE__)
+        return true; // Required by the Apple arm64 platform.
+#elif defined(__aarch64__) && defined(__linux__)
+        return (getauxval(AT_HWCAP) & HWCAP_ASIMD) != 0;
+#else
+        return false;
+#endif
+    }
+
+    // x86-64-v3, including OS support for saving XMM/YMM state.
+    struct CpuFeatures {
+        u32 leaf1;
+        u32 leaf7;
+        u32 extended;
+        u64 xcr0;
+
+        CpuFeatures()
+            : leaf1(0),
+              leaf7(0),
+              extended(0),
+              xcr0(0) {}
+    };
+    const u32 required_leaf1 = (1u << 0) | (1u << 9) | (1u << 12) | (1u << 13) | (1u << 19) |
+                               (1u << 20) | (1u << 22) | (1u << 23) | (1u << 26) | (1u << 27) |
+                               (1u << 28) | (1u << 29);
+    const u32 required_leaf7 = (1u << 3) | (1u << 5) | (1u << 8);
+    const u32 required_extended = (1u << 0) | (1u << 5);
+    inline bool supports_avx2(const CpuFeatures& f) {
+        return (f.leaf1 & required_leaf1) == required_leaf1 &&
+               (f.leaf7 & required_leaf7) == required_leaf7 &&
+               (f.extended & required_extended) == required_extended && (f.xcr0 & 6) == 6;
+    }
+    inline bool host_supports_avx2() {
+#if defined(_MSC_VER) && defined(_M_X64)
+        CpuFeatures f;
+        int registers[4];
+        __cpuid(registers, 0);
+        if (registers[0] < 7) {
+            return false;
+        }
+        __cpuidex(registers, 1, 0);
+        f.leaf1 = static_cast<u32>(registers[2]);
+        if ((f.leaf1 & required_leaf1) != required_leaf1) {
+            return false;
+        }
+        f.xcr0 = _xgetbv(0);
+        if ((f.xcr0 & 6) != 6) {
+            return false;
+        }
+        __cpuidex(registers, 7, 0);
+        f.leaf7 = static_cast<u32>(registers[1]);
+        if ((f.leaf7 & required_leaf7) != required_leaf7) {
+            return false;
+        }
+        __cpuid(registers, static_cast<int>(0x80000000));
+        if (static_cast<u32>(registers[0]) >= 0x80000001) {
+            __cpuid(registers, static_cast<int>(0x80000001));
+            f.extended = static_cast<u32>(registers[2]);
+        }
+        return supports_avx2(f);
+#elif defined(__x86_64__)
+        CpuFeatures f;
+        unsigned a, b, c, d;
+        // Query the maximum basic leaf once: CPUID can cause a costly VM exit.
+        if (__get_cpuid_max(0, 0) < 7) {
+            return false;
+        }
+        if (!__get_cpuid(1, &a, &b, &c, &d)) {
+            return false;
+        }
+        f.leaf1 = c;
+        if ((f.leaf1 & required_leaf1) != required_leaf1) {
+            return false;
+        }
+        unsigned lo, hi;
+        __asm__ volatile("xgetbv" : "=a"(lo), "=d"(hi) : "c"(0));
+        f.xcr0 = (static_cast<u64>(hi) << 32) | lo;
+        if ((f.xcr0 & 6) != 6) {
+            return false;
+        }
+        __cpuid_count(7, 0, a, b, c, d);
+        f.leaf7 = b;
+        if ((f.leaf7 & required_leaf7) != required_leaf7) {
+            return false;
+        }
+        if (__get_cpuid(0x80000001, &a, &b, &c, &d)) {
+            f.extended = c;
+        }
+        return supports_avx2(f);
+#else
+        return false;
+#endif
+    }
+} // namespace fosu_dispatch
+
+#endif

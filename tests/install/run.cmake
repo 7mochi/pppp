@@ -1,0 +1,86 @@
+foreach(required PPPP_BINARY PPPP_CONSUMER PPPP_WORK)
+  if(NOT DEFINED ${required})
+    message(FATAL_ERROR "run.cmake needs -D${required}=...")
+  endif()
+endforeach()
+
+set(config Release)
+if(EXISTS "${PPPP_BINARY}/CMakeCache.txt")
+  file(STRINGS "${PPPP_BINARY}/CMakeCache.txt" _build_type REGEX "^CMAKE_BUILD_TYPE:")
+  if(_build_type)
+    string(REGEX REPLACE "^[^=]*=" "" _value "${_build_type}")
+    if(NOT _value STREQUAL "")
+      set(config "${_value}")
+    endif()
+  endif()
+endif()
+
+set(compilers "")
+if(DEFINED PPPP_CXX_COMPILER AND NOT PPPP_CXX_COMPILER STREQUAL "")
+  list(APPEND compilers "-DCMAKE_CXX_COMPILER=${PPPP_CXX_COMPILER}")
+endif()
+if(DEFINED PPPP_C_COMPILER AND NOT PPPP_C_COMPILER STREQUAL "")
+  list(APPEND compilers "-DCMAKE_C_COMPILER=${PPPP_C_COMPILER}")
+endif()
+
+set(prefix "${PPPP_WORK}/prefix")
+set(build "${PPPP_WORK}/build")
+file(REMOVE_RECURSE "${PPPP_WORK}")
+file(MAKE_DIRECTORY "${prefix}")
+
+execute_process(COMMAND ${CMAKE_COMMAND} --install "${PPPP_BINARY}" --prefix "${prefix}"
+    --config "${config}"
+  RESULT_VARIABLE rc)
+if(NOT rc EQUAL 0)
+  message(FATAL_ERROR "installing pppp failed (${rc})")
+endif()
+
+execute_process(COMMAND ${CMAKE_COMMAND} -S "${PPPP_CONSUMER}" -B "${build}"
+    -DCMAKE_PREFIX_PATH=${prefix} -DCMAKE_BUILD_TYPE=${config} ${compilers}
+  RESULT_VARIABLE rc)
+if(NOT rc EQUAL 0)
+  message(FATAL_ERROR "configuring the consumer failed (${rc})")
+endif()
+
+execute_process(COMMAND ${CMAKE_COMMAND} --build "${build}" --config "${config}" RESULT_VARIABLE rc)
+if(NOT rc EQUAL 0)
+  message(FATAL_ERROR "building the consumer failed (${rc})")
+endif()
+
+file(GLOB_RECURSE consumer_bin "${build}/consumer" "${build}/consumer.exe")
+if(NOT consumer_bin)
+  message(FATAL_ERROR "the consumer binary was not built")
+endif()
+list(GET consumer_bin 0 consumer_exe)
+execute_process(COMMAND "${consumer_exe}" OUTPUT_VARIABLE out
+  OUTPUT_STRIP_TRAILING_WHITESPACE RESULT_VARIABLE rc)
+if(NOT rc EQUAL 0)
+  message(FATAL_ERROR "running the consumer failed (${rc})")
+endif()
+if(NOT out MATCHES "^(scalar|avx2|neon)$")
+  message(FATAL_ERROR "the consumer reported an unknown backend: '${out}'")
+endif()
+
+file(GLOB_RECURSE installed_engines "${prefix}/lib*/libfosu_engine_*" "${prefix}/bin/fosu_engine_*")
+if(installed_engines)
+  list(GET installed_engines 0 installed_engine)
+  get_filename_component(engine_name "${installed_engine}" NAME)
+  file(GLOB_RECURSE placed "${build}/${engine_name}")
+  if(NOT placed)
+    message(FATAL_ERROR "pppp_place_engine did not copy '${engine_name}' beside the consumer")
+  endif()
+
+  set(runnable "")
+  foreach(variant avx2 neon)
+    execute_process(COMMAND ${CMAKE_COMMAND} -E env FOSU_BACKEND=${variant} "${consumer_exe}"
+      OUTPUT_VARIABLE probe OUTPUT_STRIP_TRAILING_WHITESPACE RESULT_VARIABLE rc)
+    if(probe STREQUAL variant)
+      set(runnable "${probe}")
+    endif()
+  endforeach()
+  if(NOT runnable STREQUAL "" AND NOT out STREQUAL runnable)
+    message(FATAL_ERROR "the default backend '${out}' is not the runnable engine '${runnable}'")
+  endif()
+endif()
+
+message(STATUS "install consumer ok: ${out}")

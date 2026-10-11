@@ -76,12 +76,14 @@ jobs:
           if [ "${{ runner.os }}" = "macOS" ]; then extension="dylib"; fi
           mkdir -p "csharp/native/${{ matrix.rid }}"
           cp "build/pppp_c.$extension" "csharp/native/${{ matrix.rid }}/pppp_c.$extension"
+          cp build/*fosu_engine_* "csharp/native/${{ matrix.rid }}/" 2>/dev/null || true
       - name: Collect the native
         if: runner.os == 'Windows'
         shell: bash
         run: |
           mkdir -p "csharp/native/${{ matrix.rid }}"
           cp "build/Release/pppp_c.dll" "csharp/native/${{ matrix.rid }}/pppp_c.dll"
+          cp build/Release/fosu_engine_*.dll "csharp/native/${{ matrix.rid }}/" 2>/dev/null || true
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: pppp-native-${{ matrix.rid }}
@@ -143,6 +145,7 @@ jobs:
           dotnet add package pppp-dotnet
           cp ../csharp/tests/Program.cs Program.cs
           dotnet run
+          FOSU_BACKEND=scalar dotnet run
       - name: Install the package and run the suite on net20
         if: runner.os == 'Windows'
         shell: bash
@@ -163,6 +166,7 @@ jobs:
           dotnet add package pppp-dotnet
           cp ../csharp/tests/Program.cs Program.cs
           dotnet run
+          FOSU_BACKEND=scalar dotnet run
 
   publish-nuget:
     name: Publish to NuGet

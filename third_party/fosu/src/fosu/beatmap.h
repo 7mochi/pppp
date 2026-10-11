@@ -140,7 +140,7 @@ namespace fosu {
             if (!values) {
                 return false;
             }
-            std::memcpy(values, span.data(), span.size_bytes());
+            std::memcpy(static_cast<void*>(values), span.data(), span.size_bytes());
             span = nonstd::span<T>(values, span.size());
             return true;
         }

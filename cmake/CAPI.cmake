@@ -38,3 +38,13 @@ check_c_source_compiles(
 if(NOT PPPP_CAPI_HEADER_IS_C)
   message(FATAL_ERROR "include/pppp/capi.h must compile as C")
 endif()
+
+if(TARGET fosu_engine_avx2)
+  add_custom_command(TARGET pppp_c POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:fosu_engine_avx2> $<TARGET_FILE_DIR:pppp_c>)
+elseif(TARGET fosu_engine_neon)
+  add_custom_command(TARGET pppp_c POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:fosu_engine_neon> $<TARGET_FILE_DIR:pppp_c>)
+endif()

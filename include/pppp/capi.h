@@ -364,6 +364,10 @@ extern "C" {
 /// The version as `major.minor.patch`. The returned string is static; do not free it.
 PPPP_C_API const char* pppp_version(void);
 
+/// The parsing engine in use: `"scalar"`, `"avx2"` or `"neon"`. The returned string is static; do not
+/// free it.
+PPPP_C_API const char* pppp_backend(void);
+
 /// The message of a result, in English. The returned string is static; do not free it.
 PPPP_C_API const char* pppp_result_message(pppp_result result);
 

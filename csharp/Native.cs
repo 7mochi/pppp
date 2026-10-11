@@ -369,6 +369,9 @@ namespace Pppp {
         internal static extern IntPtr pppp_version();
 
         [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr pppp_backend();
+
+        [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr pppp_result_message(int result);
 
         [DllImport(Library, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]

@@ -5,6 +5,8 @@
 
 #include "pppp/bindings/records.h"
 
+#include <fosu/engine/runtime/loader.h>
+
 #include <Python.h>
 #include <cstring>
 #include <new>
@@ -1472,6 +1474,15 @@ namespace {
         return PyModule_AddObjectRef(module, "version", version.get());
     }
 
+    int add_backend(PyObject* module) {
+        PyRef backend(PyUnicode_FromString(
+            fosu::internal::engine_name(fosu::internal::selected_engine()->kind)));
+        if (!backend.get()) {
+            return -1;
+        }
+        return PyModule_AddObjectRef(module, "backend", backend.get());
+    }
+
     int bind_types(PyObject* module) {
         PyRef package(PyObject_GetAttrString(module, "__package__"));
         if (!package.get()) {
@@ -1587,7 +1598,7 @@ namespace {
     void free_module(void* module) { clear(static_cast<PyObject*>(module)); }
 
     int exec_module(PyObject* module) {
-        if (add_version(module) < 0 || add_errors(module) < 0) {
+        if (add_version(module) < 0 || add_backend(module) < 0 || add_errors(module) < 0) {
             return -1;
         }
         if (add_beatmap_type(module) < 0) {

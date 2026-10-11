@@ -40,6 +40,7 @@ from ._model import (
 )
 
 __version__: str = _core.version
+backend: str = _core.backend
 
 
 def _from_file(cls: type[Beatmap], path: str | bytes | os.PathLike[str] | os.PathLike[bytes]) -> Beatmap:
@@ -160,4 +161,5 @@ __all__ = [
     "TimingPoint",
     "Vector2",
     "__version__",
+    "backend",
 ]

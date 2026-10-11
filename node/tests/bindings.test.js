@@ -2,12 +2,21 @@ const { execFileSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const { pathToFileURL } = require("url");
+const pkgPrebuilds = require("pkg-prebuilds");
 const pppp = require("../index.js");
 
 const RESOURCES = path.join(__dirname, "..", "..", "tests", "resources");
 
 function beatmapOf(name) {
   return pppp.Beatmap.fromFileSync(path.join(RESOURCES, name));
+}
+
+function probeBackend(variant) {
+  return execFileSync(process.execPath, ["-e", "console.log(require('../index.js').backend)"], {
+    cwd: __dirname,
+    env: { ...process.env, FOSU_BACKEND: variant },
+    encoding: "utf8",
+  }).trim();
 }
 
 test("the version is a version", () => {
@@ -282,4 +291,25 @@ test("several async calculations on one beatmap run at once", async () => {
   const mods = ["NM", "HD", "DT", "HR", "EZ", "HT"];
   const results = await Promise.all(mods.map((m) => new pppp.Difficulty({ mods: m }).calculateAsync(beatmap)));
   results.forEach((result, i) => expect(result).toEqual(new pppp.Difficulty({ mods: mods[i] }).calculate(beatmap)));
+});
+
+test("backend reports the engine", () => {
+  if (process.env.FOSU_BACKEND === "scalar") {
+    expect(pppp.backend).toBe("scalar");
+    return;
+  }
+  const runnable = ["avx2", "neon"].find((variant) => probeBackend(variant) === variant) || "scalar";
+  expect(pppp.backend).toBe(runnable);
+});
+
+test("backend ships beside the binding", () => {
+  const binding = pkgPrebuilds.resolve(path.join(__dirname, ".."), require("../binding-options"));
+  const engines = fs.readdirSync(path.dirname(binding)).filter((name) => name.includes("fosu_engine_"));
+  if (["x64", "arm64"].includes(process.arch)) {
+    expect(engines.length).toBeGreaterThan(0);
+  }
+});
+
+test("FOSU_BACKEND=scalar forces the scalar engine", () => {
+  expect(probeBackend("scalar")).toBe("scalar");
 });

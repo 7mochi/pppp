@@ -9,6 +9,7 @@
 #include <fosu/beatmap.h>
 #include <fosu/engine/parse_document.h>
 #include <fosu/engine/parsing/key_value.h>
+#include <fosu/engine/runtime/loader.h>
 #include <fosu/io.h>
 #include <fosu/legacy_rules.h>
 #include <fosu/mods.h>
@@ -271,7 +272,8 @@ namespace fosu {
                                                    opts.client == Client::Lazer)) {
                 return fail(ParseErrorCode::OutOfMemory);
             }
-            const ParseError parse_error = internal::parse_document(input.data(), input.size(), beatmap_, opts);
+            const ParseError parse_error =
+                internal::selected_engine()->parse_document(input.data(), input.size(), beatmap_, opts);
             if (parse_error.code != ParseErrorCode::None) {
                 return fail(parse_error.code, parse_error.line);
             }

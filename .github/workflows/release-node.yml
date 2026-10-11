@@ -57,7 +57,11 @@ jobs:
           node-version: 24.x
       - run: npm install
       - run: npm test
+        env:
+          FOSU_BACKEND: scalar
       - run: npx pkg-prebuilds-copy --baseDir build/Release --source ${{ env.BINDING_NAME }}.node --name=${{ env.BINDING_NAME }} --strip --napi_version=${{ env.NAPI_VERSION }} --arch=${{ matrix.arch }}
+        working-directory: node
+      - run: node scripts/stage-engine.mjs ${{ matrix.arch }}
         working-directory: node
       - uses: actions/upload-artifact@v7.0.1
         with:

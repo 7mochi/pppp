@@ -16,7 +16,22 @@ if(PPPP_WITH_FOSU)
   pppp_add_test(beatmap library pppp_fosu fosu)
   pppp_add_test(timed_and_strains library pppp_fosu)
   pppp_add_test(mod_behaviour library pppp_fosu)
-  
+  pppp_add_test(backend library pppp_fosu)
+  # The engine sits in the build tree, not beside the test binary; put it there so the default run
+  # exercises the real load, and run a second time with the scalar override.
+  if(TARGET fosu_engine_avx2)
+    add_custom_command(TARGET test_backend POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+              $<TARGET_FILE:fosu_engine_avx2> $<TARGET_FILE_DIR:test_backend>)
+  elseif(TARGET fosu_engine_neon)
+    add_custom_command(TARGET test_backend POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+              $<TARGET_FILE:fosu_engine_neon> $<TARGET_FILE_DIR:test_backend>)
+  endif()
+  add_test(NAME backend_scalar COMMAND test_backend)
+  set_tests_properties(backend_scalar PROPERTIES LABELS library TIMEOUT 300
+    ENVIRONMENT "FOSU_BACKEND=scalar")
+
   pppp_add_test(parity_decode library pppp_fosu)
   pppp_add_test(parity_difficulty library pppp_fosu)
   pppp_add_test(parity_performance library pppp_fosu)
@@ -28,4 +43,15 @@ if(PPPP_WITH_FOSU AND PPPP_BUILD_CAPI)
   set(PPPP_TEST_ARGS --success)
   pppp_add_test(capi library pppp_fosu pppp_c)
   unset(PPPP_TEST_ARGS)
+endif()
+
+if(PPPP_WITH_FOSU AND PPPP_INSTALL)
+  add_test(NAME install_consumer COMMAND ${CMAKE_COMMAND}
+    -DPPPP_BINARY=${CMAKE_BINARY_DIR}
+    -DPPPP_CONSUMER=${CMAKE_CURRENT_SOURCE_DIR}/install/consumer
+    -DPPPP_WORK=${CMAKE_BINARY_DIR}/install-consumer-test
+    -DPPPP_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DPPPP_C_COMPILER=${CMAKE_C_COMPILER}
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/install/run.cmake)
+  set_tests_properties(install_consumer PROPERTIES LABELS library TIMEOUT 300)
 endif()

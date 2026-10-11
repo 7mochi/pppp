@@ -16,6 +16,7 @@ from ._model import (
 )
 
 version: Final[str]
+backend: Final[str]
 
 class Error(Exception): ...
 class ModsError(Error, ValueError): ...

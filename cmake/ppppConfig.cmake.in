@@ -1,4 +1,5 @@
 @PACKAGE_INIT@
 
 include("${CMAKE_CURRENT_LIST_DIR}/ppppTargets.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/ppppPlaceEngine.cmake")
 check_required_components(pppp)

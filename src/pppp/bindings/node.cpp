@@ -3,6 +3,8 @@
 #include <pppp/config.h>
 #include <pppp/pppp.h>
 
+#include <fosu/engine/runtime/loader.h>
+
 #include <cstdio>
 #include <cstring>
 #include <new>
@@ -1150,8 +1152,16 @@ namespace {
         return value;
     }
 
+    napi_value read_backend(napi_env env, napi_callback_info info) {
+        napi_value value = NULL;
+        napi_create_string_utf8(env, fosu::internal::engine_name(fosu::internal::selected_engine()->kind),
+                                NAPI_AUTO_LENGTH, &value);
+        return value;
+    }
+
     napi_property_descriptor properties[] = {
         {"version", NULL, NULL, read_version, NULL, NULL, napi_default_jsproperty, NULL},
+        {"backend", NULL, NULL, read_backend, NULL, NULL, napi_default_jsproperty, NULL},
         {"fromBytes", NULL, from_bytes, NULL, NULL, NULL, napi_default_jsproperty, NULL},
         {"calculateDifficulty", NULL, calculate, NULL, NULL, NULL, napi_default_jsproperty,
          const_cast<Call*>(&calls[0])},

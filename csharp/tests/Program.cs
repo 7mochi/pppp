@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using Pppp;
 
 namespace Pppp.Tests {
@@ -71,6 +74,52 @@ namespace Pppp.Tests {
         private static void TheVersionIsAVersion() {
             string version = Version.Current;
             Check(version != null && version.Split('.').Length == 3, "the version is a version");
+        }
+
+        private static bool EngineIsBesideTheNativeLibrary() {
+            List<string> roots = new List<string>();
+            roots.Add(AppDomain.CurrentDomain.BaseDirectory);
+            string ld = Environment.GetEnvironmentVariable("LD_LIBRARY_PATH");
+            if (!string.IsNullOrEmpty(ld)) {
+                roots.AddRange(ld.Split(':'));
+            }
+            foreach (string root in roots) {
+                if (Directory.Exists(root) && Directory.GetFiles(root, "*fosu_engine_*").Length > 0) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static string ProbeBackend(string variant) {
+            string entry = Assembly.GetEntryAssembly().Location;
+            ProcessStartInfo info;
+            if (entry.EndsWith(".exe")) {
+                info = new ProcessStartInfo(entry, "--print-backend");
+            } else {
+                info = new ProcessStartInfo("dotnet", "\"" + entry + "\" --print-backend");
+            }
+            info.UseShellExecute = false;
+            info.RedirectStandardOutput = true;
+            info.EnvironmentVariables["FOSU_BACKEND"] = variant;
+            using (Process process = Process.Start(info)) {
+                string output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+                return output.Trim();
+            }
+        }
+
+        private static void TheBackendLoadsTheEngine() {
+            string name = Backend.Name;
+            Check(name == "scalar" || name == "avx2" || name == "neon", "the backend name is known");
+            if (Environment.GetEnvironmentVariable("FOSU_BACKEND") == "scalar") {
+                Check(name == "scalar", "FOSU_BACKEND=scalar forces the scalar engine");
+                return;
+            }
+            Check(EngineIsBesideTheNativeLibrary(), "the engine ships beside the native library");
+            
+            string runnable = ProbeBackend("avx2") == "avx2" ? "avx2" : ProbeBackend("neon") == "neon" ? "neon" : "scalar";
+            Check(name == runnable, "the backend matches what the host can run");
         }
 
         private static void FromFileReadsTheModel() {
@@ -394,8 +443,13 @@ namespace Pppp.Tests {
             }
         }
 
-        private static int Main() {
+        private static int Main(string[] args) {
+            if (args.Length > 0 && args[0] == "--print-backend") {
+                Console.WriteLine(Backend.Name);
+                return 0;
+            }
             TheVersionIsAVersion();
+            TheBackendLoadsTheEngine();
             FromFileReadsTheModel();
             FromBytesMatchesTheFile();
             AMissingFileIsTheFrameworkException();

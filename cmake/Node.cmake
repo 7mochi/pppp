@@ -11,3 +11,13 @@ target_link_libraries(pppp_node PRIVATE ${CMAKE_JS_LIB} pppp_fosu)
 if(MSVC AND CMAKE_JS_NODELIB_DEF AND CMAKE_JS_NODELIB_TARGET)
   execute_process(COMMAND ${CMAKE_AR} /def:${CMAKE_JS_NODELIB_DEF} /out:${CMAKE_JS_NODELIB_TARGET} ${CMAKE_STATIC_LINKER_FLAGS})
 endif()
+
+if(TARGET fosu_engine_avx2)
+  add_custom_command(TARGET pppp_node POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:fosu_engine_avx2> $<TARGET_FILE_DIR:pppp_node>)
+elseif(TARGET fosu_engine_neon)
+  add_custom_command(TARGET pppp_node POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:fosu_engine_neon> $<TARGET_FILE_DIR:pppp_node>)
+endif()

@@ -226,7 +226,6 @@ PPPP_TEST(clients_hit_object_lines_stable_skips) {
 // cannot read: its repeat count is missing.
 PPPP_TEST(clients_unknown_curve_types) {
     static const char* const curves[] = {"X|100:100,1,50", "b,1,50"};
-    static const Client::Value clients[] = {Client::Stable, Client::Lazer};
     for (size_t c = 0; c < 2; c++) {
         for (size_t o = 0; o < 2; o++) {
             const std::string input = std::string("osu file format v14\n[TimingPoints]\n0,500\n[HitObjects]\n"

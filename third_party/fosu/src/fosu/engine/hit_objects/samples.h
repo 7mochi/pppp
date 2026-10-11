@@ -3,14 +3,39 @@
 
 #include <fosu/engine/parsing/numbers.h>
 #include <fosu/engine/primitives/byte_scan.h>
+#include <fosu/engine/primitives/vector_ops.h>
 #include <fosu/nonstd_config.h>
+#include <fosu/types.h>
 
 namespace fosu { namespace internal {
-    // The common editor spelling "d:d:d:d:" (upstream tests the 8 bytes at once; the padding
-    // contract makes reading them always safe).
+    // The common editor spelling "d:d:d:d:" (the padding contract makes reading the 8 bytes at
+    // once always safe).
     inline bool short_sample(const char* p) {
+#if FOSU_SIMD_X86
+        const __m128i text = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(p));
+        // Digits become [-128, -119]; each ':' becomes -128. A single
+        // comparison rejects both non-digits and misplaced separators.
+        const __m128i biased = _mm_add_epi8(text, _mm_set1_epi16(0x4650));
+        const __m128i invalid = _mm_cmpgt_epi8(biased, _mm_set1_epi16(-32631));
+        return (_mm_movemask_epi8(invalid) & 0xff) == 0;
+#else
         return p[1] == ':' && p[3] == ':' && p[5] == ':' && p[7] == ':' && is_digit(p[0]) && is_digit(p[2]) &&
                is_digit(p[4]) && is_digit(p[6]);
+#endif
+    }
+
+    // The editor's edge sets for an unrepeated slider: "d:d|d:d".
+    inline bool short_edge_sets(const char* s) {
+#if FOSU_SIMD_X86
+        const __m128i text = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(s));
+        // _mm_set_epi64x(0, 0x0050465004504650) without a C++11 long-long literal.
+        const __m128i biased = _mm_add_epi8(text, _mm_set_epi32(0, 0, 0x00504650, 0x04504650));
+        const __m128i invalid = _mm_cmpgt_epi8(biased, _mm_set1_epi16(-32631));
+        return (_mm_movemask_epi8(invalid) & 0x7f) == 0;
+#else
+        return s[1] == ':' && s[3] == '|' && s[5] == ':' && is_digit(s[0]) && is_digit(s[2]) &&
+               is_digit(s[4]) && is_digit(s[6]);
+#endif
     }
 
     // Only the fields read by the official legacy decoder affect acceptance.
@@ -46,13 +71,8 @@ namespace fosu { namespace internal {
         if (sets.empty()) {
             return true;
         }
-        if (sets.size() == 7) {
-            // "d:d|d:d"
-            const char* s = sets.data();
-            if (s[1] == ':' && s[3] == '|' && s[5] == ':' && is_digit(s[0]) && is_digit(s[2]) &&
-                is_digit(s[4]) && is_digit(s[6])) {
-                return true;
-            }
+        if (sets.size() == 7 && short_edge_sets(sets.data())) {
+            return true;
         }
         const char* p = sets.data();
         const char* end = p + sets.size();

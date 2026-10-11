@@ -1,6 +1,7 @@
 {
   global:
     pppp_version;
+    pppp_backend;
     pppp_result_message;
     pppp_mods_parse;
     pppp_mods_from_legacy;

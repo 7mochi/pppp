@@ -1,3 +1,3 @@
 import cjsModule from "./index.js";
 
-export const { version, Ruleset, Beatmap, Difficulty, Performance } = cjsModule;
+export const { version, backend, Ruleset, Beatmap, Difficulty, Performance } = cjsModule;

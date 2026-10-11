@@ -131,6 +131,7 @@ class Performance {
 }
 
 module.exports.version = binding.version;
+module.exports.backend = binding.backend;
 module.exports.Ruleset = Ruleset;
 module.exports.Beatmap = Beatmap;
 module.exports.Difficulty = Difficulty;

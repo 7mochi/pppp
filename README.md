@@ -26,17 +26,22 @@ A consumer finds the package with `find_package` and links the target it needs:
 ```cmake
 find_package(pppp CONFIG REQUIRED)
 target_link_libraries(your_target PRIVATE pppp::fosu)
+pppp_place_engine(your_target)   # puts the SIMD engine next to your_target
 ```
 
 ## Usage
 
 ```cpp
+#include <pppp/backend.h>
 #include <pppp/beatmap.h>
 #include <pppp/pppp.h>
 
 pppp::Beatmap beatmap;
 pppp::Status status = beatmap.load_file("map.osu");    // or beatmap.load_buffer(data, size)
 if (!status.ok()) { puts(status.message()); return 1; }
+
+// The parser engine the loader chose, read-only: pppp::EngineKind::SCALAR, AVX2 or NEON.
+// e.g. `pppp::backend() == pppp::EngineKind::AVX2` on an x86-64 host.
 
 pppp::Mods mods;
 if (!mods.parse("HDDT").ok()) return 1;                 // "DT:speed_change=1.4" for settings

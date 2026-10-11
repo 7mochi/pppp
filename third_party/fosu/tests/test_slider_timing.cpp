@@ -78,12 +78,6 @@ namespace {
     }
 
     bool near(double a, double b, double tolerance) { return std::fabs(a - b) <= tolerance; }
-
-    ParseOptions end_time_options() {
-        ParseOptions options = lazer_options();
-        options.calculate_slider_end_times = true;
-        return options;
-    }
 } // namespace
 
 PPPP_TEST(slider_timing_end_time_covers_every_span) {

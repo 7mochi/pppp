@@ -37,6 +37,39 @@
       }
     },
     {
+      "name": "scalar",
+      "displayName": "Parser, scalar only",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build_scalar",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "PPPP_BUILD_TESTS": "ON",
+        "PPPP_ISA": "scalar"
+      }
+    },
+    {
+      "name": "avx2",
+      "displayName": "Parser, x86-64 AVX2 engine",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build_avx2",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "PPPP_BUILD_TESTS": "ON",
+        "PPPP_ISA": "avx2"
+      }
+    },
+    {
+      "name": "neon",
+      "displayName": "Parser, AArch64 NEON engine",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build_neon",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "PPPP_BUILD_TESTS": "ON",
+        "PPPP_ISA": "neon"
+      }
+    },
+    {
       "name": "win2k",
       "displayName": "Windows 2000 and later (x86)",
       "inherits": "release",
@@ -76,6 +109,18 @@
     {
       "name": "release",
       "configurePreset": "release"
+    },
+    {
+      "name": "scalar",
+      "configurePreset": "scalar"
+    },
+    {
+      "name": "avx2",
+      "configurePreset": "avx2"
+    },
+    {
+      "name": "neon",
+      "configurePreset": "neon"
     },
     {
       "name": "win2k",

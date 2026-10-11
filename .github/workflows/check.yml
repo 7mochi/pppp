@@ -53,12 +53,12 @@ jobs:
     name: All Succeeded
     if: always()
     runs-on: ubuntu-latest
-    needs: [changes, check, check-windows]
+    needs: [changes, check, check-windows, check-configurations]
     steps:
       - uses: re-actors/alls-green@v1.3.0
         with:
           jobs: ${{ toJSON(needs) }}
-          allowed-skips: check,check-windows
+          allowed-skips: check,check-windows,check-configurations
 
   check:
     name: Check on ${{ matrix.os }}
@@ -138,3 +138,27 @@ jobs:
           cd csharp/tests
           dotnet build
           dotnet run -f net20 --no-build
+
+  check-configurations:
+    name: Check ${{ matrix.isa }} on ${{ matrix.os }}
+    needs: changes
+    if: needs.changes.outputs.core == 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            isa: scalar
+          - os: ubuntu-latest
+            isa: avx2
+          - os: macos-latest
+            isa: neon
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: nixbuild/nix-quick-install-action@v35
+      - uses: nix-community/cache-nix-action@v7.0.2
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
+      - name: Build and test (${{ matrix.isa }})
+        run: nix develop -c make test-${{ matrix.isa }}

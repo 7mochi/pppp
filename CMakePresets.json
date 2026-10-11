@@ -11,7 +11,8 @@
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "PPPP_BUILD_TESTS": "ON",
         "PPPP_BUILD_PYTHON": "ON",
-        "PPPP_BUILD_CAPI": "ON"
+        "PPPP_BUILD_CAPI": "ON",
+        "PPPP_ISA": "auto"
       }
     },
     {

@@ -119,7 +119,7 @@
             shellHook = ''
               echo "pp++"
               echo "  make configure                           # configure CMake"
-              echo "  make test                                # build and run the suites"
+              echo "  make test-auto                           # build and run the suites"
               echo "  make format                              # C++ formatting"
               echo "  make check-format                        # C++ formatting, checked"
               echo "  make check-tidy                          # C++ analysis, report only"

@@ -78,7 +78,7 @@ jobs:
       - name: Format
         run: nix develop -c make check-format
       - name: Build and test
-        run: nix develop -c make test
+        run: nix develop -c make test-auto
       - name: Test the bindings
         if: needs.changes.outputs.core == 'true' || needs.changes.outputs.python == 'true'
         run: |

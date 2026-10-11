@@ -1,7 +1,7 @@
 BUILD_DIR   := build
 NPROC := $(shell nproc 2>/dev/null || echo 4)
 
-.PHONY: all clean rebuild test test-scalar test-avx2 test-neon generate-parity-tests configure format check-format check-tidy build-windows-2k build-windows-xp-x64
+.PHONY: all clean rebuild test-auto test-scalar test-avx2 test-neon generate-parity-tests configure format check-format check-tidy build-windows-2k build-windows-xp-x64
 
 all: build
 
@@ -23,8 +23,8 @@ build-windows-xp-x64:
 	cmake --preset winxp-x64
 	cmake --build --preset winxp-x64
 
-test: build
-	@echo "Running tests:"
+test-auto: build
+	@echo "Testing pppp (PPPP_ISA=auto):"
 	ctest --test-dir $(BUILD_DIR) --output-on-failure
 
 test-scalar:
@@ -48,7 +48,7 @@ test-neon:
 clean:
 	rm -rf $(BUILD_DIR) build_scalar build_avx2 build_neon
 
-rebuild: clean build test
+rebuild: clean build test-auto
 
 format: configure
 	cmake --build $(BUILD_DIR) --target format

@@ -79,9 +79,12 @@ namespace Pppp.Tests {
         private static bool EngineIsBesideTheNativeLibrary() {
             List<string> roots = new List<string>();
             roots.Add(AppDomain.CurrentDomain.BaseDirectory);
-            string ld = Environment.GetEnvironmentVariable("LD_LIBRARY_PATH");
-            if (!string.IsNullOrEmpty(ld)) {
-                roots.AddRange(ld.Split(':'));
+            string loaderPath = Environment.GetEnvironmentVariable("LD_LIBRARY_PATH");
+            if (string.IsNullOrEmpty(loaderPath)) {
+                loaderPath = Environment.GetEnvironmentVariable("PATH");
+            }
+            if (!string.IsNullOrEmpty(loaderPath)) {
+                roots.AddRange(loaderPath.Split(Path.PathSeparator));
             }
             foreach (string root in roots) {
                 if (Directory.Exists(root) && Directory.GetFiles(root, "*fosu_engine_*").Length > 0) {

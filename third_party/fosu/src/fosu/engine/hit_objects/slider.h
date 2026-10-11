@@ -63,9 +63,7 @@ namespace fosu { namespace internal {
         return p + 2 == end || p[2] == '|' || p[2] == ',';
     }
 
-    inline bool is_ascii_letter(char value) {
-        return static_cast<fosu::u8>((value | 0x20) - 'a') < 26;
-    }
+    inline bool is_ascii_letter(char value) { return static_cast<fosu::u8>((value | 0x20) - 'a') < 26; }
 
     inline bool parse_curve_type(char value, CurveType::Value& out) {
         switch (value) {
@@ -111,19 +109,17 @@ namespace fosu { namespace internal {
     static const SliderPointShuffle (&kSliderPointShuffles)[16] = kSliderPointShuffleTable.entries;
 
     FOSU_STATIC_ASSERT(slider_point_layout, sizeof(SliderPoint) == 8 && offsetof(SliderPoint, x) == 0 &&
-                                               offsetof(SliderPoint, y) == 4);
+                                                offsetof(SliderPoint, y) == 4);
 
 #if FOSU_SIMD_X86
-    inline __m128i load16(const char* p) {
-        return _mm_loadu_si128(reinterpret_cast<const __m128i*>(p));
-    }
+    inline __m128i load16(const char* p) { return _mm_loadu_si128(reinterpret_cast<const __m128i*>(p)); }
 
     inline SliderPoint decode_slider_point(__m128i input, u32 x_digits, u32 y_digits,
                                            const HitObjectParseConstants& constants) {
         const SliderPointShuffle& shuffle = kSliderPointShuffles[(x_digits - 1) * 4 + y_digits - 1];
-        const __m128i placed = _mm_shuffle_epi8(
-            _mm_sub_epi8(input, _mm256_castsi256_si128(constants.zero)),
-            _mm_load_si128(reinterpret_cast<const __m128i*>(shuffle.bytes)));
+        const __m128i placed =
+            _mm_shuffle_epi8(_mm_sub_epi8(input, _mm256_castsi256_si128(constants.zero)),
+                             _mm_load_si128(reinterpret_cast<const __m128i*>(shuffle.bytes)));
         const __m128i coordinates =
             _mm_madd_epi16(_mm_maddubs_epi16(placed, constants.pair_weights), constants.word_weights);
         const __m128 positions = _mm_cvtepi32_ps(coordinates);
@@ -133,16 +129,13 @@ namespace fosu { namespace internal {
         return point;
     }
 #else
-    inline uint8x16_t load16(const char* p) {
-        return vld1q_u8(reinterpret_cast<const u8*>(p));
-    }
+    inline uint8x16_t load16(const char* p) { return vld1q_u8(reinterpret_cast<const u8*>(p)); }
 
     inline SliderPoint decode_slider_point(uint8x16_t input, u32 x_digits, u32 y_digits,
                                            const HitObjectParseConstants& constants) {
         const SliderPointShuffle& shuffle = kSliderPointShuffles[(x_digits - 1) * 4 + y_digits - 1];
-        const uint32x4_t coordinates =
-            decimal_groups(vqtbl1q_u8(vsubq_u8(input, constants.zero),
-                                      vld1q_u8(reinterpret_cast<const u8*>(shuffle.bytes))));
+        const uint32x4_t coordinates = decimal_groups(vqtbl1q_u8(
+            vsubq_u8(input, constants.zero), vld1q_u8(reinterpret_cast<const u8*>(shuffle.bytes))));
         const float32x4_t positions = vcvtq_f32_u32(coordinates);
         SliderPoint point;
         const u64 bits = vgetq_lane_u64(vreinterpretq_u64_f32(positions), 0);
@@ -242,9 +235,9 @@ namespace fosu { namespace internal {
         }
         const u32 second_x_digits = second_colon - first_end - 1;
         const u32 second_y_digits = second_end - second_colon - 1;
-        const bool second = (((second_x_digits - 1) | (second_y_digits - 1)) <= 3) &
-                            static_cast<bool>((pipes >> first_end) & (colons >> second_colon) &
-                                              (ends >> second_end) & 1);
+        const bool second =
+            (((second_x_digits - 1) | (second_y_digits - 1)) <= 3) &
+            static_cast<bool>((pipes >> first_end) & (colons >> second_colon) & (ends >> second_end) & 1);
         beatmap.slider_points[slider_point_count] =
             decode_slider_point(load16(p), first_x_digits, first_y_digits, constants);
         // The array has a spare slot for an absent second point; its widths are wrapped into the
@@ -286,8 +279,7 @@ namespace fosu { namespace internal {
         const char* coordinate = p + 1;
         float x;
         fosu::u32 digits = digit_run8(coordinate);
-        if (digits - 1 <= 3 && digits <= static_cast<size_t>(end - coordinate) &&
-            coordinate[digits] == ':') {
+        if (digits - 1 <= 3 && digits <= static_cast<size_t>(end - coordinate) && coordinate[digits] == ':') {
             x = static_cast<float>(swar_parse_u32(coordinate, digits));
             coordinate += digits;
         } else {
@@ -463,10 +455,9 @@ namespace fosu { namespace internal {
                     counts.slider_segments = slider_segment_begin;
                     return false;
                 }
-                beatmap.slider_segments[counts.slider_segments++] =
-                    make_curve_segment(current_curve_type, current_curve_has_degree, current_curve_degree,
-                                       segment_point_begin - slider_point_begin,
-                                       counts.slider_points - segment_point_begin);
+                beatmap.slider_segments[counts.slider_segments++] = make_curve_segment(
+                    current_curve_type, current_curve_has_degree, current_curve_degree,
+                    segment_point_begin - slider_point_begin, counts.slider_points - segment_point_begin);
                 has_explicit_segments = true;
                 segment_point_begin = counts.slider_points - 1;
                 current_curve_type = next_curve_type;
@@ -528,7 +519,8 @@ namespace fosu { namespace internal {
             const char* sound_begin = p + 1;
             for (int field = 0; field < 3; ++field) {
                 const char* comma = find_byte(',', sound_begin, end);
-                sound_fields[field] = nonstd::string_view(sound_begin, static_cast<size_t>(comma - sound_begin));
+                sound_fields[field] =
+                    nonstd::string_view(sound_begin, static_cast<size_t>(comma - sound_begin));
                 if (comma == end) {
                     break;
                 }
@@ -551,10 +543,9 @@ namespace fosu { namespace internal {
                 counts.slider_segments = slider_segment_begin;
                 return false;
             }
-            beatmap.slider_segments[counts.slider_segments++] =
-                make_curve_segment(current_curve_type, current_curve_has_degree, current_curve_degree,
-                                   segment_point_begin - slider_point_begin,
-                                   counts.slider_points - segment_point_begin);
+            beatmap.slider_segments[counts.slider_segments++] = make_curve_segment(
+                current_curve_type, current_curve_has_degree, current_curve_degree,
+                segment_point_begin - slider_point_begin, counts.slider_points - segment_point_begin);
         }
 
         Slider& slider = beatmap.sliders[counts.sliders];

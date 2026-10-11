@@ -5,11 +5,11 @@
 
 #include <fosu/beatmap.h>
 #include <fosu/engine/parsing/lines.h>
-#include <fosu/format.h>
 #include <fosu/engine/parsing/numbers.h>
 #include <fosu/engine/parsing/string_lookup.h>
 #include <fosu/engine/primitives/byte_scan.h>
 #include <fosu/engine/primitives/vector_ops.h>
+#include <fosu/format.h>
 #include <fosu/types.h>
 
 namespace fosu { namespace internal {

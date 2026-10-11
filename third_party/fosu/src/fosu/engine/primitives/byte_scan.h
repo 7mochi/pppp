@@ -12,8 +12,7 @@ namespace fosu { namespace internal {
         const u8 positions[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
         const uint8x16_t cr = vceqq_u8(bytes, broadcast_byte<'\r'>());
         const uint8x16_t lf = vceqq_u8(bytes, broadcast_byte<'\n'>());
-        const uint8x16_t positions_or_end =
-            vbslq_u8(vorrq_u8(cr, lf), vld1q_u8(positions), vdupq_n_u8(16));
+        const uint8x16_t positions_or_end = vbslq_u8(vorrq_u8(cr, lf), vld1q_u8(positions), vdupq_n_u8(16));
         return vminvq_u8(positions_or_end);
     }
 

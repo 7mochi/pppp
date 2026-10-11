@@ -14,6 +14,5 @@ namespace fosu { namespace internal {
 #else
         EngineKind::Scalar,
 #endif
-        parse_document
-    };
+        parse_document};
 }} // namespace fosu::internal

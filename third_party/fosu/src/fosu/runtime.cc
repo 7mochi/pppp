@@ -3,9 +3,7 @@
 #include <fosu/runtime.h>
 
 namespace fosu {
-    const ParsingEngine* runtime_engine() {
-        return internal::selected_engine();
-    }
+    const ParsingEngine* runtime_engine() { return internal::selected_engine(); }
     namespace {
         struct RuntimeCleanup {
             ~RuntimeCleanup() { internal::unload_engine(); }

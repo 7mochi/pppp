@@ -7,10 +7,10 @@
 #include <fosu/arena.h>
 #include <fosu/beatmap_header.h>
 #include <fosu/compiler.h>
+#include <fosu/nonstd_config.h>
 #include <fosu/result.h>
 #include <fosu/slider_event.h>
 #include <fosu/slider_path.h>
-#include <fosu/nonstd_config.h>
 
 namespace fosu {
     struct HitObject {

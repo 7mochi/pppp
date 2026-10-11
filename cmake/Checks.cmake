@@ -7,10 +7,16 @@ find_program(CLANG_FORMAT NAMES clang-format)
 file(GLOB_RECURSE PPPP_CODESTYLE_HEADERS CONFIGURE_DEPENDS
   ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h
   ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.h)
+  ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/fosu/src/*.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/fosu/tests/*.h)
 file(GLOB_RECURSE PPPP_CODESTYLE_SOURCES CONFIGURE_DEPENDS
   ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp)
+  ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/fosu/src/*.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/fosu/src/*.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/fosu/tests/*.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/fosu/tests/*.cc)
 
 if(CLANG_FORMAT)
   add_custom_target(format

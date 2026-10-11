@@ -15,44 +15,42 @@
 #include <sys/mman.h>
 #endif
 
-namespace fosu {
-    namespace internal {
-        inline void* os_reserve(size_t size) {
+namespace fosu { namespace internal {
+    inline void* os_reserve(size_t size) {
 #if defined(_WIN32)
-            return VirtualAlloc(0, size, MEM_RESERVE, PAGE_NOACCESS);
+        return VirtualAlloc(0, size, MEM_RESERVE, PAGE_NOACCESS);
 #else
-            int flags = MAP_PRIVATE | MAP_ANONYMOUS;
+        int flags = MAP_PRIVATE | MAP_ANONYMOUS;
 #if defined(MAP_NORESERVE)
-            flags |= MAP_NORESERVE;
+        flags |= MAP_NORESERVE;
 #endif
-            void* memory = mmap(0, size, PROT_NONE, flags, -1, 0);
-            if (memory == MAP_FAILED) {
-                return 0;
-            }
+        void* memory = mmap(0, size, PROT_NONE, flags, -1, 0);
+        if (memory == MAP_FAILED) {
+            return 0;
+        }
 #if defined(MADV_HUGEPAGE)
-            madvise(memory, size, MADV_HUGEPAGE);
+        madvise(memory, size, MADV_HUGEPAGE);
 #endif
-            return memory;
+        return memory;
 #endif
-        }
+    }
 
-        inline bool os_commit(void* memory, size_t size) {
+    inline bool os_commit(void* memory, size_t size) {
 #if defined(_WIN32)
-            return VirtualAlloc(memory, size, MEM_COMMIT, PAGE_READWRITE) == memory;
+        return VirtualAlloc(memory, size, MEM_COMMIT, PAGE_READWRITE) == memory;
 #else
-            return mprotect(memory, size, PROT_READ | PROT_WRITE) == 0;
+        return mprotect(memory, size, PROT_READ | PROT_WRITE) == 0;
 #endif
-        }
+    }
 
-        inline void os_release(void* memory, size_t size) {
+    inline void os_release(void* memory, size_t size) {
 #if defined(_WIN32)
-            (void)size;
-            VirtualFree(memory, 0, MEM_RELEASE);
+        (void)size;
+        VirtualFree(memory, 0, MEM_RELEASE);
 #else
-            munmap(memory, size);
+        munmap(memory, size);
 #endif
-        }
-    } // namespace internal
-} // namespace fosu
+    }
+}} // namespace fosu::internal
 
 #endif

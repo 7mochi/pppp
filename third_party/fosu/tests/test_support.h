@@ -1,7 +1,6 @@
 #ifndef FOSU_TESTS_SUPPORT_H
 #define FOSU_TESTS_SUPPORT_H
 
-
 #include <cstdio>
 #include <string>
 
@@ -24,8 +23,7 @@ inline fosu::ParseOptions lazer_options() {
 
 // Parses with a parser that lives as long as the test binary: the returned beatmap is a shallow
 // copy whose strings and arrays stay valid until the next parse_str call.
-inline fosu::Beatmap parse_str(const std::string& s,
-                               const fosu::ParseOptions& options = lazer_options()) {
+inline fosu::Beatmap parse_str(const std::string& s, const fosu::ParseOptions& options = lazer_options()) {
     static fosu::Parser parser;
     return require_parse(parser.parse(s.data(), s.size(), options));
 }

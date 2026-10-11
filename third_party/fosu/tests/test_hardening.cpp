@@ -58,8 +58,9 @@ PPPP_TEST(framing_and_combo_state) {
     CHECK(make_padded(nonstd::string_view(), empty_input));
     CHECK(must_parse(parser, empty_input).hit_objects.empty());
     FileBuffer embedded;
-    CHECK(make_padded(nonstd::string_view("[Metadata]\nTitle:[HitObjects]\n1,2,3,1,0\n[HitObjects]\n1,2,4,1,0\n"),
-                      embedded));
+    CHECK(make_padded(
+        nonstd::string_view("[Metadata]\nTitle:[HitObjects]\n1,2,3,1,0\n[HitObjects]\n1,2,4,1,0\n"),
+        embedded));
     ParseOptions hit_objects_only = lazer_options();
     hit_objects_only.sections = kSectionHitObjects;
     const Beatmap selected = must_parse(parser, embedded, hit_objects_only);
@@ -69,9 +70,9 @@ PPPP_TEST(framing_and_combo_state) {
     {
         FileBuffer input;
         CHECK(make_padded(nonstd::string_view("[HitObjects]\n256,192,100,8,0,150\n0,0,160,8,0,bad\n"
-                                     "[Metadata]\nTitle:gap\n[HitObjects]\n"
-                                     "100,100,200,1,0\n101,100,201,1,0\n"
-                                     "1.5,2,250,8,0,300\n1,2,310,1,0\n"),
+                                              "[Metadata]\nTitle:gap\n[HitObjects]\n"
+                                              "100,100,200,1,0\n101,100,201,1,0\n"
+                                              "1.5,2,250,8,0,300\n1,2,310,1,0\n"),
                           input));
         const Beatmap map = must_parse(parser, input);
         CHECK(map.stats.malformed_lines == 1);
@@ -190,8 +191,7 @@ PPPP_TEST(truncated_inputs) {
 // A map the target client refuses to load fails the parse with Unloadable and the
 // line that made it unloadable, so the adapter can map it to a parse error.
 PPPP_TEST(unloadable_map_reports_the_line) {
-    const std::string input =
-        "osu file format vx\n[TimingPoints]\n0,500\n[HitObjects]\n64,64,100,1,0\n";
+    const std::string input = "osu file format vx\n[TimingPoints]\n0,500\n[HitObjects]\n64,64,100,1,0\n";
     Parser parser;
     CHECK(!parser.parse(input.data(), input.size(), lazer_options()));
     CHECK(parser.error().code == ParseErrorCode::Unloadable);

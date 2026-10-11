@@ -17,8 +17,7 @@ namespace fosu {
     // and shortens them to actual counts. No allocation, I/O, or retained state.
     struct ParsingEngine {
         EngineKind::Value kind;
-        ParseError (*parse_document)(const char* data, size_t size, Beatmap& beatmap,
-                                     ParseOptions options);
+        ParseError (*parse_document)(const char* data, size_t size, Beatmap& beatmap, ParseOptions options);
     };
 } // namespace fosu
 

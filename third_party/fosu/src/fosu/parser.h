@@ -58,8 +58,7 @@ namespace fosu {
         }
 
         inline bool allocate_beatmap_arrays(Arena* arena, Beatmap& beatmap, nonstd::string_view input,
-                                            fosu::u32 selected_sections, bool lazer_format,
-                                            bool segments) {
+                                            fosu::u32 selected_sections, bool lazer_format, bool segments) {
             const size_t input_size = input.size();
             // Each capacity is a conservative bound derived from the shortest accepted
             // spelling. sizeof includes the string literal's trailing null byte.

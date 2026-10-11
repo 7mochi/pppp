@@ -7,7 +7,9 @@
 
 using namespace fosu;
 
-static bool padded(const char* text, FileBuffer& buffer) { return make_padded(nonstd::string_view(text), buffer); }
+static bool padded(const char* text, FileBuffer& buffer) {
+    return make_padded(nonstd::string_view(text), buffer);
+}
 static bool padded(const std::string& text, FileBuffer& buffer) {
     return make_padded(nonstd::string_view(text.data(), text.size()), buffer);
 }
@@ -114,7 +116,9 @@ PPPP_TEST(mods_and_derived_options) {
         CHECK(destination);
         Result<Beatmap> copy = skipped.copy(*destination);
         CHECK(copy.ok());
-        CHECK(require_parse(parser.parse(input.data(), input.size(), lazer_options())).hit_objects[0].end_time == 0);
+        CHECK(require_parse(parser.parse(input.data(), input.size(), lazer_options()))
+                  .hit_objects[0]
+                  .end_time == 0);
         options.calculate_slider_end_times = true;
         const Beatmap& calculated = require_parse(parser.parse(input.data(), input.size(), options));
         CHECK(calculated.hit_objects[0].end_time > calculated.hit_objects[0].time);
@@ -367,7 +371,8 @@ PPPP_TEST(option_combinations_on_reused_parser) {
     CHECK(raw.slider_paths.empty() && raw.slider_events.empty());
     CHECK(raw.stacking.empty());
     CHECK(raw.hit_objects[1].end_time == 0);
-    CHECK(canonical(raw) == canonical(require_parse(fresh.parse(input.data(), input.size(), lazer_options()))));
+    CHECK(canonical(raw) ==
+          canonical(require_parse(fresh.parse(input.data(), input.size(), lazer_options()))));
 }
 
 PPPP_TEST(event_budget_failure_and_reuse) {

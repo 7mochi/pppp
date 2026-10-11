@@ -42,14 +42,12 @@ namespace fosu_dispatch {
               extended(0),
               xcr0(0) {}
     };
-    const u32 required_leaf1 = (1u << 0) | (1u << 9) | (1u << 12) | (1u << 13) | (1u << 19) |
-                               (1u << 20) | (1u << 22) | (1u << 23) | (1u << 26) | (1u << 27) |
-                               (1u << 28) | (1u << 29);
+    const u32 required_leaf1 = (1u << 0) | (1u << 9) | (1u << 12) | (1u << 13) | (1u << 19) | (1u << 20) |
+                               (1u << 22) | (1u << 23) | (1u << 26) | (1u << 27) | (1u << 28) | (1u << 29);
     const u32 required_leaf7 = (1u << 3) | (1u << 5) | (1u << 8);
     const u32 required_extended = (1u << 0) | (1u << 5);
     inline bool supports_avx2(const CpuFeatures& f) {
-        return (f.leaf1 & required_leaf1) == required_leaf1 &&
-               (f.leaf7 & required_leaf7) == required_leaf7 &&
+        return (f.leaf1 & required_leaf1) == required_leaf1 && (f.leaf7 & required_leaf7) == required_leaf7 &&
                (f.extended & required_extended) == required_extended && (f.xcr0 & 6) == 6;
     }
     inline bool host_supports_avx2() {

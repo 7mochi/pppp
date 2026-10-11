@@ -27,151 +27,148 @@ namespace fosu { namespace internal {
 #if FOSU_SIMD
 #error "the core embeds only the scalar engine"
 #endif
-namespace {
-    // Trivial lifetime permits a host's late exit callback to initialize again
-    // after library cleanup. No parser or arena lives in an engine library.
-    const ParsingEngine& embedded_scalar_engine = compiled_engine;
-    const ParsingEngine* selected = 0;
-    nonstd::atomic_flag selecting;
+    namespace {
+        // Trivial lifetime permits a host's late exit callback to initialize again
+        // after library cleanup. No parser or arena lives in an engine library.
+        const ParsingEngine& embedded_scalar_engine = compiled_engine;
+        const ParsingEngine* selected = 0;
+        nonstd::atomic_flag selecting;
 #if defined(_WIN32)
-    typedef HMODULE EngineLibrary;
+        typedef HMODULE EngineLibrary;
 #else
-    typedef void* EngineLibrary;
+        typedef void* EngineLibrary;
 #endif
-    EngineLibrary library = 0;
-    const StringEntry<EngineKind::Value> engine_kind_entries[] = {
-        {"scalar", EngineKind::Scalar},
-        {"avx2", EngineKind::Avx2},
-        {"neon", EngineKind::Neon},
-    };
-    const StringLookup<EngineKind::Value> kEngineKinds(engine_kind_entries, 3);
+        EngineLibrary library = 0;
+        const StringEntry<EngineKind::Value> engine_kind_entries[] = {
+            {"scalar", EngineKind::Scalar},
+            {"avx2", EngineKind::Avx2},
+            {"neon", EngineKind::Neon},
+        };
+        const StringLookup<EngineKind::Value> kEngineKinds(engine_kind_entries, 3);
 
 #if defined(_WIN32)
-    const size_t kPathCapacity = 32768;
-    int module_anchor;
+        const size_t kPathCapacity = 32768;
+        int module_anchor;
 
-    bool engine_path(const char* name, wchar_t (&path)[kPathCapacity]) {
-        HMODULE module;
-        if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                                    GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                                reinterpret_cast<const wchar_t*>(&module_anchor), &module)) {
-            return false;
+        bool engine_path(const char* name, wchar_t (&path)[kPathCapacity]) {
+            HMODULE module;
+            if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                        GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                                    reinterpret_cast<const wchar_t*>(&module_anchor), &module)) {
+                return false;
+            }
+            const DWORD length = GetModuleFileNameW(module, path, kPathCapacity);
+            if (!length || length >= kPathCapacity) {
+                return false;
+            }
+            wchar_t* slash = std::wcsrchr(path, L'\\');
+            if (!slash) {
+                return false;
+            }
+            const wchar_t* filename =
+                std::strcmp(name, "avx2") == 0 ? L"fosu_engine_avx2.dll" : L"fosu_engine_neon.dll";
+            const size_t directory_length = static_cast<size_t>(slash - path) + 1;
+            const size_t filename_length = std::wcslen(filename) + 1;
+            if (directory_length + filename_length > kPathCapacity) {
+                return false;
+            }
+            std::wmemcpy(path + directory_length, filename, filename_length);
+            return true;
         }
-        const DWORD length = GetModuleFileNameW(module, path, kPathCapacity);
-        if (!length || length >= kPathCapacity) {
-            return false;
-        }
-        wchar_t* slash = std::wcsrchr(path, L'\\');
-        if (!slash) {
-            return false;
-        }
-        const wchar_t* filename =
-            std::strcmp(name, "avx2") == 0 ? L"fosu_engine_avx2.dll" : L"fosu_engine_neon.dll";
-        const size_t directory_length = static_cast<size_t>(slash - path) + 1;
-        const size_t filename_length = std::wcslen(filename) + 1;
-        if (directory_length + filename_length > kPathCapacity) {
-            return false;
-        }
-        std::wmemcpy(path + directory_length, filename, filename_length);
-        return true;
-    }
 #else
-    bool engine_path(const char* name, char (&path)[PATH_MAX]) {
-        Dl_info info = {};
-        if (!dladdr(reinterpret_cast<const void*>(&engine_path), &info)) {
-            return false;
+        bool engine_path(const char* name, char (&path)[PATH_MAX]) {
+            Dl_info info = {};
+            if (!dladdr(reinterpret_cast<const void*>(&engine_path), &info)) {
+                return false;
+            }
+            const char* slash = std::strrchr(info.dli_fname, '/');
+            if (!slash) {
+                return false;
+            }
+            const int length = std::snprintf(path, sizeof(path), "%.*s/libfosu_engine_%s" FOSU_ENGINE_SUFFIX,
+                                             static_cast<int>(slash - info.dli_fname), info.dli_fname, name);
+            return length > 0 && static_cast<size_t>(length) < sizeof(path);
         }
-        const char* slash = std::strrchr(info.dli_fname, '/');
-        if (!slash) {
-            return false;
-        }
-        const int length =
-            std::snprintf(path, sizeof(path), "%.*s/libfosu_engine_%s" FOSU_ENGINE_SUFFIX,
-                          static_cast<int>(slash - info.dli_fname), info.dli_fname, name);
-        return length > 0 && static_cast<size_t>(length) < sizeof(path);
-    }
 #endif
 
-    const ParsingEngine* load_engine_library(const char* name) {
+        const ParsingEngine* load_engine_library(const char* name) {
 #if defined(_WIN32)
-        wchar_t path[kPathCapacity];
-        if (!engine_path(name, path)) {
-            return 0;
-        }
-        HMODULE loaded = LoadLibraryW(path);
-        if (!loaded) {
-            return 0;
-        }
-        const ParsingEngine* (*entry)() =
-            reinterpret_cast<const ParsingEngine* (*)()>(GetProcAddress(loaded, "fosu_engine_v2"));
-        if (!entry) {
-            FreeLibrary(loaded);
-            return 0;
-        }
+            wchar_t path[kPathCapacity];
+            if (!engine_path(name, path)) {
+                return 0;
+            }
+            HMODULE loaded = LoadLibraryW(path);
+            if (!loaded) {
+                return 0;
+            }
+            const ParsingEngine* (*entry)() =
+                reinterpret_cast<const ParsingEngine* (*)()>(GetProcAddress(loaded, "fosu_engine_v2"));
+            if (!entry) {
+                FreeLibrary(loaded);
+                return 0;
+            }
 #else
-        char path[PATH_MAX];
-        if (!engine_path(name, path)) {
-            return 0;
-        }
-        void* loaded = dlopen(path, RTLD_NOW | RTLD_LOCAL);
-        if (!loaded) {
-            return 0;
-        }
-        const ParsingEngine* (*entry)() =
-            reinterpret_cast<const ParsingEngine* (*)()>(dlsym(loaded, "fosu_engine_v2"));
-        if (!entry) {
-            dlclose(loaded);
-            return 0;
-        }
+            char path[PATH_MAX];
+            if (!engine_path(name, path)) {
+                return 0;
+            }
+            void* loaded = dlopen(path, RTLD_NOW | RTLD_LOCAL);
+            if (!loaded) {
+                return 0;
+            }
+            const ParsingEngine* (*entry)() =
+                reinterpret_cast<const ParsingEngine* (*)()>(dlsym(loaded, "fosu_engine_v2"));
+            if (!entry) {
+                dlclose(loaded);
+                return 0;
+            }
 #endif
-        library = loaded;
-        return entry();
-    }
+            library = loaded;
+            return entry();
+        }
 
-    const ParsingEngine* select_engine_from_environment() {
+        const ParsingEngine* select_engine_from_environment() {
 #if defined(_WIN32)
-        char request_buffer[16];
-        const DWORD request_length =
-            GetEnvironmentVariableA("FOSU_BACKEND", request_buffer, sizeof(request_buffer));
-        if (request_length >= sizeof(request_buffer)) {
-            return &embedded_scalar_engine;
-        }
-        const char* request = request_length ? request_buffer : FOSU_DEFAULT_BACKEND;
+            char request_buffer[16];
+            const DWORD request_length =
+                GetEnvironmentVariableA("FOSU_BACKEND", request_buffer, sizeof(request_buffer));
+            if (request_length >= sizeof(request_buffer)) {
+                return &embedded_scalar_engine;
+            }
+            const char* request = request_length ? request_buffer : FOSU_DEFAULT_BACKEND;
 #else
-        const char* request = std::getenv("FOSU_BACKEND");
-        if (!request) {
-            request = FOSU_DEFAULT_BACKEND;
-        }
+            const char* request = std::getenv("FOSU_BACKEND");
+            if (!request) {
+                request = FOSU_DEFAULT_BACKEND;
+            }
 #endif
-        if (std::strcmp(request, "auto") == 0) {
-            const EngineKind::Value kinds[2] = {EngineKind::Avx2, EngineKind::Neon};
-            for (size_t i = 0; i < 2; i++) {
-                if (engine_available(kinds[i])) {
-                    const ParsingEngine* engine = load_engine_library(engine_name(kinds[i]));
-                    if (engine) {
-                        return engine;
+            if (std::strcmp(request, "auto") == 0) {
+                const EngineKind::Value kinds[2] = {EngineKind::Avx2, EngineKind::Neon};
+                for (size_t i = 0; i < 2; i++) {
+                    if (engine_available(kinds[i])) {
+                        const ParsingEngine* engine = load_engine_library(engine_name(kinds[i]));
+                        if (engine) {
+                            return engine;
+                        }
                     }
+                }
+                return &embedded_scalar_engine;
+            }
+            const EngineKind::Value* kind = find_engine_kind(request);
+            if (!kind || *kind == EngineKind::Scalar) {
+                return &embedded_scalar_engine;
+            }
+            if (engine_available(*kind)) {
+                const ParsingEngine* engine = load_engine_library(request);
+                if (engine) {
+                    return engine;
                 }
             }
             return &embedded_scalar_engine;
         }
-        const EngineKind::Value* kind = find_engine_kind(request);
-        if (!kind || *kind == EngineKind::Scalar) {
-            return &embedded_scalar_engine;
-        }
-        if (engine_available(*kind)) {
-            const ParsingEngine* engine = load_engine_library(request);
-            if (engine) {
-                return engine;
-            }
-        }
-        return &embedded_scalar_engine;
-    }
-} // namespace
+    } // namespace
 
-    const EngineKind::Value* find_engine_kind(nonstd::string_view name) {
-        return kEngineKinds.find(name);
-    }
+    const EngineKind::Value* find_engine_kind(nonstd::string_view name) { return kEngineKinds.find(name); }
 
     const char* engine_name(EngineKind::Value kind) {
         switch (kind) {
@@ -226,8 +223,7 @@ namespace {
     const ParsingEngine* selected_engine() {
         const ParsingEngine* engine = selected;
         if (!engine) {
-            while (selecting.test_and_set()) {
-            }
+            while (selecting.test_and_set()) {}
             engine = selected;
             if (!engine) {
                 engine = select_engine_from_environment();

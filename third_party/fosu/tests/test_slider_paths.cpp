@@ -103,8 +103,7 @@ PPPP_TEST(slider_paths_point_at_the_head_makes_a_zero_length_path) {
 // again changes nothing.
 PPPP_TEST(slider_paths_repeated_point_splits_bezier_segments) {
     CHECK(path_as("B|100:0|100:0|100:100,1,0") == path_as("L|100:0|100:100,1,0"));
-    CHECK(path_as("B|1:1|2:2|3:3|3:3|3:3|3:3|4:4,2,200") ==
-          path_as("B|1:1|2:2|3:3|3:3|4:4,2,200"));
+    CHECK(path_as("B|1:1|2:2|3:3|3:3|3:3|3:3|4:4,2,200") == path_as("B|1:1|2:2|3:3|3:3|4:4,2,200"));
 }
 
 // A perfect curve needs exactly three points that are not collinear.
@@ -170,14 +169,12 @@ PPPP_TEST(slider_paths_lazer_format_letters_start_new_segments) {
 // legacy rules to each segment, ending at the next one's first point. stable
 // gives the whole slider the last type instead; see test_clients.
 PPPP_TEST(slider_paths_lazer_letters_start_legacy_segments) {
-    CHECK(lazer_path_as("L|100:0|B|100:100|0:100,1,0").points ==
-          points4(0, 0, 100, 0, 100, 100, 0, 100));
+    CHECK(lazer_path_as("L|100:0|B|100:100|0:100,1,0").points == points4(0, 0, 100, 0, 100, 100, 0, 100));
     // A perfect curve needs exactly three points, counting that end point,
     // and draws a line through collinear ones.
     const Path arc = lazer_path_as("P|100:100|L|200:0|300:0,1,0");
     CHECK(std::fabs(arc.distance - (314.05381774902344 + 100)) <= 1e-3);
-    CHECK(lazer_path_as("P|100:0|L|200:0|200:100,1,0").points ==
-          points4(0, 0, 100, 0, 200, 0, 200, 100));
+    CHECK(lazer_path_as("P|100:0|L|200:0|200:100,1,0").points == points4(0, 0, 100, 0, 200, 0, 200, 100));
     // A last segment holding only its first point adds nothing.
     std::vector<PathPoint> three;
     three.push_back(PathPoint::make(0, 0));
@@ -186,10 +183,10 @@ PPPP_TEST(slider_paths_lazer_letters_start_legacy_segments) {
     CHECK(lazer_path_as("L|100:0|B|100:100,1,0").points == three);
     // A repeated point splits a segment, unless it is the segment's last
     // before the next one's first.
-    CHECK(std::fabs(lazer_path_as("B|100:100|100:100|200:0|L|300:100,1,0").distance -
-                    370.9743161201477) <= 1e-3);
-    CHECK(std::fabs(lazer_path_as("B|100:100|200:0|200:0|L|300:100,1,0").distance -
-                    338.47502517700195) <= 1e-3);
+    CHECK(std::fabs(lazer_path_as("B|100:100|100:100|200:0|L|300:100,1,0").distance - 370.9743161201477) <=
+          1e-3);
+    CHECK(std::fabs(lazer_path_as("B|100:100|200:0|200:0|L|300:100,1,0").distance - 338.47502517700195) <=
+          1e-3);
 }
 
 PPPP_TEST(slider_paths_bspline_degree_shapes_the_curve) {
@@ -197,18 +194,16 @@ PPPP_TEST(slider_paths_bspline_degree_shapes_the_curve) {
     const Path linear = path_as("B1|100:0|200:50|300:0,1,0", 128);
     CHECK(linear.points == points4(0, 0, 100, 0, 200, 50, 300, 0));
     // Higher degrees curve between them, even with distant points.
-    const Path distant =
-        path_as("B8|10000:0|-10000:10000|10000:-10000|-10000:0|10000:10000|"
-                "-10000:-10000|10000:0|0:10000,1,500",
-                128);
+    const Path distant = path_as("B8|10000:0|-10000:10000|10000:-10000|-10000:0|10000:10000|"
+                                 "-10000:-10000|10000:0|0:10000,1,500",
+                                 128);
     CHECK(distant.distance == 500);
     CHECK(std::fabs(distant.points.back().x - 499.805969) <= 1e-3);
     CHECK(std::fabs(distant.points.back().y - 11.9145603) <= 1e-3);
 }
 
 PPPP_TEST(slider_paths_segments_of_different_types_join) {
-    CHECK(path_as("L|100:0|B3|100:100|0:100,1,300", 128).points ==
-          points4(0, 0, 100, 0, 100, 100, 0, 100));
+    CHECK(path_as("L|100:0|B3|100:100|0:100,1,300", 128).points == points4(0, 0, 100, 0, 100, 100, 0, 100));
 }
 
 PPPP_TEST(slider_paths_position_query_clamps_and_interpolates) {

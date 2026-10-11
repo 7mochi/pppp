@@ -17,21 +17,21 @@ namespace fosu { namespace internal {
         }
 
         const StringEntry<Section::Value> lazer_section_entries[] = {
-            {"General", Section::General},       {"Editor", Section::Editor},
-            {"Metadata", Section::Metadata},     {"Difficulty", Section::Difficulty},
-            {"Events", Section::Events},         {"TimingPoints", Section::TimingPoints},
-            {"Colours", Section::Colours},       {"HitObjects", Section::HitObjects},
-            {"Variables", Section::Unknown},     {"Fonts", Section::Unknown},
-            {"CatchTheBeat", Section::Unknown},  {"Mania", Section::Unknown},
+            {"General", Section::General},      {"Editor", Section::Editor},
+            {"Metadata", Section::Metadata},    {"Difficulty", Section::Difficulty},
+            {"Events", Section::Events},        {"TimingPoints", Section::TimingPoints},
+            {"Colours", Section::Colours},      {"HitObjects", Section::HitObjects},
+            {"Variables", Section::Unknown},    {"Fonts", Section::Unknown},
+            {"CatchTheBeat", Section::Unknown}, {"Mania", Section::Unknown},
         };
 
         // stable's FileSection names, including its Unknown and All values.
         const StringEntry<Section::Value> stable_section_entries[] = {
-            {"General", Section::General},       {"Editor", Section::Editor},
-            {"Metadata", Section::Metadata},     {"Difficulty", Section::Difficulty},
-            {"Events", Section::Events},         {"TimingPoints", Section::TimingPoints},
-            {"Colours", Section::Colours},       {"HitObjects", Section::HitObjects},
-            {"Variables", Section::Unknown},     {"Unknown", Section::Unknown},
+            {"General", Section::General},   {"Editor", Section::Editor},
+            {"Metadata", Section::Metadata}, {"Difficulty", Section::Difficulty},
+            {"Events", Section::Events},     {"TimingPoints", Section::TimingPoints},
+            {"Colours", Section::Colours},   {"HitObjects", Section::HitObjects},
+            {"Variables", Section::Unknown}, {"Unknown", Section::Unknown},
             {"All", Section::Unknown},
         };
 
@@ -95,8 +95,8 @@ namespace fosu { namespace internal {
             {"Version", assign_field_text<&BeatmapHeader::version>},
             {"Source", assign_field_text<&BeatmapHeader::source>},
             {"Tags", assign_field_text<&BeatmapHeader::tags>},
-            {"BeatmapSetID", assign_field_widened<fosu::i64, &BeatmapHeader::beatmap_set_id, fosu::i32,
-                                                  parse_field_integer>},
+            {"BeatmapSetID",
+             assign_field_widened<fosu::i64, &BeatmapHeader::beatmap_set_id, fosu::i32, parse_field_integer>},
             {"BeatmapID",
              assign_field_widened<fosu::i64, &BeatmapHeader::beatmap_id, fosu::i32, parse_field_integer>},
         };

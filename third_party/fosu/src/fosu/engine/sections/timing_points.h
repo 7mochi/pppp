@@ -3,10 +3,10 @@
 
 #include <fosu/beatmap.h>
 #include <fosu/engine/parsing/lines.h>
-#include <fosu/format.h>
 #include <fosu/engine/primitives/byte_scan.h>
 #include <fosu/engine/primitives/vector_ops.h>
 #include <fosu/engine/timing_points/point.h>
+#include <fosu/format.h>
 
 namespace fosu { namespace internal {
     struct TimingPointsSectionLine {
@@ -76,8 +76,8 @@ namespace fosu { namespace internal {
     inline const char* parse_timing_points_section(Beatmap& beatmap, size_t& point_count, const char* p,
                                                    const char* file_end, const ParseContext& context) {
 #if FOSU_SIMD
-        return parse_timing_points_section_simd(beatmap, point_count, p, file_end,
-                                                context.format.time_offset, context.client);
+        return parse_timing_points_section_simd(beatmap, point_count, p, file_end, context.format.time_offset,
+                                                context.client);
 #else
         return parse_timing_points_section_scalar(beatmap, point_count, p, file_end, context);
 #endif

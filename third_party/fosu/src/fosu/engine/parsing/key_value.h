@@ -49,7 +49,8 @@ namespace fosu { namespace internal {
             while (last && (static_cast<unsigned char>(text[last]) & 0xC0) == 0x80) {
                 --last;
             }
-            if (field_space_width(nonstd::string_view(text.data() + last, text.size() - last)) != text.size() - last) {
+            if (field_space_width(nonstd::string_view(text.data() + last, text.size() - last)) !=
+                text.size() - last) {
                 break;
             }
             text = nonstd::string_view(text.data(), last);
@@ -84,7 +85,8 @@ namespace fosu { namespace internal {
     }
 
     // The same with a widening store (an int32 field value into an int64 member).
-    template <typename T, T BeatmapHeader::* Member, typename V, nonstd::optional<V> (*ParseValue)(nonstd::string_view)>
+    template <typename T, T BeatmapHeader::* Member, typename V,
+              nonstd::optional<V> (*ParseValue)(nonstd::string_view)>
     inline bool assign_field_widened(BeatmapHeader& header, nonstd::string_view input, const ParseContext&) {
         const nonstd::optional<V> value = ParseValue(input);
         if (!value.has_value()) {
@@ -123,8 +125,7 @@ namespace fosu { namespace internal {
     };
 
     inline const char* parse_key_value_section(Beatmap& beatmap, const StringLookup<FieldParser>& fields,
-                                               const char* p, const char* end,
-                                               const ParseContext& context) {
+                                               const char* p, const char* end, const ParseContext& context) {
         KeyValueSectionLine parse_line;
         parse_line.beatmap = &beatmap;
         parse_line.fields = &fields;

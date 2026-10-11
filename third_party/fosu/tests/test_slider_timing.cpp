@@ -15,8 +15,8 @@ namespace {
     // SliderMultiplier 1 at a 500 ms beat moves sliders at 0.2 px/ms, so each
     // 100 px span takes 500 ms.
     std::string beatmap(const std::string& timing_points, const std::string& hit_objects) {
-        return "osu file format v14\n[Difficulty]\nSliderMultiplier:1\n[TimingPoints]\n" +
-               timing_points + "[HitObjects]\n" + hit_objects;
+        return "osu file format v14\n[Difficulty]\nSliderMultiplier:1\n[TimingPoints]\n" + timing_points +
+               "[HitObjects]\n" + hit_objects;
     }
 
     double end_time(const std::string& input, size_t object = 0) {
@@ -29,9 +29,7 @@ namespace {
         SliderEventType::Value type;
         double time;
 
-        bool operator==(const TimedEvent& other) const {
-            return type == other.type && time == other.time;
-        }
+        bool operator==(const TimedEvent& other) const { return type == other.type && time == other.time; }
     };
 
     typedef std::vector<TimedEvent> Events;
@@ -96,8 +94,8 @@ PPPP_TEST(slider_timing_omitted_or_nonpositive_length_uses_path_distance) {
 PPPP_TEST(slider_timing_slide_count_below_one_is_one_slide) {
     const std::string input = beatmap("0,500\n", "0,0,1000,2,0,L|100:0,0,100\n");
     CHECK(end_time(input) == 1500);
-    CHECK(timed_events(input) == events3(SliderEventType::Head, 1000, SliderEventType::LegacyLastTick,
-                                         1464, SliderEventType::Tail, 1500));
+    CHECK(timed_events(input) == events3(SliderEventType::Head, 1000, SliderEventType::LegacyLastTick, 1464,
+                                         SliderEventType::Tail, 1500));
 }
 
 // The generic decoder's end time; rulesets convert sliders afterwards.
@@ -137,7 +135,8 @@ PPPP_TEST(slider_timing_beat_length_is_clamped_from_6_to_60000_ms) {
 }
 
 PPPP_TEST(slider_timing_uninherited_point_resets_velocity) {
-    const std::string input = beatmap("0,500\n0,-50,4,1,0,100,0,0\n1000,500\n", "0,0,1000,2,0,L|100:0,1,100\n");
+    const std::string input =
+        beatmap("0,500\n0,-50,4,1,0,100,0,0\n1000,500\n", "0,0,1000,2,0,L|100:0,1,100\n");
     CHECK(end_time(input) == 1500);
 }
 
@@ -150,22 +149,23 @@ PPPP_TEST(slider_timing_first_uninherited_point_in_a_group_wins) {
 }
 
 PPPP_TEST(slider_timing_last_inherited_point_in_a_group_wins) {
-    const std::string input = beatmap("0,500\n0,-50,4,1,0,100,0,0\n0,-25,4,1,0,100,0,0\n",
-                                      "0,0,1000,2,0,L|100:0,1,100\n");
+    const std::string input =
+        beatmap("0,500\n0,-50,4,1,0,100,0,0\n0,-25,4,1,0,100,0,0\n", "0,0,1000,2,0,L|100:0,1,100\n");
     CHECK(end_time(input) == 1125);
 }
 
 PPPP_TEST(slider_timing_inherited_point_overrides_reset_in_its_group) {
-    const std::string inherited_first = beatmap("0,-50,4,1,0,100,0,0\n0,500\n", "0,0,1000,2,0,L|100:0,1,100\n");
-    const std::string inherited_last = beatmap("0,500\n1000,-50,4,1,0,100,0,0\n1000,500\n",
-                                               "0,0,1000,2,0,L|100:0,1,100\n");
+    const std::string inherited_first =
+        beatmap("0,-50,4,1,0,100,0,0\n0,500\n", "0,0,1000,2,0,L|100:0,1,100\n");
+    const std::string inherited_last =
+        beatmap("0,500\n1000,-50,4,1,0,100,0,0\n1000,500\n", "0,0,1000,2,0,L|100:0,1,100\n");
     CHECK(end_time(inherited_first) == 1250);
     CHECK(end_time(inherited_last) == 1250);
 }
 
 PPPP_TEST(slider_timing_points_apply_in_time_order_not_file_order) {
-    const std::string input = beatmap("0,500\n2000,-50,4,1,0,100,0,0\n1000,-25,4,1,0,100,0,0\n",
-                                      "0,0,1500,2,0,L|100:0,1,100\n");
+    const std::string input =
+        beatmap("0,500\n2000,-50,4,1,0,100,0,0\n1000,-25,4,1,0,100,0,0\n", "0,0,1500,2,0,L|100:0,1,100\n");
     CHECK(end_time(input) == 1625);
 }
 
@@ -181,7 +181,8 @@ PPPP_TEST(slider_timing_unchanged_inherited_point_is_dropped_when_read) {
 
 // Unlike a repeat within one group, a separate later group replaces it.
 PPPP_TEST(slider_timing_later_group_at_the_same_time_replaces_earlier_one) {
-    const std::string input = beatmap("0,500\n1000,-50,4,1,0,100,0,0\n0,250\n", "0,0,500,2,0,L|100:0,1,100\n");
+    const std::string input =
+        beatmap("0,500\n1000,-50,4,1,0,100,0,0\n0,250\n", "0,0,500,2,0,L|100:0,1,100\n");
     CHECK(end_time(input) == 750);
 }
 
@@ -189,16 +190,16 @@ PPPP_TEST(slider_timing_later_group_at_the_same_time_replaces_earlier_one) {
 // points never apply before their time.
 PPPP_TEST(slider_timing_objects_before_the_first_point_use_its_beat_length) {
     const std::string uninherited = beatmap("1000,250\n", "0,0,500,2,0,L|100:0,1,100\n");
-    const std::string inherited = beatmap("1000,250\n1000,-50,4,1,0,100,0,0\n", "0,0,500,2,0,L|100:0,1,100\n");
+    const std::string inherited =
+        beatmap("1000,250\n1000,-50,4,1,0,100,0,0\n", "0,0,500,2,0,L|100:0,1,100\n");
     CHECK(end_time(uninherited) == 750);
     CHECK(end_time(inherited) == 750);
 }
 
 PPPP_TEST(slider_timing_without_timing_points_sliders_use_60_bpm) {
     // The default slider multiplier is 1.4 and the default beat 1000 ms.
-    const std::string input =
-        "osu file format v14\n[Difficulty]\nSliderMultiplier:1\n"
-        "[TimingPoints]\n0,500\n[HitObjects]\n0,0,0,2,0,L|100:0,1,140\n";
+    const std::string input = "osu file format v14\n[Difficulty]\nSliderMultiplier:1\n"
+                              "[TimingPoints]\n0,500\n[HitObjects]\n0,0,0,2,0,L|100:0,1,140\n";
     ParseOptions options = lazer_options();
     options.sections = kSectionHitObjects;
     options.calculate_slider_end_times = true;
@@ -209,8 +210,8 @@ PPPP_TEST(slider_timing_without_timing_points_sliders_use_60_bpm) {
 // lazer removes the repeats of a path no longer than 1e-7 px. Stable creates
 // them but never judges them.
 PPPP_TEST(slider_timing_zero_length_path_drops_repeats) {
-    static const char* const sliders[] = {"B|0:0,3,200",  "L|0:0,2,100", "C|0:0,2,100",
-                                          "P|0:0|0:0,2,100", "B,3072,-1",  "L,1,100"};
+    static const char* const sliders[] = {"B|0:0,3,200",     "L|0:0,2,100", "C|0:0,2,100",
+                                          "P|0:0|0:0,2,100", "B,3072,-1",   "L,1,100"};
     for (size_t i = 0; i < 6; i++) {
         const std::string input = beatmap("0,500\n", std::string("0,0,1000,2,0,") + sliders[i] + "\n");
         CHECK(end_time(input) == 1000);
@@ -254,17 +255,26 @@ PPPP_TEST(slider_timing_end_times_are_calculated_only_when_needed) {
 }
 
 PPPP_TEST(slider_timing_end_time_is_independent_of_requested_outputs) {
-    static const char* const inputs[] = {
-        "osu file format v14\n[Difficulty]\nSliderMultiplier:1\n[TimingPoints]\n0,500\n0,-50,4,1,0,100,0,0\n[HitObjects]\n0,0,1000,2,0,L|100:0,2,100\n",
-        "osu file format v14\n[Difficulty]\nSliderMultiplier:1\n[TimingPoints]\n0,500\n[HitObjects]\n0,0,1000,2,0,B|100:100|200:0|200:0,1,500\n",
-        "osu file format v14\n[Difficulty]\nSliderMultiplier:1\n[TimingPoints]\n0,500\n[HitObjects]\n0,0,1000,2,0,P|100:100|200:0,1,0\n",
-        "osu file format v14\n[Difficulty]\nSliderMultiplier:1\n[TimingPoints]\n0,500\n[HitObjects]\n0,0,1000,2,0,C|100:100|200:0,1,0\n",
-        "osu file format v14\n[Difficulty]\nSliderMultiplier:1\n[TimingPoints]\n0,500\n[HitObjects]\n0,0,1000,2,0,B,3072,-1\n",
-        "osu file format v128\n[Difficulty]\nSliderMultiplier:1.4\n"
-        "[TimingPoints]\n0,500\n[HitObjects]\n"
-        "0,0,1000,2,0,B2|100:0|100:100|100:100,1,300\n"
-        "0,0,3000,2,0,B2|100:0|100:100|100:100,1,0\n"
-        "0,0,5000,2,0,B2|100:0|100:100|100:100,1\n"};
+    static const char* const inputs[] = {"osu file format "
+                                         "v14\n[Difficulty]\nSliderMultiplier:1\n[TimingPoints]\n0,500\n0,-"
+                                         "50,4,1,0,100,0,0\n[HitObjects]\n0,0,1000,2,0,L|100:0,2,100\n",
+                                         "osu file format "
+                                         "v14\n[Difficulty]\nSliderMultiplier:1\n[TimingPoints]\n0,500\n["
+                                         "HitObjects]\n0,0,1000,2,0,B|100:100|200:0|200:0,1,500\n",
+                                         "osu file format "
+                                         "v14\n[Difficulty]\nSliderMultiplier:1\n[TimingPoints]\n0,500\n["
+                                         "HitObjects]\n0,0,1000,2,0,P|100:100|200:0,1,0\n",
+                                         "osu file format "
+                                         "v14\n[Difficulty]\nSliderMultiplier:1\n[TimingPoints]\n0,500\n["
+                                         "HitObjects]\n0,0,1000,2,0,C|100:100|200:0,1,0\n",
+                                         "osu file format "
+                                         "v14\n[Difficulty]\nSliderMultiplier:1\n[TimingPoints]\n0,500\n["
+                                         "HitObjects]\n0,0,1000,2,0,B,3072,-1\n",
+                                         "osu file format v128\n[Difficulty]\nSliderMultiplier:1.4\n"
+                                         "[TimingPoints]\n0,500\n[HitObjects]\n"
+                                         "0,0,1000,2,0,B2|100:0|100:100|100:100,1,300\n"
+                                         "0,0,3000,2,0,B2|100:0|100:100|100:100,1,0\n"
+                                         "0,0,5000,2,0,B2|100:0|100:100|100:100,1\n"};
     for (size_t i = 0; i < 6; i++) {
         const std::string input = inputs[i];
         ParseOptions expected_options = lazer_options();
@@ -295,14 +305,12 @@ PPPP_TEST(slider_timing_end_time_is_independent_of_requested_outputs) {
 }
 
 PPPP_TEST(slider_timing_events_cover_head_ticks_repeats_and_tail) {
-    const std::string input =
-        "osu file format v8\n[Difficulty]\nSliderMultiplier:1\n"
-        "[TimingPoints]\n0,500\n0,-50,4,0,0,100,0,0\n"
-        "[HitObjects]\n0,0,1000,2,0,L|400:0,2,400\n";
-    CHECK(timed_events(input) ==
-          events6(SliderEventType::Head, 1000, SliderEventType::Tick, 1500, SliderEventType::Repeat,
-                  2000, SliderEventType::Tick, 2500, SliderEventType::LegacyLastTick, 2964,
-                  SliderEventType::Tail, 3000));
+    const std::string input = "osu file format v8\n[Difficulty]\nSliderMultiplier:1\n"
+                              "[TimingPoints]\n0,500\n0,-50,4,0,0,100,0,0\n"
+                              "[HitObjects]\n0,0,1000,2,0,L|400:0,2,400\n";
+    CHECK(timed_events(input) == events6(SliderEventType::Head, 1000, SliderEventType::Tick, 1500,
+                                         SliderEventType::Repeat, 2000, SliderEventType::Tick, 2500,
+                                         SliderEventType::LegacyLastTick, 2964, SliderEventType::Tail, 3000));
     ParseOptions options = lazer_options();
     options.calculate_slider_events = true;
     const Beatmap map = parse_str(input, options);
@@ -321,10 +329,9 @@ PPPP_TEST(slider_timing_events_cover_head_ticks_repeats_and_tail) {
 
 // Before v8, tick spacing ignores the inherited velocity multiplier.
 PPPP_TEST(slider_timing_ticks_before_v8_ignore_velocity_multiplier) {
-    const std::string input =
-        "osu file format v7\n[Difficulty]\nSliderMultiplier:1\n"
-        "[TimingPoints]\n0,500\n0,-50,4,0,0,100,0,0\n"
-        "[HitObjects]\n0,0,1000,2,0,L|400:0,2,400\n";
+    const std::string input = "osu file format v7\n[Difficulty]\nSliderMultiplier:1\n"
+                              "[TimingPoints]\n0,500\n0,-50,4,0,0,100,0,0\n"
+                              "[HitObjects]\n0,0,1000,2,0,L|400:0,2,400\n";
     std::vector<double> ticks;
     const Events events = timed_events(input);
     for (size_t i = 0; i < events.size(); i++) {
@@ -351,13 +358,14 @@ PPPP_TEST(slider_timing_legacy_last_tick_is_at_least_halfway) {
 PPPP_TEST(slider_timing_nan_inherited_point_suppresses_ticks) {
     const std::string input = beatmap("0,500\n0,NaN,4,0,0,100,0,0\n", "0,0,0,2,0,L|300:0,1,300\n");
     const std::string zero_length = beatmap("0,500\n0,NaN,4,0,0,100,0,0\n", "0,0,0,2,0,B|0:0,1,0\n");
-    CHECK(timed_events(input) == events3(SliderEventType::Head, 0, SliderEventType::LegacyLastTick,
-                                         1464, SliderEventType::Tail, 1500));
+    CHECK(timed_events(input) == events3(SliderEventType::Head, 0, SliderEventType::LegacyLastTick, 1464,
+                                         SliderEventType::Tail, 1500));
     ParseOptions options = lazer_options();
     options.calculate_slider_events = true;
     const Beatmap map = parse_str(zero_length, options);
     CHECK(map.slider_events[0].size() == 3u);
     for (size_t i = 0; i < map.slider_events[0].size(); i++) {
-        CHECK(std::isfinite(map.slider_events[0][i].time) && std::isfinite(map.slider_events[0][i].path_progress));
+        CHECK(std::isfinite(map.slider_events[0][i].time) &&
+              std::isfinite(map.slider_events[0][i].path_progress));
     }
 }

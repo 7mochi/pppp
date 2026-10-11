@@ -16,11 +16,10 @@ namespace {
 } // namespace
 
 PPPP_TEST(mods_hard_rock_raises_difficulty_and_flips_vertically) {
-    const std::string input =
-        "osu file format v14\n[General]\nMode:0\n"
-        "[Difficulty]\nHPDrainRate:4\nCircleSize:4\nOverallDifficulty:4\n"
-        "ApproachRate:4\nSliderMultiplier:1\n[TimingPoints]\n0,500\n"
-        "[HitObjects]\n100,100,1000,2,0,L|200:150,1,100\n";
+    const std::string input = "osu file format v14\n[General]\nMode:0\n"
+                              "[Difficulty]\nHPDrainRate:4\nCircleSize:4\nOverallDifficulty:4\n"
+                              "ApproachRate:4\nSliderMultiplier:1\n[TimingPoints]\n0,500\n"
+                              "[HitObjects]\n100,100,1000,2,0,L|200:150,1,100\n";
     const Beatmap map = parse_str(input, with_mods(Mods::HardRock));
     CHECK(map.hp == 4 * 1.4);
     CHECK(map.cs == 4 * 1.3);
@@ -31,10 +30,9 @@ PPPP_TEST(mods_hard_rock_raises_difficulty_and_flips_vertically) {
 }
 
 PPPP_TEST(mods_hard_rock_caps_difficulty_at_10) {
-    const std::string input =
-        "osu file format "
-        "v14\n[General]\nMode:0\n[Difficulty]\nHPDrainRate:8\nCircleSize:8\n"
-        "OverallDifficulty:8\nApproachRate:8\n";
+    const std::string input = "osu file format "
+                              "v14\n[General]\nMode:0\n[Difficulty]\nHPDrainRate:8\nCircleSize:8\n"
+                              "OverallDifficulty:8\nApproachRate:8\n";
     const Beatmap map = parse_str(input, with_mods(Mods::HardRock));
     CHECK(map.hp == 10);
     CHECK(map.cs == 10);
@@ -43,10 +41,9 @@ PPPP_TEST(mods_hard_rock_caps_difficulty_at_10) {
 }
 
 PPPP_TEST(mods_easy_halves_difficulty) {
-    const std::string input =
-        "osu file format "
-        "v14\n[General]\nMode:0\n[Difficulty]\nHPDrainRate:4\nCircleSize:4\n"
-        "OverallDifficulty:4\nApproachRate:4\nSliderMultiplier:1\n";
+    const std::string input = "osu file format "
+                              "v14\n[General]\nMode:0\n[Difficulty]\nHPDrainRate:4\nCircleSize:4\n"
+                              "OverallDifficulty:4\nApproachRate:4\nSliderMultiplier:1\n";
     const Beatmap map = parse_str(input, with_mods(Mods::Easy));
     CHECK(map.hp == 2);
     CHECK(map.cs == 2);
@@ -58,11 +55,10 @@ PPPP_TEST(mods_easy_halves_difficulty) {
 // osu!taiko has no circle size or approach rate to change, and scales
 // slider velocity instead of flipping positions.
 PPPP_TEST(mods_taiko_difficulty_mods_follow_taiko_rules) {
-    const std::string input =
-        "osu file format "
-        "v14\n[General]\nMode:1\n[Difficulty]\nHPDrainRate:4\nCircleSize:4\n"
-        "OverallDifficulty:4\nApproachRate:4\nSliderMultiplier:1\n"
-        "[HitObjects]\n100,100,1000,1,0\n";
+    const std::string input = "osu file format "
+                              "v14\n[General]\nMode:1\n[Difficulty]\nHPDrainRate:4\nCircleSize:4\n"
+                              "OverallDifficulty:4\nApproachRate:4\nSliderMultiplier:1\n"
+                              "[HitObjects]\n100,100,1000,1,0\n";
     const Beatmap easy = parse_str(input, with_mods(Mods::Easy));
     CHECK(easy.hp == 2);
     CHECK(easy.od == 2);
@@ -98,13 +94,11 @@ PPPP_TEST(mods_rate_mods_scale_every_time) {
         {Mods::DoubleTime, 1.5}, {Mods::Nightcore, 1.5}, {Mods::HalfTime, 0.75}};
     for (size_t r = 0; r < 3; r++) {
         for (int mode = 0; mode < 4; mode++) {
-            const char* object = mode == 3 ? "0,0,900,128,0,1500:0:0:0:0:"
-                                           : "0,0,900,8,0,1500,0:0:0:0:";
-            const std::string input =
-                "osu file format v14\n[General]\nMode:" + to_str(mode) +
-                "\n[Events]\n2,1500,2000\n[TimingPoints]\n300,600\n"
-                "600,-50,4,0,0,100,0,0\n[HitObjects]\n" +
-                object + "\n";
+            const char* object = mode == 3 ? "0,0,900,128,0,1500:0:0:0:0:" : "0,0,900,8,0,1500,0:0:0:0:";
+            const std::string input = "osu file format v14\n[General]\nMode:" + to_str(mode) +
+                                      "\n[Events]\n2,1500,2000\n[TimingPoints]\n300,600\n"
+                                      "600,-50,4,0,0,100,0,0\n[HitObjects]\n" +
+                                      object + "\n";
             const Beatmap map = parse_str(input, with_mods(rate_cases[r].mods));
             CHECK(map.hit_objects[0].time == 900 / rate_cases[r].rate);
             CHECK(map.hit_objects[0].end_time == 1500 / rate_cases[r].rate);
@@ -120,9 +114,8 @@ PPPP_TEST(mods_rate_mods_scale_every_time) {
 
 // Calculated values come from the unscaled map, then scale with it.
 PPPP_TEST(mods_rate_mods_scale_calculated_slider_values) {
-    const std::string input =
-        "osu file format v14\n[Difficulty]\nSliderMultiplier:1\n"
-        "[TimingPoints]\n0,500\n[HitObjects]\n100,100,1000,2,0,L|200:150,1,100\n";
+    const std::string input = "osu file format v14\n[Difficulty]\nSliderMultiplier:1\n"
+                              "[TimingPoints]\n0,500\n[HitObjects]\n100,100,1000,2,0,L|200:150,1,100\n";
     ParseOptions options = lazer_options();
     options.calculate_slider_events = true;
     options.mods = static_cast<fosu::u32>(Mods::HardRock) | static_cast<fosu::u32>(Mods::DoubleTime);
@@ -139,17 +132,15 @@ PPPP_TEST(mods_rate_mods_scale_calculated_slider_values) {
 }
 
 PPPP_TEST(mods_invalid_mod_options_fail_the_parse) {
-    const std::string input =
-        "osu file format "
-        "v14\n[General]\nMode:0\n[Difficulty]\nCircleSize:4\n[HitObjects]\n0,0,0,"
-        "1,"
-        "0\n";
+    const std::string input = "osu file format "
+                              "v14\n[General]\nMode:0\n[Difficulty]\nCircleSize:4\n[HitObjects]\n0,0,0,"
+                              "1,"
+                              "0\n";
     Parser parser;
     static const fosu::u32 invalid[] = {
         static_cast<fosu::u32>(Mods::Easy) | static_cast<fosu::u32>(Mods::HardRock),
         static_cast<fosu::u32>(Mods::DoubleTime) | static_cast<fosu::u32>(Mods::HalfTime),
-        static_cast<fosu::u32>(Mods::Nightcore) | static_cast<fosu::u32>(Mods::HalfTime),
-        1u << 30};
+        static_cast<fosu::u32>(Mods::Nightcore) | static_cast<fosu::u32>(Mods::HalfTime), 1u << 30};
     for (size_t i = 0; i < 4; i++) {
         CHECK(!parser.parse(input.data(), input.size(), with_mods(invalid[i])));
     }

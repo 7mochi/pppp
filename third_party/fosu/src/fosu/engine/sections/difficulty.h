@@ -7,8 +7,8 @@
 namespace fosu { namespace internal {
     // HP, CS, OD or AR, clamped to [0, 10] except as noted.
     inline nonstd::optional<double> parse_difficulty_rating(const BeatmapHeader& header,
-                                                            nonstd::string_view input,
-                                                            Client::Value client, bool circle_size) {
+                                                            nonstd::string_view input, Client::Value client,
+                                                            bool circle_size) {
         if (client == Client::Lazer) {
             const nonstd::optional<double> value = parse_field_float(input);
             // Lazer clamps CS after every section, with the final mode; see parse_document.
@@ -110,8 +110,7 @@ namespace fosu { namespace internal {
     };
 
     inline const char* parse_difficulty_section(Beatmap& beatmap, nonstd::optional<double>& approach_rate,
-                                                const char* p, const char* end,
-                                                const ParseContext& context) {
+                                                const char* p, const char* end, const ParseContext& context) {
         DifficultySectionLine parse_line;
         parse_line.beatmap = &beatmap;
         parse_line.approach_rate = &approach_rate;

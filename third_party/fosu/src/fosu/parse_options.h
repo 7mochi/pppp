@@ -32,7 +32,7 @@ namespace fosu {
             InvalidOptions,
             OutOfMemory,
             ReadFailed, // parse_file could not read the file; errno has the cause.
-            Unloadable  // The target client would refuse to load this map.
+            Unloadable // The target client would refuse to load this map.
         };
     };
 

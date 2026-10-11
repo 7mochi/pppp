@@ -104,8 +104,14 @@ namespace fosu { namespace internal {
         Section::Value section;
         ParseError error;
 
-        Preamble() : body(0), section(Section::Unknown), error() {}
-        Preamble(const char* b, Section::Value s, const ParseError& e) : body(b), section(s), error(e) {}
+        Preamble()
+            : body(0),
+              section(Section::Unknown),
+              error() {}
+        Preamble(const char* b, Section::Value s, const ParseError& e)
+            : body(b),
+              section(s),
+              error(e) {}
     };
 
     // stable takes the version from the first line only, whatever it is: a header there starts its
@@ -160,8 +166,7 @@ namespace fosu { namespace internal {
     // once. Each section consumes its body and returns the next header or EOF; framing and scalar
     // fallbacks stay inside the section. Input has kBufferPadding readable zero bytes; string views
     // refer into it.
-    inline ParseError parse_document(const char* data, size_t size, Beatmap& beatmap,
-                                     ParseOptions options) {
+    inline ParseError parse_document(const char* data, size_t size, Beatmap& beatmap, ParseOptions options) {
         apply_client_defaults(beatmap, options.client);
         size_t velocity_preset_count = 0;
         bool velocity_presets_seen = false;
@@ -203,7 +208,9 @@ namespace fosu { namespace internal {
                 case Section::TimingPoints:
                     p = parse_timing_points_section(beatmap, timing_point_count, p, end, context);
                     break;
-                case Section::Colours: p = parse_colours_section(beatmap, colour_count, p, end, context); break;
+                case Section::Colours:
+                    p = parse_colours_section(beatmap, colour_count, p, end, context);
+                    break;
                 case Section::HitObjects:
                     p = parse_hitobjects_section(beatmap, counts, p, end, context);
                     break;
@@ -232,8 +239,8 @@ namespace fosu { namespace internal {
         beatmap.ar = approach_rate.has_value() ? *approach_rate : beatmap.od;
         // In lazer, General may follow Difficulty or repeat; CS depends on the final mode.
         if (options.client == Client::Lazer) {
-            beatmap.cs = beatmap.mode == 3 ? clamp_value(beatmap.cs, 1.0, 18.0)
-                                           : clamp_value(beatmap.cs, 0.0, 10.0);
+            beatmap.cs =
+                beatmap.mode == 3 ? clamp_value(beatmap.cs, 1.0, 18.0) : clamp_value(beatmap.cs, 0.0, 10.0);
         }
         if ((options.sections & kSectionEditor) && !velocity_presets_seen &&
             beatmap.velocity_presets.size() >= 3) {

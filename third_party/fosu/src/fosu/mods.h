@@ -44,9 +44,7 @@ namespace fosu {
         };
     };
 
-    inline bool has_mod(fosu::u32 mods, Mods::Value mod) {
-        return (mods & static_cast<fosu::u32>(mod)) != 0;
-    }
+    inline bool has_mod(fosu::u32 mods, Mods::Value mod) { return (mods & static_cast<fosu::u32>(mod)) != 0; }
 
     namespace internal {
         const fosu::u32 kKnownMods =

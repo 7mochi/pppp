@@ -5,9 +5,9 @@
 
 #include <fosu/engine/parsing/string_lookup.h>
 
+using fosu::internal::string_hash;
 using fosu::internal::StringEntry;
 using fosu::internal::StringLookup;
-using fosu::internal::string_hash;
 
 namespace {
     // Distinct strings that collide across the full 32-bit FNV-1a hash, not

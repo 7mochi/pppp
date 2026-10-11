@@ -98,13 +98,13 @@ PPPP_TEST(clients_unknown_section_names) {
         double lazer_stack_leniency;
     };
     static const Case cases[] = {
-        {"[Future]", 4, 0.2f}, {"[Fonts]", 4, 0.7f},   {"[Variables]", 3, 0.7f},
+        {"[Future]", 4, 0.2f},  {"[Fonts]", 4, 0.7f}, {"[Variables]", 3, 0.7f},
         {"[Unknown]", 3, 0.2f}, {"[All]", 3, 0.2f},
     };
     for (size_t i = 0; i < 5; i++) {
         const std::string input = std::string("osu file format v14\n[Difficulty]\nOverallDifficulty:3\n") +
-                                  cases[i].header +
-                                  "\nOverallDifficulty:4\nStackLeniency:0.2\n" + kTimingAndCircle;
+                                  cases[i].header + "\nOverallDifficulty:4\nStackLeniency:0.2\n" +
+                                  kTimingAndCircle;
         const Beatmap stable = parse_str(input, stable_options());
         CHECK(stable.od == cases[i].stable_od);
         CHECK(stable.stack_leniency == double(0.7f));
@@ -112,7 +112,8 @@ PPPP_TEST(clients_unknown_section_names) {
         CHECK(lazer.od == 3);
         CHECK(lazer.stack_leniency == cases[i].lazer_stack_leniency);
     }
-    const std::string input = std::string("osu file format v14\n") + kTimingAndCircle + "[Future]\n64,64,200,1,0\n";
+    const std::string input =
+        std::string("osu file format v14\n") + kTimingAndCircle + "[Future]\n64,64,200,1,0\n";
     CHECK(parse_str(input, stable_options()).hit_objects.size() == 2u);
     CHECK(parse_str(input, lazer_options()).hit_objects.size() == 1u);
 }
@@ -128,7 +129,10 @@ PPPP_TEST(clients_header_spelling) {
         double lazer_od;
     };
     static const Case cases[] = {
-        {"[Difficulty]", 4, 4}, {"[[Difficulty]]", 4, 5}, {"[Difficulty", 4, 5}, {"[Difficulty] ", 5, 4},
+        {"[Difficulty]", 4, 4},
+        {"[[Difficulty]]", 4, 5},
+        {"[Difficulty", 4, 5},
+        {"[Difficulty] ", 5, 4},
     };
     for (size_t i = 0; i < 4; i++) {
         const std::string input = std::string("osu file format v14\n") + cases[i].header +
@@ -261,8 +265,7 @@ PPPP_TEST(clients_indented_colours) {
 // be a point. Lazer starts a segment at each letter (see test_slider_paths)
 // and rejects a one-character token that is not a letter.
 PPPP_TEST(clients_curve_type_tokens) {
-    const std::string base =
-        "osu file format v14\n[TimingPoints]\n0,500\n[HitObjects]\n0,0,1000,2,0,";
+    const std::string base = "osu file format v14\n[TimingPoints]\n0,500\n[HitObjects]\n0,0,1000,2,0,";
     const std::string stable_input = base + "B|100:0|L|100:100|0:100,1,0\n";
     const Beatmap stable = parse_str(stable_input, paths_options(Client::Stable));
     CHECK(stable.sliders[0].curve_type == CurveType::Linear);
@@ -273,8 +276,8 @@ PPPP_TEST(clients_curve_type_tokens) {
     CHECK(lazer.sliders[0].curve_type == CurveType::Bezier);
     CHECK(lazer.slider_segments.size() == 2u);
 
-    static const char* const stable_curves[] = {"B|100:0|X|100:100", "B|100:0|5|100:100",
-                                                "B|100:0|L", "B|L|100:100"};
+    static const char* const stable_curves[] = {"B|100:0|X|100:100", "B|100:0|5|100:100", "B|100:0|L",
+                                                "B|L|100:100"};
     for (size_t i = 0; i < 4; i++) {
         const std::string input = base + stable_curves[i] + ",1,0\n";
         CHECK(parse_str(input, stable_options()).sliders.size() == 1u);
@@ -298,11 +301,10 @@ PPPP_TEST(clients_curve_type_tokens) {
 // Lazer rejects coordinates and slider lengths beyond +-131072; stable reads
 // them. Ranked maps have control points and lengths past that bound.
 PPPP_TEST(clients_coordinate_and_length_bounds) {
-    const std::string input =
-        "osu file format v14\n[TimingPoints]\n0,500\n[HitObjects]\n"
-        "200000,64,100,1,0\n"
-        "64,64,200,2,0,L|262144:-460440,1,140000\n"
-        "64,64,300,2,0,L|100:100,1,-1.79769313486231E+308\n";
+    const std::string input = "osu file format v14\n[TimingPoints]\n0,500\n[HitObjects]\n"
+                              "200000,64,100,1,0\n"
+                              "64,64,200,2,0,L|262144:-460440,1,140000\n"
+                              "64,64,300,2,0,L|100:100,1,-1.79769313486231E+308\n";
     const Beatmap stable = parse_str(input, stable_options());
     CHECK(stable.hit_objects.size() == 3u);
     CHECK(stable.hit_objects[0].x == 512);
@@ -320,7 +322,8 @@ PPPP_TEST(clients_coordinate_and_length_bounds) {
 // uses the legacy path rules. The map still reports v128.
 PPPP_TEST(clients_v128_maps_in_stable) {
     const std::string stable_input =
-        "osu file format v128\n[TimingPoints]\n0,500\n[HitObjects]\n10.75,20.5,100,2,0,B|100.5:0|L|100:100,1,0\n";
+        "osu file format "
+        "v128\n[TimingPoints]\n0,500\n[HitObjects]\n10.75,20.5,100,2,0,B|100.5:0|L|100:100,1,0\n";
     const Beatmap stable = parse_str(stable_input, paths_options(Client::Stable));
     CHECK(stable.format_version == 128);
     CHECK(stable.hit_objects[0].x == 10);
@@ -341,7 +344,8 @@ PPPP_TEST(clients_v128_maps_in_stable) {
     CHECK(std::vector<PathPoint>(v128.slider_paths[0].points.begin(), v128.slider_paths[0].points.end()) ==
           std::vector<PathPoint>(v14.slider_paths[0].points.begin(), v14.slider_paths[0].points.end()));
     CHECK(unloadable_line(
-              "osu file format v128\n[TimingPoints]\n0,500\n[HitObjects]\n10.75,20.5,100,2,0,B2|100:0|100:100,1,0\n",
+              "osu file format "
+              "v128\n[TimingPoints]\n0,500\n[HitObjects]\n10.75,20.5,100,2,0,B2|100:0|100:100,1,0\n",
               Client::Stable) == 5u);
 }
 
@@ -381,8 +385,8 @@ PPPP_TEST(clients_difficulty_bytes_before_v13) {
 // [General] already set mania and the map is v13+. Lazer clamps with the
 // final mode.
 PPPP_TEST(clients_circle_size_range_follows_mode_order) {
-    const std::string before_mode =
-        "osu file format v14\n[Difficulty]\nCircleSize:14\n[General]\nMode:3\n" + std::string(kTimingAndCircle);
+    const std::string before_mode = "osu file format v14\n[Difficulty]\nCircleSize:14\n[General]\nMode:3\n" +
+                                    std::string(kTimingAndCircle);
     CHECK(parse_str(before_mode, stable_options()).cs == 10);
     CHECK(parse_str(before_mode, lazer_options()).cs == 14);
     const std::string mode_changes =
@@ -393,7 +397,8 @@ PPPP_TEST(clients_circle_size_range_follows_mode_order) {
     static const int versions[] = {12, 14};
     for (size_t v = 0; v < 2; v++) {
         const std::string after_mode = std::string("osu file format v") + to_str(versions[v]) +
-                                       "\n[General]\nMode:3\n[Difficulty]\nCircleSize:14\n" + kTimingAndCircle;
+                                       "\n[General]\nMode:3\n[Difficulty]\nCircleSize:14\n" +
+                                       kTimingAndCircle;
         CHECK(parse_str(after_mode, stable_options()).cs == (versions[v] == 14 ? 14 : 10));
         CHECK(parse_str(after_mode, lazer_options()).cs == 14);
     }

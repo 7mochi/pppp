@@ -81,8 +81,8 @@ namespace fosu {
             }
         };
 
-        inline void subdivide_bezier(nonstd::span<const CurvePoint> points, CurvePoint* left, CurvePoint* right,
-                                     CurvePoint* midpoints) {
+        inline void subdivide_bezier(nonstd::span<const CurvePoint> points, CurvePoint* left,
+                                     CurvePoint* right, CurvePoint* midpoints) {
             const size_t count = points.size();
             if (count == 4) {
                 const CurvePoint a = (points[0] + points[1]) * 0.5f;
@@ -155,8 +155,8 @@ namespace fosu {
                 }
             }
             distance.begin_segment();
-            return bezier_distance(nonstd::span<const CurvePoint>(work + point_count - degree, degree + 1), distance,
-                                   arena);
+            return bezier_distance(nonstd::span<const CurvePoint>(work + point_count - degree, degree + 1),
+                                   distance, arena);
         }
 
         // The vertices of a flat subdivision, read across the left and right halves.
@@ -237,7 +237,8 @@ namespace fosu {
         // knot segment (100 samples) and the final vertex are kept. The curve length that was
         // dropped between kept vertices (minus the chord) is accumulated in optimised_length.
         template <typename Curve>
-        inline void catmull_distance(nonstd::span<const CurvePoint> points, Curve& distance, bool optimise = true) {
+        inline void catmull_distance(nonstd::span<const CurvePoint> points, Curve& distance,
+                                     bool optimise = true) {
             const int catmull_detail = 50;
             const int catmull_segment_length = catmull_detail * 2;
             const size_t total = (points.size() - 1) * catmull_segment_length;
@@ -342,8 +343,8 @@ namespace fosu {
 
         template <typename Curve>
         inline bool approximate_curve_segment(nonstd::span<const CurvePoint> points, CurveType::Value type,
-                                              bool has_degree, fosu::u32 degree, Curve& segment,
-                                              Arena* arena, bool optimise_catmull = true) {
+                                              bool has_degree, fosu::u32 degree, Curve& segment, Arena* arena,
+                                              bool optimise_catmull = true) {
             if (points.size() == 1 || type == CurveType::Linear ||
                 (points.size() == 2 && type != CurveType::Catmull)) {
                 for (size_t i = 0; i < points.size(); ++i) {
@@ -389,7 +390,8 @@ namespace fosu {
             return true;
         }
 
-        inline CurveType::Value legacy_curve_type(nonstd::span<const CurvePoint> points, CurveType::Value type) {
+        inline CurveType::Value legacy_curve_type(nonstd::span<const CurvePoint> points,
+                                                  CurveType::Value type) {
             if (type != CurveType::PerfectCurve) {
                 return type;
             }
@@ -401,7 +403,8 @@ namespace fosu {
             return std::fabs(cross) < 1e-3f ? CurveType::Linear : type;
         }
 
-        inline CurveType::Value lazer_curve_type(nonstd::span<const CurvePoint> points, CurveType::Value type) {
+        inline CurveType::Value lazer_curve_type(nonstd::span<const CurvePoint> points,
+                                                 CurveType::Value type) {
             return type == CurveType::PerfectCurve && points.size() > 3 ? CurveType::Bezier : type;
         }
 
@@ -409,8 +412,9 @@ namespace fosu {
         // segment's first point, if any; that point takes part in the curve type and geometry but
         // cannot start an implicit segment, nor can the last of the segment's own `vertex_count`
         // points.
-        inline bool calculate_legacy_slider_distance(nonstd::span<const CurvePoint> points, size_t vertex_count,
-                                                     CurveType::Value type, CurveDistance& distance, Arena* arena) {
+        inline bool calculate_legacy_slider_distance(nonstd::span<const CurvePoint> points,
+                                                     size_t vertex_count, CurveType::Value type,
+                                                     CurveDistance& distance, Arena* arena) {
             type = legacy_curve_type(points, type);
             size_t begin = 0;
             for (size_t i = 1; i < points.size(); ++i) {
@@ -428,8 +432,9 @@ namespace fosu {
         }
 
         inline bool calculate_lazer_slider_distance(nonstd::span<const CurvePoint> points,
-                                                    nonstd::span<const CurveSegment> segments, CurveType::Value type,
-                                                    CurveDistance& distance, Arena* arena) {
+                                                    nonstd::span<const CurveSegment> segments,
+                                                    CurveType::Value type, CurveDistance& distance,
+                                                    Arena* arena) {
             if (segments.empty()) {
                 type = lazer_curve_type(points, type);
                 size_t begin = 0;
@@ -463,7 +468,8 @@ namespace fosu {
 
         // Control points relative to the slider head, in single precision, as lazer stores them.
         inline CurvePoint* relative_control_points(const HitObject& object,
-                                                   nonstd::span<const SliderPoint> control_points, Arena* arena) {
+                                                   nonstd::span<const SliderPoint> control_points,
+                                                   Arena* arena) {
             CurvePoint* points = arena_push_array<CurvePoint>(arena, control_points.size() + 1);
             if (!points) {
                 return 0;
@@ -503,7 +509,9 @@ namespace fosu {
             CurveDistance& distance;
             Arena* arena;
 
-            LegacyDistanceVisitor(CurveDistance& d, Arena* a) : distance(d), arena(a) {}
+            LegacyDistanceVisitor(CurveDistance& d, Arena* a)
+                : distance(d),
+                  arena(a) {}
 
             bool operator()(nonstd::span<const CurvePoint> points, size_t vertex_count, CurveType::Value type,
                             bool continues_path) const {
@@ -541,12 +549,11 @@ namespace fosu {
             const nonstd::span<const CurvePoint> relative_points(points, count);
             bool calculated;
             if (lazer_format) {
-                calculated =
-                    calculate_lazer_slider_distance(relative_points, segments, slider.curve_type, distance, arena);
+                calculated = calculate_lazer_slider_distance(relative_points, segments, slider.curve_type,
+                                                             distance, arena);
             } else {
-                calculated = for_each_legacy_segment(
-                    relative_points, segments, slider.curve_type,
-                    LegacyDistanceVisitor(distance, arena));
+                calculated = for_each_legacy_segment(relative_points, segments, slider.curve_type,
+                                                     LegacyDistanceVisitor(distance, arena));
             }
             if (!calculated) {
                 return Error(ErrorCode::AllocationFailure);
@@ -631,8 +638,9 @@ namespace fosu {
         // See calculate_legacy_slider_distance. A segment after the first starts at the previous
         // one's end, so it never repeats that vertex.
         inline bool calculate_legacy_slider_curve(nonstd::span<const CurvePoint> points, size_t vertex_count,
-                                                  bool continues_path, CurveType::Value type, CurveVertices& curve,
-                                                  Arena* arena, bool optimise_catmull = true) {
+                                                  bool continues_path, CurveType::Value type,
+                                                  CurveVertices& curve, Arena* arena,
+                                                  bool optimise_catmull = true) {
             type = legacy_curve_type(points, type);
             size_t begin = 0;
             for (size_t i = 1; i <= points.size(); ++i) {
@@ -656,8 +664,8 @@ namespace fosu {
         }
 
         inline bool calculate_lazer_slider_curve(nonstd::span<const CurvePoint> points,
-                                                 nonstd::span<const CurveSegment> segments, CurveType::Value type,
-                                                 CurveVertices& curve, Arena* arena,
+                                                 nonstd::span<const CurveSegment> segments,
+                                                 CurveType::Value type, CurveVertices& curve, Arena* arena,
                                                  bool optimise_catmull = true) {
             if (segments.empty()) {
                 type = lazer_curve_type(points, type);
@@ -702,7 +710,9 @@ namespace fosu {
             bool optimise_catmull;
 
             LegacyCurveVisitor(CurveVertices& c, Arena* a, bool o)
-                : curve(c), arena(a), optimise_catmull(o) {}
+                : curve(c),
+                  arena(a),
+                  optimise_catmull(o) {}
 
             bool operator()(nonstd::span<const CurvePoint> points, size_t vertex_count, CurveType::Value type,
                             bool continues_path) const {
@@ -819,9 +829,8 @@ namespace fosu {
                     map.slider_points.subspan(slider.point_begin, slider.point_count);
                 const nonstd::span<const CurveSegment> segments =
                     map.slider_segments.subspan(slider.segment_begin, slider.segment_count);
-                const Result<SliderPath> path =
-                    calculate_slider_path(object, slider, control_points, segments, result_arena,
-                                          scratch_arena, lazer_format);
+                const Result<SliderPath> path = calculate_slider_path(
+                    object, slider, control_points, segments, result_arena, scratch_arena, lazer_format);
                 if (path.failed()) {
                     success = false;
                     break;
@@ -900,8 +909,8 @@ namespace fosu {
                 points[i + 1] = PathPoint::make(original[slider.point_begin + i].x - head.x,
                                                 original[slider.point_begin + i].y - head.y);
             }
-            curve_type =
-                internal::legacy_curve_type(nonstd::span<const internal::CurvePoint>(points, count + 1), curve_type);
+            curve_type = internal::legacy_curve_type(
+                nonstd::span<const internal::CurvePoint>(points, count + 1), curve_type);
         }
 
         points[0] = PathPoint::zero();
@@ -911,8 +920,8 @@ namespace fosu {
         const nonstd::span<const CurveSegment> segments =
             map.slider_segments.subspan(slider.segment_begin, slider.segment_count);
         return internal::calculate_slider_path_from_relative(
-            slider, nonstd::span<const internal::CurvePoint>(points, count + 1), segments, curve_type, result_arena,
-            scratch_arena, lazer_format);
+            slider, nonstd::span<const internal::CurvePoint>(points, count + 1), segments, curve_type,
+            result_arena, scratch_arena, lazer_format);
     }
 } // namespace fosu
 

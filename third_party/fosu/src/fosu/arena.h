@@ -22,8 +22,8 @@ namespace fosu {
 
     // The default reservation is 1 GiB on a 64-bit address space and 256 MiB on 32-bit, where a
     // Parser holds two arenas and both must fit the user address space.
-#if defined(_WIN64) || defined(__LP64__) || defined(_LP64) || defined(__x86_64__) || \
-    defined(__amd64__) || defined(__aarch64__) || defined(_M_X64) || defined(_M_ARM64)
+#if defined(_WIN64) || defined(__LP64__) || defined(_LP64) || defined(__x86_64__) || defined(__amd64__) ||   \
+    defined(__aarch64__) || defined(_M_X64) || defined(_M_ARM64)
     const size_t kArenaReserve = static_cast<size_t>(1) << 30;
 #else
     const size_t kArenaReserve = static_cast<size_t>(1) << 28;

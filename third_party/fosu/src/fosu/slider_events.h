@@ -107,7 +107,8 @@ namespace fosu { namespace internal {
         }
         const TempArena temp(scratch_arena);
         SliderTiming* timings = arena_push_array<SliderTiming>(scratch_arena, map.sliders.size());
-        nonstd::span<SliderEvent>* ranges = arena_push_array<nonstd::span<SliderEvent> >(result_arena, map.sliders.size());
+        nonstd::span<SliderEvent>* ranges =
+            arena_push_array<nonstd::span<SliderEvent> >(result_arena, map.sliders.size());
         nonstd::span<SliderEvent>* catch_ranges =
             arena_push_array<nonstd::span<SliderEvent> >(result_arena, map.sliders.size());
         if (!timings || !ranges || !catch_ranges ||

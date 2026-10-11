@@ -17,7 +17,8 @@ namespace fosu { namespace internal {
 
     // Legacy Enum.Parse accepts names, comma-separated combinations, and the full
     // int32 range. Individual domains can impose stricter rules on that spelling.
-    inline nonstd::optional<fosu::i32> parse_legacy_enum(nonstd::string_view input, const StringLookup<fosu::i32>& names) {
+    inline nonstd::optional<fosu::i32> parse_legacy_enum(nonstd::string_view input,
+                                                         const StringLookup<fosu::i32>& names) {
         const char* p = skip_numeric_space(input.data(), input.data() + input.size());
         const char* end = input.data() + input.size();
         while (end > p && skip_numeric_space(end - 1, end) == end) {
@@ -35,7 +36,8 @@ namespace fosu { namespace internal {
             while (part_end > p && skip_numeric_space(part_end - 1, part_end) == part_end) {
                 --part_end;
             }
-            const fosu::i32* named_value = names.find(nonstd::string_view(p, static_cast<size_t>(part_end - p)));
+            const fosu::i32* named_value =
+                names.find(nonstd::string_view(p, static_cast<size_t>(part_end - p)));
             if (!named_value) {
                 return nonstd::optional<fosu::i32>();
             }

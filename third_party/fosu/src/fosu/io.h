@@ -27,8 +27,8 @@
 #include <unistd.h>
 #endif
 
-#include <fosu/types.h>
 #include <fosu/nonstd_config.h>
+#include <fosu/types.h>
 
 namespace fosu {
     // The parser requires kBufferPadding readable zero bytes past the end of the input so
@@ -48,24 +48,14 @@ namespace fosu {
         inline void set_file_error(DWORD error) {
             switch (error) {
             case ERROR_FILE_NOT_FOUND:
-            case ERROR_PATH_NOT_FOUND:
-                errno = ENOENT;
-                break;
+            case ERROR_PATH_NOT_FOUND: errno = ENOENT; break;
             case ERROR_ACCESS_DENIED:
-            case ERROR_SHARING_VIOLATION:
-                errno = EACCES;
-                break;
+            case ERROR_SHARING_VIOLATION: errno = EACCES; break;
             case ERROR_INVALID_NAME:
-            case ERROR_INVALID_PARAMETER:
-                errno = EINVAL;
-                break;
+            case ERROR_INVALID_PARAMETER: errno = EINVAL; break;
             case ERROR_NOT_ENOUGH_MEMORY:
-            case ERROR_OUTOFMEMORY:
-                errno = ENOMEM;
-                break;
-            default:
-                errno = EIO;
-                break;
+            case ERROR_OUTOFMEMORY: errno = ENOMEM; break;
+            default: errno = EIO; break;
             }
         }
 
@@ -85,12 +75,9 @@ namespace fosu {
                 delete[] wide;
                 return kInvalidInputFile;
             }
-            InputFile file = CreateFileW(wide, GENERIC_READ,
-                                         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 0,
-                                         OPEN_EXISTING,
-                                         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN |
-                                             FILE_FLAG_BACKUP_SEMANTICS,
-                                         0);
+            InputFile file = CreateFileW(
+                wide, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 0, OPEN_EXISTING,
+                FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN | FILE_FLAG_BACKUP_SEMANTICS, 0);
             delete[] wide;
             if (file == kInvalidInputFile) {
                 set_file_error(GetLastError());
@@ -128,8 +115,7 @@ namespace fosu {
         }
 
         inline ptrdiff_t read_input_file(InputFile file, char* data, size_t size) {
-            const DWORD amount =
-                static_cast<DWORD>((std::min)(size, static_cast<size_t>(0xffffffffu)));
+            const DWORD amount = static_cast<DWORD>((std::min)(size, static_cast<size_t>(0xffffffffu)));
             DWORD read = 0;
             if (!ReadFile(file, data, amount, &read, 0)) {
                 set_file_error(GetLastError());

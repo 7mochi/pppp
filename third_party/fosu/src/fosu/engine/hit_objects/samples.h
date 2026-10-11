@@ -101,7 +101,8 @@ namespace fosu { namespace internal {
         return true;
     }
 
-    inline bool parse_hit_sample(const char* p, const char* end, nonstd::string_view& out, bool banks_only = false) {
+    inline bool parse_hit_sample(const char* p, const char* end, nonstd::string_view& out,
+                                 bool banks_only = false) {
         if (end - p == 8 && short_sample(p)) {
             out = nonstd::string_view(p, 8);
             return true;

@@ -21,7 +21,8 @@ namespace fosu { namespace internal {
                     return nonstd::optional<fosu::u32>();
                 }
                 input.remove_prefix(comma + 1);
-            } else if (comma != nonstd::string_view::npos && input.find(',', comma + 1) != nonstd::string_view::npos) {
+            } else if (comma != nonstd::string_view::npos &&
+                       input.find(',', comma + 1) != nonstd::string_view::npos) {
                 return nonstd::optional<fosu::u32>();
             }
         }

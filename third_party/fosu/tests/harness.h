@@ -8,11 +8,11 @@
 #undef CHECK
 #define CHECK(cond) CHECK_UNARY(cond)
 
-#define CHECK_MSG(cond, msg)                                                                          \
-    do {                                                                                              \
-        const char* pppp_test_msg = (msg);                                                            \
-        INFO(pppp_test_msg);                                                                          \
-        CHECK_UNARY(cond);                                                                            \
+#define CHECK_MSG(cond, msg)                                                                                 \
+    do {                                                                                                     \
+        const char* pppp_test_msg = (msg);                                                                   \
+        INFO(pppp_test_msg);                                                                                 \
+        CHECK_UNARY(cond);                                                                                   \
     } while (0)
 
 #define PPPP_TEST_MAIN()

@@ -166,9 +166,8 @@ namespace fosu { namespace internal {
 
     // osu!stable cannot load a map with a hit object it fails to read, but ignores one whose type
     // names no kind. Lazer skips both.
-    inline void reject_hitobject(Client::Value client, HitObjectCounts& counts,
-                                 bool& preceding_was_spinner, fosu::u32 type, const char* line,
-                                 const char* rest, const char* line_end) {
+    inline void reject_hitobject(Client::Value client, HitObjectCounts& counts, bool& preceding_was_spinner,
+                                 fosu::u32 type, const char* line, const char* rest, const char* line_end) {
         if (client == Client::Stable) {
             if (!counts.unloadable_line && classify_hitobject_kind(type) != HitObjectKind::Invalid) {
                 counts.unloadable_line = line;
@@ -292,8 +291,7 @@ namespace fosu { namespace internal {
                 layout.x = static_cast<u8>(x);
                 layout.y = static_cast<u8>(y);
                 layout.common_end = static_cast<u8>(type_at + 3);
-                layout.common_index =
-                    static_cast<u16>((((x - 1) * 3 + y - 1) * 10 + TimeDigits - 1) * 3 * 2);
+                layout.common_index = static_cast<u16>((((x - 1) * 3 + y - 1) * 10 + TimeDigits - 1) * 3 * 2);
                 layout.common_delimiters = delimiters;
             }
         }
@@ -366,21 +364,19 @@ namespace fosu { namespace internal {
 #if FOSU_SIMD_X86
             const LaneMasks& masks = kLaneMasks[mask_index];
             const __m256i placed = _mm256_shuffle_epi8(
-                _mm256_permutevar8x32_epi32(
-                    _mm256_sub_epi8(ascii, constants.zero),
-                    _mm256_load_si256(reinterpret_cast<const __m256i*>(masks.perm))),
+                _mm256_permutevar8x32_epi32(_mm256_sub_epi8(ascii, constants.zero),
+                                            _mm256_load_si256(reinterpret_cast<const __m256i*>(masks.perm))),
                 _mm256_load_si256(reinterpret_cast<const __m256i*>(masks.shuf)));
             const __m256i values = _mm256_madd_epi16(
-                _mm256_maddubs_epi16(
-                    placed, _mm256_setr_epi8(0, 100, 10, 1, 0, 100, 10, 1, 0, 100, 10, 1, 0, 0, 10, 1,
-                                             0, 0, 10, 1, 0, 0, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1)),
+                _mm256_maddubs_epi16(placed, _mm256_setr_epi8(0, 100, 10, 1, 0, 100, 10, 1, 0, 100, 10, 1, 0,
+                                                              0, 10, 1, 0, 0, 10, 1, 0, 0, 10, 1, 10, 1, 10,
+                                                              1, 10, 1, 10, 1)),
                 _mm256_setr_epi16(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 1, 100, 1));
             const __m128i time_groups = _mm256_extracti128_si256(values, 1);
             _mm_storeu_si128(reinterpret_cast<__m128i*>(fields),
                              _mm_add_epi32(_mm256_castsi256_si128(values), _mm_slli_si128(time_groups, 12)));
             const __m128i packed = _mm_packus_epi32(time_groups, time_groups);
-            const __m128i combined =
-                _mm_madd_epi16(packed, _mm_setr_epi16(0, 0, 10000, 1, 0, 0, 0, 0));
+            const __m128i combined = _mm_madd_epi16(packed, _mm_setr_epi16(0, 0, 10000, 1, 0, 0, 0, 0));
             _mm_store_sd(&time, _mm_cvtepi32_pd(_mm_shuffle_epi32(combined, _MM_SHUFFLE(0, 0, 0, 1))));
 #else
             Bytes32 digits;
@@ -429,20 +425,20 @@ namespace fosu { namespace internal {
         bool preceding_was_spinner = counts.preceding_was_spinner;
         while (p < file_end) {
 #if FOSU_SIMD
-            p = parse_hitobjects_fixed_time<1>(beatmap, counts, constants, preceding_was_spinner, p,
-                                               file_end, lazer_format, client, time_offset);
-            p = parse_hitobjects_fixed_time<2>(beatmap, counts, constants, preceding_was_spinner, p,
-                                               file_end, lazer_format, client, time_offset);
-            p = parse_hitobjects_fixed_time<3>(beatmap, counts, constants, preceding_was_spinner, p,
-                                               file_end, lazer_format, client, time_offset);
-            p = parse_hitobjects_fixed_time<4>(beatmap, counts, constants, preceding_was_spinner, p,
-                                               file_end, lazer_format, client, time_offset);
-            p = parse_hitobjects_fixed_time<5>(beatmap, counts, constants, preceding_was_spinner, p,
-                                               file_end, lazer_format, client, time_offset);
-            p = parse_hitobjects_fixed_time<6>(beatmap, counts, constants, preceding_was_spinner, p,
-                                               file_end, lazer_format, client, time_offset);
-            p = parse_hitobjects_fixed_time<7>(beatmap, counts, constants, preceding_was_spinner, p,
-                                               file_end, lazer_format, client, time_offset);
+            p = parse_hitobjects_fixed_time<1>(beatmap, counts, constants, preceding_was_spinner, p, file_end,
+                                               lazer_format, client, time_offset);
+            p = parse_hitobjects_fixed_time<2>(beatmap, counts, constants, preceding_was_spinner, p, file_end,
+                                               lazer_format, client, time_offset);
+            p = parse_hitobjects_fixed_time<3>(beatmap, counts, constants, preceding_was_spinner, p, file_end,
+                                               lazer_format, client, time_offset);
+            p = parse_hitobjects_fixed_time<4>(beatmap, counts, constants, preceding_was_spinner, p, file_end,
+                                               lazer_format, client, time_offset);
+            p = parse_hitobjects_fixed_time<5>(beatmap, counts, constants, preceding_was_spinner, p, file_end,
+                                               lazer_format, client, time_offset);
+            p = parse_hitobjects_fixed_time<6>(beatmap, counts, constants, preceding_was_spinner, p, file_end,
+                                               lazer_format, client, time_offset);
+            p = parse_hitobjects_fixed_time<7>(beatmap, counts, constants, preceding_was_spinner, p, file_end,
+                                               lazer_format, client, time_offset);
             if (p >= file_end) {
                 break;
             }

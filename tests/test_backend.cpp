@@ -11,8 +11,9 @@ TEST_CASE("backend reports the selected engine") {
 
     // backend() must agree with the loader's own name for the engine it selected.
     const char* expected = fosu::internal::engine_name(fosu::internal::selected_engine()->kind);
-    const char* actual = kind == pppp::EngineKind::AVX2 ? "avx2"
-                       : kind == pppp::EngineKind::NEON ? "neon" : "scalar";
+    const char* actual = kind == pppp::EngineKind::AVX2   ? "avx2"
+                         : kind == pppp::EngineKind::NEON ? "neon"
+                                                          : "scalar";
     CHECK(std::strcmp(actual, expected) == 0);
 
     const char* override = std::getenv("FOSU_BACKEND");

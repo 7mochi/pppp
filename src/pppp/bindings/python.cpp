@@ -1475,8 +1475,8 @@ namespace {
     }
 
     int add_backend(PyObject* module) {
-        PyRef backend(PyUnicode_FromString(
-            fosu::internal::engine_name(fosu::internal::selected_engine()->kind)));
+        PyRef backend(
+            PyUnicode_FromString(fosu::internal::engine_name(fosu::internal::selected_engine()->kind)));
         if (!backend.get()) {
             return -1;
         }

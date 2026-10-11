@@ -11,6 +11,6 @@ namespace pppp {
     /// (a parse, or this call), from the build's `PPPP_ISA` and the `FOSU_BACKEND` override; this only
     /// reports it.
     EngineKind::Value backend();
-}
+} // namespace pppp
 
 #endif

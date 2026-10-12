@@ -4,6 +4,7 @@
 #include "pppp/fruits/difficulty/evaluators/movement_evaluator.h"
 #include "pppp/utils/difficulty_calculation_utils.h"
 #include "pppp/utils/math/csharp.h"
+#include "pppp/utils/precision.h"
 #include <algorithm>
 #include <cmath>
 
@@ -95,9 +96,10 @@ namespace pppp { namespace fruits { namespace difficulty { namespace evaluators 
         // preprocessing::NORMALIZED_HALF_CATCHER_WIDTH)
         if (current.index >= 2 &&
             std::fabs(current.exact_distance_moved) <= preprocessing::NORMALIZED_HALF_CATCHER_WIDTH * 2 &&
-            current.exact_distance_moved == -last->exact_distance_moved &&
-            last->exact_distance_moved == -last_last->exact_distance_moved &&
-            current.strain_time == last->strain_time && last->strain_time == last_last->strain_time) {
+            utils::almost_equals(current.exact_distance_moved, -last->exact_distance_moved, 1e-3f) &&
+            utils::almost_equals(last->exact_distance_moved, -last_last->exact_distance_moved, 1e-3f) &&
+            utils::almost_equals(current.strain_time, last->strain_time, 1e-7) &&
+            utils::almost_equals(last->strain_time, last_last->strain_time, 1e-7)) {
             distance_addition = 0;
         }
 

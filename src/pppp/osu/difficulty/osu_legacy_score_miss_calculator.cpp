@@ -10,7 +10,8 @@ namespace pppp { namespace osu { namespace difficulty {
     int OsuLegacyScoreMissCalculator::count_of(int result) const { return score.statistics[result]; }
 
     double OsuLegacyScoreMissCalculator::calculate() const {
-        if (attributes.max_combo == 0 || !score.legacy_total_score.has_value()) {
+        if (attributes.max_combo == 0 || !score.legacy_total_score.has_value() ||
+            score.legacy_total_score.value() == 0) {
             return 0;
         }
 

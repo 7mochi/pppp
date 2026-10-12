@@ -100,7 +100,7 @@ export interface OsuDifficultyAttributes {
   aimDifficulty: number;
   speedDifficulty: number;
   readingDifficulty: number;
-  flashlightDifficulty: number;
+  flashlightDifficulty: number | null;
   sliderFactor: number;
   aimDifficultStrainCount: number;
   speedDifficultStrainCount: number;

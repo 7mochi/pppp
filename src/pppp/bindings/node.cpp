@@ -26,6 +26,15 @@ namespace {
         return result;
     }
 
+    napi_value optional_number(napi_env env, const nonstd::optional<double>& value) {
+        if (!value.has_value()) {
+            napi_value null_value = NULL;
+            napi_get_null(env, &null_value);
+            return null_value;
+        }
+        return number(env, value.value());
+    }
+
     napi_value unsigned_integer(napi_env env, unsigned value) {
         napi_value result = NULL;
         napi_create_uint32(env, value, &result);
@@ -352,7 +361,7 @@ namespace {
         napi_set_named_property(env, object, "speedDifficulty", number(env, value.speed_difficulty));
         napi_set_named_property(env, object, "readingDifficulty", number(env, value.reading_difficulty));
         napi_set_named_property(env, object, "flashlightDifficulty",
-                                number(env, value.flashlight_difficulty));
+                                optional_number(env, value.flashlight_difficulty));
         napi_set_named_property(env, object, "sliderFactor", number(env, value.slider_factor));
         napi_set_named_property(env, object, "aimDifficultStrainCount",
                                 number(env, value.aim_difficult_strain_count));
@@ -613,15 +622,6 @@ namespace {
         return object;
     }
 
-    napi_value optional_number(napi_env env, const nonstd::optional<double>& value) {
-        if (!value.has_value()) {
-            napi_value null_value = NULL;
-            napi_get_null(env, &null_value);
-            return null_value;
-        }
-        return number(env, value.value());
-    }
-
     napi_value osu_performance(napi_env env, const pppp::osu::difficulty::OsuPerformanceAttributes& value) {
         napi_value object = NULL;
         if (napi_create_object(env, &object) != napi_ok) {
@@ -814,6 +814,22 @@ namespace {
         return static_cast<int>(out);
     }
 
+    nonstd::optional<double> attribute_optional_number(napi_env env, napi_value object, const char* name) {
+        napi_value value = attribute_value(env, object, name);
+        napi_valuetype type = napi_undefined;
+        if (!value || napi_typeof(env, value, &type) != napi_ok || type == napi_undefined ||
+            type == napi_null) {
+            return nonstd::optional<double>();
+        }
+        double out = 0.0;
+        if (napi_get_value_double(env, value, &out) != napi_ok) {
+            napi_value ignored = NULL;
+            napi_get_and_clear_last_exception(env, &ignored);
+            return nonstd::optional<double>();
+        }
+        return out;
+    }
+
     int read_attributes(napi_env env, napi_value value, pppp::DifficultyAttributes& out) {
         napi_valuetype type = napi_undefined;
         if (napi_typeof(env, value, &type) != napi_ok || type != napi_object) {
@@ -838,7 +854,8 @@ namespace {
             osu_attributes.aim_difficulty = attribute_number(env, osu, "aimDifficulty");
             osu_attributes.speed_difficulty = attribute_number(env, osu, "speedDifficulty");
             osu_attributes.reading_difficulty = attribute_number(env, osu, "readingDifficulty");
-            osu_attributes.flashlight_difficulty = attribute_number(env, osu, "flashlightDifficulty");
+            osu_attributes.flashlight_difficulty =
+                attribute_optional_number(env, osu, "flashlightDifficulty");
             osu_attributes.slider_factor = attribute_number(env, osu, "sliderFactor");
             osu_attributes.aim_difficult_strain_count = attribute_number(env, osu, "aimDifficultStrainCount");
             osu_attributes.speed_difficult_strain_count =

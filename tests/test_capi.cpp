@@ -99,6 +99,8 @@ namespace {
         case PPPP_RULESET_OSU:
             CHECK(attributes.osu.aim_difficulty == pppp_test::difficulty_approx(osu.aim_difficulty));
             CHECK(attributes.osu.speed_difficulty == pppp_test::difficulty_approx(osu.speed_difficulty));
+            CHECK(attributes.osu.has_flashlight_difficulty ==
+                  (osu.flashlight_difficulty.has_value() ? 1 : 0));
             CHECK(attributes.osu.aim_difficult_slider_count ==
                   pppp_test::difficulty_approx(osu.aim_difficult_slider_count));
             CHECK(attributes.osu.hit_circle_count == osu.hit_circle_count);
@@ -136,15 +138,15 @@ TEST_SUITE("the C ABI") {
 
     TEST_CASE("every ruleset reproduces the pinned star ratings") {
         static const StarsRow rows[] = {
-            {PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu", "NM", PPPP_RULESET_OSU, 6.5243170265483581, 239},
-            {PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu", "DT", PPPP_RULESET_OSU, 9.4677607900646308, 239},
-            {PPPP_TEST_RESOURCES "/taiko/diffcalc-test.osu", "NM", PPPP_RULESET_TAIKO, 3.3190848563395079,
+            {PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu", "NM", PPPP_RULESET_OSU, 6.5880619069592505, 239},
+            {PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu", "DT", PPPP_RULESET_OSU, 9.159034120760282, 239},
+            {PPPP_TEST_RESOURCES "/taiko/diffcalc-test.osu", "NM", PPPP_RULESET_TAIKO, 3.323658989690031,
              200},
-            {PPPP_TEST_RESOURCES "/taiko/diffcalc-test.osu", "DT", PPPP_RULESET_TAIKO, 4.4551414906554987,
+            {PPPP_TEST_RESOURCES "/taiko/diffcalc-test.osu", "DT", PPPP_RULESET_TAIKO, 4.462215604030145,
              200},
-            {PPPP_TEST_RESOURCES "/fruits/diffcalc-test.osu", "NM", PPPP_RULESET_CATCH, 4.039861734717169,
+            {PPPP_TEST_RESOURCES "/fruits/diffcalc-test.osu", "NM", PPPP_RULESET_CATCH, 3.993565832551827,
              127},
-            {PPPP_TEST_RESOURCES "/fruits/diffcalc-test.osu", "DT", PPPP_RULESET_CATCH, 5.1527173897800873,
+            {PPPP_TEST_RESOURCES "/fruits/diffcalc-test.osu", "DT", PPPP_RULESET_CATCH, 5.073647828613076,
              127},
             {PPPP_TEST_RESOURCES "/mania/diffcalc-test.osu", "NM", PPPP_RULESET_MANIA, 2.3493769750220914,
              242},
@@ -162,6 +164,33 @@ TEST_SUITE("the C ABI") {
         check_difficulty_round_trip(PPPP_TEST_RESOURCES "/osu/2785319.osu", PPPP_RULESET_TAIKO);
         check_difficulty_round_trip(PPPP_TEST_RESOURCES "/osu/2785319.osu", PPPP_RULESET_CATCH);
         check_difficulty_round_trip(PPPP_TEST_RESOURCES "/osu/2785319.osu", PPPP_RULESET_MANIA);
+    }
+
+    TEST_CASE("the flashlight difficulty crosses the ABI only with the Flashlight mod") {
+        const char* path = PPPP_TEST_RESOURCES "/osu/2785319.osu";
+        pppp_beatmap* map = 0;
+        REQUIRE(pppp_beatmap_from_file(path, &map) == PPPP_OK);
+
+        pppp::Beatmap reference;
+        pppp_test::load(reference, path);
+
+        const pppp::DifficultyAttributes expected =
+            pppp_test::calculate(pppp::Difficulty().mods(pppp_test::parse_mods("FL")), reference);
+        REQUIRE_UNARY(expected.osu());
+        REQUIRE_UNARY(expected.osu()->flashlight_difficulty.has_value());
+
+        const ModsHandle mods("FL");
+        pppp_difficulty_options options;
+        std::memset(&options, 0, sizeof(options));
+        options.mods = mods.handle;
+
+        pppp_difficulty_attributes attributes;
+        REQUIRE(pppp_calculate_difficulty(map, &options, &attributes) == PPPP_OK);
+        pppp_beatmap_free(map);
+
+        CHECK(attributes.osu.has_flashlight_difficulty == 1);
+        CHECK(attributes.osu.flashlight_difficulty ==
+              pppp_test::difficulty_approx(expected.osu()->flashlight_difficulty.value()));
     }
 
     TEST_CASE("null options mean no mods and the map's own ruleset") {
@@ -589,11 +618,11 @@ TEST_SUITE("the C ABI") {
 
         REQUIRE(count == 601);
         CHECK(entries[300].time == 61309.235290751734);
-        CHECK(entries[300].attributes.star_rating == pppp_test::difficulty_approx(8.272126401328721));
+        CHECK(entries[300].attributes.star_rating == pppp_test::difficulty_approx(8.243851306944014));
         CHECK(entries[300].attributes.max_combo == 433);
         CHECK(entries[600].attributes.ruleset == PPPP_RULESET_OSU);
         CHECK(entries[600].attributes.osu.max_combo == 909);
-        CHECK(entries[600].attributes.star_rating == pppp_test::difficulty_approx(8.898179651893287));
+        CHECK(entries[600].attributes.star_rating == pppp_test::difficulty_approx(8.97136919085591));
 
         pppp_timed_difficulty_free(timed);
         pppp_beatmap_free(map);
@@ -630,8 +659,8 @@ TEST_SUITE("the C ABI") {
         pppp_osu_strains osu;
         REQUIRE(pppp_strains_osu(strains, &osu) == PPPP_OK);
         REQUIRE(osu.aim_count == 189);
-        CHECK(osu.aim[161] == pppp_test::difficulty_approx(549.3785675344396));
-        CHECK(osu.speed[130] == pppp_test::difficulty_approx(264.03121219093333));
+        CHECK(osu.aim[161] == pppp_test::difficulty_approx(572.4806692488332));
+        CHECK(osu.speed[130] == pppp_test::difficulty_approx(262.07748853668267));
         CHECK(osu.reading_count == 189);
         CHECK(!osu.flashlight);
         CHECK(osu.flashlight_count == 0);

@@ -51,14 +51,12 @@ TEST_CASE("osu! performance matches upstream") {
         const pppp::DifficultyAttributes attributes = difficulty(path.c_str(), pppp::Ruleset::OSU, row.mods);
         const pppp::osu::difficulty::OsuDifficultyAttributes* attrs = attributes.osu();
         REQUIRE_UNARY(attrs != 0);
-        // A perfect play completes every slider tail, which is the same value osu-native's own tests
-        // pass for a score that drops no slider ends.
         score.statistics[pppp::common::HIT_RESULT_SLIDER_TAIL_HIT] = attrs->slider_count;
         score.max_combo = row.combo;
         score.accuracy = row.accuracy < 0.0
                              ? pppp_test::classic_accuracy(row.great, row.ok, row.meh, row.miss)
                              : row.accuracy;
-        if (row.legacy_total_score != 0) {
+        if (row.legacy_total_score >= 0) {
             score.legacy_total_score = row.legacy_total_score;
         }
 

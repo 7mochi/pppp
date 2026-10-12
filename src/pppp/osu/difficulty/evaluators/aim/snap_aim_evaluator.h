@@ -15,8 +15,6 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
         /// - and slider difficulty
         static double evaluate_difficulty_of(const preprocessing::OsuDifficultyHitObject& current,
                                              bool with_slider_travel_distance);
-
-        static double calc_angle_acuteness(double angle);
     };
 }}}}} // namespace pppp::osu::difficulty::evaluators::aim
 

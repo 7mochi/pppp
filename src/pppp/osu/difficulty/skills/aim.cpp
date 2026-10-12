@@ -6,6 +6,7 @@
 #include "pppp/osu/difficulty/evaluators/aim/agility_evaluator.h"
 #include "pppp/osu/difficulty/evaluators/aim/flow_aim_evaluator.h"
 #include "pppp/osu/difficulty/evaluators/aim/snap_aim_evaluator.h"
+#include "pppp/osu/difficulty/evaluators/aim/spinner_evaluator.h"
 #include "pppp/utils/difficulty_calculation_utils.h"
 #include "pppp/utils/math/csharp.h"
 #include <algorithm>
@@ -46,20 +47,22 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
     }
 
     double Aim::calculate_adjusted_difficulty(const preprocessing::OsuDifficultyHitObject& current) {
-        const double skill_multiplier_snap = 70.9;
-        const double skill_multiplier_agility = 2.35;
-        const double skill_multiplier_flow = 242.0;
+        const double skill_multiplier_snap = 78.3;
+        const double skill_multiplier_agility = 32.5;
+        const double skill_multiplier_flow = 251.0;
+        const double skill_multiplier_spinner = 22.0;
 
-        double snap_difficulty = 0.0;
-        double agility_difficulty = 0.0;
-        double flow_difficulty = 0.0;
+        if (current.base_is_spinner) {
+            return evaluators::aim::SpinnerEvaluator::evaluate_difficulty_of(current) *
+                   skill_multiplier_spinner;
+        }
 
-        snap_difficulty =
+        double snap_difficulty =
             evaluators::aim::SnapAimEvaluator::evaluate_difficulty_of(current, include_sliders) *
             skill_multiplier_snap;
-        agility_difficulty =
+        double agility_difficulty =
             evaluators::aim::AgilityEvaluator::evaluate_difficulty_of(current) * skill_multiplier_agility;
-        flow_difficulty =
+        double flow_difficulty =
             evaluators::aim::FlowAimEvaluator::evaluate_difficulty_of(current, include_sliders) *
             skill_multiplier_flow;
 
@@ -83,7 +86,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
     double Aim::calculate_total_value(double snap_difficulty, double agility_difficulty,
                                       double flow_difficulty) {
         const double skill_multiplier_total = 1.12;
-        const double combined_snap_norm_exponent = 1.2;
+        const double combined_snap_norm_exponent = 1.5;
 
         // We compare flow to combined snap and agility because snap by itself doesn't have enough difficulty
         // to be above flow on streams Agility on the other hand is supposed to measure the rate of cursor
@@ -96,8 +99,8 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
         double p_flow = 1.0 - p_snap;
 
         if (pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_TD)) {
-            // we don't adjust agility here since agility represents TD difficulty in a decent enough way
-            snap_difficulty = utils::pow(snap_difficulty, 0.89);
+            agility_difficulty = utils::pow(agility_difficulty, 0.89);
+            snap_difficulty = utils::pow(snap_difficulty, 0.93);
             combined_snap_difficulty =
                 utils::norm(combined_snap_norm_exponent, snap_difficulty, agility_difficulty);
         }

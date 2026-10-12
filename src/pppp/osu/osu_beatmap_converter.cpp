@@ -136,6 +136,7 @@ namespace pppp { namespace osu {
             o.time_preempt = 0.0;
             o.time_fade_in = 0.0;
             o.slider = (ho.type & 2) ? ho.slider : -1;
+            o.spins_required = 0;
 
             if (object_converted.invoke != 0) {
                 object_converted.invoke(i, &pb.objects[i], 1, object_converted.context);
@@ -192,6 +193,19 @@ namespace pppp { namespace osu {
             o.time_preempt = preempt;
             o.time_fade_in = object::OsuHitObject::time_fade_in_for_preempt(preempt);
             o.kiai = kiai_at(pb, o.time + 1.0);
+
+            if (o.type & 8) {
+                // The average RPS required over the length of the spinner to clear the spinner.
+                double min_rps =
+                    pppp::utils::difficulty_range(pb.overall_difficulty, object::CLEAR_RPM_RANGE) / 60.0;
+
+                double seconds_duration = (o.end_time - o.time) / 1000.0;
+
+                // Allow a 0.1ms floating point precision error in the calculation of the duration.
+                const double duration_error = 0.0001;
+
+                o.spins_required = static_cast<int>(min_rps * seconds_duration + duration_error);
+            }
         }
     }
 

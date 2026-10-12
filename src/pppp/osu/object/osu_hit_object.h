@@ -24,6 +24,9 @@ namespace pppp { namespace osu { namespace object {
 
     const utils::DifficultyRange PREEMPT_RANGE(PREEMPT_MAX, PREEMPT_MID, PREEMPT_MIN);
 
+    /// The RPM required to clear the spinner at ODs [ 0, 5, 10 ].
+    const utils::DifficultyRange CLEAR_RPM_RANGE(90.0, 150.0, 225.0);
+
     struct OsuHitObject {
         unsigned type;
         double time;
@@ -39,6 +42,9 @@ namespace pppp { namespace osu { namespace object {
         double time_preempt;
         double time_fade_in;
         int slider;
+
+        /// Number of spins required to finish the spinner without miss.
+        int spins_required;
 
         static bool is_slider_type(unsigned type_in) { return (type_in & 2) != 0; }
         static bool is_spinner_type(unsigned type_in) { return (type_in & 8) != 0; }

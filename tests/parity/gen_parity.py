@@ -7,7 +7,6 @@ import json
 import os
 import subprocess
 import tempfile
-import xml.etree.ElementTree as ElementTree
 
 try:
     from jinja2 import Environment, FileSystemLoader, StrictUndefined
@@ -19,8 +18,9 @@ except ImportError as error:
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJECT = os.path.dirname(os.path.dirname(HERE))
 REFERENCE = os.path.join(PROJECT, "tests", "reference", "upstream")
-REFERENCE_DLL = os.path.join(REFERENCE, "bin", "Release", "net8.0", "reference.dll")
-REFERENCE_CSPROJ = os.path.join(REFERENCE, "upstream.csproj")
+REFERENCE_DLL = os.path.join(REFERENCE, "bin", "Release", "net10.0", "reference.dll")
+
+PPDEV_PIN = "496c13e0749a0995779e5169c3ff4c4ffe2cf525"
 
 RESOURCES = os.path.join(PROJECT, "tests", "resources")
 ROWS = os.path.join(HERE, "rows_to_cover.json")
@@ -49,7 +49,7 @@ SCORE_FIELDS = {
 
 CPP_TYPES = {
     "decode": {"double": "float", "int": "int", "long": "int"},
-    "difficulty": {"double": "float", "int": "int", "long": "int"},
+    "difficulty": {"double": "float", "double?": "float", "int": "int", "long": "int"},
     "performance": {"double": "double", "double?": "double", "int": "int", "long": "int"},
 }
 
@@ -63,13 +63,25 @@ LEADING_FIELDS = {
 }
 
 
-def reference_version():
-    root = ElementTree.parse(REFERENCE_CSPROJ).getroot()
-    pins = {package.get("Include"): package.get("Version")
-            for package in root.iter("PackageReference")}
-    if len(set(pins.values())) != 1:
-        raise SystemExit("upstream.csproj doesn't pin one version: %r" % pins)
-    return next(iter(pins.values()))
+def reference_pin():
+    root = os.path.dirname(PROJECT)
+    osu = os.path.join(root, "osu")
+    try:
+        pin = subprocess.run(
+            ["git", "-C", osu, "rev-parse", "HEAD"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+            check=True,
+        ).stdout.strip()
+    except subprocess.CalledProcessError as error:
+        raise SystemExit(
+            "cannot read the pin of osu/: check out ppy/osu next to this workspace at pp-dev %s"
+            % PPDEV_PIN
+        ) from error
+    if pin != PPDEV_PIN:
+        raise SystemExit("osu/ is at %s, expected pp-dev %s" % (pin, PPDEV_PIN))
+    return pin
 
 
 def dotnet(arguments):
@@ -115,7 +127,7 @@ def cpp_double(value):
 
 def number(value, ctype):
     if ctype == "float":
-        return cpp_float(value) + "f"
+        return "std::numeric_limits<float>::quiet_NaN()" if value is None else cpp_float(value) + "f"
     if ctype == "double":
         return "std::numeric_limits<double>::quiet_NaN()" if value is None else cpp_double(value)
     return str(value)
@@ -125,7 +137,9 @@ def score_value(row, key):
     value = row["score"].get(key)
     if value is not None:
         return str(value)
-    return "-1" if key == "accuracy" else "0"
+    # A score field that carries an optional in the port uses -1 for "absent", so that a present
+    # zero (e.g. legacy_total_score = 0) stays distinguishable from a missing one.
+    return "-1" if key in ("accuracy", "legacy_total_score") else "0"
 
 
 def attribute_fields(section, entries):
@@ -189,7 +203,7 @@ def guard_for(path):
 def render(template, path, tables, includes):
     with open(path, "w") as out:
         out.write(template.render(
-            version=reference_version(),
+            version=reference_pin(),
             date=datetime.date.today().isoformat(),
             guard=guard_for(path),
             tables=tables,
@@ -221,7 +235,7 @@ def main():
     template = environment.get_template("parity.h.jinja")
 
     render(template, DECODE_HEADER, [decode_table(schema, rows)], [])
-    render(template, DIFFICULTY_HEADER, difficulty_tables(schema, by_mode), [])
+    render(template, DIFFICULTY_HEADER, difficulty_tables(schema, by_mode), ["limits"])
     render(template, PERFORMANCE_HEADER, performance_tables(schema, scored_by_mode), ["limits"])
 
 

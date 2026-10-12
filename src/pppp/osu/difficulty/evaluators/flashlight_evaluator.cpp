@@ -12,10 +12,6 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators {
     double FlashlightEvaluator::evaluate_difficulty_of(const preprocessing::OsuDifficultyHitObject& current,
                                                        bool has_hidden, double cs,
                                                        bool hidden_bonus_applies) {
-        if (current.base_is_spinner) {
-            return 0.0;
-        }
-
         const double max_opacity_bonus = 0.4;
         const double hidden_bonus = 0.2;
 
@@ -42,31 +38,29 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators {
 
             cumulative_strain_time += last_obj->adjusted_delta_time;
 
-            if (!current_obj.base_is_spinner) {
-                double jump_distance =
-                    length(current.base_stacked_position - current_obj.base_stacked_end_position);
+            double jump_distance =
+                length(current.base_stacked_position - current_obj.base_stacked_end_position);
 
-                // We want to nerf objects that can be easily seen within the Flashlight circle radius.
-                if (i == 0) {
-                    small_dist_nerf = std::min(1.0, jump_distance / 75.0);
-                }
+            // We want to nerf objects that can be easily seen within the Flashlight circle radius.
+            if (i == 0) {
+                small_dist_nerf = std::min(1.0, jump_distance / 75.0);
+            }
 
-                // We also want to nerf stacks so that only the first object of the stack is accounted for.
-                double stack_nerf = std::min(1.0, (current_obj.lazy_jump_distance / scaling_factor) / 25.0);
+            // We also want to nerf stacks so that only the first object of the stack is accounted for.
+            double stack_nerf = std::min(1.0, (current_obj.lazy_jump_distance / scaling_factor) / 25.0);
 
-                // Bonus based on how visible the object is.
-                double opacity_bonus =
-                    1.0 + max_opacity_bonus *
-                              (1.0 - opacity_at(current, current_obj.base_object_start_time, has_hidden));
+            // Bonus based on how visible the object is.
+            double opacity_bonus =
+                1.0 + max_opacity_bonus *
+                          (1.0 - opacity_at(current, current_obj.base_object_start_time, has_hidden));
 
-                flashlight_difficulty +=
-                    stack_nerf * opacity_bonus * scaling_factor * jump_distance / cumulative_strain_time;
+            flashlight_difficulty +=
+                stack_nerf * opacity_bonus * scaling_factor * jump_distance / cumulative_strain_time;
 
-                if (current_obj.angle.has_value() && current.angle.has_value()) {
-                    // Objects further back in time should count less for the nerf.
-                    if (std::fabs(current_obj.angle.value() - current.angle.value()) < 0.02) {
-                        angle_repeat_count += std::max(1.0 - 0.1 * i, 0.0);
-                    }
+            if (current_obj.angle.has_value() && current.angle.has_value()) {
+                // Objects further back in time should count less for the nerf.
+                if (std::fabs(current_obj.angle.value() - current.angle.value()) < 0.02) {
+                    angle_repeat_count += std::max(1.0 - 0.1 * i, 0.0);
                 }
             }
 

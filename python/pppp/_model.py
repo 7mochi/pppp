@@ -147,7 +147,7 @@ class OsuDifficultyAttributes:
     aim_difficulty: float
     speed_difficulty: float
     reading_difficulty: float
-    flashlight_difficulty: float
+    flashlight_difficulty: float | None
     slider_factor: float
     aim_difficult_strain_count: float
     speed_difficult_strain_count: float

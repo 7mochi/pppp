@@ -106,10 +106,10 @@ target_sources(pppp_mods PUBLIC FILE_SET HEADERS
   FILES include/pppp/mods/mod.h include/pppp/mods/mods.h)
 
 add_library(pppp_common
+  src/pppp/common/aggregation/harmonic_series.cpp
   src/pppp/common/difficulty_attributes.cpp
   src/pppp/common/performance_attributes.cpp
   src/pppp/common/preprocessing/difficulty_hit_object.cpp
-  src/pppp/common/skills/harmonic_skill.cpp
   src/pppp/common/skills/skill.cpp
   src/pppp/common/skills/strain_decay_skill.cpp
   src/pppp/common/skills/strain_skill.cpp
@@ -250,6 +250,7 @@ add_library(pppp_osu_difficulty
   src/pppp/osu/difficulty/evaluators/aim/agility_evaluator.cpp
   src/pppp/osu/difficulty/evaluators/aim/flow_aim_evaluator.cpp
   src/pppp/osu/difficulty/evaluators/aim/snap_aim_evaluator.cpp
+  src/pppp/osu/difficulty/evaluators/aim/spinner_evaluator.cpp
   src/pppp/osu/difficulty/evaluators/flashlight_evaluator.cpp
   src/pppp/osu/difficulty/evaluators/reading_evaluator.cpp
   src/pppp/osu/difficulty/evaluators/speed/rhythm_evaluator.cpp
@@ -261,7 +262,8 @@ add_library(pppp_osu_difficulty
   src/pppp/osu/difficulty/skills/aim.cpp
   src/pppp/osu/difficulty/skills/flashlight.cpp
   src/pppp/osu/difficulty/skills/reading.cpp
-  src/pppp/osu/difficulty/skills/speed.cpp)
+  src/pppp/osu/difficulty/skills/speed.cpp
+  src/pppp/osu/difficulty/utils/angle_utils.cpp)
 add_library(pppp::osu::difficulty ALIAS pppp_osu_difficulty)
 set_target_properties(pppp_osu_difficulty PROPERTIES EXPORT_NAME osu::difficulty)
 target_include_directories(pppp_osu_difficulty PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)

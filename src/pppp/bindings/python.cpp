@@ -479,7 +479,7 @@ namespace {
                 {f_aim_difficulty, py_number(value.aim_difficulty)},
                 {f_speed_difficulty, py_number(value.speed_difficulty)},
                 {f_reading_difficulty, py_number(value.reading_difficulty)},
-                {f_flashlight_difficulty, py_number(value.flashlight_difficulty)},
+                {f_flashlight_difficulty, py_optional_number(value.flashlight_difficulty)},
                 {f_slider_factor, py_number(value.slider_factor)},
                 {f_aim_difficult_strain_count, py_number(value.aim_difficult_strain_count)},
                 {f_speed_difficult_strain_count, py_number(value.speed_difficult_strain_count)},
@@ -1301,6 +1301,19 @@ namespace {
             }
             return static_cast<int>(out);
         }
+
+        nonstd::optional<double> optional_number(int field) const {
+            PyObject* value = fields[slots[field]];
+            if (value == Py_None) {
+                return nonstd::optional<double>();
+            }
+            const double out = PyFloat_AsDouble(value);
+            if (PyErr_Occurred()) {
+                PyErr_Clear();
+                return nonstd::optional<double>();
+            }
+            return out;
+        }
     };
 
     bool is_record(State* state, PyObject* object, int kind, AttributeSource* source) {
@@ -1321,7 +1334,7 @@ namespace {
             attributes.aim_difficulty = source.number(f_aim_difficulty);
             attributes.speed_difficulty = source.number(f_speed_difficulty);
             attributes.reading_difficulty = source.number(f_reading_difficulty);
-            attributes.flashlight_difficulty = source.number(f_flashlight_difficulty);
+            attributes.flashlight_difficulty = source.optional_number(f_flashlight_difficulty);
             attributes.slider_factor = source.number(f_slider_factor);
             attributes.aim_difficult_strain_count = source.number(f_aim_difficult_strain_count);
             attributes.speed_difficult_strain_count = source.number(f_speed_difficult_strain_count);

@@ -119,6 +119,12 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
         double circle_size;
         int repeat_count;
 
+        /// Number of spins required to finish the spinner without miss.
+        int spins_required;
+
+        /// The duration of the HitObject.
+        double spinner_duration;
+
         OsuDifficultyHitObject(const object::OsuHitObject& object, const object::OsuHitObject& last,
                                double rate, const std::vector<DifficultyHitObject*>& objects,
                                int object_index, const OsuBeatmap& pb, const PositionCtx& pos);

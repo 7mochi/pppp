@@ -169,6 +169,7 @@ typedef struct pppp_osu_difficulty_attributes {
     double speed_difficulty;
     double reading_difficulty;
     double flashlight_difficulty;
+    pppp_int32 has_flashlight_difficulty;
     double slider_factor;
     double aim_difficult_strain_count;
     double speed_difficult_strain_count;

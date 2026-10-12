@@ -84,14 +84,14 @@ namespace {
 
 TEST_CASE("the timed attributes match upstream's CalculateTimed") {
     static const TimedRow rows[] = {
-        {PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu", "NM", 0, 124, 18000, 5.727266936277771, 63, 103000,
-         6.524323005451468, 239},
-        {PPPP_TEST_RESOURCES "/osu/2785319.osu", "HD,DT", 0, 601, 61309.235290751734, 8.272126401328721, 433,
-         115486.23529075173, 8.898179651893287, 909},
-        {PPPP_TEST_RESOURCES "/taiko/diffcalc-test.osu", "DT", 1, 238, 21624, 4.397186455763557, 118, 53000,
-         4.455142137225538, 200},
+        {PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu", "NM", 0, 124, 18000, 5.767545351317129, 63, 103000,
+         6.5880619069592505, 239},
+        {PPPP_TEST_RESOURCES "/osu/2785319.osu", "HD,DT", 0, 601, 61309.235290751734, 8.243851306944014, 433,
+         115486.23529075173, 8.97136919085591, 909},
+        {PPPP_TEST_RESOURCES "/taiko/diffcalc-test.osu", "DT", 1, 238, 21624, 4.403686852094672, 118, 53000,
+         4.462215604030145, 200},
         {PPPP_TEST_RESOURCES "/fruits/diffcalc-test.osu", "DT", 2, 93, 14500, 4.27412411307246, 47, 45250,
-         5.152717389780087, 127},
+         5.073647828613076, 127},
         {PPPP_TEST_RESOURCES "/mania/diffcalc-test.osu", "NM", 3, 137, 16250, 1.8228476946125378, 69, 30500,
          2.3493769750220914, 242},
         {PPPP_TEST_RESOURCES "/osu/2785319.osu", "4K", 3, 838, 61662, 2.5718820820666117, 530, 115486,
@@ -160,11 +160,11 @@ TEST_CASE("the osu! strain graph matches upstream_ref --strain-graph") {
     REQUIRE(osu.speed.size() == 254);
     REQUIRE(osu.reading.size() == 254);
     REQUIRE(osu.flashlight.size() == 254);
-    CHECK(osu.aim[46] == pppp_test::difficulty_approx(522.4551066294925));
-    CHECK(osu.aim_no_sliders[46] == pppp_test::difficulty_approx(522.4551066294925));
-    CHECK(osu.speed[19] == pppp_test::difficulty_approx(62.17504943719141));
-    CHECK(osu.reading[46] == pppp_test::difficulty_approx(268.69741068992795));
-    CHECK(osu.reading[253] == pppp_test::difficulty_approx(12.417220542954208));
+    CHECK(osu.aim[46] == pppp_test::difficulty_approx(532.2658451798917));
+    CHECK(osu.aim_no_sliders[46] == pppp_test::difficulty_approx(532.2658451798917));
+    CHECK(osu.speed[19] == pppp_test::difficulty_approx(59.421754881990346));
+    CHECK(osu.reading[46] == pppp_test::difficulty_approx(193.38785580639302));
+    CHECK(osu.reading[253] == pppp_test::difficulty_approx(12.417219091126125));
     CHECK(osu.flashlight[18] == pppp_test::difficulty_approx(41.02690817661656));
 
     pppp::Beatmap rated;
@@ -174,9 +174,9 @@ TEST_CASE("the osu! strain graph matches upstream_ref --strain-graph") {
     CHECK(dt.start_time() == 2400.0);
     CHECK(dt.section_length() == 600.0);
     REQUIRE(dt.osu()->aim.size() == 189);
-    CHECK(dt.osu()->aim[161] == pppp_test::difficulty_approx(549.3785675344396));
-    CHECK(dt.osu()->aim[188] == pppp_test::difficulty_approx(360.47840960759805));
-    CHECK(dt.osu()->speed[130] == pppp_test::difficulty_approx(264.03121219093333));
+    CHECK(dt.osu()->aim[161] == pppp_test::difficulty_approx(572.4806692488332));
+    CHECK(dt.osu()->aim[188] == pppp_test::difficulty_approx(356.7442881431748));
+    CHECK(dt.osu()->speed[130] == pppp_test::difficulty_approx(262.07748853668267));
     CHECK(dt.osu()->flashlight.empty());
 }
 
@@ -195,9 +195,9 @@ TEST_CASE("the osu!taiko strain graph matches upstream_ref --strain-graph") {
     REQUIRE(taiko.rhythm.size() == 89);
     REQUIRE(taiko.stamina.size() == 89);
     REQUIRE(taiko.single_colour_stamina.size() == 89);
-    CHECK(taiko.colour[29] == pppp_test::difficulty_approx(2.604853902561832));
+    CHECK(taiko.colour[29] == pppp_test::difficulty_approx(2.6337298882145888));
     CHECK(taiko.reading[32] == pppp_test::difficulty_approx(0.0001525556772378032));
-    CHECK(taiko.rhythm[40] == pppp_test::difficulty_approx(0.13536813853766497));
+    CHECK(taiko.rhythm[40] == pppp_test::difficulty_approx(0.1353227417658808));
     CHECK(taiko.stamina[32] == pppp_test::difficulty_approx(8.807433788330115));
     CHECK(taiko.single_colour_stamina[6] == pppp_test::difficulty_approx(4.473586847131765));
     CHECK(taiko.stamina[88] == pppp_test::difficulty_approx(1.324675633775491));

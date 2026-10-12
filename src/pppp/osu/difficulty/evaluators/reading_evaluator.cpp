@@ -263,8 +263,8 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators {
         const preprocessing::OsuDifficultyHitObject* next_obj =
             static_cast<const preprocessing::OsuDifficultyHitObject*>(current.next(0));
 
-        double velocity = std::max(1.0, current.lazy_jump_distance /
-                                            current.adjusted_delta_time); // Only allow velocity to buff
+        double velocity =
+            std::max(1.0, current.jump_distance / current.adjusted_delta_time); // Only allow velocity to buff
 
         double current_visible_object_density = retrieve_current_visible_object_density(current);
         double past_object_difficulty_influence = get_past_object_difficulty_influence(current);

@@ -737,5 +737,50 @@
       "count_miss": 1,
       "max_combo": 2000
     }
+  },
+  {
+    "case": "an osu! map whose speed deviation crosses the high-deviation cutoff",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      "DT"
+    ],
+    "score": {
+      "count_great": 300,
+      "count_ok": 150,
+      "count_meh": 75,
+      "count_miss": 76,
+      "max_combo": 30
+    }
+  },
+  {
+    "case": "an osu! map whose speed deviation crosses the high-deviation cutoff",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      "DT"
+    ],
+    "score": {
+      "count_great": 200,
+      "count_ok": 200,
+      "count_meh": 100,
+      "count_miss": 101,
+      "max_combo": 20
+    }
+  },
+  {
+    "case": "an osu! classic score with a zero legacy total score",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      "CL"
+    ],
+    "score": {
+      "count_great": 598,
+      "count_ok": 2,
+      "count_miss": 1,
+      "max_combo": 561,
+      "legacy_total_score": 0
+    }
   }
 ]

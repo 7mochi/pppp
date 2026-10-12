@@ -234,6 +234,7 @@ namespace pppp { namespace osu { namespace mods {
             o.time_preempt = preempt;
             o.time_fade_in = object::OsuHitObject::time_fade_in_for_preempt(preempt);
             o.slider = -1;
+            o.spins_required = 0;
         }
 
         for (size_t i = 0; i < objs.size(); i++) {

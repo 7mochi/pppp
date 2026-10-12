@@ -103,7 +103,8 @@ namespace {
         out.aim_difficulty = value.aim_difficulty;
         out.speed_difficulty = value.speed_difficulty;
         out.reading_difficulty = value.reading_difficulty;
-        out.flashlight_difficulty = value.flashlight_difficulty;
+        out.has_flashlight_difficulty = value.flashlight_difficulty.has_value();
+        out.flashlight_difficulty = out.has_flashlight_difficulty ? value.flashlight_difficulty.value() : 0.0;
         out.slider_factor = value.slider_factor;
         out.aim_difficult_strain_count = value.aim_difficult_strain_count;
         out.speed_difficult_strain_count = value.speed_difficult_strain_count;
@@ -194,7 +195,9 @@ namespace {
         out.aim_difficulty = in.aim_difficulty;
         out.speed_difficulty = in.speed_difficulty;
         out.reading_difficulty = in.reading_difficulty;
-        out.flashlight_difficulty = in.flashlight_difficulty;
+        if (in.has_flashlight_difficulty) {
+            out.flashlight_difficulty = in.flashlight_difficulty;
+        }
         out.slider_factor = in.slider_factor;
         out.aim_difficult_strain_count = in.aim_difficult_strain_count;
         out.speed_difficult_strain_count = in.speed_difficult_strain_count;

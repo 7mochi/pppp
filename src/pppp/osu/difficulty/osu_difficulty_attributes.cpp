@@ -8,7 +8,6 @@ namespace pppp { namespace osu { namespace difficulty {
         : aim_difficulty(0.0),
           speed_difficulty(0.0),
           reading_difficulty(0.0),
-          flashlight_difficulty(0.0),
           slider_factor(1.0),
           aim_difficult_strain_count(0.0),
           speed_difficult_strain_count(0.0),

@@ -33,8 +33,8 @@ namespace pppp { namespace utils {
         return pow(s, 1.0 / p);
     }
 
-    double bell_curve(double x, double mean, double width, double multiplier) {
-        return multiplier * std::exp(E_D * -(pow(x - mean, 2) / pow(width, 2)));
+    double gaussian_curve(double x, double mean, double width, double height) {
+        return height * std::exp(-0.5 * (pow(x - mean, 2) / pow(width, 2)));
     }
 
     double smoothstep_bell_curve(double x, double mean, double width) {

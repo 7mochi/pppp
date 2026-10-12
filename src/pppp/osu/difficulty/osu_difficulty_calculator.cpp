@@ -94,7 +94,7 @@ namespace pppp { namespace osu { namespace difficulty {
             double speed_rating = calculate_difficulty_rating(speed_dv);
             double reading_rating = calculate_difficulty_rating(reading_dv);
 
-            double flashlight_rating = 0.0;
+            nonstd::optional<double> flashlight_rating;
             if (flashlight) {
                 flashlight_rating = calculate_difficulty_rating(flashlight->difficulty_value());
             }
@@ -102,7 +102,10 @@ namespace pppp { namespace osu { namespace difficulty {
             double base_aim_perf = difficulty_to_performance(aim_rating);
             double base_speed_perf = difficulty_to_performance(speed_rating);
             double base_reading_perf = difficulty_to_performance(reading_rating);
-            double base_flashlight_perf = flashlight_difficulty_to_performance(flashlight_rating);
+            double base_flashlight_perf =
+                flashlight_rating.has_value()
+                    ? flashlight_difficulty_to_performance(flashlight_rating.value())
+                    : 0.0;
             double base_cognition_perf = sum_cognition_difficulty(base_reading_perf, base_flashlight_perf);
 
             double base_performance = utils::norm(1.1, base_aim_perf, base_speed_perf, base_cognition_perf);

@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 #include "pppp/osu/difficulty/skills/speed.h"
+#include "pppp/common/aggregation/harmonic_series.h"
 #include "pppp/mods/mod.h"
 #include "pppp/osu/difficulty/evaluators/speed/rhythm_evaluator.h"
 #include "pppp/osu/difficulty/evaluators/speed/speed_evaluator.h"
@@ -10,15 +11,16 @@
 
 namespace pppp { namespace osu { namespace difficulty { namespace skills {
     Speed::Speed(const pppp::mods::Mod* mods_in, size_t mod_count_in)
-        : HarmonicSkill(mods_in, mod_count_in, 20.0, 0.9),
-          current_strain(0.0) {}
+        : Skill(mods_in, mod_count_in),
+          current_strain(0.0),
+          harmonic_weight_sum(0.0) {}
 
     double Speed::strain_decay(double ms) const { return utils::pow(0.3, ms / 1000.0); }
 
-    double Speed::object_difficulty_of(const DifficultyHitObject& base_current) {
+    double Speed::process_internal(const DifficultyHitObject& base_current) {
         const preprocessing::OsuDifficultyHitObject& current =
             static_cast<const preprocessing::OsuDifficultyHitObject&>(base_current);
-        const double skill_multiplier = 1.16;
+        const double skill_multiplier = 66.2;
 
         if (pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_RX)) {
             return 0;
@@ -50,6 +52,19 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
         return difficulty;
     }
 
+    double Speed::difficulty_value() {
+        if (object_difficulties.empty()) {
+            return 0;
+        }
+
+        pppp::common::aggregation::HarmonicSeries::Result result =
+            pppp::common::aggregation::HarmonicSeries::aggregate(object_difficulties, 20.0);
+
+        harmonic_weight_sum = result.weight_sum;
+
+        return result.difficulty;
+    }
+
     double Speed::relevant_object_count() {
         if (object_difficulties.empty()) {
             return 0;
@@ -68,18 +83,42 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
         return sum;
     }
 
-    double Speed::count_top_weighted_sliders(double difficulty_value) {
-        if (slider_strains.empty()) {
-            return 0;
+    double Speed::count_top_weighted_object_difficulties(double difficulty_value) {
+        if (object_difficulties.empty()) {
+            return 0.0;
         }
 
-        if (object_weight_sum == 0) {
+        if (harmonic_weight_sum == 0) {
             return 0.0;
         }
 
         double consistent_top_object =
             difficulty_value /
-            object_weight_sum; // What would the top note be if all note values were identical
+            harmonic_weight_sum; // What would the top difficulty be if all object difficulties were identical
+
+        if (consistent_top_object == 0) {
+            return 0;
+        }
+
+        double sum = 0.0;
+        for (size_t i = 0; i < object_difficulties.size(); i++) {
+            sum += utils::logistic(object_difficulties[i] / consistent_top_object, 0.88, 10.0, 1.1);
+        }
+        return sum;
+    }
+
+    double Speed::count_top_weighted_sliders(double difficulty_value) {
+        if (slider_strains.empty()) {
+            return 0;
+        }
+
+        if (harmonic_weight_sum == 0) {
+            return 0.0;
+        }
+
+        double consistent_top_object =
+            difficulty_value /
+            harmonic_weight_sum; // What would the top note be if all note values were identical
 
         if (consistent_top_object == 0) {
             return 0;

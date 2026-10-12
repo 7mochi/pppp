@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 #include "pppp/osu/difficulty/evaluators/aim/snap_aim_evaluator.h"
+#include "pppp/osu/difficulty/utils/angle_utils.h"
 #include "pppp/utils/difficulty_calculation_utils.h"
 #include "pppp/utils/math/csharp.h"
 #include "pppp/utils/vector2.h"
@@ -11,23 +12,29 @@
 namespace pppp { namespace osu { namespace difficulty { namespace evaluators { namespace aim {
     namespace {
         double high_bpm_bonus(double ms) {
-            return 1.0 / (1.0 - utils::pow(0.03, utils::pow(ms / 1000.0, 0.65)));
+            return 1.0 / (1.0 - pppp::utils::pow(0.03, pppp::utils::pow(ms / 1000.0, 0.65)));
         }
 
-        double calc_angle_wideness(double angle) {
-            return utils::smoothstep(angle, utils::math::degrees_to_radians(40),
-                                     utils::math::degrees_to_radians(140));
-        }
+        double calculate_current_velocity(const preprocessing::OsuDifficultyHitObject& osu_curr_obj,
+                                          const preprocessing::OsuDifficultyHitObject& osu_last_obj,
+                                          double curr_distance, bool with_slider_travel_distance) {
+            double curr_velocity = curr_distance / osu_curr_obj.adjusted_delta_time;
 
-        double vector_angle_repetition(const preprocessing::OsuDifficultyHitObject& current) {
-            if (!current.angle.has_value() || current.index < 1) {
-                return 1.0;
+            // If the last object is a slider, then we extend the travel velocity through the slider into
+            // the current object.
+            if (osu_last_obj.base_is_slider && with_slider_travel_distance) {
+                double slider_distance = osu_last_obj.lazy_travel_distance + osu_curr_obj.lazy_jump_distance;
+                curr_velocity = std::max(curr_velocity, slider_distance / osu_curr_obj.adjusted_delta_time);
             }
 
-            const preprocessing::OsuDifficultyHitObject* previous =
-                static_cast<const preprocessing::OsuDifficultyHitObject*>(current.previous(0));
+            return curr_velocity;
+        }
 
-            if (!previous->angle.has_value()) {
+        double vector_angle_repetition(const preprocessing::OsuDifficultyHitObject& current,
+                                       const preprocessing::OsuDifficultyHitObject& previous) {
+            if (!current.angle.has_value() || !previous.angle.has_value() || previous.base_is_spinner ||
+                static_cast<const preprocessing::OsuDifficultyHitObject*>(previous.previous(0))
+                    ->base_is_spinner) {
                 return 1.0;
             }
 
@@ -40,213 +47,192 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
             for (int idx = 0; idx < static_cast<int>(note_limit); idx++) {
                 const preprocessing::OsuDifficultyHitObject* prev_obj =
                     static_cast<const preprocessing::OsuDifficultyHitObject*>(current.previous(idx));
-                if (!prev_obj) {
+
+                if (!prev_obj || prev_obj->base_is_spinner) {
                     break;
                 }
 
-                // Only consider vectors in the same jump section, stopping to change rhythm ruins
-                // momentum
+                // Only consider vectors in the same jump section, stopping to change rhythm ruins momentum
                 if (std::max(current.adjusted_delta_time, prev_obj->adjusted_delta_time) >
                     1.1 * std::min(current.adjusted_delta_time, prev_obj->adjusted_delta_time)) {
                     break;
                 }
 
-                if (prev_obj->normalised_vector_angle.has_value() &&
-                    current.normalised_vector_angle.has_value()) {
-                    double angle_difference = std::fabs(current.normalised_vector_angle.value() -
-                                                        prev_obj->normalised_vector_angle.value());
-                    // Refer to this desmos for tuning, constants need to be precise so that values stay
-                    // within the range of 0 and 1. https://www.desmos.com/calculator/a8jesv5sv2
-                    constant_angle_count +=
-                        std::cos(8 * std::min(utils::math::degrees_to_radians(11.25), angle_difference));
+                if (!prev_obj->normalised_vector_angle.has_value() ||
+                    !current.normalised_vector_angle.has_value()) {
+                    continue;
                 }
+
+                double angle_difference = std::fabs(current.normalised_vector_angle.value() -
+                                                    prev_obj->normalised_vector_angle.value());
+
+                // Refer to this desmos for tuning, constants need to be precise so that values stay within
+                // the range of 0 and 1. https://www.desmos.com/calculator/a8jesv5sv2
+                constant_angle_count +=
+                    std::cos(8 * std::min(pppp::utils::math::degrees_to_radians(11.25), angle_difference));
             }
 
-            double vector_repetition = utils::pow(std::min(0.5 / constant_angle_count, 1.0), 2);
+            double vector_repetition = pppp::utils::pow(std::min(0.5 / constant_angle_count, 1.0), 2);
 
             double stack_factor =
-                utils::smootherstep(current.lazy_jump_distance, 0, preprocessing::NORMALISED_DIAMETER);
+                pppp::utils::smootherstep(current.lazy_jump_distance, 0, preprocessing::NORMALISED_DIAMETER);
 
             double curr_angle = current.angle.value();
-            double last_angle = previous->angle.value();
+            double last_angle = previous.angle.value();
 
             double angle_difference_adjusted =
-                std::cos(2 * std::min(utils::math::degrees_to_radians(45),
+                std::cos(2 * std::min(pppp::utils::math::degrees_to_radians(45),
                                       std::fabs(curr_angle - last_angle) * stack_factor));
 
             double base_nerf = 1.0 - maximum_repetition_nerf *
-                                         SnapAimEvaluator::calc_angle_acuteness(last_angle) *
+                                         utils::AngleUtils::calculate_acuteness(last_angle) *
                                          angle_difference_adjusted;
 
-            return utils::pow(base_nerf + (1.0 - base_nerf) * vector_repetition * maximum_vector_influence *
-                                              stack_factor,
-                              2);
-        }
-    } // namespace
-
-    double SnapAimEvaluator::calc_angle_acuteness(double angle) {
-        return utils::smoothstep(angle, utils::math::degrees_to_radians(140),
-                                 utils::math::degrees_to_radians(40));
-    }
-
-    double SnapAimEvaluator::evaluate_difficulty_of(const preprocessing::OsuDifficultyHitObject& current,
-                                                    bool with_slider_travel_distance) {
-        const preprocessing::OsuDifficultyHitObject* prev =
-            static_cast<const preprocessing::OsuDifficultyHitObject*>(current.previous(0));
-        const preprocessing::OsuDifficultyHitObject* prev2 =
-            static_cast<const preprocessing::OsuDifficultyHitObject*>(current.previous(2));
-
-        if (current.base_is_spinner || current.index <= 1 || prev->base_is_spinner) {
-            return 0.0;
+            return pppp::utils::pow(base_nerf + (1.0 - base_nerf) * vector_repetition *
+                                                    maximum_vector_influence * stack_factor,
+                                    2);
         }
 
-        const double wide_angle_multiplier = 9.67;
-        const double acute_angle_multiplier = 2.41;
-        const double slider_multiplier = 1.5;
-        const double velocity_change_multiplier = 0.9;
+        double calculate_wide_angle_bonus(const preprocessing::OsuDifficultyHitObject& osu_curr_obj,
+                                          const preprocessing::OsuDifficultyHitObject& osu_last_obj,
+                                          double curr_distance, double prev_distance,
+                                          bool with_slider_travel_distance) {
+            const double wide_angle_multiplier = 2.15;
 
-        // WARNING: Increasing this multiplier beyond 1.02 reduces difficulty as distance increases. Refer
-        // to the desmos link above the wiggle bonus calculation
-        const double wiggle_multiplier = 1.02;
-
-        const int radius = static_cast<int>(preprocessing::NORMALISED_RADIUS);
-        const int diameter = static_cast<int>(preprocessing::NORMALISED_DIAMETER);
-
-        // Calculate the velocity to the current hitobject, which starts with a base distance / time
-        // assuming the last object is a hitcircle.
-        double curr_distance =
-            with_slider_travel_distance ? current.lazy_jump_distance : current.jump_distance;
-        double curr_velocity = curr_distance / current.adjusted_delta_time;
-
-        // But if the last object is a slider, then we extend the travel velocity through the slider into
-        // the current object.
-        if (prev->base_is_slider && with_slider_travel_distance) {
-            double slider_distance = prev->lazy_travel_distance + current.lazy_jump_distance;
-            curr_velocity = std::max(curr_velocity, slider_distance / current.adjusted_delta_time);
-        }
-
-        double prev_distance = with_slider_travel_distance ? prev->lazy_jump_distance : prev->jump_distance;
-        double prev_velocity = prev_distance / prev->adjusted_delta_time;
-
-        double snap_difficulty = curr_velocity; // Start difficulty with regular velocity.
-
-        // Penalize angle repetition.
-        snap_difficulty *= vector_angle_repetition(current);
-
-        if (current.angle.has_value() && prev->angle.has_value()) {
-            double curr_angle = current.angle.value();
-            double last_angle = prev->angle.value();
-
-            // Rewarding angles, take the smaller velocity as base.
-            double velocity_influence = std::min(curr_velocity, prev_velocity);
-
-            double acute_angle_bonus = 0.0;
-
-            // If rhythms are the same.
-            if (std::max(current.adjusted_delta_time, prev->adjusted_delta_time) <
-                1.25 * std::min(current.adjusted_delta_time, prev->adjusted_delta_time)) {
-                acute_angle_bonus = calc_angle_acuteness(curr_angle);
-
-                // Penalize angle repetition. It is important to do it _before_ multiplying by anything
-                // because we compare raw acuteness here
-                acute_angle_bonus *=
-                    0.08 + 0.92 * (1.0 - std::min(acute_angle_bonus,
-                                                  utils::pow(calc_angle_acuteness(last_angle), 3)));
-
-                // Apply acute angle bonus for BPM above 300 1/2 and distance more than one diameter
-                acute_angle_bonus *=
-                    velocity_influence *
-                    utils::smootherstep(utils::milliseconds_to_bpm(current.adjusted_delta_time, 2), 300,
-                                        400) *
-                    utils::smootherstep(curr_distance, 0, diameter * 2);
+            if (!osu_curr_obj.angle.has_value() || !osu_last_obj.angle.has_value()) {
+                return 0.0;
             }
 
-            double wide_angle_bonus = calc_angle_wideness(curr_angle);
+            double wide_angle_bonus = utils::AngleUtils::calculate_wideness(osu_curr_obj.angle.value());
 
-            // Penalize angle repetition. It is important to do it _before_ multiplying by velocity
-            // because we compare raw wideness here
+            // Penalize angle repetition. It is important to do it _before_ multiplying by velocity because
+            // we compare raw wideness here
             wide_angle_bonus *=
-                0.25 +
-                0.75 * (1.0 - std::min(wide_angle_bonus, utils::pow(calc_angle_wideness(last_angle), 3)));
+                0.25 + 0.75 * (1.0 - std::min(wide_angle_bonus,
+                                              pppp::utils::pow(utils::AngleUtils::calculate_wideness(
+                                                                   osu_last_obj.angle.value()),
+                                                               3)));
 
             // Rescaling velocity for the wide angle bonus
-            const double wide_angle_time_scale = 1.45;
-            double wide_angle_curr_velocity =
-                curr_distance / utils::pow(current.adjusted_delta_time, wide_angle_time_scale);
-            double wide_angle_prev_velocity =
-                prev_distance / utils::pow(prev->adjusted_delta_time, wide_angle_time_scale);
+            const double wide_angle_time_scale = 1.2;
 
-            if (prev->base_is_slider && with_slider_travel_distance) {
-                double slider_distance = prev->lazy_travel_distance + current.lazy_jump_distance;
-                wide_angle_curr_velocity = std::max(
-                    wide_angle_curr_velocity,
-                    slider_distance / utils::pow(current.adjusted_delta_time, wide_angle_time_scale));
+            double curr_rescaled_velocity =
+                curr_distance / pppp::utils::pow(osu_curr_obj.adjusted_delta_time, wide_angle_time_scale);
+            double prev_rescaled_velocity =
+                prev_distance / pppp::utils::pow(osu_last_obj.adjusted_delta_time, wide_angle_time_scale);
+
+            if (osu_last_obj.base_is_slider && with_slider_travel_distance) {
+                double slider_distance = osu_last_obj.lazy_travel_distance + osu_curr_obj.lazy_jump_distance;
+                curr_rescaled_velocity =
+                    std::max(curr_rescaled_velocity,
+                             slider_distance /
+                                 pppp::utils::pow(osu_curr_obj.adjusted_delta_time, wide_angle_time_scale));
             }
 
-            wide_angle_bonus *= std::min(wide_angle_curr_velocity, wide_angle_prev_velocity);
+            wide_angle_bonus *= std::min(curr_rescaled_velocity, prev_rescaled_velocity);
 
-            if (prev2) {
+            const preprocessing::OsuDifficultyHitObject* osu_last2_obj =
+                static_cast<const preprocessing::OsuDifficultyHitObject*>(osu_curr_obj.previous(2));
+
+            if (osu_last2_obj) {
                 // If objects just go back and forth through a middle point - don't give as much wide
                 // bonus
                 // Use previous(2) and previous(0) because angles calculation is done prevprev-prev-curr,
                 // so any object's angle's center point is always the previous object
-                float dist = length(prev->base_stacked_position - prev2->base_stacked_position);
+                float distance =
+                    length(osu_last_obj.base_stacked_position - osu_last2_obj->base_stacked_position);
 
-                if (dist < 1) {
-                    wide_angle_bonus *= 1.0 - 0.55 * (1.0 - dist);
+                if (distance < 1) {
+                    wide_angle_bonus *= 1.0 - 0.55 * (1.0 - distance);
                 }
             }
 
-            // Add in acute angle bonus or wide angle bonus, whichever is larger.
-            snap_difficulty += std::max(acute_angle_bonus * acute_angle_multiplier,
-                                        wide_angle_bonus * wide_angle_multiplier);
-
-            // Apply wiggle bonus for jumps that are [radius, 3*diameter] in distance, with < 110 angle
-            // https://www.desmos.com/calculator/dp0v0nvowc
-            double wiggle_bonus =
-                velocity_influence * utils::smootherstep(curr_distance, radius, diameter) *
-                utils::pow(utils::reverse_lerp(curr_distance, diameter * 3, diameter), 1.8) *
-                utils::smootherstep(curr_angle, utils::math::degrees_to_radians(110),
-                                    utils::math::degrees_to_radians(60)) *
-                utils::smootherstep(prev_distance, radius, diameter) *
-                utils::pow(utils::reverse_lerp(prev_distance, diameter * 3, diameter), 1.8) *
-                utils::smootherstep(last_angle, utils::math::degrees_to_radians(110),
-                                    utils::math::degrees_to_radians(60));
-
-            snap_difficulty += wiggle_bonus * wiggle_multiplier;
+            return wide_angle_bonus * wide_angle_multiplier;
         }
 
-        if (std::max(prev_velocity, curr_velocity) != 0) {
-            if (with_slider_travel_distance) {
-                // We want to use just the object jump without slider velocity when awarding differences
-                curr_velocity = curr_distance / current.adjusted_delta_time;
+        double calculate_velocity_change_bonus(bool with_slider_travel_distance, double prev_velocity,
+                                               double curr_velocity, double curr_distance,
+                                               const preprocessing::OsuDifficultyHitObject& osu_curr_obj,
+                                               const preprocessing::OsuDifficultyHitObject& osu_last_obj) {
+            const double velocity_change_multiplier = 0.85;
+
+            if (std::max(prev_velocity, curr_velocity) == 0) {
+                return 0.0;
             }
 
+            if (with_slider_travel_distance) {
+                // We want to use just the object jump without slider velocity when awarding differences
+                curr_velocity = curr_distance / osu_curr_obj.adjusted_delta_time;
+            }
+
+            // cap velocity to at least 1 radius distance to only award snap patterns
+            curr_velocity = std::max(curr_velocity,
+                                     preprocessing::NORMALISED_DIAMETER / osu_curr_obj.adjusted_delta_time);
+            prev_velocity = std::max(prev_velocity,
+                                     preprocessing::NORMALISED_DIAMETER / osu_last_obj.adjusted_delta_time);
+
             // Scale with ratio of difference compared to 0.5 * max dist.
-            double dist_ratio = utils::smoothstep(
+            double dist_ratio = pppp::utils::smoothstep(
                 std::fabs(prev_velocity - curr_velocity) / std::max(prev_velocity, curr_velocity), 0, 1);
 
             // Reward for % distance up to 125 / strainTime for overlaps where velocity is still changing.
             double overlap_velocity_buff =
-                std::min(diameter * 1.25 / std::min(current.adjusted_delta_time, prev->adjusted_delta_time),
+                std::min(preprocessing::NORMALISED_DIAMETER * 1.25 /
+                             std::min(osu_curr_obj.adjusted_delta_time, osu_last_obj.adjusted_delta_time),
                          std::fabs(prev_velocity - curr_velocity));
 
             double velocity_change_bonus = overlap_velocity_buff * dist_ratio;
 
             // Penalize for rhythm changes.
-            velocity_change_bonus *=
-                utils::pow(std::min(current.adjusted_delta_time, prev->adjusted_delta_time) /
-                               std::max(current.adjusted_delta_time, prev->adjusted_delta_time),
-                           2);
+            velocity_change_bonus *= pppp::utils::pow(
+                std::min(osu_curr_obj.adjusted_delta_time, osu_last_obj.adjusted_delta_time) /
+                    std::max(osu_curr_obj.adjusted_delta_time, osu_last_obj.adjusted_delta_time),
+                3);
 
-            snap_difficulty += velocity_change_bonus * velocity_change_multiplier;
+            return velocity_change_bonus * velocity_change_multiplier;
         }
 
-        // Reward sliders based on velocity.
+        double calculate_slider_bonus(const preprocessing::OsuDifficultyHitObject& osu_curr_obj) {
+            const double slider_multiplier = 1.35;
+
+            // Reward sliders based on velocity.
+            double slider_bonus = osu_curr_obj.travel_distance / osu_curr_obj.travel_time;
+            double rescaled_slider_bonus =
+                slider_bonus < 1 ? slider_bonus : pppp::utils::pow(slider_bonus, 0.75);
+
+            return rescaled_slider_bonus * slider_multiplier;
+        }
+    } // namespace
+
+    double SnapAimEvaluator::evaluate_difficulty_of(const preprocessing::OsuDifficultyHitObject& current,
+                                                    bool with_slider_travel_distance) {
+        if (current.index <= 1 || current.base_is_spinner) {
+            return 0.0;
+        }
+
+        const preprocessing::OsuDifficultyHitObject* osu_last_obj =
+            static_cast<const preprocessing::OsuDifficultyHitObject*>(current.previous(0));
+
+        double curr_distance =
+            with_slider_travel_distance ? current.lazy_jump_distance : current.jump_distance;
+        double curr_velocity =
+            calculate_current_velocity(current, *osu_last_obj, curr_distance, with_slider_travel_distance);
+
+        double prev_distance =
+            with_slider_travel_distance ? osu_last_obj->lazy_jump_distance : osu_last_obj->jump_distance;
+        double prev_velocity = prev_distance / osu_last_obj->adjusted_delta_time;
+
+        double snap_difficulty = curr_velocity; // Start difficulty with regular velocity.
+
+        // Penalize angle repetition.
+        snap_difficulty *= vector_angle_repetition(current, *osu_last_obj);
+        snap_difficulty += calculate_wide_angle_bonus(current, *osu_last_obj, curr_distance, prev_distance,
+                                                      with_slider_travel_distance);
+        snap_difficulty += calculate_velocity_change_bonus(
+            with_slider_travel_distance, prev_velocity, curr_velocity, curr_distance, current, *osu_last_obj);
+
         if (current.base_is_slider && with_slider_travel_distance) {
-            double slider_bonus = current.travel_distance / current.travel_time;
-            snap_difficulty +=
-                (slider_bonus < 1 ? slider_bonus : utils::pow(slider_bonus, 0.75)) * slider_multiplier;
+            snap_difficulty += calculate_slider_bonus(current);
         }
 
         // Apply high circle size bonus

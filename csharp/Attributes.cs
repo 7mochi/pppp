@@ -51,10 +51,14 @@ namespace Pppp {
             set { this.value.reading_difficulty = value; }
         }
 
-        /// <summary>The difficulty corresponding to the flashlight skill.</summary>
-        public double FlashlightDifficulty {
-            get { return value.flashlight_difficulty; }
-            set { this.value.flashlight_difficulty = value; }
+        /// <summary>The difficulty corresponding to the flashlight skill, absent without the
+        /// Flashlight mod.</summary>
+        public double? FlashlightDifficulty {
+            get { return value.has_flashlight_difficulty != 0 ? value.flashlight_difficulty : (double?)null; }
+            set {
+                this.value.has_flashlight_difficulty = value.HasValue ? 1 : 0;
+                this.value.flashlight_difficulty = value ?? 0.0;
+            }
         }
 
         /// <summary>Describes how much of <see cref="AimDifficulty"/> is contributed to by hitcircles or

@@ -55,7 +55,7 @@ TEST_CASE("adding classic to legacy mods matches the classic specification") {
 
     const pppp::PerformanceAttributes actual =
         pppp_test::calculate(pppp::Performance(beatmap, attributes).mods(from_bits).score(score));
-    CHECK(actual.osu()->total == pppp_test::pp_approx(298.5325815982227));
+    CHECK(actual.osu()->total == pppp_test::pp_approx(290.84046231334827));
 
     const pppp::PerformanceAttributes expected = pppp_test::calculate(
         pppp::Performance(beatmap, attributes).mods(pppp_test::parse_mods("CL")).score(score));

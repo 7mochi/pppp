@@ -167,9 +167,9 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
 
             dho.minimum_jump_time = dho.adjusted_delta_time;
 
-            // We don't need to calculate either angle or distance when one of the last->curr objects is a
-            // spinner
-            if ((ho.type & 8) || (last_ho.type & 8)) {
+            // Skip angle/distance calculation for instant spinners
+            if (((ho.type & 8) && ho.spins_required <= 0) ||
+                ((last_ho.type & 8) && last_ho.spins_required <= 0)) {
                 return;
             }
 
@@ -236,9 +236,8 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
             {
                 const OsuDifficultyHitObject* prev2_dho =
                     static_cast<const OsuDifficultyHitObject*>(dho.previous(1));
-                bool prev2_not_spinner = prev2_dho && !prev2_dho->base_is_spinner;
 
-                if (prev2_not_spinner) {
+                if (prev2_dho) {
                     pppp::utils::Vector2 last_last_pos;
                     if (prev2_dho->lazy_end_position.has_value()) {
                         last_last_pos.x = static_cast<float>(prev2_dho->lazy_end_position.value().x);
@@ -317,7 +316,9 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
           small_circle_bonus(0.0),
           overall_difficulty(0.0),
           circle_size(0.0),
-          repeat_count(0) {
+          repeat_count(0),
+          spins_required(0),
+          spinner_duration(0.0) {
         base_stacked_position = pppp::utils::vec2(0.0f, 0.0f);
         base_stacked_end_position = pppp::utils::vec2(0.0f, 0.0f);
         last_stacked_position = pppp::utils::vec2(0.0f, 0.0f);
@@ -339,12 +340,15 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
         }
         base_is_slider = (object.type & 2) != 0;
         base_is_spinner = (object.type & 8) != 0;
+        spins_required = object.spins_required;
+        spinner_duration = object.end_time - object.time;
 
         last_stacked_position = pos.stacked[i - 1];
         last_is_slider = (last.type & 2) != 0;
 
         end_time = object.end_time / rate;
-        hit_window_great = 2.0 * hit_windows.window_for(pppp::common::HIT_RESULT_GREAT) / rate;
+        hit_window_great =
+            base_is_spinner ? 0.0 : 2.0 * hit_windows.window_for(pppp::common::HIT_RESULT_GREAT) / rate;
 
         adjusted_delta_time = std::max(delta_time, MIN_DELTA_TIME);
 
@@ -356,7 +360,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
 
         preempt = object.time_preempt / rate;
         time_fade_in = object.time_fade_in;
-        small_circle_bonus = std::max(1.0, 1.0 + (30.0 - object::OsuHitObject::calculate_radius(cs)) / 70.0);
+        small_circle_bonus = std::max(1.0, 1.0 + (30.0 - object::OsuHitObject::calculate_radius(cs)) / 75.0);
         overall_difficulty = (79.5 - hit_window_great / 2.0) / 6.0;
         circle_size = cs;
 

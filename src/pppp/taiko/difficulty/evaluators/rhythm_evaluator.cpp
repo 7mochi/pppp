@@ -38,10 +38,10 @@ namespace pppp { namespace taiko { namespace difficulty { namespace evaluators {
             difficulty += terms / (1.0 + ratio);
 
             // Give bonus to near-1 ratios
-            difficulty += pppp::utils::bell_curve(ratio, 1.0, 0.5);
+            difficulty += pppp::utils::gaussian_curve(ratio, 1.0, 0.21);
 
             // Penalize ratios that are VERY near 1
-            difficulty -= pppp::utils::bell_curve(ratio, 1.0, 0.3);
+            difficulty -= pppp::utils::gaussian_curve(ratio, 1.0, 0.13);
 
             difficulty = std::max(difficulty, 0.0);
             difficulty /= std::sqrt(8.0);

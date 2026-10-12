@@ -86,6 +86,7 @@ namespace Pppp {
             internal double speed_difficulty;
             internal double reading_difficulty;
             internal double flashlight_difficulty;
+            internal int has_flashlight_difficulty;
             internal double slider_factor;
             internal double aim_difficult_strain_count;
             internal double speed_difficult_strain_count;

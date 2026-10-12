@@ -5,6 +5,7 @@
 #define PPPP_OSU_DIFFICULTY_OSU_DIFFICULTY_ATTRIBUTES_H
 
 #include "pppp/common/difficulty_attributes.h"
+#include "pppp/config.h" // IWYU pragma: export
 
 namespace pppp { namespace osu { namespace difficulty {
     struct OsuDifficultyAttributes : pppp::common::DifficultyAttributes {
@@ -18,7 +19,7 @@ namespace pppp { namespace osu { namespace difficulty {
         double reading_difficulty;
 
         /// The difficulty corresponding to the flashlight skill.
-        double flashlight_difficulty;
+        nonstd::optional<double> flashlight_difficulty;
 
         /// Describes how much of aim_difficulty is contributed to by hitcircles or sliders.
         /// A value closer to 1.0 indicates most of aim_difficulty is contributed by hitcircles.

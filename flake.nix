@@ -99,7 +99,10 @@
                 clang-tools
                 gnumake
                 nodejs
-                dotnet-sdk_8
+                (dotnetCorePackages.combinePackages [
+                  dotnetCorePackages.sdk_10_0
+                  dotnetCorePackages.runtime_8_0
+                ])
                 (python3.withPackages (
                   ps: with ps; [
                     pytest

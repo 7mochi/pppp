@@ -3,6 +3,7 @@
 
 #include "pppp/taiko/difficulty/evaluators/colour_evaluator.h"
 #include "pppp/utils/difficulty_calculation_utils.h"
+#include <algorithm>
 #include <cmath>
 #include <vector>
 
@@ -61,7 +62,7 @@ namespace pppp { namespace taiko { namespace difficulty { namespace evaluators {
 
             // Ensure no division by zero
             if (consistent_ratio_count > 0) {
-                return 1.0 - total_ratio_count / (consistent_ratio_count + 1) * 0.80;
+                return std::max(1.0 - total_ratio_count / (consistent_ratio_count + 1) * 0.80, 0.0);
             }
 
             if (recent_ratios.size() <= 1) {

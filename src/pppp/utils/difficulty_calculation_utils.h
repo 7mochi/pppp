@@ -58,13 +58,15 @@ namespace pppp { namespace utils {
     /// @returns The <i>p</i>-norm of the vector.
     double norm(double p, double v1, double v2, double v3, double v4);
 
-    /// Calculates a Gaussian-based bell curve function (https://en.wikipedia.org/wiki/Gaussian_function)
+    /// Calculates a Gaussian-based bell curve function (https://en.wikipedia.org/wiki/Gaussian_function).
+    /// Note that this is *not* the normal distribution, which normalizes the height to
+    /// 1/(width * sqrt(2pi))
     /// @param x Value to calculate the function for
     /// @param mean The mean (center) of the bell curve
     /// @param width The width (spread) of the curve
-    /// @param multiplier Multiplier to adjust the curve's height
+    /// @param height Multiplier to adjust the curve's height
     /// @returns The output of the bell curve function of `x`
-    double bell_curve(double x, double mean, double width, double multiplier = 1.0);
+    double gaussian_curve(double x, double mean, double width, double height = 1.0);
 
     /// Calculates a Smoothstep bell curve that returns 1 for x = mean, and smoothly reducing it's
     /// value to 0 over width

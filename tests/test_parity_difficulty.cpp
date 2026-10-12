@@ -19,6 +19,12 @@ namespace {
             .calculate(beatmap, out)
             .ok();
     }
+
+    bool matches(const nonstd::optional<double>& value, double expected) {
+        return value.has_value() && value.value() == pppp_test::difficulty_approx(expected);
+    }
+
+    bool absent(double expected) { return expected != expected; }
 } // namespace
 
 TEST_CASE("osu! difficulty attributes match upstream") {
@@ -41,7 +47,11 @@ TEST_CASE("osu! difficulty attributes match upstream") {
         CHECK(a->aim_difficult_slider_count == pppp_test::difficulty_approx(row.aim_difficult_slider_count));
         CHECK(a->speed_difficulty == pppp_test::difficulty_approx(row.speed_difficulty));
         CHECK(a->speed_note_count == pppp_test::difficulty_approx(row.speed_note_count));
-        CHECK(a->flashlight_difficulty == pppp_test::difficulty_approx(row.flashlight_difficulty));
+        if (absent(row.flashlight_difficulty)) {
+            CHECK_FALSE(a->flashlight_difficulty.has_value());
+        } else {
+            CHECK(matches(a->flashlight_difficulty, row.flashlight_difficulty));
+        }
         CHECK(a->reading_difficulty == pppp_test::difficulty_approx(row.reading_difficulty));
         CHECK(a->slider_factor == pppp_test::difficulty_approx(row.slider_factor));
         CHECK(a->aim_top_weighted_slider_factor ==

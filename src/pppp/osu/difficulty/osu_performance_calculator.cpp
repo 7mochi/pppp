@@ -251,28 +251,31 @@ namespace pppp { namespace osu { namespace difficulty {
                 if (!speed_deviation.has_value()) {
                     return 0;
                 }
-                double speed_value = difficulty::difficulty_to_performance(attributes.speed_difficulty);
 
-                // Decides a point where the PP value achieved compared to the speed deviation is assumed to
-                // be tapped improperly. Any PP above this point is considered "excess" speed difficulty.
-                // This is used to cause PP above the cutoff to scale logarithmically towards the original
-                // speed value thus nerfing the value.
+                // Decides a point where the difficulty played compared to the speed deviation is assumed
+                // to be tapped improperly. Any difficulty above this point is considered "excess" speed
+                // difficulty. This is used to cause difficulty above the cutoff to scale logarithmically
+                // towards the original speed value thus nerfing the value.
                 double excess_speed_difficulty_cutoff =
-                    100 + 220 * utils::pow(22 / speed_deviation.value(), 6.5);
-                if (speed_value <= excess_speed_difficulty_cutoff) {
+                    2.9 + 1.45 * utils::pow(22 / speed_deviation.value(), 5);
+
+                if (attributes.speed_difficulty <= excess_speed_difficulty_cutoff) {
                     return 1.0;
                 }
 
-                const double scale = 50;
-                double adjusted_speed_value =
-                    scale * (std::log((speed_value - excess_speed_difficulty_cutoff) / scale + 1) +
-                             excess_speed_difficulty_cutoff / scale);
+                const double scale = 0.45;
+                double adjusted_speed_difficulty =
+                    scale *
+                    (std::log((attributes.speed_difficulty - excess_speed_difficulty_cutoff) / scale + 1) +
+                     excess_speed_difficulty_cutoff / scale);
 
                 // 220 UR and less are considered tapped correctly to ensure that normal scores will be
                 // punished as little as possible
-                double t = 1 - utils::reverse_lerp(speed_deviation.value(), 22.0, 27.0);
-                adjusted_speed_value = utils::math::lerp_dotnet(adjusted_speed_value, speed_value, t);
-                return adjusted_speed_value / speed_value;
+                double lerp = 1 - utils::reverse_lerp(speed_deviation.value(), 22.0, 27.0);
+                adjusted_speed_difficulty =
+                    utils::math::lerp_dotnet(adjusted_speed_difficulty, attributes.speed_difficulty, lerp);
+
+                return adjusted_speed_difficulty / attributes.speed_difficulty;
             }
 
             /// Calculates a visibility bonus that is applicable to Traceable.
@@ -356,7 +359,10 @@ namespace pppp { namespace osu { namespace difficulty {
                 if (has_mod(pppp::mods::MOD_RX) || !speed_deviation.has_value()) {
                     return 0.0;
                 }
-                double value = difficulty::difficulty_to_performance(attributes.speed_difficulty);
+                double speed_difficulty = attributes.speed_difficulty * calculate_speed_high_deviation_nerf();
+
+                double value = difficulty::difficulty_to_performance(speed_difficulty);
+
                 if (effective_miss_count > 0) {
                     double relevant_miss_count =
                         std::min(effective_miss_count + speed_estimated_slider_breaks,
@@ -369,12 +375,11 @@ namespace pppp { namespace osu { namespace difficulty {
                     // is given.
                     value *= 1.12;
                 }
-                value *= calculate_speed_high_deviation_nerf();
 
                 // An effective hit window is created based on the speed SR. The higher the speed difficulty,
                 // the shorter the hit window. For example, a speed SR of 4.0 leads to an effective hit window
                 // of 20ms, which is OD 10.
-                double effective_hit_window = 20 * utils::pow(4 / attributes.speed_difficulty, 0.35);
+                double effective_hit_window = 20 * utils::pow(4 / speed_difficulty, 0.35);
 
                 // Find the proportion of 300s on speed notes assuming the hit window was the effective hit
                 // window.
@@ -436,8 +441,8 @@ namespace pppp { namespace osu { namespace difficulty {
                 if (!has_mod(pppp::mods::MOD_FL)) {
                     return 0.0;
                 }
-                double value =
-                    difficulty::flashlight_difficulty_to_performance(attributes.flashlight_difficulty);
+                double value = difficulty::flashlight_difficulty_to_performance(
+                    attributes.flashlight_difficulty.value());
 
                 // Penalize misses by assessing # of misses relative to the total # of objects. Default a 3%
                 // reduction for any # of misses.
@@ -520,7 +525,8 @@ namespace pppp { namespace osu { namespace difficulty {
 
         double combo_based = c.calculate_combo_based_estimated_miss_count();
         out.combo_based_estimated_miss_count = combo_based;
-        if (c.using_classic_slider_accuracy && !c.using_score_v2 && score.legacy_total_score.has_value()) {
+        if (c.using_classic_slider_accuracy && !c.using_score_v2 && score.legacy_total_score.has_value() &&
+            score.legacy_total_score.value() > 0) {
             double score_based = OsuLegacyScoreMissCalculator(score, attributes).calculate();
             out.score_based_estimated_miss_count = score_based;
             c.effective_miss_count = score_based;

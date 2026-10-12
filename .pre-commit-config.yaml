@@ -1,0 +1,45 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: &exclude |
+          (?x)^(
+            third_party/(atomic-lite|optional-bare|span-lite|string-view-lite|variant-lite)/|
+            LICENCE$|
+            .*\.osu$|
+            .*\.patch$
+          )
+      - id: end-of-file-fixer
+        exclude: *exclude
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v2.4.0
+    hooks:
+      - id: mypy
+        args: [--config-file=pyproject.toml]
+        pass_filenames: false
+        files: ^(python/|pyproject\.toml$|\.pre-commit-config\.yaml$)
+        additional_dependencies: [typing-extensions]
+
+  - repo: local
+    hooks:
+      - id: clang-format
+        name: clang-format
+        entry: .pre-commit/run.sh clang-format -i
+        language: system
+        files: |
+          (?x)^(
+            (include|src|tests)/.*\.h$|
+            (src|tests)/.*\.cpp$|
+            third_party/fosu/(src|tests)/.*\.(h|cpp|cc)$
+          )
+      - id: nixfmt
+        name: nixfmt
+        entry: .pre-commit/run.sh nixfmt
+        language: system
+        types: [nix]

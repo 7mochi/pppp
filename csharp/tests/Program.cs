@@ -120,7 +120,7 @@ namespace Pppp.Tests {
                 return;
             }
             Check(EngineIsBesideTheNativeLibrary(), "the engine ships beside the native library");
-            
+
             string runnable = ProbeBackend("avx2") == "avx2" ? "avx2" : ProbeBackend("neon") == "neon" ? "neon" : "scalar";
             Check(name == runnable, "the backend matches what the host can run");
         }

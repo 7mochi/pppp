@@ -253,4 +253,3 @@ static ScoreInfo buildScore(JsonObject input, Ruleset ruleset, FlatWorkingBeatma
 
     return score;
 }
-

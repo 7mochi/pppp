@@ -99,6 +99,9 @@
                 clang-tools
                 gnumake
                 nodejs
+                git
+                pre-commit
+                nixfmt
                 dotnet-sdk_8
                 (python3.withPackages (
                   ps: with ps; [
@@ -128,6 +131,9 @@
               echo "  npm install && npm test                  # node bindings"
               echo "  cd csharp/tests && dotnet run -f net8.0  # c# bindings"
               echo "  nix develop .#legacyWindows              # legacy windows targets"
+              if [ -t 1 ] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+                pre-commit install >/dev/null 2>&1 || true
+              fi
             '';
           };
         }

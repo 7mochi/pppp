@@ -116,6 +116,27 @@ console.log(difficulty.starRating, performance.total);
 | `PPPP_INSTALL` | top-level only | the `find_package(pppp CONFIG)` package |
 | `PPPP_WARNINGS_AS_ERRORS` | OFF | `-Werror` on the library's warnings |
 
+## Development
+
+The toolchain comes from the flake:
+
+```sh
+nix develop        # cmake, ninja, gcc, clang, python, node, .NET and pre-commit
+make test-auto     # build and run the suites
+make check-format  # the C++ formatting, checked
+```
+
+Formatting, the Python types and the file hygiene are also enforced by
+[pre-commit](https://pre-commit.com). The dev shell installs the hooks when you
+enter it; to run them by hand:
+
+```sh
+pre-commit run --all-files
+```
+
+`clang-format` and `nixfmt` come from the dev shell; outside it the hooks fall
+back to `nix develop`.
+
 ## AI Disclaimer
 
 The port was done with AI assistance (DeepSeek V4.1 Flash and Opus 5), working file by file against ppy/osu. I have gone through most of the code to check that it's correct and to fix what isn't. Not all of it though, some files have not been checked yet and I'm still working through the rest. If you find something, an issue is welcome.

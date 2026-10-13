@@ -171,7 +171,7 @@ namespace pppp { namespace beatmaps {
         }
 
         void copy_events(std::vector<SliderEventDescriptor>& out,
-                         const nonstd::span<fosu::SliderEvent> group) {
+                         const nonstd::span<fosu::SliderEvent>& group) {
             out.resize(group.size());
             for (size_t k = 0; k < group.size(); k++) {
                 const fosu::SliderEvent& e = group[k];

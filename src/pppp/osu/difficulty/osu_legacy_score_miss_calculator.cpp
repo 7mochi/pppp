@@ -45,10 +45,10 @@ namespace pppp { namespace osu { namespace difficulty {
     double OsuLegacyScoreMissCalculator::calculate_score_at_combo(double combo,
                                                                   double relevant_combo_per_object,
                                                                   double score_v1_multiplier) const {
-        int count_miss = count_of(pppp::common::HIT_RESULT_MISS);
+        int count_miss = count_of(common::HIT_RESULT_MISS);
 
-        int total_hits = count_of(pppp::common::HIT_RESULT_GREAT) + count_of(pppp::common::HIT_RESULT_OK) +
-                         count_of(pppp::common::HIT_RESULT_MEH) + count_miss;
+        int total_hits = count_of(common::HIT_RESULT_GREAT) + count_of(common::HIT_RESULT_OK) +
+                         count_of(common::HIT_RESULT_MEH) + count_miss;
 
         double estimated_objects = combo / relevant_combo_per_object - 1;
 
@@ -89,9 +89,9 @@ namespace pppp { namespace osu { namespace difficulty {
     }
 
     double OsuLegacyScoreMissCalculator::calculate_maximum_combo_based_miss_count() const {
-        int count_miss = count_of(pppp::common::HIT_RESULT_MISS);
-        int count_ok = count_of(pppp::common::HIT_RESULT_OK);
-        int count_meh = count_of(pppp::common::HIT_RESULT_MEH);
+        int count_miss = count_of(common::HIT_RESULT_MISS);
+        int count_ok = count_of(common::HIT_RESULT_OK);
+        int count_meh = count_of(common::HIT_RESULT_MEH);
 
         if (attributes.slider_count <= 0) {
             return count_miss;

@@ -12,6 +12,9 @@
 #include <cmath>
 
 namespace pppp { namespace osu { namespace difficulty { namespace skills {
+    namespace linq = ::pppp::utils::linq;
+    namespace math = ::pppp::utils::math;
+
     Reading::Reading(const pppp::mods::Mod* mods_in, size_t mod_count_in)
         : HarmonicSkill(mods_in, mod_count_in),
           has_hidden_mod(false),
@@ -53,27 +56,27 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
     double Reading::calculate_adjusted_difficulty(const preprocessing::OsuDifficultyHitObject& current) {
         double difficulty = evaluators::ReadingEvaluator::evaluate_difficulty_of(current, has_hidden_mod);
 
-        if (utils::linq::from(mods, mod_count)
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_TD)) {
+        if (linq::from(mods, mod_count)
+                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_TD)) {
             difficulty = utils::pow(difficulty, 0.89);
         }
 
-        if (utils::linq::from(mods, mod_count)
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_MG)) {
+        if (linq::from(mods, mod_count)
+                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_MG)) {
             double magnetised_strength =
-                utils::linq::from(mods, mod_count)
-                    .first(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_MG)
+                linq::from(mods, mod_count)
+                    .first(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_MG)
                     .magnetised.strength;
             difficulty *= 1.0 - magnetised_strength;
         }
 
-        if (utils::linq::from(mods, mod_count)
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_RX)) {
+        if (linq::from(mods, mod_count)
+                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_RX)) {
             difficulty *= 0.4;
         }
 
-        if (utils::linq::from(mods, mod_count)
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_AP)) {
+        if (linq::from(mods, mod_count)
+                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_AP)) {
             difficulty *= 0.1;
         }
 
@@ -84,14 +87,14 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
     }
 
     std::vector<double> Reading::get_transformed_difficulties(const std::vector<double>& difficulties) const {
-        std::vector<double> result = utils::linq::from(difficulties).where(utils::linq::_1 > 0).to_list();
+        std::vector<double> result = linq::from(difficulties).where(linq::_1 > 0).to_list();
 
         const double reduced_difficulty_base_line = 0.0; // Assume the first seconds are completely memorised
 
         int count = static_cast<int>(std::min(result.size(), static_cast<size_t>(reduced_note_count)));
         for (int i = 0; i < count; i++) {
-            double t = utils::math::clamp(static_cast<double>(i) / reduced_note_count,
-                                          reduced_difficulty_base_line, 1.0);
+            double t =
+                math::clamp(static_cast<double>(i) / reduced_note_count, reduced_difficulty_base_line, 1.0);
             double scale = std::log10(1.0 + 9.0 * t);
             result[i] *= scale;
         }
@@ -116,7 +119,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
             return 0;
         }
 
-        return utils::linq::from(object_difficulties)
-            .sum(utils::linq::bind(&utils::logistic, utils::linq::_1 / consistent_top_note, 1.15, 5.0, 1.1));
+        return linq::from(object_difficulties)
+            .sum(linq::bind(&utils::logistic, linq::_1 / consistent_top_note, 1.15, 5.0, 1.1));
     }
 }}}} // namespace pppp::osu::difficulty::skills

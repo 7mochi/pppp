@@ -14,8 +14,10 @@
 #include <doctest.h>
 #include <vector>
 
+namespace beatmaps = ::pppp::beatmaps;
+
 TEST_CASE("an empty beatmap has default attributes") {
-    const pppp::beatmaps::Beatmap empty;
+    const beatmaps::Beatmap empty;
     pppp::osu::difficulty::OsuDifficultyAttributes attrs;
 
     REQUIRE(pppp::osu::difficulty::calculate_difficulty(attrs, empty, 0, 0).ok());
@@ -24,7 +26,7 @@ TEST_CASE("an empty beatmap has default attributes") {
 }
 
 TEST_CASE("every ruleset rejects a null mod list with a count") {
-    const pppp::beatmaps::Beatmap empty;
+    const beatmaps::Beatmap empty;
     pppp::osu::difficulty::OsuDifficultyAttributes osu;
     pppp::taiko::difficulty::TaikoDifficultyAttributes taiko;
     pppp::fruits::difficulty::CatchDifficultyAttributes fruits;
@@ -141,7 +143,7 @@ TEST_CASE("the first timed taiko entries keep upstream's NaN") {
 }
 
 TEST_CASE("a beatmap without hit objects has no timed attributes") {
-    const pppp::beatmaps::Beatmap empty;
+    const beatmaps::Beatmap empty;
     CHECK(pppp_test::calculate_timed(pppp::Difficulty(), empty).empty());
 }
 
@@ -240,7 +242,7 @@ TEST_CASE("the osu!mania strain graph matches upstream_ref --strain-graph") {
 }
 
 TEST_CASE("a beatmap without hit objects has upstream's strain graph") {
-    const pppp::beatmaps::Beatmap empty;
+    const beatmaps::Beatmap empty;
 
     const pppp::Strains osu = pppp_test::strains(pppp::Difficulty(), empty);
     REQUIRE(osu.osu());

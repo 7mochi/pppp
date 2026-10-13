@@ -7,12 +7,13 @@
 #include <cmath>
 
 namespace pppp { namespace taiko { namespace difficulty { namespace utils {
+    namespace linq = ::pppp::utils::linq;
+
     void normalise_delta_times(std::vector<double>& out, const std::vector<double>& delta_times,
                                double margin_of_error) {
         out = delta_times;
 
-        std::vector<double> distinct =
-            pppp::utils::linq::from(delta_times).distinct().order_by(pppp::utils::linq::_1).to_list();
+        std::vector<double> distinct = linq::from(delta_times).distinct().order_by(linq::_1).to_list();
 
         std::vector<double> medians(distinct.size(), 0.0);
         size_t begin = 0;

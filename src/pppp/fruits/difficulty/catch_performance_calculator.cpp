@@ -11,9 +11,12 @@
 #include <cmath>
 
 namespace pppp { namespace fruits { namespace difficulty {
+    namespace linq = ::pppp::utils::linq;
+    namespace math = ::pppp::utils::math;
+
     namespace {
         struct CatchPerformanceCalculator {
-            const pppp::common::ScoreInfo& score;
+            const common::ScoreInfo& score;
             const CatchDifficultyAttributes& attributes;
 
             int num300;
@@ -22,7 +25,7 @@ namespace pppp { namespace fruits { namespace difficulty {
             int num_katu;
             int num_miss;
 
-            CatchPerformanceCalculator(const pppp::common::ScoreInfo& s, const CatchDifficultyAttributes& a)
+            CatchPerformanceCalculator(const common::ScoreInfo& s, const CatchDifficultyAttributes& a)
                 : score(s),
                   attributes(a),
                   num300(0),
@@ -34,8 +37,8 @@ namespace pppp { namespace fruits { namespace difficulty {
             double accuracy() const {
                 return total_hits() == 0
                            ? 0.0
-                           : utils::math::clamp(static_cast<double>(total_successful_hits()) / total_hits(),
-                                                0.0, 1.0);
+                           : math::clamp(static_cast<double>(total_successful_hits()) / total_hits(), 0.0,
+                                         1.0);
             }
 
             int total_hits() const { return num50 + num100 + num300 + num_miss + num_katu; }
@@ -44,23 +47,23 @@ namespace pppp { namespace fruits { namespace difficulty {
         };
     } // namespace
 
-    Status calculate_performance(CatchPerformanceAttributes& out, const pppp::common::ScoreInfo& score,
+    Status calculate_performance(CatchPerformanceAttributes& out, const common::ScoreInfo& score,
                                  const CatchDifficultyAttributes& attributes,
-                                 const pppp::beatmaps::Beatmap& beatmap) {
+                                 const beatmaps::Beatmap& beatmap) {
         out = CatchPerformanceAttributes();
 
         CatchPerformanceCalculator c(score, attributes);
 
-        c.num300 = score.statistics[pppp::common::HIT_RESULT_GREAT]; // HitResult.Great
-        c.num100 = score.statistics[pppp::common::HIT_RESULT_LARGE_TICK_HIT]; // HitResult.LargeTickHit
-        c.num50 = score.statistics[pppp::common::HIT_RESULT_SMALL_TICK_HIT]; // HitResult.SmallTickHit
-        c.num_katu = score.statistics[pppp::common::HIT_RESULT_SMALL_TICK_MISS]; // HitResult.SmallTickMiss
-        c.num_miss = std::max(
-            0, score.statistics[pppp::common::HIT_RESULT_MISS] +
-                   score.statistics[pppp::common::HIT_RESULT_LARGE_TICK_MISS]); // HitResult.Miss PLUS
-                                                                                // HitResult.LargeTickMiss
+        c.num300 = score.statistics[common::HIT_RESULT_GREAT]; // HitResult.Great
+        c.num100 = score.statistics[common::HIT_RESULT_LARGE_TICK_HIT]; // HitResult.LargeTickHit
+        c.num50 = score.statistics[common::HIT_RESULT_SMALL_TICK_HIT]; // HitResult.SmallTickHit
+        c.num_katu = score.statistics[common::HIT_RESULT_SMALL_TICK_MISS]; // HitResult.SmallTickMiss
+        c.num_miss =
+            std::max(0, score.statistics[common::HIT_RESULT_MISS] +
+                            score.statistics[common::HIT_RESULT_LARGE_TICK_MISS]); // HitResult.Miss PLUS
+                                                                                   // HitResult.LargeTickMiss
 
-        double score_max_combo = utils::math::clamp(score.max_combo, 0, attributes.max_combo);
+        double score_max_combo = math::clamp(score.max_combo, 0, attributes.max_combo);
 
         // We are heavily relying on aim in catch the beat
         double value = utils::pow(5.0 * std::max(1.0, attributes.star_rating / 0.0049) - 4.0, 2.0) / 100000.0;
@@ -102,8 +105,8 @@ namespace pppp { namespace fruits { namespace difficulty {
 
         value *= approach_rate_factor;
 
-        if (utils::linq::from(score.mods.data(), score.mods.size())
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_HD)) {
+        if (linq::from(score.mods.data(), score.mods.size())
+                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_HD)) {
             // Hiddens gives almost nothing on max approach rate, and more the lower it is
             if (approach_rate <= 10.0) {
                 value *= 1.05 + 0.075 * (10.0 - approach_rate); // 7.5% for each AR below 10
@@ -112,15 +115,15 @@ namespace pppp { namespace fruits { namespace difficulty {
             }
         }
 
-        if (utils::linq::from(score.mods.data(), score.mods.size())
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_FL)) {
+        if (linq::from(score.mods.data(), score.mods.size())
+                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_FL)) {
             value *= 1.35 * length_bonus;
         }
 
         value *= utils::pow(c.accuracy(), 5.5);
 
-        if (utils::linq::from(score.mods.data(), score.mods.size())
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_NF)) {
+        if (linq::from(score.mods.data(), score.mods.size())
+                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_NF)) {
             value *= std::max(0.90, 1.0 - 0.02 * c.num_miss);
         }
 

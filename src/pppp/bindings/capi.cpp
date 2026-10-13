@@ -16,9 +16,13 @@
     PPPP_STRINGIFY(PPPP_VERSION_MAJOR)                                                                       \
     "." PPPP_STRINGIFY(PPPP_VERSION_MINOR) "." PPPP_STRINGIFY(PPPP_VERSION_PATCH)
 
-namespace {
+namespace beatmaps = ::pppp::beatmaps;
+namespace common = ::pppp::common;
+namespace internal = ::fosu::internal;
+namespace utils = ::pppp::utils;
 
-    PPPP_STATIC_ASSERT(hit_result_count_matches, PPPP_HIT_RESULT_COUNT == pppp::common::HIT_RESULT_COUNT);
+namespace {
+    PPPP_STATIC_ASSERT(hit_result_count_matches, PPPP_HIT_RESULT_COUNT == common::HIT_RESULT_COUNT);
     PPPP_STATIC_ASSERT(int32_is_32_bits, sizeof(pppp_int32) == 4);
     PPPP_STATIC_ASSERT(int64_is_64_bits, sizeof(pppp_int64) == 8);
     PPPP_STATIC_ASSERT(result_ok_matches, PPPP_OK == static_cast<int>(pppp::StatusCode::OK));
@@ -37,25 +41,25 @@ namespace {
     PPPP_STATIC_ASSERT(ruleset_catch_matches, PPPP_RULESET_CATCH == static_cast<int>(pppp::Ruleset::CATCH));
     PPPP_STATIC_ASSERT(ruleset_mania_matches, PPPP_RULESET_MANIA == static_cast<int>(pppp::Ruleset::MANIA));
     PPPP_STATIC_ASSERT(slider_event_tick_matches,
-                       PPPP_SLIDER_EVENT_TICK == static_cast<int>(pppp::beatmaps::SLIDER_EVENT_TICK));
+                       PPPP_SLIDER_EVENT_TICK == static_cast<int>(beatmaps::SLIDER_EVENT_TICK));
     PPPP_STATIC_ASSERT(slider_event_legacy_last_tick_matches,
                        PPPP_SLIDER_EVENT_LEGACY_LAST_TICK ==
-                           static_cast<int>(pppp::beatmaps::SLIDER_EVENT_LEGACY_LAST_TICK));
+                           static_cast<int>(beatmaps::SLIDER_EVENT_LEGACY_LAST_TICK));
     PPPP_STATIC_ASSERT(slider_event_head_matches,
-                       PPPP_SLIDER_EVENT_HEAD == static_cast<int>(pppp::beatmaps::SLIDER_EVENT_HEAD));
+                       PPPP_SLIDER_EVENT_HEAD == static_cast<int>(beatmaps::SLIDER_EVENT_HEAD));
     PPPP_STATIC_ASSERT(slider_event_tail_matches,
-                       PPPP_SLIDER_EVENT_TAIL == static_cast<int>(pppp::beatmaps::SLIDER_EVENT_TAIL));
+                       PPPP_SLIDER_EVENT_TAIL == static_cast<int>(beatmaps::SLIDER_EVENT_TAIL));
     PPPP_STATIC_ASSERT(slider_event_repeat_matches,
-                       PPPP_SLIDER_EVENT_REPEAT == static_cast<int>(pppp::beatmaps::SLIDER_EVENT_REPEAT));
+                       PPPP_SLIDER_EVENT_REPEAT == static_cast<int>(beatmaps::SLIDER_EVENT_REPEAT));
 
-    pppp_vector2 to_point(const pppp::utils::Vector2& value) {
+    pppp_vector2 to_point(const utils::Vector2& value) {
         pppp_vector2 point;
         point.x = value.x;
         point.y = value.y;
         return point;
     }
 
-    pppp_slider_event_descriptor to_event(const pppp::beatmaps::SliderEventDescriptor& value) {
+    pppp_slider_event_descriptor to_event(const beatmaps::SliderEventDescriptor& value) {
         pppp_slider_event_descriptor event;
         event.type = static_cast<pppp_int32>(value.type);
         event.time = value.time;
@@ -66,14 +70,14 @@ namespace {
         return event;
     }
 
-    void copy_points(const std::vector<pppp::utils::Vector2>& source, std::vector<pppp_vector2>& out) {
+    void copy_points(const std::vector<utils::Vector2>& source, std::vector<pppp_vector2>& out) {
         out.reserve(source.size());
         for (size_t i = 0; i < source.size(); i++) {
             out.push_back(to_point(source[i]));
         }
     }
 
-    void copy_events(const std::vector<pppp::beatmaps::SliderEventDescriptor>& source,
+    void copy_events(const std::vector<beatmaps::SliderEventDescriptor>& source,
                      std::vector<pppp_slider_event_descriptor>& out) {
         out.reserve(source.size());
         for (size_t i = 0; i < source.size(); i++) {
@@ -335,10 +339,10 @@ struct pppp_beatmap {
 
 namespace {
 
-    void build_hit_objects(const pppp::beatmaps::Beatmap& map, std::vector<pppp_hit_object>& out) {
+    void build_hit_objects(const beatmaps::Beatmap& map, std::vector<pppp_hit_object>& out) {
         out.reserve(map.hit_objects.size());
         for (size_t i = 0; i < map.hit_objects.size(); i++) {
-            const pppp::beatmaps::HitObject& value = map.hit_objects[i];
+            const beatmaps::HitObject& value = map.hit_objects[i];
             pppp_hit_object object;
             object.position = to_point(value.position);
             object.type = value.type;
@@ -352,10 +356,10 @@ namespace {
         }
     }
 
-    void build_timing_points(const pppp::beatmaps::Beatmap& map, std::vector<pppp_timing_point>& out) {
+    void build_timing_points(const beatmaps::Beatmap& map, std::vector<pppp_timing_point>& out) {
         out.reserve(map.timing_points.size());
         for (size_t i = 0; i < map.timing_points.size(); i++) {
-            const pppp::beatmaps::TimingPoint& value = map.timing_points[i];
+            const beatmaps::TimingPoint& value = map.timing_points[i];
             pppp_timing_point point;
             point.time = value.time;
             point.beat_length = value.beat_length;
@@ -366,7 +370,7 @@ namespace {
         }
     }
 
-    void build_breaks(const pppp::beatmaps::Beatmap& map, std::vector<pppp_break_period>& out) {
+    void build_breaks(const beatmaps::Beatmap& map, std::vector<pppp_break_period>& out) {
         out.reserve(map.breaks.size());
         for (size_t i = 0; i < map.breaks.size(); i++) {
             pppp_break_period period;
@@ -376,10 +380,10 @@ namespace {
         }
     }
 
-    void build_slider_views(const pppp::beatmaps::Beatmap& map, std::vector<SliderView>& out) {
+    void build_slider_views(const beatmaps::Beatmap& map, std::vector<SliderView>& out) {
         out.reserve(map.sliders.size());
         for (size_t i = 0; i < map.sliders.size(); i++) {
-            const pppp::beatmaps::Slider& value = map.sliders[i];
+            const beatmaps::Slider& value = map.sliders[i];
             SliderView view;
             view.node_sounds.assign(value.node_sounds.begin(), value.node_sounds.end());
             copy_points(value.control_points, view.control_points);
@@ -401,7 +405,7 @@ namespace {
 
         beatmap.sliders.reserve(beatmap.slider_views.size());
         for (size_t i = 0; i < beatmap.slider_views.size(); i++) {
-            const pppp::beatmaps::Slider& source = beatmap.map.sliders[i];
+            const beatmaps::Slider& source = beatmap.map.sliders[i];
             const SliderView& view = beatmap.slider_views[i];
             pppp_slider slider;
             slider.slides = source.slides;
@@ -430,9 +434,7 @@ namespace {
 
 const char* pppp_version(void) { return PPPP_VERSION_STRING; }
 
-const char* pppp_backend(void) {
-    return fosu::internal::engine_name(fosu::internal::selected_engine()->kind);
-}
+const char* pppp_backend(void) { return internal::engine_name(internal::selected_engine()->kind); }
 
 const char* pppp_result_message(pppp_result result) {
     return pppp::Status(static_cast<pppp::StatusCode::Value>(result)).message();
@@ -526,7 +528,7 @@ pppp_result pppp_beatmap_get_difficulty(const pppp_beatmap* map, pppp_beatmap_di
     if (!map || !out) {
         return PPPP_INVALID_ARGUMENT;
     }
-    const pppp::beatmaps::BeatmapDifficulty& source = map->map.difficulty;
+    const beatmaps::BeatmapDifficulty& source = map->map.difficulty;
     out->drain_rate = source.drain_rate;
     out->circle_size = source.circle_size;
     out->overall_difficulty = source.overall_difficulty;
@@ -744,7 +746,7 @@ pppp_result pppp_calculate_performance(const pppp_beatmap* map, const pppp_perfo
     }
     pppp::ScoreInfo score;
     if (options && options->has_score) {
-        for (int i = 0; i < pppp::common::HIT_RESULT_COUNT; i++) {
+        for (int i = 0; i < common::HIT_RESULT_COUNT; i++) {
             score.statistics[i] = options->score.statistics[i];
             score.maximum_statistics[i] = options->score.maximum_statistics[i];
         }

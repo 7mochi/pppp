@@ -11,7 +11,7 @@ namespace pppp { namespace taiko { namespace difficulty { namespace skills {
     Colour::Colour(const pppp::mods::Mod* mods_in, size_t mod_count_in)
         : StrainDecaySkill(mods_in, mod_count_in, 0.12, 0.8) {}
 
-    double Colour::strain_value_of(const pppp::common::preprocessing::DifficultyHitObject& base_current) {
+    double Colour::strain_value_of(const common::preprocessing::DifficultyHitObject& base_current) {
         return evaluators::ColourEvaluator::evaluate_difficulty_of(
             static_cast<const preprocessing::TaikoDifficultyHitObject&>(base_current));
     }

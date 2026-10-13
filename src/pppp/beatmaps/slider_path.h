@@ -21,8 +21,7 @@ namespace pppp { namespace beatmaps {
     /// path) to 1 (end of the path), sampling the undecimated path where the slider carries one.
     /// @param slider The slider whose path is sampled.
     /// @param progress Ranges from 0 (beginning of the path) to 1 (end of the path).
-    pppp::utils::Vector2 slider_position_at_undecimated(const pppp::beatmaps::Slider& slider,
-                                                        double progress);
+    pppp::utils::Vector2 slider_position_at_undecimated(const Slider& slider, double progress);
 }} // namespace pppp::beatmaps
 
 #endif

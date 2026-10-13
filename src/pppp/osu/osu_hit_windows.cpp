@@ -12,12 +12,12 @@ namespace pppp { namespace osu {
         meh = std::floor(utils::difficulty_range(od, MEH_WINDOW_RANGE)) - 0.5;
     }
 
-    double OsuHitWindows::window_for(pppp::common::HitResult result) const {
+    double OsuHitWindows::window_for(common::HitResult result) const {
         switch (result) {
-        case pppp::common::HIT_RESULT_GREAT: return great;
-        case pppp::common::HIT_RESULT_OK: return ok;
-        case pppp::common::HIT_RESULT_MEH: return meh;
-        case pppp::common::HIT_RESULT_MISS: return MISS_WINDOW;
+        case common::HIT_RESULT_GREAT: return great;
+        case common::HIT_RESULT_OK: return ok;
+        case common::HIT_RESULT_MEH: return meh;
+        case common::HIT_RESULT_MISS: return MISS_WINDOW;
         default: return 0.0;
         }
     }

@@ -9,9 +9,12 @@
 #include <algorithm>
 
 namespace pppp { namespace mania { namespace difficulty {
+    namespace linq = ::pppp::utils::linq;
+    namespace math = ::pppp::utils::math;
+
     namespace {
         struct ManiaPerformanceCalculator {
-            const pppp::common::ScoreInfo& score;
+            const common::ScoreInfo& score;
             const ManiaDifficultyAttributes& attributes;
 
             int count_perfect;
@@ -22,7 +25,7 @@ namespace pppp { namespace mania { namespace difficulty {
             int count_miss;
             double score_accuracy;
 
-            ManiaPerformanceCalculator(const pppp::common::ScoreInfo& s, const ManiaDifficultyAttributes& a)
+            ManiaPerformanceCalculator(const common::ScoreInfo& s, const ManiaDifficultyAttributes& a)
                 : score(s),
                   attributes(a),
                   count_perfect(0),
@@ -59,31 +62,31 @@ namespace pppp { namespace mania { namespace difficulty {
         };
     } // namespace
 
-    Status calculate_performance(ManiaPerformanceAttributes& out, const pppp::common::ScoreInfo& score,
+    Status calculate_performance(ManiaPerformanceAttributes& out, const common::ScoreInfo& score,
                                  const ManiaDifficultyAttributes& attributes,
-                                 const pppp::beatmaps::Beatmap& beatmap) {
+                                 const beatmaps::Beatmap& beatmap) {
         (void)beatmap;
 
         out = ManiaPerformanceAttributes();
 
         ManiaPerformanceCalculator c(score, attributes);
 
-        c.count_perfect = score.statistics[pppp::common::HIT_RESULT_PERFECT];
-        c.count_great = score.statistics[pppp::common::HIT_RESULT_GREAT];
-        c.count_good = score.statistics[pppp::common::HIT_RESULT_GOOD];
-        c.count_ok = score.statistics[pppp::common::HIT_RESULT_OK];
-        c.count_meh = score.statistics[pppp::common::HIT_RESULT_MEH];
-        c.count_miss = std::max(0, score.statistics[pppp::common::HIT_RESULT_MISS]);
-        c.score_accuracy = utils::math::clamp(c.calculate_custom_accuracy(), 0.0, 1.0);
+        c.count_perfect = score.statistics[common::HIT_RESULT_PERFECT];
+        c.count_great = score.statistics[common::HIT_RESULT_GREAT];
+        c.count_good = score.statistics[common::HIT_RESULT_GOOD];
+        c.count_ok = score.statistics[common::HIT_RESULT_OK];
+        c.count_meh = score.statistics[common::HIT_RESULT_MEH];
+        c.count_miss = std::max(0, score.statistics[common::HIT_RESULT_MISS]);
+        c.score_accuracy = math::clamp(c.calculate_custom_accuracy(), 0.0, 1.0);
 
         double multiplier = 1.0;
 
-        if (utils::linq::from(score.mods.data(), score.mods.size())
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_NF)) {
+        if (linq::from(score.mods.data(), score.mods.size())
+                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_NF)) {
             multiplier *= 0.75;
         }
-        if (utils::linq::from(score.mods.data(), score.mods.size())
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_EZ)) {
+        if (linq::from(score.mods.data(), score.mods.size())
+                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_EZ)) {
             multiplier *= 0.5;
         }
 

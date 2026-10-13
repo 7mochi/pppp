@@ -12,8 +12,13 @@
 #include <new>
 #include <structmember.h>
 
-namespace {
+namespace beatmaps = ::pppp::beatmaps;
+namespace common = ::pppp::common;
+namespace internal = ::fosu::internal;
+namespace timing = ::pppp::beatmaps::timing;
+namespace utils = ::pppp::utils;
 
+namespace {
     class PyRef {
     public:
         explicit PyRef(PyObject* value)
@@ -409,7 +414,7 @@ namespace {
             return build(t_vector2, values, 2);
         }
 
-        PyObject* difficulty(const pppp::beatmaps::BeatmapDifficulty& value) const {
+        PyObject* difficulty(const beatmaps::BeatmapDifficulty& value) const {
             FieldValue values[] = {{f_drain_rate, py_number(value.drain_rate)},
                                    {f_circle_size, py_number(value.circle_size)},
                                    {f_overall_difficulty, py_number(value.overall_difficulty)},
@@ -419,7 +424,7 @@ namespace {
             return build(t_beatmap_difficulty, values, 6);
         }
 
-        PyObject* hit_object(const pppp::beatmaps::HitObject& value) const {
+        PyObject* hit_object(const beatmaps::HitObject& value) const {
             FieldValue values[] = {{f_position, point(value.position.x, value.position.y)},
                                    {f_type, py_integer(value.type)},
                                    {f_hitsound, py_integer(value.hitsound)},
@@ -431,7 +436,7 @@ namespace {
             return build(t_hit_object, values, 8);
         }
 
-        PyObject* slider_event(const pppp::beatmaps::SliderEventDescriptor& value) const {
+        PyObject* slider_event(const beatmaps::SliderEventDescriptor& value) const {
             FieldValue values[] = {{f_type, py_integer(value.type)},
                                    {f_time, py_number(value.time)},
                                    {f_span_index, py_integer(value.span_index)},
@@ -441,7 +446,7 @@ namespace {
             return build(t_slider_event, values, 6);
         }
 
-        PyObject* slider(const pppp::beatmaps::Slider& value) const {
+        PyObject* slider(const beatmaps::Slider& value) const {
             FieldValue values[] = {
                 {f_slides, py_integer(value.slides)},
                 {f_expected_length, py_number(value.expected_length)},
@@ -456,7 +461,7 @@ namespace {
             return build(t_slider, values, 10);
         }
 
-        PyObject* timing_point(const pppp::beatmaps::TimingPoint& value) const {
+        PyObject* timing_point(const beatmaps::TimingPoint& value) const {
             FieldValue values[] = {{f_time, py_number(value.time)},
                                    {f_beat_length, py_number(value.beat_length)},
                                    {f_meter, py_integer(value.meter)},
@@ -465,7 +470,7 @@ namespace {
             return build(t_timing_point, values, 5);
         }
 
-        PyObject* break_period(const pppp::beatmaps::timing::BreakPeriod& value) const {
+        PyObject* break_period(const timing::BreakPeriod& value) const {
             FieldValue values[] = {{f_start_time, py_number(value.start_time)},
                                    {f_end_time, py_number(value.end_time)}};
             return build(t_break_period, values, 2);
@@ -655,19 +660,19 @@ namespace {
             return list;
         }
 
-        PyObject* hit_objects(const std::vector<pppp::beatmaps::HitObject>& values) const {
+        PyObject* hit_objects(const std::vector<beatmaps::HitObject>& values) const {
             return list_of(values, &Builder::hit_object);
         }
 
-        PyObject* sliders(const std::vector<pppp::beatmaps::Slider>& values) const {
+        PyObject* sliders(const std::vector<beatmaps::Slider>& values) const {
             return list_of(values, &Builder::slider);
         }
 
-        PyObject* timing_points(const std::vector<pppp::beatmaps::TimingPoint>& values) const {
+        PyObject* timing_points(const std::vector<beatmaps::TimingPoint>& values) const {
             return list_of(values, &Builder::timing_point);
         }
 
-        PyObject* breaks(const std::vector<pppp::beatmaps::timing::BreakPeriod>& values) const {
+        PyObject* breaks(const std::vector<timing::BreakPeriod>& values) const {
             return list_of(values, &Builder::break_period);
         }
 
@@ -701,7 +706,7 @@ namespace {
             }
         }
 
-        PyObject* points(const std::vector<pppp::utils::Vector2>& values) const {
+        PyObject* points(const std::vector<utils::Vector2>& values) const {
             PyObject* list = PyList_New(py_count(values.size()));
             if (!list) {
                 return NULL;
@@ -716,7 +721,7 @@ namespace {
             return list;
         }
 
-        PyObject* events(const std::vector<pppp::beatmaps::SliderEventDescriptor>& values) const {
+        PyObject* events(const std::vector<beatmaps::SliderEventDescriptor>& values) const {
             return list_of(values, &Builder::slider_event);
         }
 
@@ -1267,7 +1272,7 @@ namespace {
             if (key == -1 && PyErr_Occurred()) {
                 return -1;
             }
-            if (key < 0 || key >= pppp::common::HIT_RESULT_COUNT) {
+            if (key < 0 || key >= common::HIT_RESULT_COUNT) {
                 PyErr_SetString(PyExc_ValueError, "statistics keys must be hit results");
                 return -1;
             }
@@ -1475,8 +1480,7 @@ namespace {
     }
 
     int add_backend(PyObject* module) {
-        PyRef backend(
-            PyUnicode_FromString(fosu::internal::engine_name(fosu::internal::selected_engine()->kind)));
+        PyRef backend(PyUnicode_FromString(internal::engine_name(internal::selected_engine()->kind)));
         if (!backend.get()) {
             return -1;
         }

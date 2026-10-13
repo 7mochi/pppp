@@ -8,6 +8,8 @@
 #include <cstddef>
 #include <doctest.h>
 
+namespace common = ::pppp::common;
+
 TEST_CASE("the score's mods reach the difficulty when the calculator is given none") {
     pppp::Beatmap beatmap;
     pppp_test::load(beatmap, PPPP_TEST_RESOURCES "/taiko/1028484.osu");
@@ -47,9 +49,9 @@ TEST_CASE("adding classic to legacy mods matches the classic specification") {
     const pppp::DifficultyAttributes attributes =
         pppp_test::calculate(pppp::Difficulty().mods(from_bits).ruleset(pppp::Ruleset::OSU), beatmap);
 
-    pppp::common::ScoreInfo score;
-    score.statistics[pppp::common::HIT_RESULT_GREAT] = 601;
-    score.statistics[pppp::common::HIT_RESULT_SLIDER_TAIL_HIT] = attributes.osu()->slider_count;
+    common::ScoreInfo score;
+    score.statistics[common::HIT_RESULT_GREAT] = 601;
+    score.statistics[common::HIT_RESULT_SLIDER_TAIL_HIT] = attributes.osu()->slider_count;
     score.max_combo = 909;
     score.accuracy = pppp_test::classic_accuracy(601, 0, 0, 0);
 

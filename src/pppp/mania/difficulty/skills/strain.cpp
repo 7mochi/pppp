@@ -20,7 +20,7 @@ namespace pppp { namespace mania { namespace difficulty { namespace skills {
         }
     } // namespace
 
-    double Strain::strain_value_of(const pppp::common::preprocessing::DifficultyHitObject& base_current) {
+    double Strain::strain_value_of(const common::preprocessing::DifficultyHitObject& base_current) {
         const preprocessing::ManiaDifficultyHitObject& current =
             static_cast<const preprocessing::ManiaDifficultyHitObject&>(base_current);
         const size_t column = static_cast<size_t>(current.column);
@@ -45,7 +45,7 @@ namespace pppp { namespace mania { namespace difficulty { namespace skills {
     }
 
     double Strain::calculate_initial_strain(double time,
-                                            const pppp::common::preprocessing::DifficultyHitObject& current) {
+                                            const common::preprocessing::DifficultyHitObject& current) {
         const double previous_start = current.last_object_start_time / current.clock_rate;
 
         return apply_decay(highest_individual_strain, time - previous_start, INDIVIDUAL_DECAY_BASE) +

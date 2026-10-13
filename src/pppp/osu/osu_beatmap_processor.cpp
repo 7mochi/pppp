@@ -17,8 +17,8 @@ namespace pppp { namespace osu {
         }
 
         void apply_stacking_range(std::vector<object::OsuHitObject>& hos,
-                                  const std::vector<pppp::utils::Vector2>& raw,
-                                  const std::vector<pppp::utils::Vector2>& end_pos, float stack_threshold) {
+                                  const std::vector<utils::Vector2>& raw,
+                                  const std::vector<utils::Vector2>& end_pos, float stack_threshold) {
             const int n = static_cast<int>(hos.size());
             int start_index = 0;
             int extended_end_index = n - 1;
@@ -116,9 +116,8 @@ namespace pppp { namespace osu {
         }
 
         void apply_stacking_old(std::vector<object::OsuHitObject>& hos,
-                                const std::vector<pppp::utils::Vector2>& raw,
-                                const std::vector<pppp::utils::Vector2>& path_end_pos,
-                                float stack_threshold) {
+                                const std::vector<utils::Vector2>& raw,
+                                const std::vector<utils::Vector2>& path_end_pos, float stack_threshold) {
             const int n = static_cast<int>(hos.size());
 
             for (int i = 0; i < n; i++) {
@@ -131,7 +130,7 @@ namespace pppp { namespace osu {
                     if (hos[j].time - stack_threshold > start_time) {
                         break;
                     }
-                    pppp::utils::Vector2 position2 =
+                    utils::Vector2 position2 =
                         object::OsuHitObject::is_slider_type(hos[i].type) ? path_end_pos[i] : raw[i];
 
                     // Note the use of StartTime in the code below doesn't match stable's use of EndTime.
@@ -203,7 +202,7 @@ namespace pppp { namespace osu {
             return;
         }
 
-        std::vector<pppp::utils::Vector2> raw(n), end_pos(n), path_end_pos(n);
+        std::vector<utils::Vector2> raw(n), end_pos(n), path_end_pos(n);
         for (int i = 0; i < n; i++) {
             raw[i] = pb.objects[i].position;
             end_pos[i] = object_end_position(pb, i);

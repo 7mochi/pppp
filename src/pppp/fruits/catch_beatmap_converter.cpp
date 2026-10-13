@@ -7,6 +7,8 @@
 #include "pppp/utils/math/csharp.h"
 
 namespace pppp { namespace fruits {
+    namespace math = ::pppp::utils::math;
+
     namespace {
         /// Flattens a juice stream's / banana shower's nested objects into `out`, in order.
         void flatten(std::vector<object::CatchHitObject*>& out,
@@ -18,19 +20,19 @@ namespace pppp { namespace fruits {
         }
     } // namespace
 
-    Status convert(CatchBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap,
-                   const pppp::beatmaps::ObjectConverted<object::CatchHitObject>& object_converted) {
+    Status convert(CatchBeatmap& pb, const beatmaps::Beatmap& beatmap,
+                   const beatmaps::ObjectConverted<object::CatchHitObject>& object_converted) {
         for (size_t i = 0; i < beatmap.hit_objects.size(); i++) {
-            const pppp::beatmaps::HitObject& ho = beatmap.hit_objects[i];
+            const beatmaps::HitObject& ho = beatmap.hit_objects[i];
             const size_t first = pb.objects.size();
 
             if (ho.slider >= 0 && static_cast<size_t>(ho.slider) < beatmap.sliders.size()) {
-                const pppp::beatmaps::Slider& slider = beatmap.sliders[ho.slider];
+                const beatmaps::Slider& slider = beatmap.sliders[ho.slider];
                 // prior to v8, speed multipliers don't adjust for how many ticks are generated over the same
                 // distance. this results in more (or less) ticks being generated in <v8 maps for the same
                 // time duration.
                 pb.objects.push_back(object::create_juice_stream(
-                    slider, utils::math::clamp(ho.position.x, 0.0, object::PLAYFIELD_WIDTH), ho.start_time,
+                    slider, math::clamp(ho.position.x, 0.0, object::PLAYFIELD_WIDTH), ho.start_time,
                     ho.end_time, static_cast<int>(ho.slider)));
             } else if ((ho.type & 8) != 0) {
                 pb.objects.push_back(object::create_banana_shower(ho.start_time, ho.end_time));

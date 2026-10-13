@@ -9,6 +9,11 @@
 #include <cmath>
 
 namespace pppp { namespace mania { namespace patterns {
+    namespace control_points = ::pppp::beatmaps::control_points;
+    namespace linq = ::pppp::utils::linq;
+    namespace math = ::pppp::utils::math;
+    namespace timing = ::pppp::beatmaps::timing;
+
     bool has_flag(int flags, int flag) { return (flags & flag) != 0; }
 
     bool has_sample(unsigned hitsound, unsigned bit) { return (hitsound & bit) != 0; }
@@ -32,17 +37,12 @@ namespace pppp { namespace mania { namespace patterns {
     }
 
     namespace {
-        double conversion_difficulty_of(const pppp::beatmaps::Beatmap& beatmap) {
-            const pppp::beatmaps::HitObject last_object =
-                pppp::utils::linq::from(beatmap.hit_objects).last_or_default();
-            const pppp::beatmaps::HitObject first_object =
-                pppp::utils::linq::from(beatmap.hit_objects).first_or_default();
-            const double total_break_time =
-                pppp::utils::linq::from(beatmap.breaks)
-                    .sum(pppp::utils::linq::bind(&pppp::beatmaps::timing::BreakPeriod::end_time,
-                                                 pppp::utils::linq::_1) -
-                         pppp::utils::linq::bind(&pppp::beatmaps::timing::BreakPeriod::start_time,
-                                                 pppp::utils::linq::_1));
+        double conversion_difficulty_of(const beatmaps::Beatmap& beatmap) {
+            const beatmaps::HitObject last_object = linq::from(beatmap.hit_objects).last_or_default();
+            const beatmaps::HitObject first_object = linq::from(beatmap.hit_objects).first_or_default();
+            const double total_break_time = linq::from(beatmap.breaks)
+                                                .sum(linq::bind(&timing::BreakPeriod::end_time, linq::_1) -
+                                                     linq::bind(&timing::BreakPeriod::start_time, linq::_1));
 
             // Drain time in seconds
             int drain_time = static_cast<int>(
@@ -52,20 +52,20 @@ namespace pppp { namespace mania { namespace patterns {
                 drain_time = 10000;
             }
 
-            const double difficulty = ((beatmap.difficulty.drain_rate +
-                                        utils::math::clamp(beatmap.difficulty.approach_rate, 4, 7)) /
-                                           1.5 +
-                                       static_cast<double>(beatmap.hit_objects.size()) / drain_time * 9.0) /
-                                      38.0 * 5.0 / 1.15;
+            const double difficulty =
+                ((beatmap.difficulty.drain_rate + math::clamp(beatmap.difficulty.approach_rate, 4, 7)) / 1.5 +
+                 static_cast<double>(beatmap.hit_objects.size()) / drain_time * 9.0) /
+                38.0 * 5.0 / 1.15;
 
             return std::min(difficulty, 12.0);
         }
     } // namespace
 
-    LegacyPatternGenerator::LegacyPatternGenerator(
-        const pppp::beatmaps::control_points::ControlPointInfo& info_in,
-        const pppp::beatmaps::Beatmap& beatmap_in, const SourceObject& hit_object_in,
-        const Pattern& previous_pattern_in, int total_columns_in, pppp::utils::LegacyRandom& random_in)
+    LegacyPatternGenerator::LegacyPatternGenerator(const control_points::ControlPointInfo& info_in,
+                                                   const beatmaps::Beatmap& beatmap_in,
+                                                   const SourceObject& hit_object_in,
+                                                   const Pattern& previous_pattern_in, int total_columns_in,
+                                                   utils::LegacyRandom& random_in)
         : PatternGenerator(info_in, beatmap_in, hit_object_in, previous_pattern_in, total_columns_in),
           random(random_in),
           random_start(total_columns_in == 8 ? 1 : 0),
@@ -75,12 +75,12 @@ namespace pppp { namespace mania { namespace patterns {
         if (allow_special && total_columns == 8) {
             const float local_x_divisor = 512.0f / 7;
             const int column = static_cast<int>(std::floor(utils::f32(position / local_x_divisor)));
-            return utils::math::clamp_int(column, 0, 6) + 1;
+            return math::clamp_int(column, 0, 6) + 1;
         }
 
         const float local_x_divisor = 512.0f / static_cast<float>(total_columns);
         const int column = static_cast<int>(std::floor(utils::f32(position / local_x_divisor)));
-        return utils::math::clamp_int(column, 0, total_columns - 1);
+        return math::clamp_int(column, 0, total_columns - 1);
     }
 
     int LegacyPatternGenerator::get_random_column(nonstd::optional<int> lower_bound,

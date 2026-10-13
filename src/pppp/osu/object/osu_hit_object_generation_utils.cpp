@@ -11,21 +11,23 @@
 #include <cmath>
 
 namespace pppp { namespace osu { namespace object {
+    namespace math = ::pppp::utils::math;
+
     namespace {
         /// Rotate a vector by the specified angle.
         /// @param v The vector to be rotated.
         /// @param rotation The angle, measured in radians, to rotate the vector by.
         /// @returns The rotated vector.
-        pppp::utils::Vector2 rotate_vector(pppp::utils::Vector2 v, float rotation) {
+        utils::Vector2 rotate_vector(utils::Vector2 v, float rotation) {
             float angle = std::atan2(v.y, v.x) + rotation;
             float len = length(v);
-            return pppp::utils::vec2(len * std::cos(angle), len * std::sin(angle));
+            return utils::vec2(len * std::cos(angle), len * std::sin(angle));
         }
 
         struct WorkingObject {
             float rotation_original;
-            pppp::utils::Vector2 position_modified;
-            pppp::utils::Vector2 end_position_modified;
+            utils::Vector2 position_modified;
+            utils::Vector2 end_position_modified;
             size_t info;
         };
 
@@ -40,7 +42,7 @@ namespace pppp { namespace osu { namespace object {
         /// @param sl The slider to process.
         /// @returns The angle in radians.
         float get_slider_rotation(const PlayableSlider& sl) {
-            pppp::utils::Vector2 end = slider_position_at(sl, 1);
+            utils::Vector2 end = slider_position_at(sl, 1);
             return std::atan2(end.y, end.x);
         }
 
@@ -57,30 +59,30 @@ namespace pppp { namespace osu { namespace object {
         /// @param position The position to be clamped.
         /// @param padding The minimum distance allowed from playfield edges.
         /// @returns The clamped position.
-        pppp::utils::Vector2 clamp_to_playfield_with_padding(pppp::utils::Vector2 position, float padding) {
-            return pppp::utils::vec2(
-                static_cast<float>(utils::math::clamp(position.x, padding, PLAYFIELD_WIDTH - padding)),
-                static_cast<float>(utils::math::clamp(position.y, padding, PLAYFIELD_HEIGHT - padding)));
+        utils::Vector2 clamp_to_playfield_with_padding(utils::Vector2 position, float padding) {
+            return utils::vec2(
+                static_cast<float>(math::clamp(position.x, padding, PLAYFIELD_WIDTH - padding)),
+                static_cast<float>(math::clamp(position.y, padding, PLAYFIELD_HEIGHT - padding)));
         }
 
         /// Estimate the centre of mass of a slider relative to its start position.
         /// @param sl The slider to process.
         /// @returns The centre of mass of the slider.
-        pppp::utils::Vector2 calculate_centre_of_mass(const PlayableSlider& sl) {
+        utils::Vector2 calculate_centre_of_mass(const PlayableSlider& sl) {
             const double sample_step = 50;
             double path_distance = sl.cumulative_lengths.empty() ? 0.0 : sl.cumulative_lengths.back();
             if (path_distance <= sample_step) {
-                pppp::utils::Vector2 end = slider_position_at(sl, 1);
-                return pppp::utils::vec2(end.x / 2, end.y / 2);
+                utils::Vector2 end = slider_position_at(sl, 1);
+                return utils::vec2(end.x / 2, end.y / 2);
             }
             int count = 0;
-            pppp::utils::Vector2 sum = pppp::utils::vec2(0.0f, 0.0f);
+            utils::Vector2 sum = utils::vec2(0.0f, 0.0f);
             // NOLINTNEXTLINE(cert-flp30-c)
             for (double i = 0; i < path_distance; i += sample_step) {
                 sum = sum + slider_position_at(sl, i / path_distance);
                 count++;
             }
-            return pppp::utils::vec2(sum.x / static_cast<float>(count), sum.y / static_cast<float>(count));
+            return utils::vec2(sum.x / static_cast<float>(count), sum.y / static_cast<float>(count));
         }
 
         /// Calculates a rectangle which contains all of the possible movements of the slider (in relative X/Y
@@ -111,9 +113,8 @@ namespace pppp { namespace osu { namespace object {
         }
     } // namespace
 
-    pppp::utils::Vector2 rotate_vector_towards_vector(pppp::utils::Vector2 initial,
-                                                      pppp::utils::Vector2 destination,
-                                                      float rotation_ratio) {
+    utils::Vector2 rotate_vector_towards_vector(utils::Vector2 initial, utils::Vector2 destination,
+                                                float rotation_ratio) {
         float initial_angle = std::atan2(initial.y, initial.x);
         float dest_angle = std::atan2(destination.y, destination.x);
         float diff = dest_angle - initial_angle;
@@ -125,14 +126,13 @@ namespace pppp { namespace osu { namespace object {
         }
         float final_angle = initial_angle + rotation_ratio * diff;
         float len = length(initial);
-        return pppp::utils::vec2(len * std::cos(final_angle), len * std::sin(final_angle));
+        return utils::vec2(len * std::cos(final_angle), len * std::sin(final_angle));
     }
 
-    pppp::utils::Vector2 rotate_away_from_edge(pppp::utils::Vector2 prev_object_pos,
-                                               pppp::utils::Vector2 pos_relative_to_prev,
-                                               float rotation_ratio) {
+    utils::Vector2 rotate_away_from_edge(utils::Vector2 prev_object_pos, utils::Vector2 pos_relative_to_prev,
+                                         float rotation_ratio) {
         float relative_rotation_distance = 0.0f;
-        pppp::utils::Vector2 middle = playfield_centre();
+        utils::Vector2 middle = playfield_centre();
         if (prev_object_pos.x < middle.x) {
             relative_rotation_distance = std::max((BORDER_DISTANCE_X - prev_object_pos.x) / BORDER_DISTANCE_X,
                                                   relative_rotation_distance);
@@ -166,19 +166,19 @@ namespace pppp { namespace osu { namespace object {
                 if (prev_ho.slider >= 0) {
                     previous_absolute_angle = get_slider_rotation(pb.sliders[prev_ho.slider]);
                 } else {
-                    pppp::utils::Vector2 earliest =
+                    utils::Vector2 earliest =
                         before_previous ? object_end_position(pb, infos[before_previous->info].object)
                                         : playfield_centre();
-                    pppp::utils::Vector2 relative = prev_ho.position - earliest;
+                    utils::Vector2 relative = prev_ho.position - earliest;
                     previous_absolute_angle = std::atan2(relative.y, relative.x);
                 }
             }
 
             float absolute_angle = previous_absolute_angle + pi.relative_angle;
-            pppp::utils::Vector2 pos_relative_to_prev =
-                pppp::utils::vec2(pi.distance_from_previous * std::cos(absolute_angle),
-                                  pi.distance_from_previous * std::sin(absolute_angle));
-            pppp::utils::Vector2 last_end_position =
+            utils::Vector2 pos_relative_to_prev =
+                utils::vec2(pi.distance_from_previous * std::cos(absolute_angle),
+                            pi.distance_from_previous * std::sin(absolute_angle));
+            utils::Vector2 last_end_position =
                 previous ? previous->end_position_modified : playfield_centre();
             pos_relative_to_prev = rotate_away_from_edge(last_end_position, pos_relative_to_prev, 0.5f);
             current.position_modified = last_end_position + pos_relative_to_prev;
@@ -189,31 +189,30 @@ namespace pppp { namespace osu { namespace object {
 
             absolute_angle = std::atan2(pos_relative_to_prev.y, pos_relative_to_prev.x);
             const PlayableSlider& sl = pb.sliders[ho.slider];
-            pppp::utils::Vector2 com_original = calculate_centre_of_mass(sl);
-            pppp::utils::Vector2 com_modified =
+            utils::Vector2 com_original = calculate_centre_of_mass(sl);
+            utils::Vector2 com_modified =
                 rotate_vector(com_original, pi.rotation + absolute_angle - get_slider_rotation(sl));
             com_modified = rotate_away_from_edge(current.position_modified, com_modified, 0.5f);
             float relative_rotation =
                 std::atan2(com_modified.y, com_modified.x) - std::atan2(com_original.y, com_original.x);
-            if (!pppp::utils::almost_equals(relative_rotation, 0.0f)) {
+            if (!utils::almost_equals(relative_rotation, 0.0f)) {
                 rotate_slider(pb, ho.slider, relative_rotation);
             }
         }
 
-        pppp::utils::Vector2 clamp_hit_circle_to_playfield(OsuBeatmap& pb,
-                                                           const std::vector<ObjectPositionInfo>& infos,
-                                                           WorkingObject& wo) {
+        utils::Vector2 clamp_hit_circle_to_playfield(OsuBeatmap& pb,
+                                                     const std::vector<ObjectPositionInfo>& infos,
+                                                     WorkingObject& wo) {
             OsuHitObject& ho = pb.objects[infos[wo.info].object];
-            pppp::utils::Vector2 previous_position = wo.position_modified;
+            utils::Vector2 previous_position = wo.position_modified;
             wo.end_position_modified = wo.position_modified =
                 clamp_to_playfield_with_padding(wo.position_modified, static_cast<float>(object_radius(pb)));
             ho.position = wo.position_modified;
             return wo.position_modified - previous_position;
         }
 
-        pppp::utils::Vector2 clamp_slider_to_playfield(OsuBeatmap& pb,
-                                                       const std::vector<ObjectPositionInfo>& infos,
-                                                       WorkingObject& wo) {
+        utils::Vector2 clamp_slider_to_playfield(OsuBeatmap& pb, const std::vector<ObjectPositionInfo>& infos,
+                                                 WorkingObject& wo) {
             size_t obj = infos[wo.info].object;
             OsuHitObject& ho = pb.objects[obj];
             int s = ho.slider;
@@ -232,27 +231,27 @@ namespace pppp { namespace osu { namespace object {
                 bounds = calculate_possible_movement_bounds(pb, pb.sliders[s]);
             }
 
-            pppp::utils::Vector2 previous_position = wo.position_modified;
-            float new_x = bounds.width < 0
-                              ? static_cast<float>(utils::math::clamp(bounds.left, 0, PLAYFIELD_WIDTH))
-                              : static_cast<float>(
-                                    utils::math::clamp(previous_position.x, bounds.left, bounds.right()));
-            float new_y = bounds.height < 0
-                              ? static_cast<float>(utils::math::clamp(bounds.top, 0, PLAYFIELD_HEIGHT))
-                              : static_cast<float>(
-                                    utils::math::clamp(previous_position.y, bounds.top, bounds.bottom()));
-            ho.position = wo.position_modified = pppp::utils::vec2(new_x, new_y);
+            utils::Vector2 previous_position = wo.position_modified;
+            float new_x =
+                bounds.width < 0
+                    ? static_cast<float>(math::clamp(bounds.left, 0, PLAYFIELD_WIDTH))
+                    : static_cast<float>(math::clamp(previous_position.x, bounds.left, bounds.right()));
+            float new_y =
+                bounds.height < 0
+                    ? static_cast<float>(math::clamp(bounds.top, 0, PLAYFIELD_HEIGHT))
+                    : static_cast<float>(math::clamp(previous_position.y, bounds.top, bounds.bottom()));
+            ho.position = wo.position_modified = utils::vec2(new_x, new_y);
             wo.end_position_modified = object_end_position(pb, obj);
             return wo.position_modified - previous_position;
         }
 
         void apply_decreasing_shift(OsuBeatmap& pb, const std::vector<size_t>& objects,
-                                    pppp::utils::Vector2 shift) {
+                                    utils::Vector2 shift) {
             float radius = static_cast<float>(object_radius(pb));
             int count = static_cast<int>(objects.size());
             for (int i = 0; i < count; i++) {
                 OsuHitObject& ho = pb.objects[objects[i]];
-                pppp::utils::Vector2 position =
+                utils::Vector2 position =
                     ho.position + shift * (static_cast<float>(count - i) / static_cast<float>(count + 1));
                 ho.position = clamp_to_playfield_with_padding(position, radius);
             }
@@ -262,7 +261,7 @@ namespace pppp { namespace osu { namespace object {
     void flip_slider_in_place_horizontally(OsuBeatmap& pb, int slider_index) {
         PlayableSlider& sl = pb.sliders[slider_index];
         for (size_t k = 0; k < sl.control_points.size(); k++) {
-            pppp::utils::Vector2 flipped = {-sl.control_points[k].x, sl.control_points[k].y};
+            utils::Vector2 flipped = {-sl.control_points[k].x, sl.control_points[k].y};
             set_control_point(sl.control_points[k], flipped);
         }
         slider_recompute(pb, slider_index);
@@ -277,7 +276,7 @@ namespace pppp { namespace osu { namespace object {
     }
 
     bool is_hit_object_on_beat(const OsuBeatmap& pb, const OsuHitObject& ho, bool downbeats_only) {
-        const pppp::beatmaps::control_points::TimingControlPoint* tp = timing_point_at(pb, ho.time);
+        const beatmaps::control_points::TimingControlPoint* tp = timing_point_at(pb, ho.time);
         double tp_time = tp ? tp->time : 0.0;
         double beat_length = tp ? tp->beat_length : 1000.0;
         int meter = tp ? tp->time_signature : 4;
@@ -298,11 +297,11 @@ namespace pppp { namespace osu { namespace object {
 
     std::vector<ObjectPositionInfo> generate_position_infos(const OsuBeatmap& pb) {
         std::vector<ObjectPositionInfo> infos;
-        pppp::utils::Vector2 previous_position = playfield_centre();
+        utils::Vector2 previous_position = playfield_centre();
         float previous_angle = 0.0f;
         for (size_t i = 0; i < pb.objects.size(); i++) {
             const OsuHitObject& ho = pb.objects[i];
-            pppp::utils::Vector2 relative = ho.position - previous_position;
+            utils::Vector2 relative = ho.position - previous_position;
             float absolute_angle = std::atan2(relative.y, relative.x);
             float relative_angle = absolute_angle - previous_angle;
             ObjectPositionInfo info;
@@ -342,7 +341,7 @@ namespace pppp { namespace osu { namespace object {
             }
             compute_modified_position(pb, infos, current, previous, i > 1 ? &working[i - 2] : 0);
 
-            pppp::utils::Vector2 shift = pppp::utils::vec2(0.0f, 0.0f);
+            utils::Vector2 shift = utils::vec2(0.0f, 0.0f);
             if (ho.slider >= 0) {
                 shift = clamp_slider_to_playfield(pb, infos, current);
             } else {

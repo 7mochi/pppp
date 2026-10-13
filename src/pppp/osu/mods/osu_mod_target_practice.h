@@ -24,7 +24,7 @@ namespace pppp { namespace osu { namespace mods {
     /// Acceptable difference for timing comparisons
     const double TIMING_PRECISION = 1;
 
-    Status apply_target_practice(pppp::osu::OsuBeatmap& pb, const pppp::mods::Mod& mod);
+    Status apply_target_practice(OsuBeatmap& pb, const pppp::mods::Mod& mod);
 }}} // namespace pppp::osu::mods
 
 #endif

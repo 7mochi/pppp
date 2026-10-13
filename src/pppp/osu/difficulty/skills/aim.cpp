@@ -13,6 +13,10 @@
 #include <cmath>
 
 namespace pppp { namespace osu { namespace difficulty { namespace skills {
+    namespace aim = ::pppp::osu::difficulty::evaluators::aim;
+    namespace linq = ::pppp::utils::linq;
+    namespace math = ::pppp::utils::math;
+
     Aim::Aim(const pppp::mods::Mod* mods_in, size_t mod_count_in, bool include_sliders_in)
         : VariableLengthStrainSkill(mods_in, mod_count_in, 0.9, 400),
           include_sliders(include_sliders_in),
@@ -30,8 +34,8 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
     double Aim::strain_value_at(const DifficultyHitObject& base_current) {
         const preprocessing::OsuDifficultyHitObject& current =
             static_cast<const preprocessing::OsuDifficultyHitObject&>(base_current);
-        if (utils::linq::from(mods, mod_count)
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_AP)) {
+        if (linq::from(mods, mod_count)
+                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_AP)) {
             return 0;
         }
 
@@ -57,21 +61,19 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
         double flow_difficulty = 0.0;
 
         snap_difficulty =
-            evaluators::aim::SnapAimEvaluator::evaluate_difficulty_of(current, include_sliders) *
-            skill_multiplier_snap;
+            aim::SnapAimEvaluator::evaluate_difficulty_of(current, include_sliders) * skill_multiplier_snap;
         agility_difficulty =
-            evaluators::aim::AgilityEvaluator::evaluate_difficulty_of(current) * skill_multiplier_agility;
+            aim::AgilityEvaluator::evaluate_difficulty_of(current) * skill_multiplier_agility;
         flow_difficulty =
-            evaluators::aim::FlowAimEvaluator::evaluate_difficulty_of(current, include_sliders) *
-            skill_multiplier_flow;
+            aim::FlowAimEvaluator::evaluate_difficulty_of(current, include_sliders) * skill_multiplier_flow;
 
         double total_difficulty = calculate_total_value(snap_difficulty, agility_difficulty, flow_difficulty);
 
-        if (utils::linq::from(mods, mod_count)
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_MG)) {
+        if (linq::from(mods, mod_count)
+                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_MG)) {
             double magnetised_strength =
-                utils::linq::from(mods, mod_count)
-                    .first(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_MG)
+                linq::from(mods, mod_count)
+                    .first(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_MG)
                     .magnetised.strength;
             total_difficulty *= 1.0 - magnetised_strength;
         }
@@ -97,16 +99,16 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
         double p_snap = calculate_snap_flow_probability(flow_difficulty / combined_snap_difficulty);
         double p_flow = 1.0 - p_snap;
 
-        if (utils::linq::from(mods, mod_count)
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_TD)) {
+        if (linq::from(mods, mod_count)
+                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_TD)) {
             // we don't adjust agility here since agility represents TD difficulty in a decent enough way
             snap_difficulty = utils::pow(snap_difficulty, 0.89);
             combined_snap_difficulty =
                 utils::norm(combined_snap_norm_exponent, snap_difficulty, agility_difficulty);
         }
 
-        if (utils::linq::from(mods, mod_count)
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_RX)) {
+        if (linq::from(mods, mod_count)
+                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_RX)) {
             combined_snap_difficulty *= 0.75;
             flow_difficulty *= 0.6;
         }
@@ -137,14 +139,14 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
             return 0;
         }
 
-        double max_slider_strain = utils::linq::from(slider_strains).max();
+        double max_slider_strain = linq::from(slider_strains).max();
 
         if (max_slider_strain == 0) {
             return 0;
         }
 
-        return utils::linq::from(slider_strains)
-            .sum(utils::linq::bind(&utils::logistic, utils::linq::_1 / max_slider_strain, 0.5, 12.0, 1.0));
+        return linq::from(slider_strains)
+            .sum(linq::bind(&utils::logistic, linq::_1 / max_slider_strain, 0.5, 12.0, 1.0));
     }
 
     double Aim::count_top_weighted_sliders(double difficulty_value) {
@@ -161,9 +163,8 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
         }
 
         // Use a weighted sum of all strains. Constants are arbitrary and give nice values
-        return utils::linq::from(slider_strains)
-            .sum(utils::linq::bind(&utils::logistic, utils::linq::_1 / consistent_top_strain, 0.88, 10.0,
-                                   1.1));
+        return linq::from(slider_strains)
+            .sum(linq::bind(&utils::logistic, linq::_1 / consistent_top_strain, 0.88, 10.0, 1.1));
     }
 
     std::vector<StrainPeak> Aim::get_reduced_strain_peaks() {
@@ -172,10 +173,9 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
 
         // Sections with 0 strain are excluded to avoid worst-case time complexity of the following sort
         // (e.g. /b/2351871). These sections will not contribute to the difficulty.
-        std::vector<StrainPeak> strains =
-            utils::linq::from(get_current_strain_peaks())
-                .where(utils::linq::bind(&StrainPeak::value, utils::linq::_1) > 0)
-                .to_list();
+        std::vector<StrainPeak> strains = linq::from(get_current_strain_peaks())
+                                              .where(linq::bind(&StrainPeak::value, linq::_1) > 0)
+                                              .to_list();
 
         const int chunk_size = 20;
         double red_time = 0.0;
@@ -189,12 +189,12 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
             // NOLINTNEXTLINE(cert-flp30-c)
             for (double added_time = 0.0; added_time < strain.section_length; added_time += chunk_size) {
                 double t = (red_time + added_time) / reduced_section_time;
-                t = utils::math::clamp(t, 0.0, 1.0);
-                double scale = std::log10(utils::math::lerp(1.0, 10.0, t));
+                t = math::clamp(t, 0.0, 1.0);
+                double scale = std::log10(math::lerp(1.0, 10.0, t));
 
                 StrainPeak new_peak;
                 // intentionally add at end and sort afterwards, should be cheaper.
-                new_peak.value = strain.value * utils::math::lerp(reduced_strain_baseline, 1.0, scale);
+                new_peak.value = strain.value * math::lerp(reduced_strain_baseline, 1.0, scale);
                 new_peak.section_length =
                     std::min(static_cast<double>(chunk_size), strain.section_length - added_time);
                 strains.push_back(new_peak);
@@ -204,9 +204,9 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
             skip_count++;
         }
 
-        return utils::linq::from(strains)
+        return linq::from(strains)
             .skip(skip_count)
-            .order_by_descending(utils::linq::bind(&StrainPeak::value, utils::linq::_1))
+            .order_by_descending(linq::bind(&StrainPeak::value, linq::_1))
             .to_list();
     }
 

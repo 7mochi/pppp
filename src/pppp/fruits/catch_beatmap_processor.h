@@ -21,10 +21,10 @@ namespace pppp { namespace fruits {
     /// @param position The position which the offset should be applied to.
     /// @param max_offset The maximum offset, cannot exceed 20px.
     /// @param rng The random number generator.
-    void apply_random_offset(float& position, double max_offset, utils::LegacyRandom& rng);
+    void apply_random_offset(float& position, double max_offset, pppp::utils::LegacyRandom& rng);
 
     void apply_hard_rock_offset(object::CatchHitObject& object, bool& has_last, float& last_position,
-                                double& last_start_time, utils::LegacyRandom& rng);
+                                double& last_start_time, pppp::utils::LegacyRandom& rng);
     void initialise_hyper_dash(CatchBeatmap& pb);
 
     void apply_position_offsets(CatchBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap,

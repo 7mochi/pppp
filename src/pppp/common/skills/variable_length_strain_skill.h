@@ -14,7 +14,9 @@ namespace pppp { namespace common { namespace skills {
         double section_length;
 
         /// Reverse sort, highest is first.
-        int compare_to(const StrainPeak& other) const { return utils::math::compare_to(other.value, value); }
+        int compare_to(const StrainPeak& other) const {
+            return pppp::utils::math::compare_to(other.value, value);
+        }
     };
 
     /// Stores previous strains so that, if a high difficulty hit object is followed by a lower

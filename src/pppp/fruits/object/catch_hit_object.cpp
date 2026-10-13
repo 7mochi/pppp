@@ -7,6 +7,8 @@
 #include "pppp/utils/precision.h"
 
 namespace pppp { namespace fruits { namespace object {
+    namespace math = ::pppp::utils::math;
+
     namespace {
         /// Calculates scale from a CS value, with an optional fudge that was historically applied to the osu!
         /// ruleset.
@@ -23,7 +25,7 @@ namespace pppp { namespace fruits { namespace object {
     }
 
     double CatchHitObject::effective_x() const {
-        return utils::math::clamp(static_cast<float>(original_x) + static_cast<float>(x_offset), 0.0f,
-                                  static_cast<float>(PLAYFIELD_WIDTH));
+        return math::clamp(static_cast<float>(original_x) + static_cast<float>(x_offset), 0.0f,
+                           static_cast<float>(PLAYFIELD_WIDTH));
     }
 }}} // namespace pppp::fruits::object

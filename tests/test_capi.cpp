@@ -8,6 +8,9 @@
 #include <doctest.h>
 #include <vector>
 
+namespace beatmaps = ::pppp::beatmaps;
+namespace common = ::pppp::common;
+
 namespace {
     struct ModsHandle {
         pppp_mods* handle;
@@ -251,7 +254,7 @@ TEST_SUITE("the C ABI") {
         REQUIRE(slider_count > 0);
 
         for (size_t i = 0; i < slider_count; i++) {
-            const pppp::beatmaps::Slider& expected = reference.sliders[i];
+            const beatmaps::Slider& expected = reference.sliders[i];
 
             CHECK(sliders[i].slides == expected.slides);
             CHECK(sliders[i].expected_length == expected.expected_length);
@@ -293,11 +296,11 @@ TEST_SUITE("the C ABI") {
         pppp::Beatmap reference;
         pppp_test::load(reference, path);
 
-        pppp::common::ScoreInfo score;
-        score.statistics[pppp::common::HIT_RESULT_GREAT] = 300;
-        score.statistics[pppp::common::HIT_RESULT_OK] = 20;
-        score.statistics[pppp::common::HIT_RESULT_MEH] = 3;
-        score.statistics[pppp::common::HIT_RESULT_MISS] = 1;
+        common::ScoreInfo score;
+        score.statistics[common::HIT_RESULT_GREAT] = 300;
+        score.statistics[common::HIT_RESULT_OK] = 20;
+        score.statistics[common::HIT_RESULT_MEH] = 3;
+        score.statistics[common::HIT_RESULT_MISS] = 1;
         score.max_combo = 500;
         score.accuracy = pppp_test::classic_accuracy(300, 20, 3, 1);
 
@@ -343,11 +346,11 @@ TEST_SUITE("the C ABI") {
         pppp::Beatmap reference;
         pppp_test::load(reference, path);
 
-        pppp::common::ScoreInfo score;
-        score.statistics[pppp::common::HIT_RESULT_GREAT] = 300;
-        score.statistics[pppp::common::HIT_RESULT_OK] = 20;
-        score.statistics[pppp::common::HIT_RESULT_MEH] = 3;
-        score.statistics[pppp::common::HIT_RESULT_MISS] = 1;
+        common::ScoreInfo score;
+        score.statistics[common::HIT_RESULT_GREAT] = 300;
+        score.statistics[common::HIT_RESULT_OK] = 20;
+        score.statistics[common::HIT_RESULT_MEH] = 3;
+        score.statistics[common::HIT_RESULT_MISS] = 1;
         score.max_combo = 500;
         score.accuracy = pppp_test::classic_accuracy(300, 20, 3, 1);
 

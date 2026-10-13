@@ -12,8 +12,13 @@
 
 #include <node_api.h>
 
-namespace {
+namespace beatmaps = ::pppp::beatmaps;
+namespace common = ::pppp::common;
+namespace internal = ::fosu::internal;
+namespace timing = ::pppp::beatmaps::timing;
+namespace utils = ::pppp::utils;
 
+namespace {
     napi_value number(napi_env env, double value) {
         napi_value result = NULL;
         napi_create_double(env, value, &result);
@@ -38,7 +43,7 @@ namespace {
         return result;
     }
 
-    napi_value point(napi_env env, const pppp::utils::Vector2& value) {
+    napi_value point(napi_env env, const utils::Vector2& value) {
         napi_value object = NULL;
         if (napi_create_object(env, &object) != napi_ok) {
             return NULL;
@@ -50,7 +55,7 @@ namespace {
         return object;
     }
 
-    napi_value difficulty(napi_env env, const pppp::beatmaps::BeatmapDifficulty& value) {
+    napi_value difficulty(napi_env env, const beatmaps::BeatmapDifficulty& value) {
         napi_value object = NULL;
         if (napi_create_object(env, &object) != napi_ok) {
             return NULL;
@@ -64,7 +69,7 @@ namespace {
         return object;
     }
 
-    napi_value hit_object(napi_env env, const pppp::beatmaps::HitObject& value) {
+    napi_value hit_object(napi_env env, const beatmaps::HitObject& value) {
         napi_value object = NULL;
         if (napi_create_object(env, &object) != napi_ok) {
             return NULL;
@@ -80,7 +85,7 @@ namespace {
         return object;
     }
 
-    napi_value slider_event(napi_env env, const pppp::beatmaps::SliderEventDescriptor& value) {
+    napi_value slider_event(napi_env env, const beatmaps::SliderEventDescriptor& value) {
         napi_value object = NULL;
         if (napi_create_object(env, &object) != napi_ok) {
             return NULL;
@@ -116,7 +121,7 @@ namespace {
         return array;
     }
 
-    napi_value array_of_points(napi_env env, const std::vector<pppp::utils::Vector2>& values) {
+    napi_value array_of_points(napi_env env, const std::vector<utils::Vector2>& values) {
         napi_value array = NULL;
         if (napi_create_array_with_length(env, values.size(), &array) != napi_ok) {
             return NULL;
@@ -127,8 +132,7 @@ namespace {
         return array;
     }
 
-    napi_value array_of_events(napi_env env,
-                               const std::vector<pppp::beatmaps::SliderEventDescriptor>& values) {
+    napi_value array_of_events(napi_env env, const std::vector<beatmaps::SliderEventDescriptor>& values) {
         napi_value array = NULL;
         if (napi_create_array_with_length(env, values.size(), &array) != napi_ok) {
             return NULL;
@@ -139,7 +143,7 @@ namespace {
         return array;
     }
 
-    napi_value slider(napi_env env, const pppp::beatmaps::Slider& value) {
+    napi_value slider(napi_env env, const beatmaps::Slider& value) {
         napi_value object = NULL;
         if (napi_create_object(env, &object) != napi_ok) {
             return NULL;
@@ -159,7 +163,7 @@ namespace {
         return object;
     }
 
-    napi_value timing_point(napi_env env, const pppp::beatmaps::TimingPoint& value) {
+    napi_value timing_point(napi_env env, const beatmaps::TimingPoint& value) {
         napi_value object = NULL;
         if (napi_create_object(env, &object) != napi_ok) {
             return NULL;
@@ -172,7 +176,7 @@ namespace {
         return object;
     }
 
-    napi_value break_period(napi_env env, const pppp::beatmaps::timing::BreakPeriod& value) {
+    napi_value break_period(napi_env env, const timing::BreakPeriod& value) {
         napi_value object = NULL;
         if (napi_create_object(env, &object) != napi_ok) {
             return NULL;
@@ -182,7 +186,7 @@ namespace {
         return object;
     }
 
-    napi_value build_hit_objects(napi_env env, const pppp::beatmaps::Beatmap& map) {
+    napi_value build_hit_objects(napi_env env, const beatmaps::Beatmap& map) {
         const size_t count = map.hit_objects.size();
         napi_value array = NULL;
         if (napi_create_array_with_length(env, count, &array) != napi_ok) {
@@ -194,7 +198,7 @@ namespace {
         return array;
     }
 
-    napi_value build_sliders(napi_env env, const pppp::beatmaps::Beatmap& map) {
+    napi_value build_sliders(napi_env env, const beatmaps::Beatmap& map) {
         const size_t count = map.sliders.size();
         napi_value array = NULL;
         if (napi_create_array_with_length(env, count, &array) != napi_ok) {
@@ -206,7 +210,7 @@ namespace {
         return array;
     }
 
-    napi_value build_timing_points(napi_env env, const pppp::beatmaps::Beatmap& map) {
+    napi_value build_timing_points(napi_env env, const beatmaps::Beatmap& map) {
         const size_t count = map.timing_points.size();
         napi_value array = NULL;
         if (napi_create_array_with_length(env, count, &array) != napi_ok) {
@@ -218,7 +222,7 @@ namespace {
         return array;
     }
 
-    napi_value build_breaks(napi_env env, const pppp::beatmaps::Beatmap& map) {
+    napi_value build_breaks(napi_env env, const beatmaps::Beatmap& map) {
         const size_t count = map.breaks.size();
         napi_value array = NULL;
         if (napi_create_array_with_length(env, count, &array) != napi_ok) {
@@ -231,7 +235,7 @@ namespace {
     }
 
     napi_value beatmap_field(napi_env env, napi_callback_info info, const char* cache,
-                             napi_value (*build)(napi_env, const pppp::beatmaps::Beatmap&)) {
+                             napi_value (*build)(napi_env, const beatmaps::Beatmap&)) {
         napi_value receiver = NULL;
         if (napi_get_cb_info(env, info, NULL, NULL, &receiver, NULL) != napi_ok) {
             return NULL;
@@ -708,8 +712,8 @@ namespace {
                                             "ignoreHit",     "comboBreak",
                                             "sliderTailHit", "legacyComboIncrease"};
 
-    PPPP_STATIC_ASSERT(hit_result_names_match, sizeof(hit_result_names) / sizeof(hit_result_names[0]) ==
-                                                   pppp::common::HIT_RESULT_COUNT);
+    PPPP_STATIC_ASSERT(hit_result_names_match,
+                       sizeof(hit_result_names) / sizeof(hit_result_names[0]) == common::HIT_RESULT_COUNT);
 
     int read_statistics(napi_env env, napi_value value, int* out) {
         bool absent = false;
@@ -739,7 +743,7 @@ namespace {
                 return -1;
             }
             int index = -1;
-            for (int result = 0; result < pppp::common::HIT_RESULT_COUNT; result++) {
+            for (int result = 0; result < common::HIT_RESULT_COUNT; result++) {
                 if (std::strcmp(name, hit_result_names[result]) == 0) {
                     index = result;
                     break;
@@ -1154,7 +1158,7 @@ namespace {
 
     napi_value read_backend(napi_env env, napi_callback_info info) {
         napi_value value = NULL;
-        napi_create_string_utf8(env, fosu::internal::engine_name(fosu::internal::selected_engine()->kind),
+        napi_create_string_utf8(env, internal::engine_name(internal::selected_engine()->kind),
                                 NAPI_AUTO_LENGTH, &value);
         return value;
     }

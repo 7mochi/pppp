@@ -8,6 +8,10 @@
 #include "pppp/utils/math/uint128.h"
 
 namespace pppp { namespace osu { namespace difficulty {
+    namespace linq = ::pppp::utils::linq;
+    namespace math = ::pppp::utils::math;
+    namespace timing = ::pppp::beatmaps::timing;
+
     LegacyScoreAttributes::LegacyScoreAttributes()
         : accuracy_score(0.0),
           combo_score(0.0),
@@ -60,9 +64,9 @@ namespace pppp { namespace osu { namespace difficulty {
                 const object::PlayableSlider& sl = pb.sliders[ho.slider];
                 // 1 for head, 1 for tail, plus repeats
                 big_ticks += 2 + (sl.slides - 1);
-                small_ticks += utils::linq::from(sl.events).count(
-                    utils::linq::bind(&pppp::beatmaps::SliderEventDescriptor::type, utils::linq::_1) ==
-                    pppp::beatmaps::SLIDER_EVENT_TICK);
+                small_ticks +=
+                    linq::from(sl.events).count(linq::bind(&beatmaps::SliderEventDescriptor::type,
+                                                           linq::_1) == beatmaps::SLIDER_EVENT_TICK);
             } else if (ho.type & 8) {
                 spinner_score += calculate_spinner_score(ho.end_time - ho.time);
             }
@@ -112,57 +116,53 @@ namespace pppp { namespace osu { namespace difficulty {
             // converting to decimal, which is NOT what the x87 FPU does.
 
             double values[3] = {drain_rate, overall_difficulty, circle_size};
-            utils::Uint128 positive = utils::math::u128_from(0), negative = utils::math::u128_from(0);
+            utils::Uint128 positive = math::u128_from(0), negative = math::u128_from(0);
             for (int i = 0; i < 3; i++) {
                 bool neg = false;
-                pppp_uint64 magnitude = utils::math::decimal15_scaled(values[i], &neg);
+                pppp_uint64 magnitude = math::decimal15_scaled(values[i], &neg);
                 if (neg) {
-                    negative = utils::math::u128_add(negative, utils::math::u128_from(magnitude));
+                    negative = math::u128_add(negative, math::u128_from(magnitude));
                 } else {
-                    positive = utils::math::u128_add(positive, utils::math::u128_from(magnitude));
+                    positive = math::u128_add(positive, math::u128_from(magnitude));
                 }
             }
 
-            utils::Uint128 a = utils::math::u128_add(utils::math::u128_mul(positive, ratio_den),
-                                                     utils::math::u128_mul64(ratio_num, SCALE));
-            utils::Uint128 b = utils::math::u128_mul(negative, ratio_den);
-            if (utils::math::u128_cmp(b, a) > 0) {
+            utils::Uint128 a =
+                math::u128_add(math::u128_mul(positive, ratio_den), math::u128_mul64(ratio_num, SCALE));
+            utils::Uint128 b = math::u128_mul(negative, ratio_den);
+            if (math::u128_cmp(b, a) > 0) {
                 return 0;
             }
-            utils::Uint128 num = utils::math::u128_mul(utils::math::u128_sub(a, b), 5);
-            utils::Uint128 den = utils::math::u128_mul(utils::math::u128_mul64(SCALE, ratio_den), 38);
+            utils::Uint128 num = math::u128_mul(math::u128_sub(a, b), 5);
+            utils::Uint128 den = math::u128_mul(math::u128_mul64(SCALE, ratio_den), 38);
             utils::Uint128 q, rem;
-            utils::math::u128_divmod(num, den, &q, &rem);
+            math::u128_divmod(num, den, &q, &rem);
 
-            utils::Uint128 twice_rem = utils::math::u128_shl1(rem);
-            int cmp = utils::math::u128_cmp(twice_rem, den);
-            if (cmp > 0 || (cmp == 0 && utils::math::u128_is_odd(q))) {
-                q = utils::math::u128_add(q, utils::math::u128_from(1));
+            utils::Uint128 twice_rem = math::u128_shl1(rem);
+            int cmp = math::u128_cmp(twice_rem, den);
+            if (cmp > 0 || (cmp == 0 && math::u128_is_odd(q))) {
+                q = math::u128_add(q, math::u128_from(1));
             }
             return static_cast<int>(q.lo);
         }
 
-        int raw_drain_length(const pppp::beatmaps::Beatmap& beatmap) {
+        int raw_drain_length(const beatmaps::Beatmap& beatmap) {
             if (beatmap.hit_objects.empty()) {
                 return 0;
             }
-            int break_length =
-                utils::linq::from(beatmap.breaks)
-                    .select(
-                        utils::linq::bind(&utils::math::round_half_even_int,
-                                          utils::linq::bind(&pppp::beatmaps::timing::BreakPeriod::end_time,
-                                                            utils::linq::_1)) -
-                        utils::linq::bind(&utils::math::round_half_even_int,
-                                          utils::linq::bind(&pppp::beatmaps::timing::BreakPeriod::start_time,
-                                                            utils::linq::_1)))
-                    .sum();
-            return (utils::math::round_half_even_int(beatmap.hit_objects.back().start_time) -
-                    utils::math::round_half_even_int(beatmap.hit_objects.front().start_time) - break_length) /
+            int break_length = linq::from(beatmap.breaks)
+                                   .select(linq::bind(&math::round_half_even_int,
+                                                      linq::bind(&timing::BreakPeriod::end_time, linq::_1)) -
+                                           linq::bind(&math::round_half_even_int,
+                                                      linq::bind(&timing::BreakPeriod::start_time, linq::_1)))
+                                   .sum();
+            return (math::round_half_even_int(beatmap.hit_objects.back().start_time) -
+                    math::round_half_even_int(beatmap.hit_objects.front().start_time) - break_length) /
                    1000;
         }
     } // namespace
 
-    int peppy_stars(const pppp::beatmaps::Beatmap& beatmap) {
+    int peppy_stars(const beatmaps::Beatmap& beatmap) {
         int object_count = static_cast<int>(beatmap.hit_objects.size());
         int drain_length = raw_drain_length(beatmap);
 
@@ -229,7 +229,7 @@ namespace pppp { namespace osu { namespace difficulty {
         };
     } // namespace
 
-    LegacyScoreAttributes simulate(const pppp::beatmaps::Beatmap& beatmap, const OsuBeatmap& pb) {
+    LegacyScoreAttributes simulate(const beatmaps::Beatmap& beatmap, const OsuBeatmap& pb) {
         Simulator sim;
         sim.score_multiplier = peppy_stars(beatmap);
 
@@ -239,15 +239,11 @@ namespace pppp { namespace osu { namespace difficulty {
                 const object::PlayableSlider& sl = pb.sliders[ho.slider];
                 for (size_t e = 0; e < sl.events.size(); e++) {
                     switch (sl.events[e].type) {
-                    case pppp::beatmaps::SLIDER_EVENT_HEAD:
-                    case pppp::beatmaps::SLIDER_EVENT_TAIL:
-                    case pppp::beatmaps::SLIDER_EVENT_REPEAT:
-                        sim.simulate_hit(30, true, false, false, 0);
-                        break;
-                    case pppp::beatmaps::SLIDER_EVENT_TICK:
-                        sim.simulate_hit(10, true, false, false, 0);
-                        break;
-                    case pppp::beatmaps::SLIDER_EVENT_LEGACY_LAST_TICK: break;
+                    case beatmaps::SLIDER_EVENT_HEAD:
+                    case beatmaps::SLIDER_EVENT_TAIL:
+                    case beatmaps::SLIDER_EVENT_REPEAT: sim.simulate_hit(30, true, false, false, 0); break;
+                    case beatmaps::SLIDER_EVENT_TICK: sim.simulate_hit(10, true, false, false, 0); break;
+                    case beatmaps::SLIDER_EVENT_LEGACY_LAST_TICK: break;
                     }
                 }
                 sim.simulate_hit(300, false, true, false, 0);
@@ -267,9 +263,8 @@ namespace pppp { namespace osu { namespace difficulty {
     }
 
     double get_legacy_score_multiplier(const pppp::mods::Mod* mods, size_t mod_count) {
-        bool score_v2 =
-            utils::linq::from(mods, mod_count)
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_SV2);
+        bool score_v2 = linq::from(mods, mod_count)
+                            .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_SV2);
 
         double multiplier = 1.0;
 

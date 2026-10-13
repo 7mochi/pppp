@@ -6,6 +6,8 @@
 #include <algorithm>
 
 namespace pppp { namespace fruits { namespace difficulty { namespace preprocessing {
+    namespace math = ::pppp::utils::math;
+
     CatchDifficultyHitObject::CatchDifficultyHitObject(const object::CatchHitObject& object,
                                                        const object::CatchHitObject& last, double rate,
                                                        float half_catcher_width,
@@ -45,7 +47,7 @@ namespace pppp { namespace fruits { namespace difficulty { namespace preprocessi
             index == 0 ? last_normalized_position
                        : static_cast<const CatchDifficultyHitObject*>(previous(0))->player_position;
 
-        player_position = static_cast<float>(utils::math::clamp(
+        player_position = static_cast<float>(math::clamp(
             last_player_position,
             normalized_position - (NORMALIZED_HALF_CATCHER_WIDTH - ABSOLUTE_PLAYER_POSITIONING_ERROR),
             normalized_position + (NORMALIZED_HALF_CATCHER_WIDTH - ABSOLUTE_PLAYER_POSITIONING_ERROR)));

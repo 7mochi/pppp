@@ -20,6 +20,9 @@
 #include <vector>
 
 namespace pppp { namespace osu { namespace difficulty {
+    namespace linq = ::pppp::utils::linq;
+    namespace math = ::pppp::utils::math;
+
     namespace {
         double calculate_aim_difficulty_rating(double difficulty_value) {
             return utils::pow(difficulty_value, 0.63) * 0.02275;
@@ -30,7 +33,7 @@ namespace pppp { namespace osu { namespace difficulty {
         }
 
         double calculate_star_rating(double base_performance) {
-            return utils::math::cbrt(base_performance * PERFORMANCE_BASE_MULTIPLIER);
+            return math::cbrt(base_performance * PERFORMANCE_BASE_MULTIPLIER);
         }
 
         bool is_slider(const object::OsuHitObject& hit_object) { return hit_object.slider >= 0; }
@@ -48,11 +51,10 @@ namespace pppp { namespace osu { namespace difficulty {
             for (size_t i = 0; i < pb.objects.size(); i++) {
                 const object::OsuHitObject& ho = pb.objects[i];
                 if (ho.slider >= 0) {
-                    const std::vector<pppp::beatmaps::SliderEventDescriptor>& events =
-                        pb.sliders[ho.slider].events;
+                    const std::vector<beatmaps::SliderEventDescriptor>& events = pb.sliders[ho.slider].events;
                     for (size_t j = 0; j < events.size(); j++) {
-                        if (events[j].type == pppp::beatmaps::SLIDER_EVENT_TICK ||
-                            events[j].type == pppp::beatmaps::SLIDER_EVENT_REPEAT) {
+                        if (events[j].type == beatmaps::SLIDER_EVENT_TICK ||
+                            events[j].type == beatmaps::SLIDER_EVENT_REPEAT) {
                             large_ticks++;
                         }
                     }
@@ -61,11 +63,10 @@ namespace pppp { namespace osu { namespace difficulty {
             return large_ticks;
         }
 
-        void create_difficulty_attributes(OsuDifficultyAttributes& out,
-                                          const pppp::beatmaps::Beatmap& beatmap, const OsuBeatmap& pb,
-                                          skills::Aim& aim_with_sliders, skills::Aim& aim_no_sliders,
-                                          skills::Speed& speed, skills::Reading& reading,
-                                          skills::Flashlight* flashlight) {
+        void create_difficulty_attributes(OsuDifficultyAttributes& out, const beatmaps::Beatmap& beatmap,
+                                          const OsuBeatmap& pb, skills::Aim& aim_with_sliders,
+                                          skills::Aim& aim_no_sliders, skills::Speed& speed,
+                                          skills::Reading& reading, skills::Flashlight* flashlight) {
             double aim_dv = aim_with_sliders.difficulty_value();
             double aim_no_sliders_dv = aim_no_sliders.difficulty_value();
             double speed_dv = speed.difficulty_value();
@@ -113,12 +114,9 @@ namespace pppp { namespace osu { namespace difficulty {
             double base_performance = utils::norm(1.1, base_aim_perf, base_speed_perf, base_cognition_perf);
             double star_rating = calculate_star_rating(base_performance);
 
-            int hit_circle_count =
-                utils::linq::from(pb.objects).count(utils::linq::bind(&is_hit_circle, utils::linq::_1));
-            int slider_count =
-                utils::linq::from(pb.objects).count(utils::linq::bind(&is_slider, utils::linq::_1));
-            int spinner_count =
-                utils::linq::from(pb.objects).count(utils::linq::bind(&is_spinner, utils::linq::_1));
+            int hit_circle_count = linq::from(pb.objects).count(linq::bind(&is_hit_circle, linq::_1));
+            int slider_count = linq::from(pb.objects).count(linq::bind(&is_slider, linq::_1));
+            int spinner_count = linq::from(pb.objects).count(linq::bind(&is_spinner, linq::_1));
             int large_tick_count = count_large_ticks(pb);
 
             out.star_rating = star_rating;
@@ -198,7 +196,7 @@ namespace pppp { namespace osu { namespace difficulty {
             for (size_t i = 0; i < n; i++) {
                 const object::OsuHitObject& ho = pb.objects[i];
                 float off = (ho.type & 8) ? 0.0f : static_cast<float>(ho.stack_height) * scale * -6.4f;
-                pppp::utils::Vector2 mod_off = {off, off};
+                utils::Vector2 mod_off = {off, off};
                 pos.raw[i] = ho.position;
                 pos.offset[i] = mod_off;
                 pos.stacked[i] = ho.position + mod_off;
@@ -216,7 +214,7 @@ namespace pppp { namespace osu { namespace difficulty {
         }
     }
 
-    Status calculate_difficulty(OsuDifficultyAttributes& out, const pppp::beatmaps::Beatmap& beatmap,
+    Status calculate_difficulty(OsuDifficultyAttributes& out, const beatmaps::Beatmap& beatmap,
                                 const pppp::mods::Mod* mods, size_t mod_count) {
         if (!mods && mod_count) {
             return StatusCode::INVALID_ARGUMENT;
@@ -235,12 +233,9 @@ namespace pppp { namespace osu { namespace difficulty {
                 out.slider_factor = 0.0;
                 return StatusCode::OK;
             }
-            out.hit_circle_count =
-                utils::linq::from(pb.objects).count(utils::linq::bind(&is_hit_circle, utils::linq::_1));
-            out.slider_count =
-                utils::linq::from(pb.objects).count(utils::linq::bind(&is_slider, utils::linq::_1));
-            out.spinner_count =
-                utils::linq::from(pb.objects).count(utils::linq::bind(&is_spinner, utils::linq::_1));
+            out.hit_circle_count = linq::from(pb.objects).count(linq::bind(&is_hit_circle, linq::_1));
+            out.slider_count = linq::from(pb.objects).count(linq::bind(&is_slider, linq::_1));
+            out.spinner_count = linq::from(pb.objects).count(linq::bind(&is_spinner, linq::_1));
             out.large_tick_count = count_large_ticks(pb);
             out.max_combo = max_combo(pb);
             out.nested_score_per_object =
@@ -259,8 +254,7 @@ namespace pppp { namespace osu { namespace difficulty {
         }
 
         bool has_flashlight =
-            utils::linq::from(mods, mod_count)
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_FL);
+            linq::from(mods, mod_count).any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_FL);
 
         skills::Aim aim_with_sliders(mods, mod_count, true);
         skills::Aim aim_no_sliders(mods, mod_count, false);
@@ -286,7 +280,7 @@ namespace pppp { namespace osu { namespace difficulty {
 
     Status calculate_timed_difficulty(std::vector<double>& times,
                                       std::vector<OsuDifficultyAttributes>& attributes,
-                                      const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                                      const beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
                                       size_t mod_count) {
         times.clear();
         attributes.clear();
@@ -305,8 +299,7 @@ namespace pppp { namespace osu { namespace difficulty {
         }
 
         bool has_flashlight =
-            utils::linq::from(mods, mod_count)
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_FL);
+            linq::from(mods, mod_count).any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_FL);
 
         skills::Aim aim_with_sliders(mods, mod_count, true);
         skills::Aim aim_no_sliders(mods, mod_count, false);
@@ -348,8 +341,8 @@ namespace pppp { namespace osu { namespace difficulty {
         return StatusCode::OK;
     }
 
-    Status calculate_strains(OsuStrains& out, const pppp::beatmaps::Beatmap& beatmap,
-                             const pppp::mods::Mod* mods, size_t mod_count) {
+    Status calculate_strains(OsuStrains& out, const beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                             size_t mod_count) {
         out = OsuStrains();
         if (!mods && mod_count) {
             return StatusCode::INVALID_ARGUMENT;
@@ -376,8 +369,7 @@ namespace pppp { namespace osu { namespace difficulty {
         }
 
         bool has_flashlight =
-            utils::linq::from(mods, mod_count)
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_FL);
+            linq::from(mods, mod_count).any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_FL);
 
         skills::Aim aim_with_sliders(mods, mod_count, true);
         skills::Aim aim_no_sliders(mods, mod_count, false);

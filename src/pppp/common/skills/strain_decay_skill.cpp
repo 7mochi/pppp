@@ -5,7 +5,7 @@
 #include "pppp/utils/difficulty_calculation_utils.h"
 
 namespace pppp { namespace common { namespace skills {
-    StrainDecaySkill::StrainDecaySkill(const pppp::mods::Mod* mods_in, size_t mod_count_in,
+    StrainDecaySkill::StrainDecaySkill(const mods::Mod* mods_in, size_t mod_count_in,
                                        double skill_multiplier_in, double strain_decay_base_in,
                                        double decay_weight_in, int section_length_in)
         : StrainSkill(mods_in, mod_count_in, decay_weight_in, section_length_in),

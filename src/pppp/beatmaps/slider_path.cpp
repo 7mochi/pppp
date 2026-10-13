@@ -8,32 +8,35 @@
 #include "pppp/utils/search/csharp.h"
 
 namespace pppp { namespace beatmaps {
+    namespace linq = ::pppp::utils::linq;
+    namespace math = ::pppp::utils::math;
+    namespace search = ::pppp::utils::search;
+
     namespace {
         double progress_to_distance(double progress, const std::vector<double>& cumulative_lengths) {
             double distance = cumulative_lengths.empty() ? 0.0 : cumulative_lengths.back();
-            return utils::math::clamp(progress, 0.0, 1.0) * distance;
+            return math::clamp(progress, 0.0, 1.0) * distance;
         }
 
         int index_of_distance(const std::vector<double>& cumulative_lengths, double d) {
-            int i = utils::search::binary_search(cumulative_lengths, d);
+            int i = search::binary_search(cumulative_lengths, d);
             if (i < 0) {
                 i = ~i;
             }
             return i;
         }
 
-        pppp::utils::Vector2 interpolate_vertices(const std::vector<pppp::utils::Vector2>& path,
-                                                  const std::vector<double>& cumulative_lengths, int i,
-                                                  double d) {
+        utils::Vector2 interpolate_vertices(const std::vector<utils::Vector2>& path,
+                                            const std::vector<double>& cumulative_lengths, int i, double d) {
             if (path.empty()) {
-                pppp::utils::Vector2 zero = {0.0f, 0.0f};
+                utils::Vector2 zero = {0.0f, 0.0f};
                 return zero;
             }
             if (i <= 0) {
-                return utils::linq::from(path).first();
+                return linq::from(path).first();
             }
             if (i >= static_cast<int>(path.size())) {
-                return utils::linq::from(path).last();
+                return linq::from(path).last();
             }
 
             double d0 = cumulative_lengths[i - 1], d1 = cumulative_lengths[i];
@@ -48,14 +51,13 @@ namespace pppp { namespace beatmaps {
         }
     } // namespace
 
-    pppp::utils::Vector2 slider_position_at(const std::vector<pppp::utils::Vector2>& path,
-                                            const std::vector<double>& cumulative_lengths, double progress) {
+    utils::Vector2 slider_position_at(const std::vector<utils::Vector2>& path,
+                                      const std::vector<double>& cumulative_lengths, double progress) {
         double d = progress_to_distance(progress, cumulative_lengths);
         return interpolate_vertices(path, cumulative_lengths, index_of_distance(cumulative_lengths, d), d);
     }
 
-    pppp::utils::Vector2 slider_position_at_undecimated(const pppp::beatmaps::Slider& slider,
-                                                        double progress) {
+    utils::Vector2 slider_position_at_undecimated(const Slider& slider, double progress) {
         if (!slider.undecimated_path.empty()) {
             return slider_position_at(slider.undecimated_path, slider.undecimated_cumulative_lengths,
                                       progress);

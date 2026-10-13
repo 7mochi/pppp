@@ -57,7 +57,7 @@ namespace pppp { namespace fruits { namespace difficulty {
         }
     }
 
-    Status calculate_difficulty(CatchDifficultyAttributes& out, const pppp::beatmaps::Beatmap& beatmap,
+    Status calculate_difficulty(CatchDifficultyAttributes& out, const beatmaps::Beatmap& beatmap,
                                 const pppp::mods::Mod* mods, size_t mod_count) {
         if (!mods && mod_count) {
             return StatusCode::INVALID_ARGUMENT;
@@ -91,7 +91,7 @@ namespace pppp { namespace fruits { namespace difficulty {
 
     Status calculate_timed_difficulty(std::vector<double>& times,
                                       std::vector<CatchDifficultyAttributes>& attributes,
-                                      const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                                      const beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
                                       size_t mod_count) {
         times.clear();
         attributes.clear();
@@ -142,8 +142,8 @@ namespace pppp { namespace fruits { namespace difficulty {
         return StatusCode::OK;
     }
 
-    Status calculate_strains(CatchStrains& out, const pppp::beatmaps::Beatmap& beatmap,
-                             const pppp::mods::Mod* mods, size_t mod_count) {
+    Status calculate_strains(CatchStrains& out, const beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                             size_t mod_count) {
         out = CatchStrains();
         if (!mods && mod_count) {
             return StatusCode::INVALID_ARGUMENT;

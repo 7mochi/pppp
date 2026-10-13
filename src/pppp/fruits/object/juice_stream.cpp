@@ -5,7 +5,7 @@
 #include "pppp/beatmaps/slider_path.h"
 
 namespace pppp { namespace fruits { namespace object {
-    CatchHitObject create_juice_stream(const pppp::beatmaps::Slider& slider, double head_x, double time,
+    CatchHitObject create_juice_stream(const beatmaps::Slider& slider, double head_x, double time,
                                        double end_time, int slider_index) {
         CatchHitObject stream;
         stream.kind = OBJECT_JUICE_STREAM;
@@ -17,14 +17,14 @@ namespace pppp { namespace fruits { namespace object {
         stream.hyper_dash = false;
         stream.slider_index = slider_index;
 
-        const std::vector<pppp::beatmaps::SliderEventDescriptor>& events =
+        const std::vector<beatmaps::SliderEventDescriptor>& events =
             slider.catch_events.empty() ? slider.events : slider.catch_events;
         bool have_last = false;
         double last_time = 0.0;
         double last_progress = 0.0;
 
         for (size_t i = 0; i < events.size(); i++) {
-            const pppp::beatmaps::SliderEventDescriptor& e = events[i];
+            const beatmaps::SliderEventDescriptor& e = events[i];
 
             // generate tiny droplets since the last point
             if (have_last) {
@@ -46,7 +46,7 @@ namespace pppp { namespace fruits { namespace object {
                         tiny.time = t + last_time;
                         tiny.end_time = tiny.time;
                         tiny.original_x =
-                            head_x + pppp::beatmaps::slider_position_at_undecimated(slider, progress).x;
+                            head_x + beatmaps::slider_position_at_undecimated(slider, progress).x;
                         tiny.x_offset = 0.0;
                         tiny.distance_to_hyper_dash = 0.0;
                         tiny.hyper_dash = false;
@@ -63,16 +63,15 @@ namespace pppp { namespace fruits { namespace object {
             last_time = e.time;
             last_progress = e.path_progress;
 
-            if (e.type == pppp::beatmaps::SLIDER_EVENT_LEGACY_LAST_TICK) {
+            if (e.type == beatmaps::SLIDER_EVENT_LEGACY_LAST_TICK) {
                 continue;
             }
 
             CatchHitObject object;
-            object.kind = e.type == pppp::beatmaps::SLIDER_EVENT_TICK ? OBJECT_DROPLET : OBJECT_FRUIT;
+            object.kind = e.type == beatmaps::SLIDER_EVENT_TICK ? OBJECT_DROPLET : OBJECT_FRUIT;
             object.time = e.time;
             object.end_time = object.time;
-            object.original_x =
-                head_x + pppp::beatmaps::slider_position_at_undecimated(slider, e.path_progress).x;
+            object.original_x = head_x + beatmaps::slider_position_at_undecimated(slider, e.path_progress).x;
             object.x_offset = 0.0;
             object.distance_to_hyper_dash = 0.0;
             object.hyper_dash = false;

@@ -14,7 +14,7 @@
 namespace pppp { namespace osu { namespace mods {
     namespace {
         float playfield_diagonal() {
-            return utils::length_fast(pppp::utils::vec2(object::PLAYFIELD_WIDTH, object::PLAYFIELD_HEIGHT));
+            return utils::length_fast(utils::vec2(object::PLAYFIELD_WIDTH, object::PLAYFIELD_HEIGHT));
         }
 
         struct RandomState {

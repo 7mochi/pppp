@@ -22,7 +22,7 @@ namespace pppp { namespace osu { namespace object {
     /// Maximum preempt time at AR=0.
     const double PREEMPT_MAX = 1800.0;
 
-    const utils::DifficultyRange PREEMPT_RANGE(PREEMPT_MAX, PREEMPT_MID, PREEMPT_MIN);
+    const pppp::utils::DifficultyRange PREEMPT_RANGE(PREEMPT_MAX, PREEMPT_MID, PREEMPT_MIN);
 
     struct OsuHitObject {
         unsigned type;

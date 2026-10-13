@@ -11,14 +11,16 @@
 #include <cmath>
 
 namespace pppp { namespace osu { namespace difficulty { namespace evaluators { namespace aim {
+    namespace math = ::pppp::utils::math;
+
     namespace {
         double calculate_overlap_factor(const preprocessing::OsuDifficultyHitObject& first,
                                         const preprocessing::OsuDifficultyHitObject& second) {
             double object_radius = object::OsuHitObject::calculate_radius(first.circle_size);
 
             double distance = length(first.base_stacked_position - second.base_stacked_position);
-            return utils::math::clamp(
-                1.0 - utils::pow(std::max(distance - object_radius, 0.0) / object_radius, 2), 0.0, 1.0);
+            return math::clamp(1.0 - utils::pow(std::max(distance - object_radius, 0.0) / object_radius, 2),
+                               0.0, 1.0);
         }
     } // namespace
 

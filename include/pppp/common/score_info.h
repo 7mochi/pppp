@@ -10,8 +10,8 @@
 
 namespace pppp { namespace common {
     struct ScoreInfo {
-        int statistics[pppp::common::HIT_RESULT_COUNT];
-        int maximum_statistics[pppp::common::HIT_RESULT_COUNT];
+        int statistics[HIT_RESULT_COUNT];
+        int maximum_statistics[HIT_RESULT_COUNT];
         int max_combo;
         double accuracy;
 

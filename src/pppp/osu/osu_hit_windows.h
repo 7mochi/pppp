@@ -11,9 +11,9 @@ namespace pppp { namespace osu {
     /// osu! ruleset has a fixed miss window regardless of difficulty settings.
     const double MISS_WINDOW = 400.0;
 
-    const utils::DifficultyRange GREAT_WINDOW_RANGE(80.0, 50.0, 20.0);
-    const utils::DifficultyRange OK_WINDOW_RANGE(140.0, 100.0, 60.0);
-    const utils::DifficultyRange MEH_WINDOW_RANGE(200.0, 150.0, 100.0);
+    const pppp::utils::DifficultyRange GREAT_WINDOW_RANGE(80.0, 50.0, 20.0);
+    const pppp::utils::DifficultyRange OK_WINDOW_RANGE(140.0, 100.0, 60.0);
+    const pppp::utils::DifficultyRange MEH_WINDOW_RANGE(200.0, 150.0, 100.0);
 
     struct OsuHitWindows {
         double great;

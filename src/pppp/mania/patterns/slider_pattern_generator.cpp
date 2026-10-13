@@ -10,19 +10,22 @@
 #include <cmath>
 
 namespace pppp { namespace mania { namespace patterns {
-    SliderPatternGenerator::SliderPatternGenerator(
-        const pppp::beatmaps::control_points::ControlPointInfo& info_in,
-        const pppp::beatmaps::Beatmap& beatmap_in, const SourceObject& hit_object_in,
-        const Pattern& previous_pattern_in, int total_columns_in, pppp::utils::LegacyRandom& random_in)
+    namespace control_points = ::pppp::beatmaps::control_points;
+    namespace linq = ::pppp::utils::linq;
+    namespace math = ::pppp::utils::math;
+
+    SliderPatternGenerator::SliderPatternGenerator(const control_points::ControlPointInfo& info_in,
+                                                   const beatmaps::Beatmap& beatmap_in,
+                                                   const SourceObject& hit_object_in,
+                                                   const Pattern& previous_pattern_in, int total_columns_in,
+                                                   utils::LegacyRandom& random_in)
         : LegacyPatternGenerator(info_in, beatmap_in, hit_object_in, previous_pattern_in, total_columns_in,
                                  random_in),
           convert_type(PATTERN_NONE) {
-        const pppp::beatmaps::control_points::TimingControlPoint* timing_point =
-            info.timing_point_at(hit_object.start_time);
-        const double timing_beat_length = timing_point != 0
-                                              ? timing_point->beat_length
-                                              : pppp::beatmaps::control_points::DEFAULT_BEAT_LENGTH;
-        const pppp::beatmaps::control_points::DifficultyControlPoint* difficulty_point =
+        const control_points::TimingControlPoint* timing_point = info.timing_point_at(hit_object.start_time);
+        const double timing_beat_length =
+            timing_point != 0 ? timing_point->beat_length : control_points::DEFAULT_BEAT_LENGTH;
+        const control_points::DifficultyControlPoint* difficulty_point =
             info.difficulty_point_at(hit_object.start_time);
         const double slider_velocity =
             difficulty_point != 0 ? difficulty_point->clamped_slider_velocity() : 1.0;
@@ -41,7 +44,7 @@ namespace pppp { namespace mania { namespace patterns {
         }
 
         span_count = hit_object.slides > 0 ? hit_object.slides : 1;
-        start_time = static_cast<int>(utils::math::round_half_even(hit_object.start_time));
+        start_time = static_cast<int>(math::round_half_even(hit_object.start_time));
 
         // This matches stable's calculation.
         end_time =
@@ -49,8 +52,7 @@ namespace pppp { namespace mania { namespace patterns {
                                                          0.01 / beatmap.difficulty.slider_multiplier));
         segment_duration = (end_time - start_time) / span_count;
 
-        const pppp::beatmaps::control_points::EffectControlPoint* effect_point =
-            info.effect_point_at(hit_object.start_time);
+        const control_points::EffectControlPoint* effect_point = info.effect_point_at(hit_object.start_time);
         convert_type =
             (effect_point != 0 && effect_point->kiai_mode) ? PATTERN_NONE : PATTERN_LOW_PROBABILITY;
     }
@@ -439,7 +441,7 @@ namespace pppp { namespace mania { namespace patterns {
     void SliderPatternGenerator::generate(std::vector<Pattern>& out) {
         const Pattern original = generate_core();
 
-        if (pppp::utils::linq::from(original.hit_objects).count() == 1) {
+        if (linq::from(original.hit_objects).count() == 1) {
             out.push_back(original);
             return;
         }
@@ -454,7 +456,7 @@ namespace pppp { namespace mania { namespace patterns {
         for (size_t i = 0; i < original.hit_objects.size(); i++) {
             const ManiaHitObject& obj = original.hit_objects[i];
 
-            if (end_time != static_cast<int>(utils::math::round_half_even(obj.end_time))) {
+            if (end_time != static_cast<int>(math::round_half_even(obj.end_time))) {
                 intermediate.add(obj);
             } else {
                 end_timepattern.add(obj);

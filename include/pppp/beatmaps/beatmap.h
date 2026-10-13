@@ -43,8 +43,8 @@ namespace pppp { namespace beatmaps {
         std::vector<double> cumulative_lengths;
         std::vector<pppp::utils::Vector2> undecimated_path;
         std::vector<double> undecimated_cumulative_lengths;
-        std::vector<pppp::beatmaps::SliderEventDescriptor> events;
-        std::vector<pppp::beatmaps::SliderEventDescriptor> catch_events;
+        std::vector<SliderEventDescriptor> events;
+        std::vector<SliderEventDescriptor> catch_events;
     };
 
     /// A HitObject describes an object in a Beatmap.
@@ -95,7 +95,7 @@ namespace pppp { namespace beatmaps {
         std::vector<Slider> sliders;
         std::vector<TimingPoint> timing_points;
 
-        std::vector<pppp::beatmaps::timing::BreakPeriod> breaks;
+        std::vector<timing::BreakPeriod> breaks;
 
         SliderPathOps slider_path;
 

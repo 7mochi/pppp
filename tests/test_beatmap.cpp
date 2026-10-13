@@ -9,22 +9,25 @@
 #include <fosu/parser.h>
 #include <vector>
 
-TEST_CASE("fosu parses 2785319.osu with every calculation on") {
-    ::fosu::Parser parser;
-    ::fosu::ParseOptions options;
+namespace beatmaps = ::pppp::beatmaps;
+namespace utils = ::pppp::utils;
 
-    options.sections = ::fosu::kAllSections;
+TEST_CASE("fosu parses 2785319.osu with every calculation on") {
+    fosu::Parser parser;
+    fosu::ParseOptions options;
+
+    options.sections = fosu::kAllSections;
     options.calculate_slider_end_times = true;
     options.calculate_slider_paths = true;
     options.calculate_slider_events = true;
     options.apply_stacking = true;
 
-    const ::fosu::Result< ::fosu::Beatmap*> result =
+    const fosu::Result<fosu::Beatmap*> result =
         parser.parse_file(PPPP_TEST_RESOURCES "/osu/2785319.osu", options);
 
     REQUIRE(result.ok());
 
-    const ::fosu::Beatmap& map = *result.value();
+    const fosu::Beatmap& map = *result.value();
 
     CHECK(map.hit_objects.size() == 601);
     CHECK_FALSE(map.timing_points.empty());
@@ -70,11 +73,11 @@ TEST_CASE("the mode and the hit sounds survive the adapter") {
 
     CHECK(beatmap.hit_objects[0].hitsound == 6);
 
-    const pppp::beatmaps::HitObject& first_slider = beatmap.hit_objects[8];
+    const beatmaps::HitObject& first_slider = beatmap.hit_objects[8];
 
     REQUIRE(first_slider.slider >= 0);
 
-    const pppp::beatmaps::Slider& slider = beatmap.sliders[first_slider.slider];
+    const beatmaps::Slider& slider = beatmap.sliders[first_slider.slider];
 
     REQUIRE(slider.node_sounds.size() == 2);
     CHECK(slider.node_sounds[0] == 2);
@@ -82,24 +85,24 @@ TEST_CASE("the mode and the hit sounds survive the adapter") {
 }
 
 TEST_CASE("from_parsed copies what the parser produced") {
-    ::fosu::Parser parser;
-    ::fosu::ParseOptions options;
+    fosu::Parser parser;
+    fosu::ParseOptions options;
 
-    options.sections = ::fosu::kAllSections;
+    options.sections = fosu::kAllSections;
     options.calculate_slider_end_times = true;
     options.calculate_slider_paths = true;
     options.calculate_slider_events = true;
     options.apply_stacking = true;
 
-    const ::fosu::Result< ::fosu::Beatmap*> result =
+    const fosu::Result<fosu::Beatmap*> result =
         parser.parse_file(PPPP_TEST_RESOURCES "/osu/2785319.osu", options);
 
     REQUIRE(result.ok());
 
-    const ::fosu::Beatmap* parsed = result.value();
+    const fosu::Beatmap* parsed = result.value();
     pppp::Beatmap beatmap;
 
-    REQUIRE(pppp::beatmaps::from_parsed(beatmap, parsed).ok());
+    REQUIRE(beatmaps::from_parsed(beatmap, parsed).ok());
     CHECK(beatmap.hit_objects.size() == parsed->hit_objects.size());
     CHECK(beatmap.sliders.size() == parsed->sliders.size());
     REQUIRE(beatmap.slider_path.recompute);
@@ -127,9 +130,9 @@ TEST_CASE("from_parsed copies what the parser produced") {
                 continue;
             }
 
-            const pppp::beatmaps::Slider& slider = beatmap.sliders[s];
-            std::vector<pppp::utils::Vector2> relative(slider.control_points.size());
-            std::vector<pppp::utils::Vector2> path;
+            const beatmaps::Slider& slider = beatmap.sliders[s];
+            std::vector<utils::Vector2> relative(slider.control_points.size());
+            std::vector<utils::Vector2> path;
             std::vector<double> lengths;
 
             for (size_t k = 0; k < relative.size(); k++) {
@@ -158,19 +161,19 @@ TEST_CASE("bad input is rejected") {
     CHECK(beatmap.load_file("nonexistent.osu").code() == pppp::StatusCode::PARSE);
     CHECK(beatmap.load_file(0).code() == pppp::StatusCode::INVALID_ARGUMENT);
     CHECK(beatmap.load_buffer(0, 1).code() == pppp::StatusCode::PARSE);
-    CHECK(pppp::beatmaps::from_parsed(beatmap, 0).code() == pppp::StatusCode::INVALID_ARGUMENT);
+    CHECK(beatmaps::from_parsed(beatmap, 0).code() == pppp::StatusCode::INVALID_ARGUMENT);
 
     const char unloadable[] = "osu file format vx\n[HitObjects]\n1,2,3,1,0\n";
     CHECK(beatmap.load_buffer(unloadable, sizeof(unloadable) - 1).code() == pppp::StatusCode::PARSE);
 }
 
 namespace {
-    void load_empty(pppp::beatmaps::Beatmap& beatmap) {
-        ::fosu::Parser parser;
-        const ::fosu::Result< ::fosu::Beatmap*> parsed = parser.parse("", 0, ::fosu::ParseOptions());
+    void load_empty(beatmaps::Beatmap& beatmap) {
+        fosu::Parser parser;
+        const fosu::Result<fosu::Beatmap*> parsed = parser.parse("", 0, fosu::ParseOptions());
 
         REQUIRE(parsed.ok());
-        REQUIRE(pppp::beatmaps::from_parsed(beatmap, parsed.value()).ok());
+        REQUIRE(beatmaps::from_parsed(beatmap, parsed.value()).ok());
     }
 } // namespace
 

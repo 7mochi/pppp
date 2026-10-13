@@ -9,7 +9,7 @@
 #include "pppp/status.h"
 
 namespace pppp { namespace osu { namespace mods {
-    Status apply_random(pppp::osu::OsuBeatmap& pb, const pppp::mods::Mod& mod);
+    Status apply_random(OsuBeatmap& pb, const pppp::mods::Mod& mod);
 }}} // namespace pppp::osu::mods
 
 #endif

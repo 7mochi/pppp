@@ -8,6 +8,8 @@
 #include <cmath>
 
 namespace pppp { namespace fruits { namespace difficulty { namespace evaluators {
+    namespace math = ::pppp::utils::math;
+
     double MovementEvaluator::evaluate_difficulty_of(const preprocessing::CatchDifficultyHitObject& current) {
         const preprocessing::CatchDifficultyHitObject* last =
             static_cast<const preprocessing::CatchDifficultyHitObject*>(current.previous(0));
@@ -28,7 +30,7 @@ namespace pppp { namespace fruits { namespace difficulty { namespace evaluators 
         // Direction change bonus.
         if (std::fabs(current.distance_moved) > 0.1) {
             if (current.index >= 1 && std::fabs(last->distance_moved) > 0.1 &&
-                utils::math::sign(current.distance_moved) != utils::math::sign(last->distance_moved)) {
+                math::sign(current.distance_moved) != math::sign(last->distance_moved)) {
                 double bonus_factor = std::min(50.0f, std::fabs(current.distance_moved)) / 50.0f;
                 double antiflow_factor = std::max(
                     static_cast<double>(std::min(70.0f, std::fabs(last->distance_moved)) / 70.0f), 0.38);
@@ -54,8 +56,7 @@ namespace pppp { namespace fruits { namespace difficulty { namespace evaluators 
                 static_cast<const preprocessing::CatchDifficultyHitObject*>(current.previous(i));
 
             // Only same direction movements matter as they do not take any additional inputs.
-            if (utils::math::sign(current.distance_moved) !=
-                    utils::math::sign(catch_prev_obj->distance_moved) ||
+            if (math::sign(current.distance_moved) != math::sign(catch_prev_obj->distance_moved) ||
                 current.distance_moved == 0 || catch_prev_obj->distance_moved == 0) {
                 break;
             }

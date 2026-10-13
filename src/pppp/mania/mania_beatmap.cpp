@@ -5,6 +5,8 @@
 #include "pppp/utils/linq/csharp.h"
 
 namespace pppp { namespace mania {
+    namespace linq = ::pppp::utils::linq;
+
     namespace {
         int max_combo_for_object(const ManiaHitObject& hit_object) {
             if (hit_object.hold) {
@@ -22,7 +24,6 @@ namespace pppp { namespace mania {
           is_for_current_ruleset(false) {}
 
     int max_combo(const ManiaBeatmap& pb) {
-        return pppp::utils::linq::from(pb.objects)
-            .sum(pppp::utils::linq::bind(&max_combo_for_object, pppp::utils::linq::_1));
+        return linq::from(pb.objects).sum(linq::bind(&max_combo_for_object, linq::_1));
     }
 }} // namespace pppp::mania

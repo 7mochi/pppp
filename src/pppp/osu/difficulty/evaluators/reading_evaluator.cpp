@@ -9,12 +9,14 @@
 #include <cmath>
 
 namespace pppp { namespace osu { namespace difficulty { namespace evaluators {
+    namespace math = ::pppp::utils::math;
+
     namespace {
         double high_bpm_bonus(double ms) { return 1.0 / (1.0 - utils::pow(0.8, ms / 1000.0)); }
 
         // Returns a nerfing factor for when objects are very distant in time, affecting reading less.
         double get_time_nerf_factor(double delta_time) {
-            return utils::math::clamp(2.0 - delta_time / (READING_WINDOW_SIZE / 2.0), 0.0, 1.0);
+            return math::clamp(2.0 - delta_time / (READING_WINDOW_SIZE / 2.0), 0.0, 1.0);
         }
 
         // Returns the density of objects visible at the point in time the current object needs to be clicked
@@ -126,8 +128,8 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators {
 
                             // Lerp between max angle difference and rescaled alternating difference, with
                             // more harsh scaling compared to normal difference
-                            angle_difference_alternating = utils::math::lerp_dotnet(
-                                utils::PI_D, 0.1 * angle_difference_alternating, weight);
+                            angle_difference_alternating =
+                                math::lerp_dotnet(utils::PI_D, 0.1 * angle_difference_alternating, weight);
                         }
                     }
 
@@ -135,7 +137,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators {
                                                               preprocessing::NORMALISED_RADIUS);
 
                     constant_angle_count +=
-                        std::cos(3.0 * std::min(utils::math::degrees_to_radians(30),
+                        std::cos(3.0 * std::min(math::degrees_to_radians(30),
                                                 std::min(angle_difference, angle_difference_alternating) *
                                                     stack_factor)) *
                         long_interval_factor;
@@ -149,7 +151,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators {
                 loop_obj_prev0 = loop_obj;
             }
 
-            return utils::math::clamp(2.0 / constant_angle_count, 0.2, 1.0);
+            return math::clamp(2.0 / constant_angle_count, 0.2, 1.0);
         }
 
         /// Calculates the density difficulty of the current object and how hard it is to aim it because of it

@@ -16,10 +16,9 @@ namespace pppp {
             }
         }
 
-        bool is_rate_mod(pppp::mods::ModId id) {
-            return id == pppp::mods::MOD_DT || id == pppp::mods::MOD_NC || id == pppp::mods::MOD_HT ||
-                   id == pppp::mods::MOD_DC || id == pppp::mods::MOD_WU || id == pppp::mods::MOD_WD ||
-                   id == pppp::mods::MOD_AS;
+        bool is_rate_mod(mods::ModId id) {
+            return id == mods::MOD_DT || id == mods::MOD_NC || id == mods::MOD_HT || id == mods::MOD_DC ||
+                   id == mods::MOD_WU || id == mods::MOD_WD || id == mods::MOD_AS;
         }
     } // namespace
 
@@ -36,13 +35,13 @@ namespace pppp {
         }
 
         Mod rate;
-        pppp::mods::mod_make(&rate, pppp::mods::MOD_AS);
+        mods::mod_make(&rate, mods::MOD_AS);
         rate.variable_rate.initial_rate = clock_rate_value;
         mods.push_back(rate);
         return mods;
     }
 
-    Status Difficulty::calculate(const pppp::beatmaps::Beatmap& map, DifficultyAttributes& out) const {
+    Status Difficulty::calculate(const beatmaps::Beatmap& map, DifficultyAttributes& out) const {
         out = DifficultyAttributes();
         const Mods mods = effective_mods();
         const Ruleset::Value mode = has_ruleset ? ruleset_value : static_cast<Ruleset::Value>(map.mode);
@@ -50,8 +49,7 @@ namespace pppp {
         switch (mode) {
         case Ruleset::OSU: {
             OsuDifficultyAttributes value;
-            const Status status =
-                pppp::osu::difficulty::calculate_difficulty(value, map, mods.data(), mods.size());
+            const Status status = osu::difficulty::calculate_difficulty(value, map, mods.data(), mods.size());
             if (status.ok()) {
                 out = value;
             }
@@ -60,7 +58,7 @@ namespace pppp {
         case Ruleset::TAIKO: {
             TaikoDifficultyAttributes value;
             const Status status =
-                pppp::taiko::difficulty::calculate_difficulty(value, map, mods.data(), mods.size());
+                taiko::difficulty::calculate_difficulty(value, map, mods.data(), mods.size());
             if (status.ok()) {
                 out = value;
             }
@@ -69,7 +67,7 @@ namespace pppp {
         case Ruleset::CATCH: {
             CatchDifficultyAttributes value;
             const Status status =
-                pppp::fruits::difficulty::calculate_difficulty(value, map, mods.data(), mods.size());
+                fruits::difficulty::calculate_difficulty(value, map, mods.data(), mods.size());
             if (status.ok()) {
                 out = value;
             }
@@ -78,7 +76,7 @@ namespace pppp {
         case Ruleset::MANIA: {
             ManiaDifficultyAttributes value;
             const Status status =
-                pppp::mania::difficulty::calculate_difficulty(value, map, mods.data(), mods.size());
+                mania::difficulty::calculate_difficulty(value, map, mods.data(), mods.size());
             if (status.ok()) {
                 out = value;
             }
@@ -88,7 +86,7 @@ namespace pppp {
         }
     }
 
-    Status Difficulty::calculate_timed(const pppp::beatmaps::Beatmap& map,
+    Status Difficulty::calculate_timed(const beatmaps::Beatmap& map,
                                        std::vector<TimedDifficultyAttributes>& out) const {
         out.clear();
         const Mods mods = effective_mods();
@@ -98,8 +96,8 @@ namespace pppp {
         switch (mode) {
         case Ruleset::OSU: {
             std::vector<OsuDifficultyAttributes> attributes;
-            const Status status = pppp::osu::difficulty::calculate_timed_difficulty(times, attributes, map,
-                                                                                    mods.data(), mods.size());
+            const Status status =
+                osu::difficulty::calculate_timed_difficulty(times, attributes, map, mods.data(), mods.size());
             if (status.ok()) {
                 tag(out, times, attributes);
             }
@@ -107,8 +105,8 @@ namespace pppp {
         }
         case Ruleset::TAIKO: {
             std::vector<TaikoDifficultyAttributes> attributes;
-            const Status status = pppp::taiko::difficulty::calculate_timed_difficulty(
-                times, attributes, map, mods.data(), mods.size());
+            const Status status = taiko::difficulty::calculate_timed_difficulty(times, attributes, map,
+                                                                                mods.data(), mods.size());
             if (status.ok()) {
                 tag(out, times, attributes);
             }
@@ -116,8 +114,8 @@ namespace pppp {
         }
         case Ruleset::CATCH: {
             std::vector<CatchDifficultyAttributes> attributes;
-            const Status status = pppp::fruits::difficulty::calculate_timed_difficulty(
-                times, attributes, map, mods.data(), mods.size());
+            const Status status = fruits::difficulty::calculate_timed_difficulty(times, attributes, map,
+                                                                                 mods.data(), mods.size());
             if (status.ok()) {
                 tag(out, times, attributes);
             }
@@ -125,8 +123,8 @@ namespace pppp {
         }
         case Ruleset::MANIA: {
             std::vector<ManiaDifficultyAttributes> attributes;
-            const Status status = pppp::mania::difficulty::calculate_timed_difficulty(
-                times, attributes, map, mods.data(), mods.size());
+            const Status status = mania::difficulty::calculate_timed_difficulty(times, attributes, map,
+                                                                                mods.data(), mods.size());
             if (status.ok()) {
                 tag(out, times, attributes);
             }
@@ -136,7 +134,7 @@ namespace pppp {
         }
     }
 
-    Status Difficulty::strains(const pppp::beatmaps::Beatmap& map, Strains& out) const {
+    Status Difficulty::strains(const beatmaps::Beatmap& map, Strains& out) const {
         out = Strains();
         const Mods mods = effective_mods();
         const Ruleset::Value mode = has_ruleset ? ruleset_value : static_cast<Ruleset::Value>(map.mode);
@@ -144,8 +142,7 @@ namespace pppp {
         switch (mode) {
         case Ruleset::OSU: {
             OsuStrains value;
-            const Status status =
-                pppp::osu::difficulty::calculate_strains(value, map, mods.data(), mods.size());
+            const Status status = osu::difficulty::calculate_strains(value, map, mods.data(), mods.size());
             if (status.ok()) {
                 out = value;
             }
@@ -153,8 +150,7 @@ namespace pppp {
         }
         case Ruleset::TAIKO: {
             TaikoStrains value;
-            const Status status =
-                pppp::taiko::difficulty::calculate_strains(value, map, mods.data(), mods.size());
+            const Status status = taiko::difficulty::calculate_strains(value, map, mods.data(), mods.size());
             if (status.ok()) {
                 out = value;
             }
@@ -162,8 +158,7 @@ namespace pppp {
         }
         case Ruleset::CATCH: {
             CatchStrains value;
-            const Status status =
-                pppp::fruits::difficulty::calculate_strains(value, map, mods.data(), mods.size());
+            const Status status = fruits::difficulty::calculate_strains(value, map, mods.data(), mods.size());
             if (status.ok()) {
                 out = value;
             }
@@ -171,8 +166,7 @@ namespace pppp {
         }
         case Ruleset::MANIA: {
             ManiaStrains value;
-            const Status status =
-                pppp::mania::difficulty::calculate_strains(value, map, mods.data(), mods.size());
+            const Status status = mania::difficulty::calculate_strains(value, map, mods.data(), mods.size());
             if (status.ok()) {
                 out = value;
             }

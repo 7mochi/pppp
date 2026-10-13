@@ -16,6 +16,8 @@
 #include <vector>
 
 namespace pppp { namespace taiko { namespace difficulty {
+    namespace linq = ::pppp::utils::linq;
+
     namespace {
         /// Applies a final re-scaling of the star rating.
         /// @param star_rating The raw star rating value before re-scaling.
@@ -111,8 +113,7 @@ namespace pppp { namespace taiko { namespace difficulty {
                 double combined_rating = 0.0;
                 double weight = 1.0;
 
-                const std::vector<double> strains =
-                    pppp::utils::linq::from(peaks).order_descending().to_list();
+                const std::vector<double> strains = linq::from(peaks).order_descending().to_list();
                 for (size_t i = 0; i < strains.size(); i++) {
                     combined_rating += strains[i] * weight;
                     weight *= 0.9;
@@ -129,7 +130,7 @@ namespace pppp { namespace taiko { namespace difficulty {
 
                 // The average of the top 5% of strain peaks from hit objects.
                 double top_average_hit_object_strain =
-                    pppp::utils::linq::from(object_peaks)
+                    linq::from(object_peaks)
                         .order_descending()
                         .take(1 + static_cast<int>(object_peaks.size()) / 20)
                         .average();
@@ -139,7 +140,7 @@ namespace pppp { namespace taiko { namespace difficulty {
                 // The top average strain is used instead of the very hardest to prevent exceptionally hard
                 // objects lowering the factor.
                 consistency_factor =
-                    pppp::utils::linq::from(object_peaks).sum() /
+                    linq::from(object_peaks).sum() /
                     (top_average_hit_object_strain * static_cast<double>(object_peaks.size()));
 
                 return combined_rating;
@@ -217,7 +218,7 @@ namespace pppp { namespace taiko { namespace difficulty {
         }
     }
 
-    Status calculate_difficulty(TaikoDifficultyAttributes& out, const pppp::beatmaps::Beatmap& beatmap,
+    Status calculate_difficulty(TaikoDifficultyAttributes& out, const beatmaps::Beatmap& beatmap,
                                 const pppp::mods::Mod* mods, size_t mod_count) {
         if (!mods && mod_count) {
             return StatusCode::INVALID_ARGUMENT;
@@ -253,9 +254,8 @@ namespace pppp { namespace taiko { namespace difficulty {
         std::vector<preprocessing::SamePatternsGroupedHitObjects> pattern_groupings;
         preprocessing::rhythm::process_and_assign(note_objects, rhythm_groupings, pattern_groupings);
 
-        c.is_relax = pppp::utils::linq::from(mods, mod_count)
-                         .any(pppp::utils::linq::bind(&pppp::mods::Mod::id, pppp::utils::linq::_1) ==
-                              pppp::mods::MOD_RX);
+        c.is_relax =
+            linq::from(mods, mod_count).any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_RX);
         c.is_convert = pb.is_convert;
 
         skills::Rhythm rhythm(mods, mod_count);
@@ -279,7 +279,7 @@ namespace pppp { namespace taiko { namespace difficulty {
 
     Status calculate_timed_difficulty(std::vector<double>& times,
                                       std::vector<TaikoDifficultyAttributes>& attributes,
-                                      const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                                      const beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
                                       size_t mod_count) {
         times.clear();
         attributes.clear();
@@ -298,9 +298,8 @@ namespace pppp { namespace taiko { namespace difficulty {
             return StatusCode::OK;
         }
 
-        c.is_relax = pppp::utils::linq::from(mods, mod_count)
-                         .any(pppp::utils::linq::bind(&pppp::mods::Mod::id, pppp::utils::linq::_1) ==
-                              pppp::mods::MOD_RX);
+        c.is_relax =
+            linq::from(mods, mod_count).any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_RX);
         c.is_convert = pb.is_convert;
 
         skills::Rhythm rhythm(mods, mod_count);
@@ -356,8 +355,8 @@ namespace pppp { namespace taiko { namespace difficulty {
         return StatusCode::OK;
     }
 
-    Status calculate_strains(TaikoStrains& out, const pppp::beatmaps::Beatmap& beatmap,
-                             const pppp::mods::Mod* mods, size_t mod_count) {
+    Status calculate_strains(TaikoStrains& out, const beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                             size_t mod_count) {
         out = TaikoStrains();
         if (!mods && mod_count) {
             return StatusCode::INVALID_ARGUMENT;

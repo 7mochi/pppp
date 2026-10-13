@@ -14,20 +14,21 @@
 #include <cstdlib>
 
 namespace pppp { namespace osu { namespace difficulty { namespace preprocessing {
-    namespace {
-        double calculate_angle(pppp::utils::Vector2 current, pppp::utils::Vector2 last,
-                               pppp::utils::Vector2 last_last) {
-            pppp::utils::Vector2 v1 = last_last - last;
-            pppp::utils::Vector2 v2 = current - last;
+    namespace math = ::pppp::utils::math;
 
-            float dot = pppp::utils::dot(v1, v2);
+    namespace {
+        double calculate_angle(utils::Vector2 current, utils::Vector2 last, utils::Vector2 last_last) {
+            utils::Vector2 v1 = last_last - last;
+            utils::Vector2 v2 = current - last;
+
+            float dot = utils::dot(v1, v2);
             float det = v1.x * v2.y - v1.y * v2.x;
 
             return std::fabs(std::atan2(static_cast<double>(det), static_cast<double>(dot)));
         }
 
-        const pppp::beatmaps::SliderEventDescriptor* find_event(const object::PlayableSlider& slider,
-                                                                pppp::beatmaps::SliderEventType type) {
+        const beatmaps::SliderEventDescriptor* find_event(const object::PlayableSlider& slider,
+                                                          beatmaps::SliderEventType type) {
             for (size_t j = 0; j < slider.events.size(); j++) {
                 if (slider.events[j].type == type) {
                     return &slider.events[j];
@@ -37,14 +38,14 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
         }
 
         void compute_slider_cursor_position(const OsuBeatmap& pb, size_t ho_index, double slider_radius,
-                                            const PositionCtx& pos, pppp::utils::Vector2& lazy_end_out,
+                                            const PositionCtx& pos, utils::Vector2& lazy_end_out,
                                             double& lazy_travel_distance_out, double& lazy_travel_time_out) {
             const object::OsuHitObject& ho = pb.objects[ho_index];
             const object::PlayableSlider& slider = pb.sliders[ho.slider];
-            pppp::utils::Vector2 stacked_pos = pos.stacked[ho_index];
+            utils::Vector2 stacked_pos = pos.stacked[ho_index];
 
             double duration = ho.end_time - ho.time;
-            double tail_leniency = pppp::beatmaps::TAIL_LENIENCY;
+            double tail_leniency = beatmaps::TAIL_LENIENCY;
 
             // TODO: This commented version is actually correct by the new lazer implementation, but
             // intentionally held back from difficulty calculator to preserve known behaviour. double
@@ -58,15 +59,15 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
 
             double tracking_end_time = std::max(ho.time + duration + tail_leniency, ho.time + duration / 2.0);
 
-            std::vector<const pppp::beatmaps::SliderEventDescriptor*> nested;
-            const pppp::beatmaps::SliderEventDescriptor* last_real_tick = 0;
+            std::vector<const beatmaps::SliderEventDescriptor*> nested;
+            const beatmaps::SliderEventDescriptor* last_real_tick = 0;
             for (size_t j = 0; j < slider.events.size(); j++) {
-                const pppp::beatmaps::SliderEventDescriptor& evt = slider.events[j];
-                if (evt.type == pppp::beatmaps::SLIDER_EVENT_LEGACY_LAST_TICK) {
+                const beatmaps::SliderEventDescriptor& evt = slider.events[j];
+                if (evt.type == beatmaps::SLIDER_EVENT_LEGACY_LAST_TICK) {
                     continue;
                 }
                 nested.push_back(&evt);
-                if (evt.type == pppp::beatmaps::SLIDER_EVENT_TICK) {
+                if (evt.type == beatmaps::SLIDER_EVENT_TICK) {
                     last_real_tick = &evt;
                 }
             }
@@ -95,7 +96,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
                 end_time_min = fmod(end_time_min, 1.0);
             }
 
-            pppp::utils::Vector2 lazy_end = slider_position_at(slider, end_time_min);
+            utils::Vector2 lazy_end = slider_position_at(slider, end_time_min);
 
             // lazySliderDistance is coded to be sensitive to scaling, this makes the maths easier with the
             // thresholds being used.
@@ -104,14 +105,14 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
             lazy_end =
                 stacked_pos + lazy_end; // temporary lazy end position until a real result can be derived.
 
-            pppp::utils::Vector2 curr_cursor = stacked_pos;
+            utils::Vector2 curr_cursor = stacked_pos;
             double lazy_travel_distance = 0.0;
 
             for (size_t i = 1; i < nested.size(); i++) {
-                const pppp::beatmaps::SliderEventDescriptor& evt = *nested[i];
+                const beatmaps::SliderEventDescriptor& evt = *nested[i];
 
-                pppp::utils::Vector2 evt_pos = pos.nested(ho_index, evt.position);
-                pppp::utils::Vector2 movement = evt_pos - curr_cursor;
+                utils::Vector2 evt_pos = pos.nested(ho_index, evt.position);
+                utils::Vector2 movement = evt_pos - curr_cursor;
                 double movement_length = length(movement) * scaling_factor;
 
                 // Amount of movement required so that the cursor position needs to be updated.
@@ -124,12 +125,12 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
                     // lazy end position may actually be farther away than the sliders true end. This code is
                     // designed to prevent buffing situations where lazy end is actually a less efficient
                     // movement.
-                    pppp::utils::Vector2 lazy_movement = lazy_end - curr_cursor;
+                    utils::Vector2 lazy_movement = lazy_end - curr_cursor;
                     if (length(lazy_movement) < length(movement)) {
                         movement = lazy_movement;
                         movement_length = length(movement) * scaling_factor;
                     }
-                } else if (evt.type == pppp::beatmaps::SLIDER_EVENT_REPEAT) {
+                } else if (evt.type == beatmaps::SLIDER_EVENT_REPEAT) {
                     // For a slider repeat, assume a tighter movement threshold to better assess repeat
                     // sliders.
                     required_movement = NORMALISED_RADIUS;
@@ -176,11 +177,11 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
             // We will scale distances by this factor, so we can assume a uniform CircleSize among beatmaps.
             float scaling_factor = static_cast<float>(NORMALISED_RADIUS / static_cast<float>(radius));
 
-            pppp::utils::Vector2 last_cursor_pos = dho.last_stacked_position;
+            utils::Vector2 last_cursor_pos = dho.last_stacked_position;
 
-            pppp::utils::Vector2 last_raw_pos = pos.stacked[dho.index];
+            utils::Vector2 last_raw_pos = pos.stacked[dho.index];
 
-            pppp::utils::Vector2 base_pos = dho.base_stacked_position;
+            utils::Vector2 base_pos = dho.base_stacked_position;
 
             dho.jump_distance = length(base_pos - last_raw_pos) * scaling_factor;
             dho.lazy_jump_distance = length(base_pos - last_cursor_pos) * scaling_factor;
@@ -218,10 +219,10 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
                 double last_travel_time = std::max(last_travel_time_raw / clock_rate, MIN_DELTA_TIME);
                 dho.minimum_jump_time = std::max(dho.adjusted_delta_time - last_travel_time, MIN_DELTA_TIME);
 
-                pppp::utils::Vector2 tail_pos = last_raw_pos;
+                utils::Vector2 tail_pos = last_raw_pos;
                 if (last_ho.slider >= 0) {
-                    const pppp::beatmaps::SliderEventDescriptor* tail =
-                        find_event(pb.sliders[last_ho.slider], pppp::beatmaps::SLIDER_EVENT_TAIL);
+                    const beatmaps::SliderEventDescriptor* tail =
+                        find_event(pb.sliders[last_ho.slider], beatmaps::SLIDER_EVENT_TAIL);
                     if (tail) {
                         tail_pos = pos.nested(dho.index, tail->position);
                     }
@@ -239,7 +240,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
                 bool prev2_not_spinner = prev2_dho && !prev2_dho->base_is_spinner;
 
                 if (prev2_not_spinner) {
-                    pppp::utils::Vector2 last_last_pos;
+                    utils::Vector2 last_last_pos;
                     if (prev2_dho->lazy_end_position.has_value()) {
                         last_last_pos.x = static_cast<float>(prev2_dho->lazy_end_position.value().x);
                         last_last_pos.y = static_cast<float>(prev2_dho->lazy_end_position.value().y);
@@ -247,8 +248,8 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
                         last_last_pos = pos.stacked[dho.index - 1];
                     }
 
-                    pppp::utils::Vector2 angle_cursor_pos = last_cursor_pos;
-                    pppp::utils::Vector2 slider_angle_last_last_pos = last_last_pos;
+                    utils::Vector2 angle_cursor_pos = last_cursor_pos;
+                    utils::Vector2 slider_angle_last_last_pos = last_last_pos;
 
                     if (dho.last_is_slider && dho.index >= 1) {
                         const OsuDifficultyHitObject* prev_dho =
@@ -257,13 +258,13 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
                             angle_cursor_pos = last_raw_pos;
 
                             if (last_ho.slider >= 0) {
-                                const std::vector<pppp::beatmaps::SliderEventDescriptor>& events =
+                                const std::vector<beatmaps::SliderEventDescriptor>& events =
                                     pb.sliders[last_ho.slider].events;
                                 int last_non_tail_idx = -1;
                                 for (int e = static_cast<int>(events.size()) - 1; e >= 0; e--) {
-                                    pppp::beatmaps::SliderEventType t = events[e].type;
-                                    if (t != pppp::beatmaps::SLIDER_EVENT_TAIL &&
-                                        t != pppp::beatmaps::SLIDER_EVENT_LEGACY_LAST_TICK) {
+                                    beatmaps::SliderEventType t = events[e].type;
+                                    if (t != beatmaps::SLIDER_EVENT_TAIL &&
+                                        t != beatmaps::SLIDER_EVENT_LEGACY_LAST_TICK) {
                                         last_non_tail_idx = e;
                                         break;
                                     }
@@ -281,7 +282,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
                         calculate_angle(base_pos, last_cursor_pos, slider_angle_last_last_pos);
                     dho.angle = std::min(ang, slider_ang);
 
-                    pppp::utils::Vector2 v = base_pos - angle_cursor_pos;
+                    utils::Vector2 v = base_pos - angle_cursor_pos;
                     dho.normalised_vector_angle =
                         std::atan2(static_cast<double>(std::fabs(v.y)), static_cast<double>(std::fabs(v.x)));
                 }
@@ -318,12 +319,12 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
           overall_difficulty(0.0),
           circle_size(0.0),
           repeat_count(0) {
-        base_stacked_position = pppp::utils::vec2(0.0f, 0.0f);
-        base_stacked_end_position = pppp::utils::vec2(0.0f, 0.0f);
-        last_stacked_position = pppp::utils::vec2(0.0f, 0.0f);
+        base_stacked_position = utils::vec2(0.0f, 0.0f);
+        base_stacked_end_position = utils::vec2(0.0f, 0.0f);
+        last_stacked_position = utils::vec2(0.0f, 0.0f);
 
         double cs = pb.circle_size;
-        pppp::osu::OsuHitWindows hit_windows;
+        OsuHitWindows hit_windows;
         hit_windows.set_difficulty(pb.overall_difficulty);
 
         size_t i = static_cast<size_t>(object_index) + 1;
@@ -331,8 +332,8 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
         base_stacked_position = pos.stacked[i];
         base_stacked_end_position = pos.stacked[i];
         if (object.slider >= 0) {
-            const pppp::beatmaps::SliderEventDescriptor* tail =
-                find_event(pb.sliders[object.slider], pppp::beatmaps::SLIDER_EVENT_TAIL);
+            const beatmaps::SliderEventDescriptor* tail =
+                find_event(pb.sliders[object.slider], beatmaps::SLIDER_EVENT_TAIL);
             if (tail) {
                 base_stacked_end_position = pos.nested(i, tail->position);
             }
@@ -344,7 +345,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
         last_is_slider = (last.type & 2) != 0;
 
         end_time = object.end_time / rate;
-        hit_window_great = 2.0 * hit_windows.window_for(pppp::common::HIT_RESULT_GREAT) / rate;
+        hit_window_great = 2.0 * hit_windows.window_for(common::HIT_RESULT_GREAT) / rate;
 
         adjusted_delta_time = std::max(delta_time, MIN_DELTA_TIME);
 
@@ -374,7 +375,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
         repeat_count = (object.slider >= 0) ? pb.sliders[object.slider].slides - 1 : 0;
 
         if (object.slider >= 0) {
-            pppp::utils::Vector2 lazy_end;
+            utils::Vector2 lazy_end;
             double ltd, ltt;
             compute_slider_cursor_position(pb, i, object::OsuHitObject::calculate_radius(cs), pos, lazy_end,
                                            ltd, ltt);
@@ -433,13 +434,12 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
 
         if (hidden) {
             double fade_out_start_time = obj_start_time - time_preempt + obj.time_fade_in;
-            double fade_out_duration = time_preempt * pppp::osu::mods::FADE_OUT_DURATION_MULTIPLIER;
+            double fade_out_duration = time_preempt * mods::FADE_OUT_DURATION_MULTIPLIER;
 
-            return std::min(
-                utils::math::clamp((time - fade_in_start_time) / fade_in_duration, 0.0, 1.0),
-                1.0 - utils::math::clamp((time - fade_out_start_time) / fade_out_duration, 0.0, 1.0));
+            return std::min(math::clamp((time - fade_in_start_time) / fade_in_duration, 0.0, 1.0),
+                            1.0 - math::clamp((time - fade_out_start_time) / fade_out_duration, 0.0, 1.0));
         }
 
-        return utils::math::clamp((time - fade_in_start_time) / fade_in_duration, 0.0, 1.0);
+        return math::clamp((time - fade_in_start_time) / fade_in_duration, 0.0, 1.0);
     }
 }}}} // namespace pppp::osu::difficulty::preprocessing

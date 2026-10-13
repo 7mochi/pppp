@@ -8,7 +8,9 @@
 #include <cmath>
 
 namespace pppp { namespace common { namespace skills {
-    StrainSkill::StrainSkill(const pppp::mods::Mod* mods_in, size_t mod_count_in, double decay_weight_in,
+    namespace linq = ::pppp::utils::linq;
+
+    StrainSkill::StrainSkill(const mods::Mod* mods_in, size_t mod_count_in, double decay_weight_in,
                              int section_length_in)
         : Skill(mods_in, mod_count_in),
           decay_weight(decay_weight_in),
@@ -42,8 +44,7 @@ namespace pppp { namespace common { namespace skills {
         // sort (e.g. /b/2351871). These sections will not contribute to the difficulty.
         std::vector<double> current_strain_peaks;
         get_current_strain_peaks(current_strain_peaks);
-        const utils::linq::Enumerable<double> peaks =
-            utils::linq::from(current_strain_peaks).where(utils::linq::_1 > 0);
+        const linq::Enumerable<double> peaks = linq::from(current_strain_peaks).where(linq::_1 > 0);
 
         // Difficulty is the weighted sum of the highest strains from every section.
         // We're sorting from highest to lowest strain.
@@ -66,7 +67,7 @@ namespace pppp { namespace common { namespace skills {
     }
 
     void StrainSkill::get_current_strain_peaks(std::vector<double>& out) const {
-        std::vector<double> peaks = utils::linq::from(strain_peaks).append(current_section_peak).to_list();
+        std::vector<double> peaks = linq::from(strain_peaks).append(current_section_peak).to_list();
         out.swap(peaks);
     }
 
@@ -84,8 +85,7 @@ namespace pppp { namespace common { namespace skills {
         }
 
         // Use a weighted sum of all strains. Constants are arbitrary and give nice values
-        return utils::linq::from(object_difficulties)
-            .sum(utils::linq::bind(&utils::logistic, utils::linq::_1 / consistent_top_strain, 0.88, 10.0,
-                                   1.1));
+        return linq::from(object_difficulties)
+            .sum(linq::bind(&utils::logistic, linq::_1 / consistent_top_strain, 0.88, 10.0, 1.1));
     }
 }}} // namespace pppp::common::skills

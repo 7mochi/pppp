@@ -9,6 +9,9 @@
 #include <limits>
 
 namespace pppp { namespace taiko { namespace difficulty { namespace preprocessing { namespace rhythm {
+    namespace linq = ::pppp::utils::linq;
+    namespace math = ::pppp::utils::math;
+
     data::SameRhythmHitObjectGrouping::SameRhythmHitObjectGrouping(
         SameRhythmHitObjectGrouping* previous_in,
         const std::vector<TaikoDifficultyHitObject*>& hit_objects_in)
@@ -25,14 +28,12 @@ namespace pppp { namespace taiko { namespace difficulty { namespace preprocessin
         std::vector<double> normalised;
         utils::normalise_delta_times(normalised, delta_times, SNAP_TOLERANCE);
 
-        const pppp::utils::linq::Enumerable<double> normalised_hit_object_delta_time =
-            pppp::utils::linq::from(normalised).skip(1);
+        const linq::Enumerable<double> normalised_hit_object_delta_time = linq::from(normalised).skip(1);
 
         // Secondary check to ensure there isn't any 'noise' or outliers by taking the modal delta time.
-        const double modal_delta =
-            normalised_hit_object_delta_time.count() > 0
-                ? pppp::utils::math::round_half_even(normalised_hit_object_delta_time.element_at(0))
-                : 0.0;
+        const double modal_delta = normalised_hit_object_delta_time.count() > 0
+                                       ? math::round_half_even(normalised_hit_object_delta_time.element_at(0))
+                                       : 0.0;
 
         // Calculate the average interval between hitobjects.
         if (normalised_hit_object_delta_time.count() > 0) {

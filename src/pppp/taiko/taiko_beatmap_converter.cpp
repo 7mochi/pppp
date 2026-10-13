@@ -9,6 +9,9 @@
 #include <limits>
 
 namespace pppp { namespace taiko {
+    namespace control_points = ::pppp::beatmaps::control_points;
+    namespace linq = ::pppp::utils::linq;
+
     namespace {
         double precision_adjusted_beat_length(double slider_velocity, double beat_length) {
             double slider_velocity_as_beat_length = -100.0 / slider_velocity;
@@ -27,9 +30,8 @@ namespace pppp { namespace taiko {
             return beat_length * bpm_multiplier;
         }
 
-        double
-        slider_velocity_at(const std::vector<pppp::beatmaps::control_points::DifficultyControlPoint>& points,
-                           double time) {
+        double slider_velocity_at(const std::vector<control_points::DifficultyControlPoint>& points,
+                                  double time) {
             double velocity = 1.0;
             for (size_t i = 0; i < points.size(); i++) {
                 if (points[i].time > time) {
@@ -41,11 +43,10 @@ namespace pppp { namespace taiko {
         }
 
         bool should_convert_slider_to_hits(
-            const pppp::beatmaps::Beatmap& beatmap,
-            const pppp::beatmaps::control_points::ControlPointInfo& info,
-            const std::vector<pppp::beatmaps::control_points::DifficultyControlPoint>& difficulty_points,
-            bool is_convert, const pppp::beatmaps::HitObject& ho, const pppp::beatmaps::Slider& slider,
-            int* taiko_duration, double* tick_spacing) {
+            const beatmaps::Beatmap& beatmap, const control_points::ControlPointInfo& info,
+            const std::vector<control_points::DifficultyControlPoint>& difficulty_points, bool is_convert,
+            const beatmaps::HitObject& ho, const beatmaps::Slider& slider, int* taiko_duration,
+            double* tick_spacing) {
             // DO NOT CHANGE OR REFACTOR ANYTHING IN HERE WITHOUT TESTING AGAINST _ALL_ BEATMAPS.
             // Some of these calculations look redundant, but they are not - extremely small floating point
             // errors are introduced to maintain 1:1 compatibility with stable.
@@ -60,10 +61,9 @@ namespace pppp { namespace taiko {
             distance *= VELOCITY_MULTIPLIER;
             distance *= spans;
 
-            const pppp::beatmaps::control_points::TimingControlPoint* timing =
-                info.timing_point_at(ho.start_time);
+            const control_points::TimingControlPoint* timing = info.timing_point_at(ho.start_time);
             double timing_beat_length =
-                timing != 0 ? timing->beat_length : pppp::beatmaps::control_points::DEFAULT_BEAT_LENGTH;
+                timing != 0 ? timing->beat_length : control_points::DEFAULT_BEAT_LENGTH;
 
             double slider_velocity = slider_velocity_at(difficulty_points, ho.start_time);
             double beat_length = precision_adjusted_beat_length(slider_velocity, timing_beat_length);
@@ -97,8 +97,8 @@ namespace pppp { namespace taiko {
             return *tick_spacing > 0 && distance / osu_velocity * 1000.0 < 2.0 * beat_length;
         }
 
-        void add_effect_point(std::vector<pppp::beatmaps::control_points::EffectControlPoint>& points,
-                              double time, bool kiai, double scroll_speed) {
+        void add_effect_point(std::vector<control_points::EffectControlPoint>& points, double time, bool kiai,
+                              double scroll_speed) {
             bool existing_kiai = false;
             double existing_scroll = 1.0; // the default scroll speed
             size_t position = 0;
@@ -118,13 +118,12 @@ namespace pppp { namespace taiko {
                 return;
             }
 
-            pppp::beatmaps::control_points::EffectControlPoint ep(time, kiai);
+            control_points::EffectControlPoint ep(time, kiai);
             ep.scroll_speed = scroll_speed;
             points.insert(points.begin() + static_cast<ptrdiff_t>(position), ep);
         }
 
-        bool kiai_at(const std::vector<pppp::beatmaps::control_points::EffectControlPoint>& points,
-                     double time) {
+        bool kiai_at(const std::vector<control_points::EffectControlPoint>& points, double time) {
             bool kiai = false;
             for (size_t i = 0; i < points.size(); i++) {
                 if (points[i].time > time) {
@@ -137,8 +136,8 @@ namespace pppp { namespace taiko {
 
     } // namespace
 
-    void convert(TaikoBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap,
-                 const pppp::beatmaps::ObjectConverted<TaikoHitObject>& object_converted) {
+    void convert(TaikoBeatmap& pb, const beatmaps::Beatmap& beatmap,
+                 const beatmaps::ObjectConverted<TaikoHitObject>& object_converted) {
         pb = TaikoBeatmap();
         pb.overall_difficulty = beatmap.difficulty.overall_difficulty;
         pb.drain_rate = beatmap.difficulty.drain_rate;
@@ -150,13 +149,13 @@ namespace pppp { namespace taiko {
         // An effect point is dropped when neither the kiai flag nor the scroll speed differ from
         // whatever is already in force at that time, which is why most of a convert's control lines
         // leave no effect point at all.
-        std::vector<pppp::beatmaps::control_points::EffectControlPoint> effect_points;
+        std::vector<control_points::EffectControlPoint> effect_points;
         for (size_t i = 0; i < pb.info.effect_points.size(); i++) {
             // Only taiko and mania read the point's velocity into the effect point; for a convert
             // it stays at 1 and the slider reconstruction below inserts the real values on top.
             double scroll_speed = 1.0;
             if (!pb.is_convert) {
-                const pppp::beatmaps::control_points::DifficultyControlPoint* dp =
+                const control_points::DifficultyControlPoint* dp =
                     pb.info.difficulty_point_at(pb.info.effect_points[i].time);
                 scroll_speed = dp != 0 ? dp->slider_velocity : 1.0;
                 if (scroll_speed < 0.01) {
@@ -172,12 +171,12 @@ namespace pppp { namespace taiko {
         pb.info.effect_points.swap(effect_points);
 
         for (size_t i = 0; i < beatmap.hit_objects.size(); i++) {
-            const pppp::beatmaps::HitObject& ho = beatmap.hit_objects[i];
+            const beatmaps::HitObject& ho = beatmap.hit_objects[i];
             const size_t first = pb.objects.size();
 
             // Old osu! used hit sounding to determine various hit type information
             if (ho.slider >= 0 && static_cast<size_t>(ho.slider) < beatmap.sliders.size()) {
-                const pppp::beatmaps::Slider& slider = beatmap.sliders[ho.slider];
+                const beatmaps::Slider& slider = beatmap.sliders[ho.slider];
                 int taiko_duration = 0;
                 double tick_spacing = 0.0;
 
@@ -250,16 +249,14 @@ namespace pppp { namespace taiko {
         // Objects that a slider burst produced share start times with whatever follows, so the
         // order has to be preserved exactly.
         std::vector<TaikoHitObject> sorted =
-            utils::linq::from(pb.objects)
-                .order_by(utils::linq::bind(&TaikoHitObject::time, utils::linq::_1))
-                .to_list();
+            linq::from(pb.objects).order_by(linq::bind(&TaikoHitObject::time, linq::_1)).to_list();
         pb.objects.swap(sorted);
 
         // Post processing step to transform standard slider velocity changes into scroll speed changes
         if (pb.is_convert) {
             double last_scroll_speed = 1.0;
             for (size_t i = 0; i < beatmap.hit_objects.size(); i++) {
-                const pppp::beatmaps::HitObject& ho = beatmap.hit_objects[i];
+                const beatmaps::HitObject& ho = beatmap.hit_objects[i];
                 if (ho.slider < 0) {
                     continue; // only sliders carry a slider velocity
                 }

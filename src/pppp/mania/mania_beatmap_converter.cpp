@@ -18,25 +18,28 @@
 #include <algorithm>
 
 namespace pppp { namespace mania {
+    namespace control_points = ::pppp::beatmaps::control_points;
+    namespace linq = ::pppp::utils::linq;
+    namespace math = ::pppp::utils::math;
+
     namespace {
-        bool has_duration(const pppp::beatmaps::HitObject& ho) {
-            return (ho.type & (pppp::beatmaps::slider | pppp::beatmaps::spinner | pppp::beatmaps::hold)) != 0;
+        bool has_duration(const beatmaps::HitObject& ho) {
+            return (ho.type & (beatmaps::slider | beatmaps::spinner | beatmaps::hold)) != 0;
         }
 
-        int end_time_object_count(const pppp::beatmaps::Beatmap& beatmap) {
-            return utils::linq::from(beatmap.hit_objects)
-                .count(utils::linq::bind(&has_duration, utils::linq::_1));
+        int end_time_object_count(const beatmaps::Beatmap& beatmap) {
+            return linq::from(beatmap.hit_objects).count(linq::bind(&has_duration, linq::_1));
         }
 
-        int get_column_count(const pppp::beatmaps::Beatmap& beatmap) {
-            const double rounded_circle_size = utils::math::round_half_even(beatmap.difficulty.circle_size);
+        int get_column_count(const beatmaps::Beatmap& beatmap) {
+            const double rounded_circle_size = math::round_half_even(beatmap.difficulty.circle_size);
 
             if (beatmap.mode == 3) {
                 return static_cast<int>(std::max(1.0, rounded_circle_size));
             }
 
             const double rounded_overall_difficulty =
-                utils::math::round_half_even(beatmap.difficulty.overall_difficulty);
+                math::round_half_even(beatmap.difficulty.overall_difficulty);
             const int total_object_count = static_cast<int>(beatmap.hit_objects.size());
             const int count_slider_or_spinner = end_time_object_count(beatmap);
 
@@ -60,21 +63,19 @@ namespace pppp { namespace mania {
             return std::max(4, std::min(static_cast<int>(rounded_overall_difficulty) + 1, 7));
         }
 
-        int random_seed_of(const pppp::beatmaps::Beatmap& beatmap) {
+        int random_seed_of(const beatmaps::Beatmap& beatmap) {
             const float drain_and_circle = static_cast<float>(
                 utils::f32(beatmap.difficulty.drain_rate + beatmap.difficulty.circle_size));
-            const int rounded_drain_and_circle =
-                static_cast<int>(utils::math::round_half_even(drain_and_circle));
+            const int rounded_drain_and_circle = static_cast<int>(math::round_half_even(drain_and_circle));
             const int scaled_overall = static_cast<int>(beatmap.difficulty.overall_difficulty * 41.2);
             const int rounded_approach =
-                static_cast<int>(utils::math::round_half_even(utils::f32(beatmap.difficulty.approach_rate)));
+                static_cast<int>(math::round_half_even(utils::f32(beatmap.difficulty.approach_rate)));
 
             return rounded_drain_and_circle * 20 + scaled_overall + rounded_approach;
         }
 
         /// Flattens the source hit object into the generator's `SourceObject`.
-        patterns::SourceObject source_of(const pppp::beatmaps::Beatmap& beatmap,
-                                         const pppp::beatmaps::HitObject& ho) {
+        patterns::SourceObject source_of(const beatmaps::Beatmap& beatmap, const beatmaps::HitObject& ho) {
             patterns::SourceObject src;
             src.start_time = ho.start_time;
             src.end_time = has_duration(ho) ? ho.end_time : ho.start_time;
@@ -84,7 +85,7 @@ namespace pppp { namespace mania {
             src.has_path = ho.slider >= 0;
 
             if (ho.slider >= 0 && static_cast<size_t>(ho.slider) < beatmap.sliders.size()) {
-                const pppp::beatmaps::Slider& slider = beatmap.sliders[ho.slider];
+                const beatmaps::Slider& slider = beatmap.sliders[ho.slider];
                 src.slides = slider.slides > 0 ? slider.slides : 1;
                 src.expected_distance = slider.expected_length;
                 src.node_sounds = &slider.node_sounds;
@@ -94,7 +95,7 @@ namespace pppp { namespace mania {
         }
     } // namespace
 
-    ManiaBeatmapConverter::ManiaBeatmapConverter(const pppp::beatmaps::Beatmap& beatmap_in,
+    ManiaBeatmapConverter::ManiaBeatmapConverter(const beatmaps::Beatmap& beatmap_in,
                                                  const pppp::mods::Mod* mods_in, size_t mod_count_in)
         : beatmap(beatmap_in),
           target_columns(get_column_count(beatmap_in)),
@@ -145,7 +146,7 @@ namespace pppp { namespace mania {
         }
     }
 
-    void ManiaBeatmapConverter::record_note(double time, pppp::utils::Vector2 position) {
+    void ManiaBeatmapConverter::record_note(double time, utils::Vector2 position) {
         last_time = time;
         last_position = position;
     }
@@ -157,7 +158,7 @@ namespace pppp { namespace mania {
         pb.target_columns = target_columns;
         pb.dual = dual;
 
-        pppp::beatmaps::control_points::ControlPointInfo info;
+        control_points::ControlPointInfo info;
         info.build(beatmap);
 
         const int columns = total_columns();
@@ -165,26 +166,26 @@ namespace pppp { namespace mania {
         std::vector<patterns::Pattern> generated;
 
         for (size_t i = 0; i < beatmap.hit_objects.size(); i++) {
-            const pppp::beatmaps::HitObject& ho = beatmap.hit_objects[i];
+            const beatmaps::HitObject& ho = beatmap.hit_objects[i];
             const patterns::SourceObject src = source_of(beatmap, ho);
             const size_t first = pb.objects.size();
 
             generated.clear();
             bool keeps_pattern = false;
 
-            if ((ho.type & pppp::beatmaps::spinner) != 0) {
+            if ((ho.type & beatmaps::spinner) != 0) {
                 // Note: Some older mania-specific beatmaps can have spinners that are converted rather than
                 // passed through.
                 //       Newer beatmaps will usually use the "hold" hitobject type below.
                 patterns::SpinnerPatternGenerator conversion(info, beatmap, src, last_pattern, columns,
                                                              random);
                 conversion.generate(generated);
-                pppp::utils::Vector2 spinner_position;
+                utils::Vector2 spinner_position;
                 spinner_position.x = 256.0;
                 spinner_position.y = 192.0;
                 record_note(src.end_time, spinner_position);
                 compute_density(src.end_time);
-            } else if ((ho.type & pppp::beatmaps::hold) != 0) {
+            } else if ((ho.type & beatmaps::hold) != 0) {
                 patterns::PassThroughPatternGenerator conversion(info, beatmap, src, last_pattern, columns,
                                                                  random);
                 conversion.generate(generated);
@@ -247,8 +248,8 @@ namespace pppp { namespace mania {
         }
 
         std::vector<object::ManiaHitObject> sorted =
-            utils::linq::from(pb.objects)
-                .order_by(utils::linq::bind(&object::ManiaHitObject::start_time, utils::linq::_1))
+            linq::from(pb.objects)
+                .order_by(linq::bind(&object::ManiaHitObject::start_time, linq::_1))
                 .to_list();
         pb.objects.swap(sorted);
 
@@ -269,7 +270,7 @@ namespace pppp { namespace mania {
         }
     }
 
-    Status build(ManiaBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+    Status build(ManiaBeatmap& pb, const beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
                  size_t mod_count) {
         ManiaBeatmapConverter converter(beatmap, mods, mod_count);
         converter.convert(pb);

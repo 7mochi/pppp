@@ -10,6 +10,9 @@
 #include "pppp/utils/linq/csharp.h"
 
 namespace pppp { namespace osu {
+    namespace control_points = ::pppp::beatmaps::control_points;
+    namespace linq = ::pppp::utils::linq;
+
     OsuBeatmap::OsuBeatmap()
         : source(0),
           format_version(14),
@@ -20,28 +23,27 @@ namespace pppp { namespace osu {
           drain_rate(5.0),
           clock_rate(1.0) {}
 
-    const pppp::beatmaps::control_points::TimingControlPoint* timing_point_at(const OsuBeatmap& pb,
-                                                                              double time) {
+    const control_points::TimingControlPoint* timing_point_at(const OsuBeatmap& pb, double time) {
         return pb.info.timing_point_at(time);
     }
 
     bool kiai_at(const OsuBeatmap& pb, double time) {
-        const pppp::beatmaps::control_points::EffectControlPoint* ep = pb.info.effect_point_at(time);
+        const control_points::EffectControlPoint* ep = pb.info.effect_point_at(time);
         return ep ? ep->kiai_mode : false;
     }
 
-    void set_control_point(pppp::utils::Vector2& current, pppp::utils::Vector2 value) {
+    void set_control_point(utils::Vector2& current, utils::Vector2 value) {
         if (value.x == current.x && value.y == current.y) {
             return;
         }
         current = value;
     }
 
-    pppp::utils::Vector2 slider_position_at(const object::PlayableSlider& slider, double progress) {
-        return pppp::beatmaps::slider_position_at(slider.path, slider.cumulative_lengths, progress);
+    utils::Vector2 slider_position_at(const object::PlayableSlider& slider, double progress) {
+        return beatmaps::slider_position_at(slider.path, slider.cumulative_lengths, progress);
     }
 
-    pppp::utils::Vector2 object_end_position(const OsuBeatmap& pb, size_t object_index) {
+    utils::Vector2 object_end_position(const OsuBeatmap& pb, size_t object_index) {
         const object::OsuHitObject& ho = pb.objects[object_index];
         if (ho.slider < 0) {
             return ho.position;
@@ -49,7 +51,7 @@ namespace pppp { namespace osu {
 
         const object::PlayableSlider& sl = pb.sliders[ho.slider];
         for (size_t e = 0; e < sl.events.size(); e++) {
-            if (sl.events[e].type == pppp::beatmaps::SLIDER_EVENT_TAIL) {
+            if (sl.events[e].type == beatmaps::SLIDER_EVENT_TAIL) {
                 return ho.position + sl.events[e].position;
             }
         }
@@ -65,8 +67,7 @@ namespace pppp { namespace osu {
             return 0.0;
         }
 
-        return utils::linq::from(pb.objects)
-            .max(utils::linq::bind(&object::OsuHitObject::end_time, utils::linq::_1));
+        return linq::from(pb.objects).max(linq::bind(&object::OsuHitObject::end_time, linq::_1));
     }
 
     int max_combo(const OsuBeatmap& pb) {
@@ -74,10 +75,9 @@ namespace pppp { namespace osu {
         for (size_t i = 0; i < pb.objects.size(); i++) {
             const object::OsuHitObject& ho = pb.objects[i];
             if (ho.slider >= 0) {
-                const std::vector<pppp::beatmaps::SliderEventDescriptor>& events =
-                    pb.sliders[ho.slider].events;
+                const std::vector<beatmaps::SliderEventDescriptor>& events = pb.sliders[ho.slider].events;
                 for (size_t j = 0; j < events.size(); j++) {
-                    if (events[j].type != pppp::beatmaps::SLIDER_EVENT_LEGACY_LAST_TICK) {
+                    if (events[j].type != beatmaps::SLIDER_EVENT_LEGACY_LAST_TICK) {
                         combo++;
                     }
                 }
@@ -88,9 +88,8 @@ namespace pppp { namespace osu {
         return combo;
     }
 
-    Status build(OsuBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
-                 size_t mod_count,
-                 const pppp::beatmaps::ObjectConverted<object::OsuHitObject>& object_converted) {
+    Status build(OsuBeatmap& pb, const beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                 size_t mod_count, const beatmaps::ObjectConverted<object::OsuHitObject>& object_converted) {
         Status rc = convert(pb, beatmap, object_converted);
         if (!rc.ok()) {
             return rc;

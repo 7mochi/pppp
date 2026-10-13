@@ -22,8 +22,8 @@ namespace pppp { namespace mania { namespace object {
 
     /// Orders by start time rounded half to even.
     inline int hit_object_start_time_rounded(const ManiaHitObject& a, const ManiaHitObject& b) {
-        return utils::math::round_half_even_int(a.start_time) -
-               utils::math::round_half_even_int(b.start_time);
+        return pppp::utils::math::round_half_even_int(a.start_time) -
+               pppp::utils::math::round_half_even_int(b.start_time);
     }
 }}} // namespace pppp::mania::object
 

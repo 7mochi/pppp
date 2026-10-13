@@ -9,6 +9,8 @@
 #include <cmath>
 
 namespace pppp { namespace osu { namespace difficulty { namespace evaluators { namespace speed {
+    namespace math = ::pppp::utils::math;
+
     namespace {
         /// An island is a group of consecutive objects with the same delta time.
         struct Island {
@@ -133,9 +135,9 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
                 std::max(prev_delta, curr_delta) / std::min(prev_delta, curr_delta);
 
             // reduce ratio bonus if delta difference is too big
-            double difference_multiplier = utils::math::clamp(2.0 - delta_difference_ratio / 8.0, 0.0, 1.0);
+            double difference_multiplier = math::clamp(2.0 - delta_difference_ratio / 8.0, 0.0, 1.0);
 
-            double window_penalty = utils::math::clamp(
+            double window_penalty = math::clamp(
                 (delta_difference - delta_difference_epsilon) / delta_difference_epsilon, 0.0, 1.0);
 
             double effective_difficulty =

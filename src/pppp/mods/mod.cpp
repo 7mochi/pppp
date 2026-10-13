@@ -10,6 +10,7 @@
 #define PPPP_MOD_INCOMPATIBLE(list) list, sizeof(list) / sizeof((list)[0])
 
 namespace pppp { namespace mods {
+    namespace math = ::pppp::utils::math;
 
     namespace {
         struct ModDef {
@@ -234,7 +235,7 @@ namespace pppp { namespace mods {
             case MOD_HT:
             case MOD_DC: rate *= mods[i].rate.speed_change > 0.0 ? mods[i].rate.speed_change : 0.75; break;
             case MOD_WU:
-            case MOD_WD: rate *= utils::math::round2_to_even(mods[i].variable_rate.initial_rate); break;
+            case MOD_WD: rate *= math::round2_to_even(mods[i].variable_rate.initial_rate); break;
             case MOD_AS: rate *= mods[i].variable_rate.initial_rate; break;
             default: break;
             }

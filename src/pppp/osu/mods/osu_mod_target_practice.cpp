@@ -13,6 +13,10 @@
 #include <vector>
 
 namespace pppp { namespace osu { namespace mods {
+    namespace control_points = ::pppp::beatmaps::control_points;
+    namespace linq = ::pppp::utils::linq;
+    namespace timing = ::pppp::beatmaps::timing;
+
     namespace {
         bool almost_bigger(double v1, double v2) { return utils::almost_bigger(v1, v2, TIMING_PRECISION); }
 
@@ -29,7 +33,7 @@ namespace pppp { namespace osu { namespace mods {
         bool is_inside_break_period(const OsuBeatmap& pb, const std::vector<object::OsuHitObject>& original,
                                     double time) {
             for (size_t b = 0; b < pb.breaks.size(); b++) {
-                const pppp::beatmaps::timing::BreakPeriod& br = pb.breaks[b];
+                const timing::BreakPeriod& br = pb.breaks[b];
                 const object::OsuHitObject* first_after = 0;
                 for (size_t k = 0; k < original.size(); k++) {
                     if (almost_bigger(original[k].time, br.end_time)) {
@@ -49,7 +53,7 @@ namespace pppp { namespace osu { namespace mods {
 
         void get_beats_for_timing_point(const OsuBeatmap& pb, size_t tp_index, double map_end_time,
                                         std::vector<double>& beats) {
-            const pppp::beatmaps::control_points::TimingControlPoint& tp = pb.info.timing_points[tp_index];
+            const control_points::TimingControlPoint& tp = pb.info.timing_points[tp_index];
             int i = 0;
             double current_time = tp.time;
             while (!definitely_bigger(current_time, map_end_time) &&
@@ -62,7 +66,7 @@ namespace pppp { namespace osu { namespace mods {
 
         std::vector<double> generate_beats(const OsuBeatmap& pb,
                                            const std::vector<object::OsuHitObject>& original) {
-            double start_time = utils::linq::from(pb.objects).first().time;
+            double start_time = linq::from(pb.objects).first().time;
             double end_time = last_object_time(pb);
             std::vector<double> beats;
             for (size_t t = 0; t < pb.info.timing_points.size(); t++) {
@@ -90,7 +94,7 @@ namespace pppp { namespace osu { namespace mods {
             // Remove beats that are too close to the next one (e.g. due to timing point changes)
             for (int i = static_cast<int>(beats.size()) - 2; i >= 0; i--) {
                 double beat = beats[i];
-                const pppp::beatmaps::control_points::TimingControlPoint* tp = timing_point_at(pb, beat);
+                const control_points::TimingControlPoint* tp = timing_point_at(pb, beat);
                 double beat_length = tp ? tp->beat_length : 1000.0;
                 if (!definitely_bigger(beats[i + 1] - beat, beat_length / 2)) {
                     beats.erase(beats.begin() + i);
@@ -114,7 +118,7 @@ namespace pppp { namespace osu { namespace mods {
         /// @param obj The hit object to be clamped.
         /// @param radius The radius of the hit object.
         void clamp_to_playfield(object::OsuHitObject& obj, float radius) {
-            pppp::utils::Vector2 p = obj.position;
+            utils::Vector2 p = obj.position;
             if (p.y < radius) {
                 p.y = radius;
             } else if (p.y > object::PLAYFIELD_HEIGHT - radius) {
@@ -128,12 +132,11 @@ namespace pppp { namespace osu { namespace mods {
             obj.position = p;
         }
 
-        bool check_for_overlap(const utils::linq::Enumerable<object::OsuHitObject>& objects_to_check,
+        bool check_for_overlap(const linq::Enumerable<object::OsuHitObject>& objects_to_check,
                                const object::OsuHitObject& target, double target_radius) {
-            return objects_to_check.any(
-                utils::linq::bind(&pppp::utils::distance,
-                                  utils::linq::bind(&object::OsuHitObject::position, utils::linq::_1),
-                                  target.position) < target_radius * 2);
+            return objects_to_check.any(linq::bind(&utils::distance,
+                                                   linq::bind(&object::OsuHitObject::position, linq::_1),
+                                                   target.position) < target_radius * 2);
         }
 
         void randomize_circle_pos(OsuBeatmap& pb, std::vector<object::OsuHitObject>& objs,
@@ -146,12 +149,12 @@ namespace pppp { namespace osu { namespace mods {
             float radius = static_cast<float>(radius_d);
 
             float direction = two_pi * static_cast<float>(rng.next_double() * 1.0f);
-            int max_combo_index = utils::linq::from(objs).last().combo_index;
+            int max_combo_index = linq::from(objs).last().combo_index;
 
             for (size_t i = 0; i < objs.size(); i++) {
                 object::OsuHitObject& obj = objs[i];
-                pppp::utils::Vector2 last_pos =
-                    i == 0 ? pppp::utils::vec2(object::PLAYFIELD_WIDTH / 2, object::PLAYFIELD_HEIGHT / 2)
+                utils::Vector2 last_pos =
+                    i == 0 ? utils::vec2(object::PLAYFIELD_WIDTH / 2, object::PLAYFIELD_HEIGHT / 2)
                            : objs[i - 1].position;
 
                 float distance = max_combo_index == 0 ? radius
@@ -170,8 +173,8 @@ namespace pppp { namespace osu { namespace mods {
                 int try_count = 0;
 
                 // for checking overlap
-                const utils::linq::Enumerable<object::OsuHitObject> preceding_objects =
-                    utils::linq::from(objs)
+                const linq::Enumerable<object::OsuHitObject> preceding_objects =
+                    linq::from(objs)
                         .skip_last(static_cast<int>(objs.size() - i))
                         .take_last(OVERLAP_CHECK_COUNT);
 
@@ -179,8 +182,8 @@ namespace pppp { namespace osu { namespace mods {
                     if (try_count > 0) {
                         direction = two_pi * static_cast<float>(rng.next_double() * 1.0f);
                     }
-                    pppp::utils::Vector2 relative =
-                        pppp::utils::vec2(distance * std::cos(direction), distance * std::sin(direction));
+                    utils::Vector2 relative =
+                        utils::vec2(distance * std::cos(direction), distance * std::sin(direction));
                     // Rotate the new circle away from playfield border
                     relative = object::rotate_away_from_edge(last_pos, relative, EDGE_ROTATION_MULTIPLIER);
                     direction = std::atan2(relative.y, relative.x);
@@ -209,9 +212,7 @@ namespace pppp { namespace osu { namespace mods {
         utils::DotNetRandom rng(mod.target.seed.value());
 
         std::vector<object::OsuHitObject> original =
-            utils::linq::from(pb.objects)
-                .order_by(utils::linq::bind(&object::OsuHitObject::time, utils::linq::_1))
-                .to_list();
+            linq::from(pb.objects).order_by(linq::bind(&object::OsuHitObject::time, linq::_1)).to_list();
 
         std::vector<double> beats = generate_beats(pb, original);
 
@@ -223,7 +224,7 @@ namespace pppp { namespace osu { namespace mods {
             o.type = 1;
             o.time = beats[i];
             o.end_time = beats[i];
-            o.position = pppp::utils::vec2(0.0f, 0.0f);
+            o.position = utils::vec2(0.0f, 0.0f);
             o.new_combo = false;
             o.combo_offset = 0;
             o.combo_index = 0;

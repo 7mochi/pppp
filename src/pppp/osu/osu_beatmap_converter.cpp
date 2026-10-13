@@ -12,7 +12,7 @@
 namespace pppp { namespace osu {
     namespace {
         void add_timing_point(OsuBeatmap& pb, double time, double beat_length, int meter) {
-            const pppp::beatmaps::control_points::TimingControlPoint tp(time, beat_length, meter);
+            const beatmaps::control_points::TimingControlPoint tp(time, beat_length, meter);
 
             for (size_t i = 0; i < pb.info.timing_points.size(); i++) {
                 if (pb.info.timing_points[i].time == time) {
@@ -33,7 +33,7 @@ namespace pppp { namespace osu {
                 return;
             }
 
-            const pppp::beatmaps::control_points::EffectControlPoint ep(time, kiai);
+            const beatmaps::control_points::EffectControlPoint ep(time, kiai);
 
             for (size_t i = 0; i < pb.info.effect_points.size(); i++) {
                 if (pb.info.effect_points[i].time == time) {
@@ -49,14 +49,13 @@ namespace pppp { namespace osu {
             pb.info.effect_points.push_back(ep);
         }
 
-        void flush_timing_group(OsuBeatmap& pb,
-                                const std::vector<const pppp::beatmaps::TimingPoint*>& group) {
+        void flush_timing_group(OsuBeatmap& pb, const std::vector<const beatmaps::TimingPoint*>& group) {
             if (group.empty()) {
                 return;
             }
 
-            const pppp::beatmaps::TimingPoint* first_timing = 0;
-            const pppp::beatmaps::TimingPoint* last_inherited = 0;
+            const beatmaps::TimingPoint* first_timing = 0;
+            const beatmaps::TimingPoint* last_inherited = 0;
 
             for (size_t i = 0; i < group.size(); i++) {
                 if (group[i]->uninherited) {
@@ -76,21 +75,21 @@ namespace pppp { namespace osu {
                 }
             }
 
-            const pppp::beatmaps::TimingPoint* effect_source = last_inherited ? last_inherited : first_timing;
+            const beatmaps::TimingPoint* effect_source = last_inherited ? last_inherited : first_timing;
             if (effect_source) {
                 add_effect_point(pb, effect_source->time, (effect_source->effects & 1) != 0);
             }
         }
 
-        void build_control_points(OsuBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap) {
+        void build_control_points(OsuBeatmap& pb, const beatmaps::Beatmap& beatmap) {
             pb.info.timing_points.clear();
             pb.info.effect_points.clear();
 
-            std::vector<const pppp::beatmaps::TimingPoint*> group;
+            std::vector<const beatmaps::TimingPoint*> group;
             double group_time = 0.0;
 
             for (size_t i = 0; i < beatmap.timing_points.size(); i++) {
-                const pppp::beatmaps::TimingPoint* tp = &beatmap.timing_points[i];
+                const beatmaps::TimingPoint* tp = &beatmap.timing_points[i];
                 if (!group.empty() && tp->time != group_time) {
                     flush_timing_group(pb, group);
                     group.clear();
@@ -102,8 +101,8 @@ namespace pppp { namespace osu {
         }
     } // namespace
 
-    Status convert(OsuBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap,
-                   const pppp::beatmaps::ObjectConverted<object::OsuHitObject>& object_converted) {
+    Status convert(OsuBeatmap& pb, const beatmaps::Beatmap& beatmap,
+                   const beatmaps::ObjectConverted<object::OsuHitObject>& object_converted) {
         pb = OsuBeatmap();
         pb.source = &beatmap;
         pb.format_version = beatmap.format_version;
@@ -115,12 +114,12 @@ namespace pppp { namespace osu {
 
         pb.objects.resize(beatmap.hit_objects.size());
         for (size_t i = 0; i < beatmap.hit_objects.size(); i++) {
-            const pppp::beatmaps::HitObject& ho = beatmap.hit_objects[i];
+            const beatmaps::HitObject& ho = beatmap.hit_objects[i];
             object::OsuHitObject& o = pb.objects[i];
             o.type = ho.type;
             o.time = ho.start_time;
             o.end_time = ho.end_time;
-            pppp::utils::Vector2 raw = ho.position;
+            utils::Vector2 raw = ho.position;
             if (ho.type & 8) {
                 raw.x = 256.0f;
                 raw.y = 192.0f;
@@ -144,20 +143,20 @@ namespace pppp { namespace osu {
 
         pb.sliders.resize(beatmap.sliders.size());
         for (size_t i = 0; i < beatmap.hit_objects.size(); i++) {
-            const pppp::beatmaps::HitObject& ho = beatmap.hit_objects[i];
+            const beatmaps::HitObject& ho = beatmap.hit_objects[i];
             if (!(ho.type & 2) || ho.slider < 0 || static_cast<size_t>(ho.slider) >= beatmap.sliders.size()) {
                 continue;
             }
-            const pppp::beatmaps::Slider& src = beatmap.sliders[ho.slider];
+            const beatmaps::Slider& src = beatmap.sliders[ho.slider];
             object::PlayableSlider& sl = pb.sliders[ho.slider];
             sl.owner_object = static_cast<unsigned>(i);
             sl.slides = src.slides;
             sl.length = src.expected_length;
 
-            pppp::utils::Vector2 head = pb.objects[i].position;
+            utils::Vector2 head = pb.objects[i].position;
             sl.control_points.resize(src.control_points.size());
             for (size_t k = 0; k < src.control_points.size(); k++) {
-                const pppp::utils::Vector2& p = src.control_points[k];
+                const utils::Vector2& p = src.control_points[k];
                 sl.control_points[k].x = p.x - head.x;
                 sl.control_points[k].y = p.y - head.y;
             }
@@ -165,7 +164,7 @@ namespace pppp { namespace osu {
             sl.cumulative_lengths = src.cumulative_lengths;
             sl.events.resize(src.events.size());
             for (size_t k = 0; k < src.events.size(); k++) {
-                const pppp::beatmaps::SliderEventDescriptor& e = src.events[k];
+                const beatmaps::SliderEventDescriptor& e = src.events[k];
                 sl.events[k].type = e.type;
                 sl.events[k].time = e.time;
                 sl.events[k].span_index = e.span_index;
@@ -219,14 +218,14 @@ namespace pppp { namespace osu {
                 continue;
             }
             for (size_t k = 0; k < sl.control_points.size(); k++) {
-                pppp::utils::Vector2 p = sl.control_points[k];
+                utils::Vector2 p = sl.control_points[k];
                 if (h) {
-                    pppp::utils::Vector2 r = {-p.x, p.y};
+                    utils::Vector2 r = {-p.x, p.y};
                     set_control_point(sl.control_points[k], r);
                     p = sl.control_points[k];
                 }
                 if (v) {
-                    pppp::utils::Vector2 r = {p.x, -p.y};
+                    utils::Vector2 r = {p.x, -p.y};
                     set_control_point(sl.control_points[k], r);
                 }
             }
@@ -247,7 +246,7 @@ namespace pppp { namespace osu {
                     // Sliders retain their default TimeFadeIn to match Stable
                     if (!(pb.objects[i].type & 2)) {
                         pb.objects[i].time_fade_in =
-                            pb.objects[i].time_preempt * pppp::osu::mods::FADE_IN_DURATION_MULTIPLIER;
+                            pb.objects[i].time_preempt * mods::FADE_IN_DURATION_MULTIPLIER;
                     }
                 }
                 break;
@@ -294,7 +293,7 @@ namespace pppp { namespace osu {
             return StatusCode::NO_SLIDER_PATH_BACKEND;
         }
         object::PlayableSlider& sl = pb.sliders[slider_index];
-        const pppp::beatmaps::SliderPathOps& backend = pb.source->slider_path;
+        const beatmaps::SliderPathOps& backend = pb.source->slider_path;
         int rc = backend.recompute(backend.ctx, sl.owner_object,
                                    sl.control_points.empty() ? 0 : &sl.control_points[0],
                                    sl.control_points.size(), &sl.path, &sl.cumulative_lengths);

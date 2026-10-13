@@ -18,9 +18,12 @@
 #include <cmath>
 
 namespace pppp { namespace osu { namespace difficulty {
+    namespace linq = ::pppp::utils::linq;
+    namespace math = ::pppp::utils::math;
+
     namespace {
         struct OsuPerformanceCalculator {
-            const pppp::common::ScoreInfo& score;
+            const common::ScoreInfo& score;
             const OsuDifficultyAttributes& attributes;
 
             bool using_classic_slider_accuracy;
@@ -46,7 +49,7 @@ namespace pppp { namespace osu { namespace difficulty {
             nonstd::optional<double> speed_deviation;
             double aim_estimated_slider_breaks, speed_estimated_slider_breaks;
 
-            OsuPerformanceCalculator(const pppp::common::ScoreInfo& s, const OsuDifficultyAttributes& a)
+            OsuPerformanceCalculator(const common::ScoreInfo& s, const OsuDifficultyAttributes& a)
                 : score(s),
                   attributes(a),
                   using_classic_slider_accuracy(false),
@@ -269,7 +272,7 @@ namespace pppp { namespace osu { namespace difficulty {
                 // 220 UR and less are considered tapped correctly to ensure that normal scores will be
                 // punished as little as possible
                 double t = 1 - utils::reverse_lerp(speed_deviation.value(), 22.0, 27.0);
-                adjusted_speed_value = utils::math::lerp_dotnet(adjusted_speed_value, speed_value, t);
+                adjusted_speed_value = math::lerp_dotnet(adjusted_speed_value, speed_value, t);
                 return adjusted_speed_value / speed_value;
             }
 
@@ -294,9 +297,8 @@ namespace pppp { namespace osu { namespace difficulty {
             }
 
             double compute_aim_value() const {
-                if (utils::linq::from(score.mods.data(), score.mods.size())
-                        .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) ==
-                             pppp::mods::MOD_AP)) {
+                if (linq::from(score.mods.data(), score.mods.size())
+                        .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_AP)) {
                     return 0.0;
                 }
                 double aim_difficulty = attributes.aim_difficulty;
@@ -306,16 +308,16 @@ namespace pppp { namespace osu { namespace difficulty {
                         // When the score is considered classic (regardless if it was made on old client or
                         // not) we consider all missing combo to be dropped difficult sliders
                         int maximum_possible_dropped_sliders = total_imperfect_hits();
-                        estimate_improperly_followed_difficult_sliders = utils::math::clamp(
-                            static_cast<double>(std::min(maximum_possible_dropped_sliders,
-                                                         attributes.max_combo - score_max_combo)),
-                            0.0, attributes.aim_difficult_slider_count);
+                        estimate_improperly_followed_difficult_sliders =
+                            math::clamp(static_cast<double>(std::min(maximum_possible_dropped_sliders,
+                                                                     attributes.max_combo - score_max_combo)),
+                                        0.0, attributes.aim_difficult_slider_count);
                     } else {
                         // We add tick misses here since they too mean that the player didn't follow the
                         // slider properly We however aren't adding misses here because missing slider heads
                         // has a harsh penalty by itself and doesn't mean that the rest of the slider wasn't
                         // followed properly
-                        estimate_improperly_followed_difficult_sliders = utils::math::clamp(
+                        estimate_improperly_followed_difficult_sliders = math::clamp(
                             static_cast<double>(count_slider_ends_dropped + count_slider_tick_miss), 0.0,
                             attributes.aim_difficult_slider_count);
                     }
@@ -341,15 +343,13 @@ namespace pppp { namespace osu { namespace difficulty {
                 }
                 // TC bonuses are excluded when blinds is present as the increased visual difficulty is
                 // unimportant when notes cannot be seen.
-                if (utils::linq::from(score.mods.data(), score.mods.size())
-                        .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) ==
-                             pppp::mods::MOD_BL)) {
+                if (linq::from(score.mods.data(), score.mods.size())
+                        .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_BL)) {
                     value *=
                         1.3 + (th * (0.0016 / (1 + 2 * effective_miss_count)) * utils::pow(accuracy, 16)) *
                                   (1 - 0.003 * drain_rate * drain_rate);
-                } else if (utils::linq::from(score.mods.data(), score.mods.size())
-                               .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) ==
-                                    pppp::mods::MOD_TC)) {
+                } else if (linq::from(score.mods.data(), score.mods.size())
+                               .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_TC)) {
                     value *= 1.0 + calculate_traceable_bonus(attributes.slider_factor);
                 }
                 value *= accuracy;
@@ -357,9 +357,8 @@ namespace pppp { namespace osu { namespace difficulty {
             }
 
             double compute_speed_value() const {
-                if (utils::linq::from(score.mods.data(), score.mods.size())
-                        .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) ==
-                             pppp::mods::MOD_RX) ||
+                if (linq::from(score.mods.data(), score.mods.size())
+                        .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_RX) ||
                     !speed_deviation.has_value()) {
                     return 0.0;
                 }
@@ -371,9 +370,8 @@ namespace pppp { namespace osu { namespace difficulty {
                     value *=
                         calculate_miss_penalty(relevant_miss_count, attributes.speed_difficult_strain_count);
                 }
-                if (utils::linq::from(score.mods.data(), score.mods.size())
-                        .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) ==
-                             pppp::mods::MOD_BL)) {
+                if (linq::from(score.mods.data(), score.mods.size())
+                        .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_BL)) {
                     // Increasing the speed value by object count for Blinds isn't ideal, so the minimum buff
                     // is given.
                     value *= 1.12;
@@ -395,9 +393,8 @@ namespace pppp { namespace osu { namespace difficulty {
             }
 
             double compute_accuracy_value() const {
-                if (utils::linq::from(score.mods.data(), score.mods.size())
-                        .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) ==
-                             pppp::mods::MOD_RX)) {
+                if (linq::from(score.mods.data(), score.mods.size())
+                        .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_RX)) {
                     return 0.0;
                 }
                 // This percentage only considers HitCircles of any value - in this part of the calculation we
@@ -432,15 +429,13 @@ namespace pppp { namespace osu { namespace difficulty {
                 value *= amount_hit_objects_with_accuracy < 1000
                              ? utils::pow(amount_hit_objects_with_accuracy / 1000.0, 0.3)
                              : utils::pow(amount_hit_objects_with_accuracy / 1000.0, 0.1);
-                if (utils::linq::from(score.mods.data(), score.mods.size())
-                        .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) ==
-                             pppp::mods::MOD_BL)) {
+                if (linq::from(score.mods.data(), score.mods.size())
+                        .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_BL)) {
                     // Increasing the accuracy value by object count for Blinds isn't ideal, so the minimum
                     // buff is given.
                     value *= 1.14;
-                } else if (utils::linq::from(score.mods.data(), score.mods.size())
-                               .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) ==
-                                    pppp::mods::MOD_TC)) {
+                } else if (linq::from(score.mods.data(), score.mods.size())
+                               .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_TC)) {
                     // Decrease bonus for AR > 10
                     value *= 1 + 0.08 * utils::reverse_lerp(approach_rate, 11.5, 10);
                 }
@@ -448,9 +443,8 @@ namespace pppp { namespace osu { namespace difficulty {
             }
 
             double compute_flashlight_value() const {
-                if (!utils::linq::from(score.mods.data(), score.mods.size())
-                         .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) ==
-                              pppp::mods::MOD_FL)) {
+                if (!linq::from(score.mods.data(), score.mods.size())
+                         .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_FL)) {
                     return 0.0;
                 }
                 double value =
@@ -483,30 +477,29 @@ namespace pppp { namespace osu { namespace difficulty {
 
     } // namespace
 
-    Status calculate_performance(OsuPerformanceAttributes& out, const pppp::common::ScoreInfo& score,
+    Status calculate_performance(OsuPerformanceAttributes& out, const common::ScoreInfo& score,
                                  const OsuDifficultyAttributes& attributes,
-                                 const pppp::beatmaps::Beatmap& beatmap) {
+                                 const beatmaps::Beatmap& beatmap) {
         out = OsuPerformanceAttributes();
         OsuPerformanceCalculator c(score, attributes);
 
         c.using_classic_slider_accuracy =
-            utils::linq::from(score.mods.data(), score.mods.size())
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_CL &&
-                     utils::linq::bind(&pppp::mods::ClassicSettings::no_slider_head_accuracy,
-                                       utils::linq::bind(&pppp::mods::Mod::classic, utils::linq::_1)));
-        c.using_score_v2 =
-            utils::linq::from(score.mods.data(), score.mods.size())
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_SV2);
+            linq::from(score.mods.data(), score.mods.size())
+                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_CL &&
+                     linq::bind(&pppp::mods::ClassicSettings::no_slider_head_accuracy,
+                                linq::bind(&pppp::mods::Mod::classic, linq::_1)));
+        c.using_score_v2 = linq::from(score.mods.data(), score.mods.size())
+                               .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_SV2);
 
-        c.accuracy = utils::math::clamp(score.accuracy, 0.0, 1.0);
+        c.accuracy = math::clamp(score.accuracy, 0.0, 1.0);
         c.score_max_combo = std::min(std::max(score.max_combo, 0), attributes.max_combo);
-        c.count_great = score.statistics[pppp::common::HIT_RESULT_GREAT];
-        c.count_ok = score.statistics[pppp::common::HIT_RESULT_OK];
-        c.count_meh = score.statistics[pppp::common::HIT_RESULT_MEH];
-        c.count_miss = score.statistics[pppp::common::HIT_RESULT_MISS];
+        c.count_great = score.statistics[common::HIT_RESULT_GREAT];
+        c.count_ok = score.statistics[common::HIT_RESULT_OK];
+        c.count_meh = score.statistics[common::HIT_RESULT_MEH];
+        c.count_miss = score.statistics[common::HIT_RESULT_MISS];
         c.count_slider_ends_dropped =
-            attributes.slider_count - score.statistics[pppp::common::HIT_RESULT_SLIDER_TAIL_HIT];
-        c.count_slider_tick_miss = score.statistics[pppp::common::HIT_RESULT_LARGE_TICK_MISS];
+            attributes.slider_count - score.statistics[common::HIT_RESULT_SLIDER_TAIL_HIT];
+        c.count_slider_tick_miss = score.statistics[common::HIT_RESULT_LARGE_TICK_MISS];
         c.effective_miss_count = c.count_miss;
 
         pppp::mods::DifficultySettings ds;
@@ -519,11 +512,11 @@ namespace pppp { namespace osu { namespace difficulty {
         pppp::mods::mod_apply_to_difficulty(score.mods.data(), score.mods.size(), &ds);
         c.clock_rate = pppp::mods::mod_calculate_rate(score.mods.data(), score.mods.size());
 
-        pppp::osu::OsuHitWindows hit_windows;
+        OsuHitWindows hit_windows;
         hit_windows.set_difficulty(static_cast<float>(ds.overall_difficulty));
-        c.great_hit_window = hit_windows.window_for(pppp::common::HIT_RESULT_GREAT) / c.clock_rate;
-        c.ok_hit_window = hit_windows.window_for(pppp::common::HIT_RESULT_OK) / c.clock_rate;
-        c.meh_hit_window = hit_windows.window_for(pppp::common::HIT_RESULT_MEH) / c.clock_rate;
+        c.great_hit_window = hit_windows.window_for(common::HIT_RESULT_GREAT) / c.clock_rate;
+        c.ok_hit_window = hit_windows.window_for(common::HIT_RESULT_OK) / c.clock_rate;
+        c.meh_hit_window = hit_windows.window_for(common::HIT_RESULT_MEH) / c.clock_rate;
 
         {
             double preempt =
@@ -559,18 +552,18 @@ namespace pppp { namespace osu { namespace difficulty {
         }
 
         double multiplier = difficulty::PERFORMANCE_BASE_MULTIPLIER;
-        if (utils::linq::from(score.mods.data(), score.mods.size())
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_NF)) {
+        if (linq::from(score.mods.data(), score.mods.size())
+                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_NF)) {
             multiplier *= std::max(0.90, 1.0 - 0.02 * c.effective_miss_count);
         }
-        if (utils::linq::from(score.mods.data(), score.mods.size())
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_SO) &&
+        if (linq::from(score.mods.data(), score.mods.size())
+                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_SO) &&
             c.total_hits() > 0) {
             multiplier *=
                 1.0 - utils::pow(static_cast<double>(attributes.spinner_count) / c.total_hits(), 0.85);
         }
-        if (utils::linq::from(score.mods.data(), score.mods.size())
-                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_RX)) {
+        if (linq::from(score.mods.data(), score.mods.size())
+                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_RX)) {
             // https://www.desmos.com/calculator/vspzsop6td
             // we use OD13.3 as maximum since it's the value at which great hitwidow becomes 0
             // this is well beyond currently maximum achievable OD which is 12.17 (DTx2 + DA with OD11)

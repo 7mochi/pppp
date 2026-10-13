@@ -6,6 +6,8 @@
 #include <pppp/performance.h>
 #include <string>
 
+namespace common = ::pppp::common;
+
 namespace {
     const pppp::DifficultyAttributes difficulty(const char* map, pppp::Ruleset::Value ruleset,
                                                 const char* mods) {
@@ -17,7 +19,7 @@ namespace {
     }
 
     pppp::PerformanceAttributes performance(const char* map, pppp::Ruleset::Value ruleset, const char* mods,
-                                            const pppp::common::ScoreInfo& score) {
+                                            const common::ScoreInfo& score) {
         pppp::Beatmap beatmap;
         pppp_test::load(beatmap, map);
 
@@ -42,18 +44,18 @@ TEST_CASE("osu! performance matches upstream") {
         INFO(row.name << " " << row.map << " " << row.mods << " " << row.score);
 
         const std::string path = std::string(PPPP_TEST_RESOURCES) + row.map;
-        pppp::common::ScoreInfo score;
+        common::ScoreInfo score;
         score.mods = pppp_test::parse_mods(row.mods);
-        score.statistics[pppp::common::HIT_RESULT_GREAT] = row.great;
-        score.statistics[pppp::common::HIT_RESULT_OK] = row.ok;
-        score.statistics[pppp::common::HIT_RESULT_MEH] = row.meh;
-        score.statistics[pppp::common::HIT_RESULT_MISS] = row.miss;
+        score.statistics[common::HIT_RESULT_GREAT] = row.great;
+        score.statistics[common::HIT_RESULT_OK] = row.ok;
+        score.statistics[common::HIT_RESULT_MEH] = row.meh;
+        score.statistics[common::HIT_RESULT_MISS] = row.miss;
         const pppp::DifficultyAttributes attributes = difficulty(path.c_str(), pppp::Ruleset::OSU, row.mods);
         const pppp::osu::difficulty::OsuDifficultyAttributes* attrs = attributes.osu();
         REQUIRE_UNARY(attrs != 0);
         // A perfect play completes every slider tail, which is the same value osu-native's own tests
         // pass for a score that drops no slider ends.
-        score.statistics[pppp::common::HIT_RESULT_SLIDER_TAIL_HIT] = attrs->slider_count;
+        score.statistics[common::HIT_RESULT_SLIDER_TAIL_HIT] = attrs->slider_count;
         score.max_combo = row.combo;
         score.accuracy = row.accuracy < 0.0
                              ? pppp_test::classic_accuracy(row.great, row.ok, row.meh, row.miss)
@@ -101,11 +103,11 @@ TEST_CASE("taiko performance matches upstream") {
         INFO(row.name << " " << row.map << " " << row.mods << " " << row.score);
 
         const std::string path = std::string(PPPP_TEST_RESOURCES) + row.map;
-        pppp::common::ScoreInfo score;
+        common::ScoreInfo score;
         score.mods = pppp_test::parse_mods(row.mods);
-        score.statistics[pppp::common::HIT_RESULT_GREAT] = row.great;
-        score.statistics[pppp::common::HIT_RESULT_OK] = row.ok;
-        score.statistics[pppp::common::HIT_RESULT_MISS] = row.miss;
+        score.statistics[common::HIT_RESULT_GREAT] = row.great;
+        score.statistics[common::HIT_RESULT_OK] = row.ok;
+        score.statistics[common::HIT_RESULT_MISS] = row.miss;
         // The map's own maximum combo stands in when the table names none, and this mode's accuracy is
         // always the one its judgements give, never a number read from the table.
         const pppp::DifficultyAttributes attributes =
@@ -140,13 +142,13 @@ TEST_CASE("osu!catch performance matches upstream") {
         INFO(row.name << " " << row.map << " " << row.mods << " " << row.score);
 
         const std::string path = std::string(PPPP_TEST_RESOURCES) + row.map;
-        pppp::common::ScoreInfo score;
+        common::ScoreInfo score;
         score.mods = pppp_test::parse_mods(row.mods);
-        score.statistics[pppp::common::HIT_RESULT_GREAT] = row.fruits;
-        score.statistics[pppp::common::HIT_RESULT_LARGE_TICK_HIT] = row.droplets;
-        score.statistics[pppp::common::HIT_RESULT_SMALL_TICK_HIT] = row.tiny_droplets;
-        score.statistics[pppp::common::HIT_RESULT_SMALL_TICK_MISS] = row.tiny_misses;
-        score.statistics[pppp::common::HIT_RESULT_MISS] = row.miss;
+        score.statistics[common::HIT_RESULT_GREAT] = row.fruits;
+        score.statistics[common::HIT_RESULT_LARGE_TICK_HIT] = row.droplets;
+        score.statistics[common::HIT_RESULT_SMALL_TICK_HIT] = row.tiny_droplets;
+        score.statistics[common::HIT_RESULT_SMALL_TICK_MISS] = row.tiny_misses;
+        score.statistics[common::HIT_RESULT_MISS] = row.miss;
         const pppp::DifficultyAttributes attributes =
             difficulty(path.c_str(), pppp::Ruleset::CATCH, row.mods);
         const pppp::fruits::difficulty::CatchDifficultyAttributes* attrs = attributes.fruits();
@@ -173,14 +175,14 @@ TEST_CASE("osu!mania performance matches upstream") {
         INFO(row.name << " " << row.map << " " << row.mods << " " << row.score);
 
         const std::string path = std::string(PPPP_TEST_RESOURCES) + row.map;
-        pppp::common::ScoreInfo score;
+        common::ScoreInfo score;
         score.mods = pppp_test::parse_mods(row.mods);
-        score.statistics[pppp::common::HIT_RESULT_PERFECT] = row.perfect;
-        score.statistics[pppp::common::HIT_RESULT_GREAT] = row.great;
-        score.statistics[pppp::common::HIT_RESULT_GOOD] = row.good;
-        score.statistics[pppp::common::HIT_RESULT_OK] = row.ok;
-        score.statistics[pppp::common::HIT_RESULT_MEH] = row.meh;
-        score.statistics[pppp::common::HIT_RESULT_MISS] = row.miss;
+        score.statistics[common::HIT_RESULT_PERFECT] = row.perfect;
+        score.statistics[common::HIT_RESULT_GREAT] = row.great;
+        score.statistics[common::HIT_RESULT_GOOD] = row.good;
+        score.statistics[common::HIT_RESULT_OK] = row.ok;
+        score.statistics[common::HIT_RESULT_MEH] = row.meh;
+        score.statistics[common::HIT_RESULT_MISS] = row.miss;
         const pppp::DifficultyAttributes attributes =
             difficulty(path.c_str(), pppp::Ruleset::MANIA, row.mods);
         const pppp::mania::difficulty::ManiaDifficultyAttributes* attrs = attributes.mania();

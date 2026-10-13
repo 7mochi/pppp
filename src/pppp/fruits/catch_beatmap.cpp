@@ -10,6 +10,8 @@
 #include <algorithm>
 
 namespace pppp { namespace fruits {
+    namespace linq = ::pppp::utils::linq;
+
     CatchBeatmap::CatchBeatmap()
         : clock_rate(1.0),
           circle_size(5.0),
@@ -30,17 +32,15 @@ namespace pppp { namespace fruits {
     void palpable_objects(std::vector<object::CatchHitObject*>& out, CatchBeatmap& pb) {
         // We want to only consider fruits that contribute to the combo.
         std::vector<object::CatchHitObject*> objects =
-            utils::linq::from(pb.all_objects)
-                .where(utils::linq::bind(&object::CatchHitObject::kind, utils::linq::_1) ==
-                           object::OBJECT_FRUIT ||
-                       utils::linq::bind(&object::CatchHitObject::kind, utils::linq::_1) ==
-                           object::OBJECT_DROPLET)
-                .order_by(utils::linq::bind(&object::CatchHitObject::time, utils::linq::_1))
+            linq::from(pb.all_objects)
+                .where(linq::bind(&object::CatchHitObject::kind, linq::_1) == object::OBJECT_FRUIT ||
+                       linq::bind(&object::CatchHitObject::kind, linq::_1) == object::OBJECT_DROPLET)
+                .order_by(linq::bind(&object::CatchHitObject::time, linq::_1))
                 .to_list();
         out.swap(objects);
     }
 
-    ModdedDifficulty modded_difficulty(const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+    ModdedDifficulty modded_difficulty(const beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
                                        size_t mod_count) {
         ModdedDifficulty out;
         out.circle_size = beatmap.difficulty.circle_size;
@@ -88,9 +88,9 @@ namespace pppp { namespace fruits {
         return out;
     }
 
-    Status build(CatchBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+    Status build(CatchBeatmap& pb, const beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
                  size_t mod_count,
-                 const pppp::beatmaps::ObjectConverted<object::CatchHitObject>& object_converted) {
+                 const beatmaps::ObjectConverted<object::CatchHitObject>& object_converted) {
         pb = CatchBeatmap();
         pb.clock_rate = pppp::mods::mod_calculate_rate(mods, mod_count);
         pb.is_convert = beatmap.mode == 0;

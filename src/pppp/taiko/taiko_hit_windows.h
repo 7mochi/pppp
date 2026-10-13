@@ -7,9 +7,9 @@
 #include "pppp/utils/difficulty_range.h"
 
 namespace pppp { namespace taiko {
-    const utils::DifficultyRange GREAT_WINDOW_RANGE(50.0, 35.0, 20.0);
-    const utils::DifficultyRange OK_WINDOW_RANGE(120.0, 80.0, 50.0);
-    const utils::DifficultyRange MISS_WINDOW_RANGE(135.0, 95.0, 70.0);
+    const pppp::utils::DifficultyRange GREAT_WINDOW_RANGE(50.0, 35.0, 20.0);
+    const pppp::utils::DifficultyRange OK_WINDOW_RANGE(120.0, 80.0, 50.0);
+    const pppp::utils::DifficultyRange MISS_WINDOW_RANGE(135.0, 95.0, 70.0);
 
     struct TaikoHitWindows {
         double great;

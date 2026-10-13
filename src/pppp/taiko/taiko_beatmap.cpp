@@ -10,6 +10,8 @@
 #include <cmath>
 
 namespace pppp { namespace taiko {
+    namespace control_points = ::pppp::beatmaps::control_points;
+
     namespace {
         double round_away_from_zero(double x) { return x >= 0.0 ? std::floor(x + 0.5) : std::ceil(x - 0.5); }
 
@@ -28,7 +30,7 @@ namespace pppp { namespace taiko {
         }
 
         int closest_beat_divisor(const TaikoBeatmap& pb, double time) {
-            const pppp::beatmaps::control_points::TimingControlPoint* point = pb.info.timing_point_at(time);
+            const control_points::TimingControlPoint* point = pb.info.timing_point_at(time);
             double point_time = point ? point->time : 0.0;
             double point_beat_length = point ? point->beat_length : 1000.0;
 
@@ -59,8 +61,7 @@ namespace pppp { namespace taiko {
         }
 
         int snap_between_notes(const TaikoBeatmap& pb, double current_time, double next_time) {
-            const pppp::beatmaps::control_points::TimingControlPoint* point =
-                pb.info.timing_point_at(current_time);
+            const control_points::TimingControlPoint* point = pb.info.timing_point_at(current_time);
             double point_time = point ? point->time : 0.0;
             return closest_beat_divisor(pb, point_time + (next_time - current_time));
         }
@@ -146,7 +147,7 @@ namespace pppp { namespace taiko {
                             if (index_in_pattern % 3 == 1) {
                                 removed[hits[j]] = true;
                             } else if (index_in_pattern % 3 == 2) {
-                                const pppp::beatmaps::control_points::TimingControlPoint* point =
+                                const control_points::TimingControlPoint* point =
                                     pb.info.timing_point_at(pb.objects[hits[j]].time);
                                 double beat_length = point ? point->beat_length : 1000.0;
                                 pb.objects[hits[j]].time =
@@ -173,7 +174,7 @@ namespace pppp { namespace taiko {
 
     bool hit_object_less(const TaikoHitObject& a, const TaikoHitObject& b) { return a.time < b.time; }
 
-    ModdedDifficulty modded_difficulty(const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+    ModdedDifficulty modded_difficulty(const beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
                                        size_t mod_count) {
         ModdedDifficulty out;
         out.overall_difficulty = beatmap.difficulty.overall_difficulty;
@@ -220,17 +221,17 @@ namespace pppp { namespace taiko {
           is_convert(false) {}
 
     double beat_length_at(const TaikoBeatmap& pb, double time) {
-        const pppp::beatmaps::control_points::TimingControlPoint* point = pb.info.timing_point_at(time);
-        return point != 0 ? point->beat_length : pppp::beatmaps::control_points::DEFAULT_BEAT_LENGTH;
+        const control_points::TimingControlPoint* point = pb.info.timing_point_at(time);
+        return point != 0 ? point->beat_length : control_points::DEFAULT_BEAT_LENGTH;
     }
 
     double scroll_speed_at(const TaikoBeatmap& pb, double time) {
-        const pppp::beatmaps::control_points::EffectControlPoint* point = pb.info.effect_point_at(time);
+        const control_points::EffectControlPoint* point = pb.info.effect_point_at(time);
         return point != 0 ? point->clamped_scroll_speed() : 1.0;
     }
 
-    Status build(TaikoBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
-                 size_t mod_count, const pppp::beatmaps::ObjectConverted<TaikoHitObject>& object_converted) {
+    Status build(TaikoBeatmap& pb, const beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                 size_t mod_count, const beatmaps::ObjectConverted<TaikoHitObject>& object_converted) {
         convert(pb, beatmap, object_converted);
         pb.clock_rate = pppp::mods::mod_calculate_rate(mods, mod_count);
 

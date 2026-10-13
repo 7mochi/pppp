@@ -12,9 +12,11 @@
 #include <cmath>
 
 namespace pppp { namespace taiko { namespace difficulty {
+    namespace linq = ::pppp::utils::linq;
+
     namespace {
         struct TaikoPerformanceCalculator {
-            const pppp::common::ScoreInfo& score;
+            const common::ScoreInfo& score;
             const TaikoDifficultyAttributes& attributes;
 
             int count_great;
@@ -26,7 +28,7 @@ namespace pppp { namespace taiko { namespace difficulty {
             double great_hit_window;
             double total_difficult_hits;
 
-            TaikoPerformanceCalculator(const pppp::common::ScoreInfo& s, const TaikoDifficultyAttributes& a)
+            TaikoPerformanceCalculator(const common::ScoreInfo& s, const TaikoDifficultyAttributes& a)
                 : score(s),
                   attributes(a),
                   count_great(0),
@@ -100,15 +102,13 @@ namespace pppp { namespace taiko { namespace difficulty {
                 double miss_penalty = 0.97 + 0.03 * total_difficult_hits / (total_difficult_hits + 1500.0);
                 difficulty_value *= pppp::utils::pow(miss_penalty, count_miss);
 
-                if (pppp::utils::linq::from(score.mods.data(), score.mods.size())
-                        .any(pppp::utils::linq::bind(&pppp::mods::Mod::id, pppp::utils::linq::_1) ==
-                             pppp::mods::MOD_HD)) {
+                if (linq::from(score.mods.data(), score.mods.size())
+                        .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_HD)) {
                     double hidden_bonus = is_convert ? 0.025 : 0.1;
 
                     // Hidden+flashlight plays are excluded from reading-based penalties to hidden.
-                    if (!pppp::utils::linq::from(score.mods.data(), score.mods.size())
-                             .any(pppp::utils::linq::bind(&pppp::mods::Mod::id, pppp::utils::linq::_1) ==
-                                  pppp::mods::MOD_FL)) {
+                    if (!linq::from(score.mods.data(), score.mods.size())
+                             .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_FL)) {
                         // A penalty is applied to the bonus for hidden on non-classic scores, as the
                         // playfield can be made wider to make fast reading easier.
                         if (!is_classic) {
@@ -116,9 +116,8 @@ namespace pppp { namespace taiko { namespace difficulty {
                         }
                         // A penalty is applied to classic easy+hidden scores, as notes disappear later making
                         // fast reading easier.
-                        if (pppp::utils::linq::from(score.mods.data(), score.mods.size())
-                                .any(pppp::utils::linq::bind(&pppp::mods::Mod::id, pppp::utils::linq::_1) ==
-                                     pppp::mods::MOD_EZ) &&
+                        if (linq::from(score.mods.data(), score.mods.size())
+                                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_EZ) &&
                             is_classic) {
                             hidden_bonus *= 0.5;
                         }
@@ -127,9 +126,8 @@ namespace pppp { namespace taiko { namespace difficulty {
                     difficulty_value *= 1.0 + hidden_bonus;
                 }
 
-                if (pppp::utils::linq::from(score.mods.data(), score.mods.size())
-                        .any(pppp::utils::linq::bind(&pppp::mods::Mod::id, pppp::utils::linq::_1) ==
-                             pppp::mods::MOD_FL)) {
+                if (linq::from(score.mods.data(), score.mods.size())
+                        .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_FL)) {
                     difficulty_value *= std::max(
                         1.0, 1.050 - std::min(attributes.mono_stamina_factor / 50.0, 1.0) * length_bonus);
                 }
@@ -156,9 +154,8 @@ namespace pppp { namespace taiko { namespace difficulty {
                 accuracy_value *= 1.0 + pppp::utils::pow(50.0 / estimated_unstable_rate.value(), 2) *
                                             pppp::utils::pow(attributes.star_rating, 2.8) / 600.0;
 
-                if (pppp::utils::linq::from(score.mods.data(), score.mods.size())
-                        .any(pppp::utils::linq::bind(&pppp::mods::Mod::id, pppp::utils::linq::_1) ==
-                             pppp::mods::MOD_HD) &&
+                if (linq::from(score.mods.data(), score.mods.size())
+                        .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_HD) &&
                     !is_convert) {
                     accuracy_value *= 1.075;
                 }
@@ -170,12 +167,10 @@ namespace pppp { namespace taiko { namespace difficulty {
                 // Applies a bonus to maps with more total memory required with HDFL.
                 double memory_length_bonus = std::min(1.15, pppp::utils::pow(total_hits() / 1500.0, 0.3));
 
-                if (pppp::utils::linq::from(score.mods.data(), score.mods.size())
-                        .any(pppp::utils::linq::bind(&pppp::mods::Mod::id, pppp::utils::linq::_1) ==
-                             pppp::mods::MOD_FL) &&
-                    pppp::utils::linq::from(score.mods.data(), score.mods.size())
-                        .any(pppp::utils::linq::bind(&pppp::mods::Mod::id, pppp::utils::linq::_1) ==
-                             pppp::mods::MOD_HD) &&
+                if (linq::from(score.mods.data(), score.mods.size())
+                        .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_FL) &&
+                    linq::from(score.mods.data(), score.mods.size())
+                        .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_HD) &&
                     !is_convert) {
                     accuracy_value *= std::max(1.0, 1.05 * memory_length_bonus);
                 }
@@ -185,17 +180,17 @@ namespace pppp { namespace taiko { namespace difficulty {
         };
     } // namespace
 
-    Status calculate_performance(TaikoPerformanceAttributes& out, const pppp::common::ScoreInfo& score,
+    Status calculate_performance(TaikoPerformanceAttributes& out, const common::ScoreInfo& score,
                                  const TaikoDifficultyAttributes& attributes,
-                                 const pppp::beatmaps::Beatmap& beatmap) {
+                                 const beatmaps::Beatmap& beatmap) {
         out = TaikoPerformanceAttributes();
 
         TaikoPerformanceCalculator c(score, attributes);
 
-        c.count_great = score.statistics[pppp::common::HIT_RESULT_GREAT];
-        c.count_ok = score.statistics[pppp::common::HIT_RESULT_OK];
-        c.count_meh = score.statistics[pppp::common::HIT_RESULT_MEH];
-        c.count_miss = std::max(0, score.statistics[pppp::common::HIT_RESULT_MISS]);
+        c.count_great = score.statistics[common::HIT_RESULT_GREAT];
+        c.count_ok = score.statistics[common::HIT_RESULT_OK];
+        c.count_meh = score.statistics[common::HIT_RESULT_MEH];
+        c.count_miss = std::max(0, score.statistics[common::HIT_RESULT_MISS]);
 
         c.clock_rate = pppp::mods::mod_calculate_rate(score.mods.data(), score.mods.size());
 
@@ -216,9 +211,8 @@ namespace pppp { namespace taiko { namespace difficulty {
         // Converts and the classic mod are detected and omitted from mod-specific bonuses due to the scope
         // of current difficulty calculation.
         bool is_convert = beatmap.mode != 1;
-        bool is_classic = pppp::utils::linq::from(score.mods.data(), score.mods.size())
-                              .any(pppp::utils::linq::bind(&pppp::mods::Mod::id, pppp::utils::linq::_1) ==
-                                   pppp::mods::MOD_CL);
+        bool is_classic = linq::from(score.mods.data(), score.mods.size())
+                              .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_CL);
 
         double difficulty_value = c.compute_difficulty_value(is_convert, is_classic) * 1.08;
         double accuracy_value = c.compute_accuracy_value(is_convert) * 1.1;

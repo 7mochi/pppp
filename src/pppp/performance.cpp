@@ -34,7 +34,7 @@ namespace pppp {
         case Ruleset::OSU: {
             OsuPerformanceAttributes value;
             const Status status =
-                pppp::osu::difficulty::calculate_performance(value, score, *attributes.osu(), *beatmap);
+                osu::difficulty::calculate_performance(value, score, *attributes.osu(), *beatmap);
             if (status.ok()) {
                 out = value;
             }
@@ -43,7 +43,7 @@ namespace pppp {
         case Ruleset::TAIKO: {
             TaikoPerformanceAttributes value;
             const Status status =
-                pppp::taiko::difficulty::calculate_performance(value, score, *attributes.taiko(), *beatmap);
+                taiko::difficulty::calculate_performance(value, score, *attributes.taiko(), *beatmap);
             if (status.ok()) {
                 out = value;
             }
@@ -52,7 +52,7 @@ namespace pppp {
         case Ruleset::CATCH: {
             CatchPerformanceAttributes value;
             const Status status =
-                pppp::fruits::difficulty::calculate_performance(value, score, *attributes.fruits(), *beatmap);
+                fruits::difficulty::calculate_performance(value, score, *attributes.fruits(), *beatmap);
             if (status.ok()) {
                 out = value;
             }
@@ -61,7 +61,7 @@ namespace pppp {
         case Ruleset::MANIA: {
             ManiaPerformanceAttributes value;
             const Status status =
-                pppp::mania::difficulty::calculate_performance(value, score, *attributes.mania(), *beatmap);
+                mania::difficulty::calculate_performance(value, score, *attributes.mania(), *beatmap);
             if (status.ok()) {
                 out = value;
             }

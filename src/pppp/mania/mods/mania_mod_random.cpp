@@ -8,14 +8,16 @@
 #include <vector>
 
 namespace pppp { namespace mania { namespace mods {
+    namespace linq = ::pppp::utils::linq;
+
     void apply_random(ManiaBeatmap& pb, int seed) {
         utils::DotNetRandom rng(seed);
 
         int available_columns = pb.total_columns();
         const std::vector<int> shuffled_columns =
-            pppp::utils::linq::range(0, available_columns)
-                .order_by(pppp::utils::linq::bind(
-                    static_cast<int (utils::DotNetRandom::*)()>(&utils::DotNetRandom::next), &rng))
+            linq::range(0, available_columns)
+                .order_by(
+                    linq::bind(static_cast<int (utils::DotNetRandom::*)()>(&utils::DotNetRandom::next), &rng))
                 .to_list();
 
         for (size_t i = 0; i < pb.objects.size(); i++) {

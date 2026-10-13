@@ -7,13 +7,13 @@
 #include <vector>
 
 namespace pppp { namespace mania { namespace mods {
+    namespace linq = ::pppp::utils::linq;
+
     void apply_hold_off(ManiaBeatmap& pb) {
         std::vector<ManiaHitObject> new_objects;
 
         const std::vector<ManiaHitObject> hold_notes =
-            pppp::utils::linq::from(pb.objects)
-                .where(pppp::utils::linq::bind(&ManiaHitObject::hold, pppp::utils::linq::_1))
-                .to_list();
+            linq::from(pb.objects).where(linq::bind(&ManiaHitObject::hold, linq::_1)).to_list();
         for (size_t i = 0; i < hold_notes.size(); i++) {
             // Add a note for the beginning of the hold note
             ManiaHitObject note;
@@ -23,12 +23,11 @@ namespace pppp { namespace mania { namespace mods {
             new_objects.push_back(note);
         }
 
-        std::vector<ManiaHitObject> objects =
-            pppp::utils::linq::from(pb.objects)
-                .where(!pppp::utils::linq::bind(&ManiaHitObject::hold, pppp::utils::linq::_1))
-                .concat(new_objects)
-                .order_by(pppp::utils::linq::bind(&ManiaHitObject::start_time, pppp::utils::linq::_1))
-                .to_list();
+        std::vector<ManiaHitObject> objects = linq::from(pb.objects)
+                                                  .where(!linq::bind(&ManiaHitObject::hold, linq::_1))
+                                                  .concat(new_objects)
+                                                  .order_by(linq::bind(&ManiaHitObject::start_time, linq::_1))
+                                                  .to_list();
         pb.objects.swap(objects);
     }
 }}} // namespace pppp::mania::mods

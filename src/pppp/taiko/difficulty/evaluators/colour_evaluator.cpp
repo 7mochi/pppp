@@ -8,6 +8,8 @@
 #include <vector>
 
 namespace pppp { namespace taiko { namespace difficulty { namespace evaluators {
+    namespace linq = ::pppp::utils::linq;
+
     namespace {
         double evaluate_repeating_hit_patterns(const preprocessing::RepeatingHitPatterns& pattern) {
             return 2.0 * (1.0 - pppp::utils::logistic(E * pattern.repetition_interval - 2.0 * E));
@@ -71,11 +73,9 @@ namespace pppp { namespace taiko { namespace difficulty { namespace evaluators {
 
             // As a fallback, calculate the maximum deviation from the average of the recent ratios to ensure
             // slightly off-snapped objects don't bypass the penalty.
-            double max_ratio_deviation =
-                pppp::utils::linq::from(recent_ratios)
-                    .max(pppp::utils::linq::bind(static_cast<double (*)(double)>(&std::fabs),
-                                                 pppp::utils::linq::_1 -
-                                                     pppp::utils::linq::from(recent_ratios).average()));
+            double max_ratio_deviation = linq::from(recent_ratios)
+                                             .max(linq::bind(static_cast<double (*)(double)>(&std::fabs),
+                                                             linq::_1 - linq::from(recent_ratios).average()));
 
             double consistent_ratio_penalty =
                 0.7 + 0.3 * pppp::utils::smootherstep(max_ratio_deviation, 0.0, 1.0);

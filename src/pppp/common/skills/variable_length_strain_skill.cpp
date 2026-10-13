@@ -9,7 +9,11 @@
 #include <algorithm>
 
 namespace pppp { namespace common { namespace skills {
-    VariableLengthStrainSkill::VariableLengthStrainSkill(const pppp::mods::Mod* mods_in, size_t mod_count_in,
+    namespace linq = ::pppp::utils::linq;
+    namespace math = ::pppp::utils::math;
+    namespace search = ::pppp::utils::search;
+
+    VariableLengthStrainSkill::VariableLengthStrainSkill(const mods::Mod* mods_in, size_t mod_count_in,
                                                          double decay_weight_in, int max_section_length_in)
         : Skill(mods_in, mod_count_in),
           decay_weight(decay_weight_in),
@@ -79,16 +83,15 @@ namespace pppp { namespace common { namespace skills {
         }
 
         // Use a weighted sum of all strains. Constants are arbitrary and give nice values
-        return utils::linq::from(object_difficulties)
-            .sum(utils::linq::bind(&utils::logistic, utils::linq::_1 / consistent_top_strain, 0.88, 10.0,
-                                   1.1));
+        return linq::from(object_difficulties)
+            .sum(linq::bind(&utils::logistic, linq::_1 / consistent_top_strain, 0.88, 10.0, 1.1));
     }
 
     const std::vector<StrainPeak>& VariableLengthStrainSkill::get_current_strain_peaks() {
         if (final_peak == 0) {
             StrainPeak fp;
             fp.value = current_section_peak;
-            fp.section_length = utils::math::round_half_even(current_section_end - current_section_begin);
+            fp.section_length = math::round_half_even(current_section_end - current_section_begin);
             size_t pos = add_in_place(fp);
             final_peak = &strain_peaks[pos];
         }
@@ -145,7 +148,7 @@ namespace pppp { namespace common { namespace skills {
 
         StrainPeak peak;
         peak.value = current_section_peak;
-        peak.section_length = utils::math::round_half_even(section_length);
+        peak.section_length = math::round_half_even(section_length);
 
         add_in_place(peak);
         total_length += section_length;
@@ -160,7 +163,7 @@ namespace pppp { namespace common { namespace skills {
     }
 
     size_t VariableLengthStrainSkill::add_in_place(const StrainPeak& peak) {
-        int index = utils::search::binary_search(strain_peaks, peak);
+        int index = search::binary_search(strain_peaks, peak);
         if (index < 0) {
             index = ~index;
         }

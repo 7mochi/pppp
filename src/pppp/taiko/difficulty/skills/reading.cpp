@@ -10,7 +10,7 @@ namespace pppp { namespace taiko { namespace difficulty { namespace skills {
         : StrainDecaySkill(mods_in, mod_count_in, 1.0, 0.4),
           current_strain(0.0) {}
 
-    double Reading::strain_value_of(const pppp::common::preprocessing::DifficultyHitObject& base_current) {
+    double Reading::strain_value_of(const common::preprocessing::DifficultyHitObject& base_current) {
         const preprocessing::TaikoDifficultyHitObject& current =
             static_cast<const preprocessing::TaikoDifficultyHitObject&>(base_current);
 

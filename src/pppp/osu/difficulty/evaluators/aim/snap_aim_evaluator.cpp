@@ -9,14 +9,15 @@
 #include <cmath>
 
 namespace pppp { namespace osu { namespace difficulty { namespace evaluators { namespace aim {
+    namespace math = ::pppp::utils::math;
+
     namespace {
         double high_bpm_bonus(double ms) {
             return 1.0 / (1.0 - utils::pow(0.03, utils::pow(ms / 1000.0, 0.65)));
         }
 
         double calc_angle_wideness(double angle) {
-            return utils::smoothstep(angle, utils::math::degrees_to_radians(40),
-                                     utils::math::degrees_to_radians(140));
+            return utils::smoothstep(angle, math::degrees_to_radians(40), math::degrees_to_radians(140));
         }
 
         double vector_angle_repetition(const preprocessing::OsuDifficultyHitObject& current) {
@@ -58,7 +59,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
                     // Refer to this desmos for tuning, constants need to be precise so that values stay
                     // within the range of 0 and 1. https://www.desmos.com/calculator/a8jesv5sv2
                     constant_angle_count +=
-                        std::cos(8 * std::min(utils::math::degrees_to_radians(11.25), angle_difference));
+                        std::cos(8 * std::min(math::degrees_to_radians(11.25), angle_difference));
                 }
             }
 
@@ -71,7 +72,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
             double last_angle = previous->angle.value();
 
             double angle_difference_adjusted =
-                std::cos(2 * std::min(utils::math::degrees_to_radians(45),
+                std::cos(2 * std::min(math::degrees_to_radians(45),
                                       std::fabs(curr_angle - last_angle) * stack_factor));
 
             double base_nerf = 1.0 - maximum_repetition_nerf *
@@ -85,8 +86,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
     } // namespace
 
     double SnapAimEvaluator::calc_angle_acuteness(double angle) {
-        return utils::smoothstep(angle, utils::math::degrees_to_radians(140),
-                                 utils::math::degrees_to_radians(40));
+        return utils::smoothstep(angle, math::degrees_to_radians(140), math::degrees_to_radians(40));
     }
 
     double SnapAimEvaluator::evaluate_difficulty_of(const preprocessing::OsuDifficultyHitObject& current,
@@ -206,12 +206,10 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
             double wiggle_bonus =
                 velocity_influence * utils::smootherstep(curr_distance, radius, diameter) *
                 utils::pow(utils::reverse_lerp(curr_distance, diameter * 3, diameter), 1.8) *
-                utils::smootherstep(curr_angle, utils::math::degrees_to_radians(110),
-                                    utils::math::degrees_to_radians(60)) *
+                utils::smootherstep(curr_angle, math::degrees_to_radians(110), math::degrees_to_radians(60)) *
                 utils::smootherstep(prev_distance, radius, diameter) *
                 utils::pow(utils::reverse_lerp(prev_distance, diameter * 3, diameter), 1.8) *
-                utils::smootherstep(last_angle, utils::math::degrees_to_radians(110),
-                                    utils::math::degrees_to_radians(60));
+                utils::smootherstep(last_angle, math::degrees_to_radians(110), math::degrees_to_radians(60));
 
             snap_difficulty += wiggle_bonus * wiggle_multiplier;
         }

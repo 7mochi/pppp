@@ -7,6 +7,8 @@
 #include <cmath>
 
 namespace pppp { namespace taiko { namespace difficulty { namespace preprocessing {
+    namespace linq = ::pppp::utils::linq;
+
     TaikoDifficultyHitObject::TaikoDifficultyHitObject(
         const TaikoHitObject& object, const TaikoHitObject& last, double rate,
         const std::vector<DifficultyHitObject*>& objects,
@@ -45,9 +47,8 @@ namespace pppp { namespace taiko { namespace difficulty { namespace preprocessin
                 static_cast<const TaikoDifficultyHitObject*>(this->previous(0));
             double actual_ratio = delta_time / previous->delta_time;
             double closest_ratio =
-                pppp::utils::linq::from(rhythm::COMMON_RATIOS)
-                    .min_by(pppp::utils::linq::bind(static_cast<double (*)(double)>(&std::fabs),
-                                                    pppp::utils::linq::_1 - actual_ratio));
+                linq::from(rhythm::COMMON_RATIOS)
+                    .min_by(linq::bind(static_cast<double (*)(double)>(&std::fabs), linq::_1 - actual_ratio));
 
             rhythm.ratio = closest_ratio;
         }
@@ -66,15 +67,15 @@ namespace pppp { namespace taiko { namespace difficulty { namespace preprocessin
         if (mono_objects == 0) {
             return 0;
         }
-        return pppp::utils::linq::from(*mono_objects).element_at_or_default(mono_index - (backwards + 1));
+        return linq::from(*mono_objects).element_at_or_default(mono_index - (backwards + 1));
     }
 
     TaikoDifficultyHitObject* TaikoDifficultyHitObject::previous_note(int backwards) const {
-        return pppp::utils::linq::from(*note_objects).element_at_or_default(note_index - (backwards + 1));
+        return linq::from(*note_objects).element_at_or_default(note_index - (backwards + 1));
     }
 
     TaikoDifficultyHitObject* TaikoDifficultyHitObject::next_note(int forwards) const {
-        return pppp::utils::linq::from(*note_objects).element_at_or_default(note_index + (forwards + 1));
+        return linq::from(*note_objects).element_at_or_default(note_index + (forwards + 1));
     }
 
     double rhythm::data::SameRhythmHitObjectGrouping::start_time() const {

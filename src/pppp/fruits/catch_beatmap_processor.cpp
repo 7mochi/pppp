@@ -10,6 +10,8 @@
 #include <cmath>
 
 namespace pppp { namespace fruits {
+    namespace math = ::pppp::utils::math;
+
     void apply_offset(float& position, float amount) {
         if (amount > 0) {
             // Clamp to the right bound
@@ -132,15 +134,14 @@ namespace pppp { namespace fruits {
                 last_excess = half_catcher_width;
             } else {
                 current.distance_to_hyper_dash = distance_to_hyper;
-                last_excess = utils::math::clamp(distance_to_hyper, 0.0, half_catcher_width);
+                last_excess = math::clamp(distance_to_hyper, 0.0, half_catcher_width);
             }
 
             last_direction = this_direction;
         }
     }
 
-    void apply_position_offsets(CatchBeatmap& pb, const pppp::beatmaps::Beatmap& beatmap,
-                                bool hard_rock_offsets) {
+    void apply_position_offsets(CatchBeatmap& pb, const beatmaps::Beatmap& beatmap, bool hard_rock_offsets) {
         utils::LegacyRandom rng(RNG_SEED);
 
         bool has_last = false;
@@ -169,7 +170,7 @@ namespace pppp { namespace fruits {
                 break;
 
             case object::OBJECT_JUICE_STREAM: {
-                const pppp::beatmaps::Slider& slider = beatmap.sliders[object.slider_index];
+                const beatmaps::Slider& slider = beatmap.sliders[object.slider_index];
 
                 if (!slider.control_points.empty()) {
                     has_last = true;
@@ -187,8 +188,8 @@ namespace pppp { namespace fruits {
                     nested.x_offset = 0.0;
 
                     if (nested.kind == object::OBJECT_TINY_DROPLET) {
-                        nested.x_offset = utils::math::clamp(rng.next(-20, 20), -nested.original_x,
-                                                             object::PLAYFIELD_WIDTH - nested.original_x);
+                        nested.x_offset = math::clamp(rng.next(-20, 20), -nested.original_x,
+                                                      object::PLAYFIELD_WIDTH - nested.original_x);
                     } else if (nested.kind == object::OBJECT_DROPLET) {
                         rng.next(); // osu!stable retrieved a random droplet rotation
                     }

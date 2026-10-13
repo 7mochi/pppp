@@ -10,10 +10,12 @@ namespace pppp { namespace osu { namespace difficulty {
     const double PERFORMANCE_BASE_MULTIPLIER = 1.12;
     const double PERFORMANCE_NORM_EXPONENT = 1.1;
 
-    inline double difficulty_to_performance(double difficulty) { return 4.0 * utils::pow(difficulty, 3); }
+    inline double difficulty_to_performance(double difficulty) {
+        return 4.0 * pppp::utils::pow(difficulty, 3);
+    }
 
     inline double flashlight_difficulty_to_performance(double difficulty) {
-        return 25.0 * utils::pow(difficulty, 2);
+        return 25.0 * pppp::utils::pow(difficulty, 2);
     }
 
     inline double sum_cognition_difficulty(double reading, double flashlight) {
@@ -25,10 +27,10 @@ namespace pppp { namespace osu { namespace difficulty {
         }
 
         double ratio = flashlight / reading;
-        double nerfed = flashlight * utils::math::clamp(ratio, 0.25, 1.0);
+        double nerfed = flashlight * pppp::utils::math::clamp(ratio, 0.25, 1.0);
 
         // Nerf flashlight value in cognition sum when reading is greater than flashlight
-        return utils::norm(PERFORMANCE_NORM_EXPONENT, reading, nerfed);
+        return pppp::utils::norm(PERFORMANCE_NORM_EXPONENT, reading, nerfed);
     }
 }}} // namespace pppp::osu::difficulty
 

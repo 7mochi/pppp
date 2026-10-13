@@ -6,6 +6,8 @@
 #include "pppp/utils/math/csharp.h"
 
 namespace pppp { namespace osu { namespace difficulty { namespace evaluators { namespace speed {
+    namespace math = ::pppp::utils::math;
+
     namespace {
         double high_bpm_bonus(double ms) { return 1.0 / (1.0 - utils::pow(0.3, ms / 1000.0)); }
     } // namespace
@@ -27,7 +29,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
         // Cap deltatime to the OD 300 hitwindow.
         // 0.93 is derived from making sure 260bpm OD8 streams aren't nerfed harshly, whilst 0.92 limits
         // the effect of the cap.
-        strain_time /= utils::math::clamp((strain_time / current.hit_window_great) / 0.93, 0.92, 1.0);
+        strain_time /= math::clamp((strain_time / current.hit_window_great) / 0.93, 0.92, 1.0);
 
         // speedBonus will be 0.0 for BPM < 200
         double speed_bonus = 0.0;

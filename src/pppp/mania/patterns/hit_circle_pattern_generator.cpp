@@ -10,21 +10,22 @@
 #include <cmath>
 
 namespace pppp { namespace mania { namespace patterns {
+    namespace control_points = ::pppp::beatmaps::control_points;
+    namespace linq = ::pppp::utils::linq;
+    namespace math = ::pppp::utils::math;
+
     HitCirclePatternGenerator::HitCirclePatternGenerator(
-        const pppp::beatmaps::control_points::ControlPointInfo& info_in,
-        const pppp::beatmaps::Beatmap& beatmap_in, const SourceObject& hit_object_in,
-        const Pattern& previous_pattern_in, int total_columns_in, pppp::utils::LegacyRandom& random_in,
-        double previous_time, pppp::utils::Vector2 previous_position, double density, int last_stair)
+        const control_points::ControlPointInfo& info_in, const beatmaps::Beatmap& beatmap_in,
+        const SourceObject& hit_object_in, const Pattern& previous_pattern_in, int total_columns_in,
+        utils::LegacyRandom& random_in, double previous_time, utils::Vector2 previous_position,
+        double density, int last_stair)
         : LegacyPatternGenerator(info_in, beatmap_in, hit_object_in, previous_pattern_in, total_columns_in,
                                  random_in),
           stair_type(last_stair),
           convert_type(PATTERN_NONE) {
-        const pppp::beatmaps::control_points::TimingControlPoint* tp =
-            info.timing_point_at(hit_object.start_time);
-        const double beat_length =
-            tp != 0 ? tp->beat_length : pppp::beatmaps::control_points::DEFAULT_BEAT_LENGTH;
-        const pppp::beatmaps::control_points::EffectControlPoint* ep =
-            info.effect_point_at(hit_object.start_time);
+        const control_points::TimingControlPoint* tp = info.timing_point_at(hit_object.start_time);
+        const double beat_length = tp != 0 ? tp->beat_length : control_points::DEFAULT_BEAT_LENGTH;
+        const control_points::EffectControlPoint* ep = info.effect_point_at(hit_object.start_time);
         const bool kiai = ep != 0 && ep->kiai_mode;
 
         const float dx = static_cast<float>(utils::f32(hit_object.position.x - previous_position.x));
@@ -184,8 +185,8 @@ namespace pppp { namespace mania { namespace patterns {
 
         // The stable values were allowed to exceed 1, which indicate <0% probability. These values
         // needs to be clamped otherwise the note count would be drawn from an invalid range.
-        p2 = utils::math::clamp(p2, 0, 1);
-        p3 = utils::math::clamp(p3, 0, 1);
+        p2 = math::clamp(p2, 0, 1);
+        p3 = math::clamp(p3, 0, 1);
 
         const double centre_val = random.next_double();
         const int note_count = LegacyPatternGenerator::get_random_note_count(p2, p3, 0, 0, 0);
@@ -249,11 +250,9 @@ namespace pppp { namespace mania { namespace patterns {
             return pattern;
         }
 
-        const int last_column =
-            pppp::utils::linq::from(previous_pattern.hit_objects).first_or_default().column;
+        const int last_column = linq::from(previous_pattern.hit_objects).first_or_default().column;
 
-        if (has_flag(convert_type, PATTERN_REVERSE) &&
-            pppp::utils::linq::from(previous_pattern.hit_objects).any()) {
+        if (has_flag(convert_type, PATTERN_REVERSE) && linq::from(previous_pattern.hit_objects).any()) {
             // Generate a new pattern by copying the last hit objects in reverse-column order
             for (int i = random_start; i < total_columns; i++) {
                 if (previous_pattern.column_has_object(i)) {
@@ -264,7 +263,7 @@ namespace pppp { namespace mania { namespace patterns {
         }
 
         if (has_flag(convert_type, PATTERN_CYCLE) &&
-            pppp::utils::linq::from(previous_pattern.hit_objects).count() == 1
+            linq::from(previous_pattern.hit_objects).count() == 1
             // If we convert to 7K + 1, let's not overload the special key
             && (total_columns != 8 || last_column != 0)
             // Make sure the last column was not the centre column
@@ -275,8 +274,7 @@ namespace pppp { namespace mania { namespace patterns {
             return pattern;
         }
 
-        if (has_flag(convert_type, PATTERN_FORCE_STACK) &&
-            pppp::utils::linq::from(previous_pattern.hit_objects).any()) {
+        if (has_flag(convert_type, PATTERN_FORCE_STACK) && linq::from(previous_pattern.hit_objects).any()) {
             // Generate a new pattern by placing on the already filled columns
             for (int i = random_start; i < total_columns; i++) {
                 if (previous_pattern.column_has_object(i)) {
@@ -286,7 +284,7 @@ namespace pppp { namespace mania { namespace patterns {
             return pattern;
         }
 
-        if (pppp::utils::linq::from(previous_pattern.hit_objects).count() == 1) {
+        if (linq::from(previous_pattern.hit_objects).count() == 1) {
             if (has_flag(convert_type, PATTERN_STAIR)) {
                 // Generate a new pattern by placing on the next column, cycling back to the start
                 // if there is no "next"

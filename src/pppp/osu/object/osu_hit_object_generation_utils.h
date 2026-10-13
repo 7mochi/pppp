@@ -90,7 +90,7 @@ namespace pppp { namespace osu {
         bool is_hit_object_on_beat(const OsuBeatmap& pb, const OsuHitObject& ho, bool downbeats_only);
 
         /// Generates a random number from a normal distribution using the Box-Muller transform.
-        float random_gaussian(utils::DotNetRandom& rng, float mean, float std_dev);
+        float random_gaussian(pppp::utils::DotNetRandom& rng, float mean, float std_dev);
 
         /// Generate a list of ObjectPositionInfos containing information for how the given list of
         /// OsuHitObjects are positioned.

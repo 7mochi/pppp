@@ -20,7 +20,7 @@ namespace pppp {
 namespace pppp { namespace beatmaps {
     /// Fill `out` from a beatmap parsed by the vendored parser. `parsed`, and whatever owns it,
     /// must outlive `out`: the slider paths are recomputed from it.
-    Status from_parsed(Beatmap& out, const ::fosu::Beatmap* parsed);
+    Status from_parsed(Beatmap& out, const fosu::Beatmap* parsed);
 }} // namespace pppp::beatmaps
 
 #endif

@@ -10,6 +10,8 @@
 #include <vector>
 
 namespace pppp { namespace mania { namespace difficulty {
+    namespace sort = ::pppp::utils::sort;
+
     namespace {
         void create_difficulty_attributes(ManiaDifficultyAttributes& out, const ManiaBeatmap& pb,
                                           skills::Strain& strain) {
@@ -30,7 +32,7 @@ namespace pppp { namespace mania { namespace difficulty {
         }
 
         std::vector<ManiaHitObject> sorted = pb.objects;
-        utils::sort::legacy_sort(&sorted[0], sorted.size(), object::hit_object_start_time_rounded);
+        sort::legacy_sort(&sorted[0], sorted.size(), object::hit_object_start_time_rounded);
 
         std::vector<const preprocessing::ManiaDifficultyHitObject*> last_in_column(
             static_cast<size_t>(total_columns), 0);
@@ -50,7 +52,7 @@ namespace pppp { namespace mania { namespace difficulty {
         }
     }
 
-    Status calculate_difficulty(ManiaDifficultyAttributes& out, const pppp::beatmaps::Beatmap& beatmap,
+    Status calculate_difficulty(ManiaDifficultyAttributes& out, const beatmaps::Beatmap& beatmap,
                                 const pppp::mods::Mod* mods, size_t mod_count) {
         if (!mods && mod_count) {
             return StatusCode::INVALID_ARGUMENT;
@@ -84,7 +86,7 @@ namespace pppp { namespace mania { namespace difficulty {
 
     Status calculate_timed_difficulty(std::vector<double>& times,
                                       std::vector<ManiaDifficultyAttributes>& attributes,
-                                      const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                                      const beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
                                       size_t mod_count) {
         times.clear();
         attributes.clear();
@@ -112,7 +114,7 @@ namespace pppp { namespace mania { namespace difficulty {
         preprocessing::create_hit_objects(dho_list, dho_ptrs, pb);
 
         std::vector<ManiaHitObject> sorted = pb.objects;
-        utils::sort::legacy_sort(&sorted[0], sorted.size(), object::hit_object_start_time_rounded);
+        sort::legacy_sort(&sorted[0], sorted.size(), object::hit_object_start_time_rounded);
 
         size_t current = 0;
 
@@ -134,8 +136,8 @@ namespace pppp { namespace mania { namespace difficulty {
         return StatusCode::OK;
     }
 
-    Status calculate_strains(ManiaStrains& out, const pppp::beatmaps::Beatmap& beatmap,
-                             const pppp::mods::Mod* mods, size_t mod_count) {
+    Status calculate_strains(ManiaStrains& out, const beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
+                             size_t mod_count) {
         out = ManiaStrains();
         if (!mods && mod_count) {
             return StatusCode::INVALID_ARGUMENT;

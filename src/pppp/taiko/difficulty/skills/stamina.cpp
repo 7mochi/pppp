@@ -14,7 +14,7 @@ namespace pppp { namespace taiko { namespace difficulty { namespace skills {
 
     double Stamina::strain_decay(double ms) const { return pppp::utils::pow(STRAIN_DECAY_BASE, ms / 1000.0); }
 
-    double Stamina::strain_value_at(const pppp::common::preprocessing::DifficultyHitObject& base_current) {
+    double Stamina::strain_value_at(const common::preprocessing::DifficultyHitObject& base_current) {
         const preprocessing::TaikoDifficultyHitObject& current =
             static_cast<const preprocessing::TaikoDifficultyHitObject&>(base_current);
 
@@ -42,9 +42,8 @@ namespace pppp { namespace taiko { namespace difficulty { namespace skills {
                                      : current_strain;
     }
 
-    double
-    Stamina::calculate_initial_strain(double time,
-                                      const pppp::common::preprocessing::DifficultyHitObject& base_current) {
+    double Stamina::calculate_initial_strain(double time,
+                                             const common::preprocessing::DifficultyHitObject& base_current) {
         const preprocessing::TaikoDifficultyHitObject& current =
             static_cast<const preprocessing::TaikoDifficultyHitObject&>(base_current);
         if (single_colour_stamina) {

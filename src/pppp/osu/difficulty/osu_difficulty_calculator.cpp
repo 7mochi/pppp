@@ -13,6 +13,7 @@
 #include "pppp/osu/difficulty/skills/speed.h"
 #include "pppp/osu/object/osu_hit_object.h"
 #include "pppp/utils/difficulty_calculation_utils.h"
+#include "pppp/utils/linq/csharp.h"
 #include "pppp/utils/math/csharp.h"
 #include <algorithm>
 #include <cmath>
@@ -32,28 +33,32 @@ namespace pppp { namespace osu { namespace difficulty {
             return utils::math::cbrt(base_performance * PERFORMANCE_BASE_MULTIPLIER);
         }
 
-        /// Counts the objects the difficulty attributes report, by type.
-        void count_objects(const OsuBeatmap& pb, int* hit_circles, int* sliders, int* large_ticks,
-                           int* spinners) {
-            *hit_circles = *sliders = *large_ticks = *spinners = 0;
+        bool is_slider(const object::OsuHitObject& hit_object) { return hit_object.slider >= 0; }
+
+        bool is_spinner(const object::OsuHitObject& hit_object) {
+            return hit_object.slider < 0 && (hit_object.type & 8) != 0;
+        }
+
+        bool is_hit_circle(const object::OsuHitObject& hit_object) {
+            return hit_object.slider < 0 && (hit_object.type & 8) == 0;
+        }
+
+        int count_large_ticks(const OsuBeatmap& pb) {
+            int large_ticks = 0;
             for (size_t i = 0; i < pb.objects.size(); i++) {
                 const object::OsuHitObject& ho = pb.objects[i];
                 if (ho.slider >= 0) {
-                    (*sliders)++;
                     const std::vector<pppp::beatmaps::SliderEventDescriptor>& events =
                         pb.sliders[ho.slider].events;
                     for (size_t j = 0; j < events.size(); j++) {
                         if (events[j].type == pppp::beatmaps::SLIDER_EVENT_TICK ||
                             events[j].type == pppp::beatmaps::SLIDER_EVENT_REPEAT) {
-                            (*large_ticks)++;
+                            large_ticks++;
                         }
                     }
-                } else if (ho.type & 8) {
-                    (*spinners)++;
-                } else {
-                    (*hit_circles)++;
                 }
             }
+            return large_ticks;
         }
 
         void create_difficulty_attributes(OsuDifficultyAttributes& out,
@@ -108,8 +113,13 @@ namespace pppp { namespace osu { namespace difficulty {
             double base_performance = utils::norm(1.1, base_aim_perf, base_speed_perf, base_cognition_perf);
             double star_rating = calculate_star_rating(base_performance);
 
-            int hit_circle_count = 0, slider_count = 0, large_tick_count = 0, spinner_count = 0;
-            count_objects(pb, &hit_circle_count, &slider_count, &large_tick_count, &spinner_count);
+            int hit_circle_count =
+                utils::linq::from(pb.objects).count(utils::linq::bind(&is_hit_circle, utils::linq::_1));
+            int slider_count =
+                utils::linq::from(pb.objects).count(utils::linq::bind(&is_slider, utils::linq::_1));
+            int spinner_count =
+                utils::linq::from(pb.objects).count(utils::linq::bind(&is_spinner, utils::linq::_1));
+            int large_tick_count = count_large_ticks(pb);
 
             out.star_rating = star_rating;
             out.aim_difficulty = aim_rating;
@@ -225,8 +235,13 @@ namespace pppp { namespace osu { namespace difficulty {
                 out.slider_factor = 0.0;
                 return StatusCode::OK;
             }
-            count_objects(pb, &out.hit_circle_count, &out.slider_count, &out.large_tick_count,
-                          &out.spinner_count);
+            out.hit_circle_count =
+                utils::linq::from(pb.objects).count(utils::linq::bind(&is_hit_circle, utils::linq::_1));
+            out.slider_count =
+                utils::linq::from(pb.objects).count(utils::linq::bind(&is_slider, utils::linq::_1));
+            out.spinner_count =
+                utils::linq::from(pb.objects).count(utils::linq::bind(&is_spinner, utils::linq::_1));
+            out.large_tick_count = count_large_ticks(pb);
             out.max_combo = max_combo(pb);
             out.nested_score_per_object =
                 calculate_nested_score_per_object(pb, static_cast<int>(pb.objects.size()));
@@ -243,7 +258,9 @@ namespace pppp { namespace osu { namespace difficulty {
             return StatusCode::OK;
         }
 
-        bool has_flashlight = pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_FL);
+        bool has_flashlight =
+            utils::linq::from(mods, mod_count)
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_FL);
 
         skills::Aim aim_with_sliders(mods, mod_count, true);
         skills::Aim aim_no_sliders(mods, mod_count, false);
@@ -287,7 +304,9 @@ namespace pppp { namespace osu { namespace difficulty {
             return StatusCode::OK;
         }
 
-        bool has_flashlight = pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_FL);
+        bool has_flashlight =
+            utils::linq::from(mods, mod_count)
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_FL);
 
         skills::Aim aim_with_sliders(mods, mod_count, true);
         skills::Aim aim_no_sliders(mods, mod_count, false);
@@ -356,7 +375,9 @@ namespace pppp { namespace osu { namespace difficulty {
             return StatusCode::OK;
         }
 
-        bool has_flashlight = pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_FL);
+        bool has_flashlight =
+            utils::linq::from(mods, mod_count)
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_FL);
 
         skills::Aim aim_with_sliders(mods, mod_count, true);
         skills::Aim aim_no_sliders(mods, mod_count, false);

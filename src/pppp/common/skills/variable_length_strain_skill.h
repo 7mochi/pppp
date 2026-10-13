@@ -17,9 +17,6 @@ namespace pppp { namespace common { namespace skills {
         int compare_to(const StrainPeak& other) const { return utils::math::compare_to(other.value, value); }
     };
 
-    /// Reverse sort, highest is first.
-    inline bool strain_peak_greater(const StrainPeak& a, const StrainPeak& b) { return a.value > b.value; }
-
     /// Stores previous strains so that, if a high difficulty hit object is followed by a lower
     /// difficulty hit object, the high difficulty hit object gets a full strain instead of being cut short.
     struct QueuedStrain {

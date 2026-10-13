@@ -20,10 +20,6 @@ namespace pppp { namespace mania { namespace object {
               hold(false) {}
     };
 
-    inline bool hit_object_earlier(const ManiaHitObject& a, const ManiaHitObject& b) {
-        return a.start_time < b.start_time;
-    }
-
     /// Orders by start time rounded half to even.
     inline int hit_object_start_time_rounded(const ManiaHitObject& a, const ManiaHitObject& b) {
         return utils::math::round_half_even_int(a.start_time) -

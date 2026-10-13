@@ -2,43 +2,36 @@
 // See the LICENCE file in the repository root for full licence text.
 
 #include "pppp/mania/mods/mania_mod_invert.h"
+#include "pppp/utils/linq/csharp.h"
 #include <algorithm>
 #include <cstddef>
 #include <vector>
 
 namespace pppp { namespace mania { namespace mods {
     void apply_invert(ManiaBeatmap& pb, const pppp::beatmaps::control_points::ControlPointInfo& info) {
-        const int columns = pb.total_columns();
-        std::vector<ManiaHitObject> out;
+        std::vector<ManiaHitObject> new_objects;
 
-        std::vector<int> column_order;
-        std::vector<bool> seen(static_cast<size_t>(columns > 0 ? columns : 0), false);
-        for (size_t i = 0; i < pb.objects.size(); i++) {
-            const int column = pb.objects[i].column;
-            if (column >= 0 && static_cast<size_t>(column) < seen.size() &&
-                !seen[static_cast<size_t>(column)]) {
-                seen[static_cast<size_t>(column)] = true;
-                column_order.push_back(column);
-            }
-        }
+        const std::vector<pppp::utils::linq::Grouping<int, ManiaHitObject> > columns =
+            pppp::utils::linq::from(pb.objects)
+                .group_by(pppp::utils::linq::bind(&ManiaHitObject::column, pppp::utils::linq::_1))
+                .to_list();
+        for (size_t c = 0; c < columns.size(); c++) {
+            const pppp::utils::linq::Grouping<int, ManiaHitObject>& column = columns[c];
+            std::vector<ManiaHitObject> new_column_objects;
 
-        for (size_t c = 0; c < column_order.size(); c++) {
-            const int column = column_order[c];
+            const std::vector<double> locations =
+                pppp::utils::linq::from(column.elements)
+                    .where(!pppp::utils::linq::bind(&ManiaHitObject::hold, pppp::utils::linq::_1))
+                    .select(pppp::utils::linq::bind(&ManiaHitObject::start_time, pppp::utils::linq::_1))
+                    .concat(pppp::utils::linq::from(column.elements)
+                                .where(pppp::utils::linq::bind(&ManiaHitObject::hold, pppp::utils::linq::_1))
+                                .select(pppp::utils::linq::bind(&ManiaHitObject::start_time,
+                                                                pppp::utils::linq::_1))
+                                .to_list())
+                    .order_by(pppp::utils::linq::_1)
+                    .to_list();
 
-            std::vector<double> locations;
-            for (size_t i = 0; i < pb.objects.size(); i++) {
-                if (pb.objects[i].column == column && !pb.objects[i].hold) {
-                    locations.push_back(pb.objects[i].start_time);
-                }
-            }
-            for (size_t i = 0; i < pb.objects.size(); i++) {
-                if (pb.objects[i].column == column && pb.objects[i].hold) {
-                    locations.push_back(pb.objects[i].start_time);
-                }
-            }
-            std::stable_sort(locations.begin(), locations.end());
-
-            for (size_t i = 0; i + 1 < locations.size(); i++) {
+            for (int i = 0; i < static_cast<int>(locations.size()) - 1; i++) {
                 // Full duration of the hold note.
                 double duration = locations[i + 1] - locations[i];
 
@@ -51,15 +44,20 @@ namespace pppp { namespace mania { namespace mods {
                 duration = std::max(duration / 2, duration - beat_length / 4);
 
                 ManiaHitObject hold;
-                hold.column = column;
+                hold.column = column.key;
                 hold.start_time = locations[i];
                 hold.end_time = locations[i] + duration;
                 hold.hold = true;
-                out.push_back(hold);
+                new_column_objects.push_back(hold);
             }
+
+            new_objects.insert(new_objects.end(), new_column_objects.begin(), new_column_objects.end());
         }
 
-        std::stable_sort(out.begin(), out.end(), object::hit_object_earlier);
-        pb.objects.swap(out);
+        std::vector<ManiaHitObject> objects =
+            pppp::utils::linq::from(new_objects)
+                .order_by(pppp::utils::linq::bind(&ManiaHitObject::start_time, pppp::utils::linq::_1))
+                .to_list();
+        pb.objects.swap(objects);
     }
 }}} // namespace pppp::mania::mods

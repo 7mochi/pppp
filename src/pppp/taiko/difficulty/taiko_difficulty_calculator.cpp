@@ -11,9 +11,8 @@
 #include "pppp/taiko/difficulty/skills/stamina.h"
 #include "pppp/taiko/taiko_beatmap.h"
 #include "pppp/utils/difficulty_calculation_utils.h"
-#include <algorithm>
+#include "pppp/utils/linq/csharp.h"
 #include <cmath>
-#include <functional>
 #include <vector>
 
 namespace pppp { namespace taiko { namespace difficulty {
@@ -110,11 +109,12 @@ namespace pppp { namespace taiko { namespace difficulty {
                 }
 
                 double combined_rating = 0.0;
-                std::sort(peaks.begin(), peaks.end(), std::greater<double>());
-
                 double weight = 1.0;
-                for (size_t i = 0; i < peaks.size(); i++) {
-                    combined_rating += peaks[i] * weight;
+
+                const std::vector<double> strains =
+                    pppp::utils::linq::from(peaks).order_descending().to_list();
+                for (size_t i = 0; i < strains.size(); i++) {
+                    combined_rating += strains[i] * weight;
                     weight *= 0.9;
                 }
 
@@ -128,25 +128,19 @@ namespace pppp { namespace taiko { namespace difficulty {
                 }
 
                 // The average of the top 5% of strain peaks from hit objects.
-                std::sort(object_peaks.begin(), object_peaks.end(), std::greater<double>());
-
-                size_t top_count = 1 + object_peaks.size() / 20;
-                double top_sum = 0.0;
-                for (size_t i = 0; i < top_count; i++) {
-                    top_sum += object_peaks[i];
-                }
-                double top_average = top_sum / static_cast<double>(top_count);
-
-                double total = 0.0;
-                for (size_t i = 0; i < object_peaks.size(); i++) {
-                    total += object_peaks[i];
-                }
+                double top_average_hit_object_strain =
+                    pppp::utils::linq::from(object_peaks)
+                        .order_descending()
+                        .take(1 + static_cast<int>(object_peaks.size()) / 20)
+                        .average();
 
                 // Calculates a consistency factor as the sum of difficulty from hit objects compared to if
                 // every object were as hard as the hardest.
                 // The top average strain is used instead of the very hardest to prevent exceptionally hard
                 // objects lowering the factor.
-                consistency_factor = total / (top_average * static_cast<double>(object_peaks.size()));
+                consistency_factor =
+                    pppp::utils::linq::from(object_peaks).sum() /
+                    (top_average_hit_object_strain * static_cast<double>(object_peaks.size()));
 
                 return combined_rating;
             }
@@ -259,7 +253,9 @@ namespace pppp { namespace taiko { namespace difficulty {
         std::vector<preprocessing::SamePatternsGroupedHitObjects> pattern_groupings;
         preprocessing::rhythm::process_and_assign(note_objects, rhythm_groupings, pattern_groupings);
 
-        c.is_relax = pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_RX);
+        c.is_relax = pppp::utils::linq::from(mods, mod_count)
+                         .any(pppp::utils::linq::bind(&pppp::mods::Mod::id, pppp::utils::linq::_1) ==
+                              pppp::mods::MOD_RX);
         c.is_convert = pb.is_convert;
 
         skills::Rhythm rhythm(mods, mod_count);
@@ -302,7 +298,9 @@ namespace pppp { namespace taiko { namespace difficulty {
             return StatusCode::OK;
         }
 
-        c.is_relax = pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_RX);
+        c.is_relax = pppp::utils::linq::from(mods, mod_count)
+                         .any(pppp::utils::linq::bind(&pppp::mods::Mod::id, pppp::utils::linq::_1) ==
+                              pppp::mods::MOD_RX);
         c.is_convert = pb.is_convert;
 
         skills::Rhythm rhythm(mods, mod_count);

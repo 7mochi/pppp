@@ -4,6 +4,7 @@
 #include "pppp/mania/difficulty/mania_performance_calculator.h"
 #include "pppp/mods/mod.h"
 #include "pppp/utils/difficulty_calculation_utils.h"
+#include "pppp/utils/linq/csharp.h"
 #include "pppp/utils/math/csharp.h"
 #include <algorithm>
 
@@ -77,13 +78,13 @@ namespace pppp { namespace mania { namespace difficulty {
 
         double multiplier = 1.0;
 
-        for (size_t i = 0; i < score.mods.size(); i++) {
-            if (score.mods[i].id == pppp::mods::MOD_NF) {
-                multiplier *= 0.75;
-            }
-            if (score.mods[i].id == pppp::mods::MOD_EZ) {
-                multiplier *= 0.5;
-            }
+        if (utils::linq::from(score.mods.data(), score.mods.size())
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_NF)) {
+            multiplier *= 0.75;
+        }
+        if (utils::linq::from(score.mods.data(), score.mods.size())
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_EZ)) {
+            multiplier *= 0.5;
         }
 
         double difficulty_value = c.compute_difficulty_value();

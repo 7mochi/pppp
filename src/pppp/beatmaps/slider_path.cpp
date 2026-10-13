@@ -2,9 +2,10 @@
 // See the LICENCE file in the repository root for full licence text.
 
 #include "pppp/beatmaps/slider_path.h"
+#include "pppp/utils/linq/csharp.h"
 #include "pppp/utils/math/csharp.h"
+#include "pppp/utils/precision.h"
 #include "pppp/utils/search/csharp.h"
-#include <cmath>
 
 namespace pppp { namespace beatmaps {
     namespace {
@@ -29,16 +30,16 @@ namespace pppp { namespace beatmaps {
                 return zero;
             }
             if (i <= 0) {
-                return path.front();
+                return utils::linq::from(path).first();
             }
             if (i >= static_cast<int>(path.size())) {
-                return path.back();
+                return utils::linq::from(path).last();
             }
 
             double d0 = cumulative_lengths[i - 1], d1 = cumulative_lengths[i];
 
             // Avoid division by and almost-zero number in case two points are extremely close to each other.
-            if (std::fabs(d0 - d1) <= 1e-7) {
+            if (utils::almost_equals(d0, d1)) {
                 return path[i - 1];
             }
 

@@ -12,6 +12,7 @@
 #include "pppp/mania/patterns/pass_through_pattern_generator.h"
 #include "pppp/mania/patterns/slider_pattern_generator.h"
 #include "pppp/mania/patterns/spinner_pattern_generator.h"
+#include "pppp/utils/linq/csharp.h"
 #include "pppp/utils/math/csharp.h"
 #include "pppp/utils/precision.h"
 #include <algorithm>
@@ -23,14 +24,8 @@ namespace pppp { namespace mania {
         }
 
         int end_time_object_count(const pppp::beatmaps::Beatmap& beatmap) {
-            int count = 0;
-
-            for (size_t i = 0; i < beatmap.hit_objects.size(); i++) {
-                if (has_duration(beatmap.hit_objects[i])) {
-                    count++;
-                }
-            }
-            return count;
+            return utils::linq::from(beatmap.hit_objects)
+                .count(utils::linq::bind(&has_duration, utils::linq::_1));
         }
 
         int get_column_count(const pppp::beatmaps::Beatmap& beatmap) {
@@ -251,7 +246,11 @@ namespace pppp { namespace mania {
             }
         }
 
-        std::stable_sort(pb.objects.begin(), pb.objects.end(), object::hit_object_earlier);
+        std::vector<object::ManiaHitObject> sorted =
+            utils::linq::from(pb.objects)
+                .order_by(utils::linq::bind(&object::ManiaHitObject::start_time, utils::linq::_1))
+                .to_list();
+        pb.objects.swap(sorted);
 
         for (size_t i = 0; i < mod_count; i++) {
             switch (mods[i].id) {

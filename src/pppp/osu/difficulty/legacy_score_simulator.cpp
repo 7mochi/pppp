@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 #include "pppp/osu/difficulty/legacy_score_simulator.h"
+#include "pppp/utils/linq/csharp.h"
 #include "pppp/utils/math/csharp.h"
 #include "pppp/utils/math/legacy_score.h"
 #include "pppp/utils/math/uint128.h"
@@ -59,11 +60,9 @@ namespace pppp { namespace osu { namespace difficulty {
                 const object::PlayableSlider& sl = pb.sliders[ho.slider];
                 // 1 for head, 1 for tail, plus repeats
                 big_ticks += 2 + (sl.slides - 1);
-                for (size_t e = 0; e < sl.events.size(); e++) {
-                    if (sl.events[e].type == pppp::beatmaps::SLIDER_EVENT_TICK) {
-                        small_ticks++;
-                    }
-                }
+                small_ticks += utils::linq::from(sl.events).count(
+                    utils::linq::bind(&pppp::beatmaps::SliderEventDescriptor::type, utils::linq::_1) ==
+                    pppp::beatmaps::SLIDER_EVENT_TICK);
             } else if (ho.type & 8) {
                 spinner_score += calculate_spinner_score(ho.end_time - ho.time);
             }
@@ -147,14 +146,16 @@ namespace pppp { namespace osu { namespace difficulty {
             if (beatmap.hit_objects.empty()) {
                 return 0;
             }
-            int break_length = 0;
-            for (size_t b = 0; b < beatmap.breaks.size(); b++) {
-                double start = beatmap.breaks[b].start_time;
-                double end = beatmap.breaks[b].end_time > start ? beatmap.breaks[b].end_time
-                                                                : start; // decoder: end = max(start, end)
-                break_length +=
-                    utils::math::round_half_even_int(end) - utils::math::round_half_even_int(start);
-            }
+            int break_length =
+                utils::linq::from(beatmap.breaks)
+                    .select(
+                        utils::linq::bind(&utils::math::round_half_even_int,
+                                          utils::linq::bind(&pppp::beatmaps::timing::BreakPeriod::end_time,
+                                                            utils::linq::_1)) -
+                        utils::linq::bind(&utils::math::round_half_even_int,
+                                          utils::linq::bind(&pppp::beatmaps::timing::BreakPeriod::start_time,
+                                                            utils::linq::_1)))
+                    .sum();
             return (utils::math::round_half_even_int(beatmap.hit_objects.back().start_time) -
                     utils::math::round_half_even_int(beatmap.hit_objects.front().start_time) - break_length) /
                    1000;
@@ -266,7 +267,9 @@ namespace pppp { namespace osu { namespace difficulty {
     }
 
     double get_legacy_score_multiplier(const pppp::mods::Mod* mods, size_t mod_count) {
-        bool score_v2 = pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_SV2);
+        bool score_v2 =
+            utils::linq::from(mods, mod_count)
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_SV2);
 
         double multiplier = 1.0;
 

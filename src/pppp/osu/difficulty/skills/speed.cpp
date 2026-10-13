@@ -6,7 +6,7 @@
 #include "pppp/osu/difficulty/evaluators/speed/rhythm_evaluator.h"
 #include "pppp/osu/difficulty/evaluators/speed/speed_evaluator.h"
 #include "pppp/utils/difficulty_calculation_utils.h"
-#include <algorithm>
+#include "pppp/utils/linq/csharp.h"
 
 namespace pppp { namespace osu { namespace difficulty { namespace skills {
     Speed::Speed(const pppp::mods::Mod* mods_in, size_t mod_count_in)
@@ -20,7 +20,8 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
             static_cast<const preprocessing::OsuDifficultyHitObject&>(base_current);
         const double skill_multiplier = 1.16;
 
-        if (pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_RX)) {
+        if (utils::linq::from(mods, mod_count)
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_RX)) {
             return 0;
         }
 
@@ -43,7 +44,8 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
     double Speed::calculate_adjusted_difficulty(const preprocessing::OsuDifficultyHitObject& current) {
         double difficulty = evaluators::speed::SpeedEvaluator::evaluate_difficulty_of(current);
 
-        if (pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_AP)) {
+        if (utils::linq::from(mods, mod_count)
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_AP)) {
             difficulty *= 0.5;
         }
 
@@ -55,17 +57,14 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
             return 0;
         }
 
-        double max_strain = *std::max_element(object_difficulties.begin(), object_difficulties.end());
+        double max_strain = utils::linq::from(object_difficulties).max();
 
         if (max_strain == 0) {
             return 0;
         }
 
-        double sum = 0.0;
-        for (size_t i = 0; i < object_difficulties.size(); i++) {
-            sum += utils::logistic(object_difficulties[i] / max_strain, 0.5, 12.0);
-        }
-        return sum;
+        return utils::linq::from(object_difficulties)
+            .sum(utils::linq::bind(&utils::logistic, utils::linq::_1 / max_strain, 0.5, 12.0, 1.0));
     }
 
     double Speed::count_top_weighted_sliders(double difficulty_value) {
@@ -86,10 +85,8 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
         }
 
         // Use a weighted sum of all notes. Constants are arbitrary and give nice values
-        double sum = 0.0;
-        for (size_t i = 0; i < slider_strains.size(); i++) {
-            sum += utils::logistic(slider_strains[i] / consistent_top_object, 0.88, 10.0, 1.1);
-        }
-        return sum;
+        return utils::linq::from(slider_strains)
+            .sum(utils::linq::bind(&utils::logistic, utils::linq::_1 / consistent_top_object, 0.88, 10.0,
+                                   1.1));
     }
 }}}} // namespace pppp::osu::difficulty::skills

@@ -5,6 +5,7 @@
 #include "pppp/osu/object/osu_hit_object.h"
 #include "pppp/osu/object/osu_hit_object_generation_utils.h"
 #include "pppp/osu/object/osu_playfield.h"
+#include "pppp/utils/linq/csharp.h"
 #include "pppp/utils/precision.h"
 #include "pppp/utils/random/csharp.h"
 #include <algorithm>
@@ -19,24 +20,20 @@ namespace pppp { namespace osu { namespace mods {
             return utils::definitely_bigger(v1, v2, TIMING_PRECISION);
         }
 
-        struct ByStartTime {
-            const OsuBeatmap* pb;
-            bool operator()(size_t a, size_t b) const { return pb->objects[a].time < pb->objects[b].time; }
-        };
-
         /// Check if a given time is inside a BreakPeriod.
         /// @remarks The given time is also considered to be inside a break if it is earlier than the
         /// start time of the first original hit object after the break.
         /// @param pb The beatmap whose breaks are checked.
         /// @param original Hit objects ordered by time.
         /// @param time The time to be checked.
-        bool is_inside_break_period(const OsuBeatmap& pb, const std::vector<size_t>& original, double time) {
+        bool is_inside_break_period(const OsuBeatmap& pb, const std::vector<object::OsuHitObject>& original,
+                                    double time) {
             for (size_t b = 0; b < pb.breaks.size(); b++) {
                 const pppp::beatmaps::timing::BreakPeriod& br = pb.breaks[b];
                 const object::OsuHitObject* first_after = 0;
                 for (size_t k = 0; k < original.size(); k++) {
-                    if (almost_bigger(pb.objects[original[k]].time, br.end_time)) {
-                        first_after = &pb.objects[original[k]];
+                    if (almost_bigger(original[k].time, br.end_time)) {
+                        first_after = &original[k];
                         break;
                     }
                 }
@@ -63,8 +60,9 @@ namespace pppp { namespace osu { namespace mods {
             }
         }
 
-        std::vector<double> generate_beats(const OsuBeatmap& pb, const std::vector<size_t>& original) {
-            double start_time = pb.objects[0].time; // the first object in list order
+        std::vector<double> generate_beats(const OsuBeatmap& pb,
+                                           const std::vector<object::OsuHitObject>& original) {
+            double start_time = utils::linq::from(pb.objects).first().time;
             double end_time = last_object_time(pb);
             std::vector<double> beats;
             for (size_t t = 0; t < pb.info.timing_points.size(); t++) {
@@ -130,6 +128,14 @@ namespace pppp { namespace osu { namespace mods {
             obj.position = p;
         }
 
+        bool check_for_overlap(const utils::linq::Enumerable<object::OsuHitObject>& objects_to_check,
+                               const object::OsuHitObject& target, double target_radius) {
+            return objects_to_check.any(
+                utils::linq::bind(&pppp::utils::distance,
+                                  utils::linq::bind(&object::OsuHitObject::position, utils::linq::_1),
+                                  target.position) < target_radius * 2);
+        }
+
         void randomize_circle_pos(OsuBeatmap& pb, std::vector<object::OsuHitObject>& objs,
                                   utils::DotNetRandom& rng) {
             if (objs.empty()) {
@@ -140,7 +146,7 @@ namespace pppp { namespace osu { namespace mods {
             float radius = static_cast<float>(radius_d);
 
             float direction = two_pi * static_cast<float>(rng.next_double() * 1.0f);
-            int max_combo_index = objs.back().combo_index;
+            int max_combo_index = utils::linq::from(objs).last().combo_index;
 
             for (size_t i = 0; i < objs.size(); i++) {
                 object::OsuHitObject& obj = objs[i];
@@ -162,9 +168,13 @@ namespace pppp { namespace osu { namespace mods {
 
                 // Attempt to place the circle at a place that does not overlap with previous ones
                 int try_count = 0;
-                size_t preceding_begin =
-                    i >= static_cast<size_t>(OVERLAP_CHECK_COUNT) ? i - OVERLAP_CHECK_COUNT : 0;
-                bool overlap;
+
+                // for checking overlap
+                const utils::linq::Enumerable<object::OsuHitObject> preceding_objects =
+                    utils::linq::from(objs)
+                        .skip_last(static_cast<int>(objs.size() - i))
+                        .take_last(OVERLAP_CHECK_COUNT);
+
                 do {
                     if (try_count > 0) {
                         direction = two_pi * static_cast<float>(rng.next_double() * 1.0f);
@@ -180,15 +190,7 @@ namespace pppp { namespace osu { namespace mods {
                     if (try_count % 10 == 0) {
                         distance *= 0.9f;
                     }
-
-                    overlap = false;
-                    for (size_t k = preceding_begin; k < i; k++) {
-                        if (pppp::utils::distance(objs[k].position, obj.position) < radius_d * 2) {
-                            overlap = true;
-                            break;
-                        }
-                    }
-                } while (distance >= radius_d * 2 && overlap);
+                } while (distance >= radius_d * 2 && check_for_overlap(preceding_objects, obj, radius_d));
 
                 if (obj.last_in_combo) {
                     direction = two_pi * static_cast<float>(rng.next_double() * 1.0f);
@@ -206,12 +208,10 @@ namespace pppp { namespace osu { namespace mods {
         }
         utils::DotNetRandom rng(mod.target.seed.value());
 
-        std::vector<size_t> original(pb.objects.size());
-        for (size_t i = 0; i < original.size(); i++) {
-            original[i] = i;
-        }
-        ByStartTime cmp = {&pb};
-        std::stable_sort(original.begin(), original.end(), cmp);
+        std::vector<object::OsuHitObject> original =
+            utils::linq::from(pb.objects)
+                .order_by(utils::linq::bind(&object::OsuHitObject::time, utils::linq::_1))
+                .to_list();
 
         std::vector<double> beats = generate_beats(pb, original);
 
@@ -239,7 +239,7 @@ namespace pppp { namespace osu { namespace mods {
         for (size_t i = 0; i < objs.size(); i++) {
             int combo_index = 0;
             for (int k = static_cast<int>(original.size()) - 1; k >= 0; k--) {
-                const object::OsuHitObject& orig = pb.objects[original[k]];
+                const object::OsuHitObject& orig = original[k];
                 if (almost_bigger(objs[i].time, orig.time)) {
                     combo_index = orig.combo_index;
                     break;

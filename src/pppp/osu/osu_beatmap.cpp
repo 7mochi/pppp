@@ -7,6 +7,7 @@
 #include "pppp/osu/object/osu_hit_object.h"
 #include "pppp/osu/osu_beatmap_converter.h"
 #include "pppp/osu/osu_beatmap_processor.h"
+#include "pppp/utils/linq/csharp.h"
 
 namespace pppp { namespace osu {
     OsuBeatmap::OsuBeatmap()
@@ -60,13 +61,12 @@ namespace pppp { namespace osu {
     }
 
     double last_object_time(const OsuBeatmap& pb) {
-        double last = 0.0;
-        for (size_t i = 0; i < pb.objects.size(); i++) {
-            if (i == 0 || pb.objects[i].end_time > last) {
-                last = pb.objects[i].end_time;
-            }
+        if (pb.objects.empty()) {
+            return 0.0;
         }
-        return last;
+
+        return utils::linq::from(pb.objects)
+            .max(utils::linq::bind(&object::OsuHitObject::end_time, utils::linq::_1));
     }
 
     int max_combo(const OsuBeatmap& pb) {

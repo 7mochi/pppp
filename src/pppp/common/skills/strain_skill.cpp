@@ -3,9 +3,9 @@
 
 #include "pppp/common/skills/strain_skill.h"
 #include "pppp/utils/difficulty_calculation_utils.h"
+#include "pppp/utils/linq/csharp.h"
 #include <algorithm>
 #include <cmath>
-#include <functional>
 
 namespace pppp { namespace common { namespace skills {
     StrainSkill::StrainSkill(const pppp::mods::Mod* mods_in, size_t mod_count_in, double decay_weight_in,
@@ -40,20 +40,16 @@ namespace pppp { namespace common { namespace skills {
 
         // Sections with 0 strain are excluded to avoid worst-case time complexity of the following
         // sort (e.g. /b/2351871). These sections will not contribute to the difficulty.
-        std::vector<double> all;
-        get_current_strain_peaks(all);
-        std::vector<double> peaks;
-        for (size_t i = 0; i < all.size(); i++) {
-            if (all[i] > 0) {
-                peaks.push_back(all[i]);
-            }
-        }
+        std::vector<double> current_strain_peaks;
+        get_current_strain_peaks(current_strain_peaks);
+        const utils::linq::Enumerable<double> peaks =
+            utils::linq::from(current_strain_peaks).where(utils::linq::_1 > 0);
 
         // Difficulty is the weighted sum of the highest strains from every section.
         // We're sorting from highest to lowest strain.
-        std::sort(peaks.begin(), peaks.end(), std::greater<double>());
-        for (size_t i = 0; i < peaks.size(); i++) {
-            difficulty += peaks[i] * weight;
+        const std::vector<double> strains = peaks.order_descending().to_list();
+        for (size_t i = 0; i < strains.size(); i++) {
+            difficulty += strains[i] * weight;
             weight *= decay_weight;
         }
 
@@ -70,8 +66,8 @@ namespace pppp { namespace common { namespace skills {
     }
 
     void StrainSkill::get_current_strain_peaks(std::vector<double>& out) const {
-        out = strain_peaks;
-        out.push_back(current_section_peak);
+        std::vector<double> peaks = utils::linq::from(strain_peaks).append(current_section_peak).to_list();
+        out.swap(peaks);
     }
 
     double StrainSkill::count_top_weighted_strains(double difficulty_value) {
@@ -88,10 +84,8 @@ namespace pppp { namespace common { namespace skills {
         }
 
         // Use a weighted sum of all strains. Constants are arbitrary and give nice values
-        double sum = 0.0;
-        for (size_t i = 0; i < object_difficulties.size(); i++) {
-            sum += utils::logistic(object_difficulties[i] / consistent_top_strain, 0.88, 10.0, 1.1);
-        }
-        return sum;
+        return utils::linq::from(object_difficulties)
+            .sum(utils::linq::bind(&utils::logistic, utils::linq::_1 / consistent_top_strain, 0.88, 10.0,
+                                   1.1));
     }
 }}} // namespace pppp::common::skills

@@ -49,7 +49,7 @@ namespace pppp { namespace taiko {
                     std::fabs(time - closest_positive_snapped_time(point_time, point_beat_length, time,
                                                                    PREDEFINED_DIVISORS[i]));
 
-                if (closest_time - 1e-7 > distance) {
+                if (utils::definitely_bigger(closest_time, distance)) {
                     closest_divisor = PREDEFINED_DIVISORS[i];
                     closest_time = distance;
                 }

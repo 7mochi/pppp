@@ -5,6 +5,7 @@
 #include "pppp/fruits/catch_beatmap_converter.h"
 #include "pppp/fruits/catch_beatmap_processor.h"
 #include "pppp/fruits/mods/catch_mod_mirror.h"
+#include "pppp/utils/linq/csharp.h"
 #include "pppp/utils/precision.h"
 #include <algorithm>
 
@@ -27,17 +28,16 @@ namespace pppp { namespace fruits {
     }
 
     void palpable_objects(std::vector<object::CatchHitObject*>& out, CatchBeatmap& pb) {
-        out.clear();
-
         // We want to only consider fruits that contribute to the combo.
-        for (size_t i = 0; i < pb.all_objects.size(); i++) {
-            if (pb.all_objects[i]->kind == object::OBJECT_FRUIT ||
-                pb.all_objects[i]->kind == object::OBJECT_DROPLET) {
-                out.push_back(pb.all_objects[i]);
-            }
-        }
-
-        std::stable_sort(out.begin(), out.end(), object::hit_object_earlier);
+        std::vector<object::CatchHitObject*> objects =
+            utils::linq::from(pb.all_objects)
+                .where(utils::linq::bind(&object::CatchHitObject::kind, utils::linq::_1) ==
+                           object::OBJECT_FRUIT ||
+                       utils::linq::bind(&object::CatchHitObject::kind, utils::linq::_1) ==
+                           object::OBJECT_DROPLET)
+                .order_by(utils::linq::bind(&object::CatchHitObject::time, utils::linq::_1))
+                .to_list();
+        out.swap(objects);
     }
 
     ModdedDifficulty modded_difficulty(const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,

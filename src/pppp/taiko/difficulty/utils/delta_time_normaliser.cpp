@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 #include "pppp/taiko/difficulty/utils/delta_time_normaliser.h"
+#include "pppp/utils/linq/csharp.h"
 #include <algorithm>
 #include <cmath>
 
@@ -10,9 +11,8 @@ namespace pppp { namespace taiko { namespace difficulty { namespace utils {
                                double margin_of_error) {
         out = delta_times;
 
-        std::vector<double> distinct = delta_times;
-        std::sort(distinct.begin(), distinct.end());
-        distinct.erase(std::unique(distinct.begin(), distinct.end()), distinct.end());
+        std::vector<double> distinct =
+            pppp::utils::linq::from(delta_times).distinct().order_by(pppp::utils::linq::_1).to_list();
 
         std::vector<double> medians(distinct.size(), 0.0);
         size_t begin = 0;

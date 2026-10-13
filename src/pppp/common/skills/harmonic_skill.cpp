@@ -3,8 +3,8 @@
 
 #include "pppp/common/skills/harmonic_skill.h"
 #include "pppp/utils/difficulty_calculation_utils.h"
-#include <algorithm>
-#include <functional>
+#include "pppp/utils/linq/csharp.h"
+#include <vector>
 
 namespace pppp { namespace common { namespace skills {
     HarmonicSkill::HarmonicSkill(const pppp::mods::Mod* mods_in, size_t mod_count_in,
@@ -27,18 +27,12 @@ namespace pppp { namespace common { namespace skills {
 
         std::vector<double> difficulties = get_transformed_difficulties(object_difficulties);
 
-        std::vector<double> sorted_diffs;
-        for (size_t i = 0; i < difficulties.size(); i++) {
-            if (difficulties[i] > 0) {
-                sorted_diffs.push_back(difficulties[i]);
-            }
-        }
-
         double difficulty = 0.0;
 
         // Objects with 0 difficulty are excluded to avoid worst-case time complexity of the following sort
         // (e.g. /b/2351871). These objects will not contribute to the difficulty.
-        std::sort(sorted_diffs.begin(), sorted_diffs.end(), std::greater<double>());
+        const std::vector<double> sorted_diffs =
+            utils::linq::from(difficulties).where(utils::linq::_1 > 0).order_descending().to_list();
         for (size_t i = 0; i < sorted_diffs.size(); i++) {
             // Use a harmonic sum that considers each object of the map according to a predefined
             // weight.
@@ -67,10 +61,8 @@ namespace pppp { namespace common { namespace skills {
             return 0.0;
         }
 
-        double sum = 0.0;
-        for (size_t i = 0; i < object_difficulties.size(); i++) {
-            sum += utils::logistic(object_difficulties[i] / consistent_top_object, 0.88, 10.0, 1.1);
-        }
-        return sum;
+        return utils::linq::from(object_difficulties)
+            .sum(utils::linq::bind(&utils::logistic, utils::linq::_1 / consistent_top_object, 0.88, 10.0,
+                                   1.1));
     }
 }}} // namespace pppp::common::skills

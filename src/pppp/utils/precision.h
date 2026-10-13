@@ -1,12 +1,12 @@
 #ifndef PPPP_UTILS_PRECISION_H
 #define PPPP_UTILS_PRECISION_H
 
+#include <cmath>
+
 /// The floating-point precision every ruleset shares: the named constants the calculations measure
 /// in, the single-precision cast that pins a computed `double` back to the `float` the game stores,
 /// and the three tolerance tests of osu!framework's `Precision` (`AlmostEquals`, `AlmostBigger`,
-/// `DefinitelyBigger`). The tests live together because each caller supplies its own acceptable
-/// difference — the rulesets use very different ones, from `1e-7` up to a whole millisecond — so
-/// the comparison cannot be a single equality and the tolerance must stay the caller's choice.
+/// `DefinitelyBigger`).
 namespace pppp { namespace utils {
     const double PI_D = 3.14159265358979323846;
     const double E_D = 2.7182818284590452354;
@@ -23,31 +23,47 @@ namespace pppp { namespace utils {
         return static_cast<double>(f);
     }
 
-    /// Equal within an acceptable difference each caller supplies.
-    /// @param a The left value.
-    /// @param b The right value.
-    /// @param acceptable_difference How far apart the two may be and still be equal.
-    /// @returns Whether the two are within the acceptable difference.
-    inline bool almost_equals(double a, double b, double acceptable_difference) {
-        return (a > b ? a - b : b - a) <= acceptable_difference;
+    /// The default epsilon for all `float` values.
+    const float FLOAT_EPSILON = 1e-3f;
+
+    /// The default epsilon for all `double` values.
+    const double DOUBLE_EPSILON = 1e-7;
+
+    /// Computes whether a value is definitely greater than another given an acceptable difference.
+    /// @param value1 The value to compare.
+    /// @param value2 The value to compare against.
+    /// @param acceptable_difference The acceptable difference. Defaults to `DOUBLE_EPSILON`.
+    /// @returns Whether `value1` is definitely greater than `value2`.
+    inline bool definitely_bigger(double value1, double value2,
+                                  double acceptable_difference = DOUBLE_EPSILON) {
+        return value1 - acceptable_difference > value2;
     }
 
-    /// Greater than, allowing for the caller's acceptable difference.
-    /// @param a The left value.
-    /// @param b The right value.
-    /// @param acceptable_difference How far apart the two may be and still be treated as equal.
-    /// @returns Whether `a` is greater than `b` by more than the acceptable difference allows.
-    inline bool almost_bigger(double a, double b, double acceptable_difference) {
-        return a - b > -acceptable_difference;
+    /// Computes whether a value is almost greater than another given an acceptable difference.
+    /// @param value1 The value to compare.
+    /// @param value2 The value to compare against.
+    /// @param acceptable_difference The acceptable difference. Defaults to `DOUBLE_EPSILON`.
+    /// @returns Whether `value1` is almost greater than `value2`.
+    inline bool almost_bigger(double value1, double value2, double acceptable_difference = DOUBLE_EPSILON) {
+        return value1 > value2 - acceptable_difference;
     }
 
-    /// Greater than by at least the caller's acceptable difference.
-    /// @param a The left value.
-    /// @param b The right value.
-    /// @param acceptable_difference How far apart the two must be to count as strictly greater.
-    /// @returns Whether `a` is greater than `b` by more than the acceptable difference.
-    inline bool definitely_bigger(double a, double b, double acceptable_difference) {
-        return a - b > acceptable_difference;
+    /// Computes whether two values are equal within an acceptable difference.
+    /// @param value1 The first value.
+    /// @param value2 The second value.
+    /// @param acceptable_difference The acceptable difference. Defaults to `FLOAT_EPSILON`.
+    /// @returns Whether `value1` and `value2` are almost equal.
+    inline bool almost_equals(float value1, float value2, float acceptable_difference = FLOAT_EPSILON) {
+        return std::fabs(value1 - value2) <= acceptable_difference;
+    }
+
+    /// Computes whether two values are equal within an acceptable difference.
+    /// @param value1 The first value.
+    /// @param value2 The second value.
+    /// @param acceptable_difference The acceptable difference. Defaults to `DOUBLE_EPSILON`.
+    /// @returns Whether `value1` and `value2` are almost equal.
+    inline bool almost_equals(double value1, double value2, double acceptable_difference = DOUBLE_EPSILON) {
+        return std::fabs(value1 - value2) <= acceptable_difference;
     }
 }} // namespace pppp::utils
 

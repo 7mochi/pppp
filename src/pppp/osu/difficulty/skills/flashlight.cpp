@@ -6,6 +6,7 @@
 #include "pppp/osu/difficulty/evaluators/flashlight_evaluator.h"
 #include "pppp/osu/mods/osu_mod_hidden.h"
 #include "pppp/utils/difficulty_calculation_utils.h"
+#include "pppp/utils/linq/csharp.h"
 #include "pppp/utils/math/csharp.h"
 #include <algorithm>
 
@@ -29,7 +30,8 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
             static_cast<const preprocessing::OsuDifficultyHitObject&>(base_current);
         const double skill_multiplier = 0.058;
 
-        if (!pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_FL)) {
+        if (!utils::linq::from(mods, mod_count)
+                 .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_FL)) {
             return 0;
         }
 
@@ -40,40 +42,43 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
     }
 
     double Flashlight::calculate_adjusted_difficulty(const preprocessing::OsuDifficultyHitObject& current) {
-        bool any_hidden = pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_HD);
+        bool any_hidden =
+            utils::linq::from(mods, mod_count)
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_HD);
         bool has_hidden = mods::has_hidden_body_fade(mods, mod_count);
         double difficulty = evaluators::FlashlightEvaluator::evaluate_difficulty_of(
             current, has_hidden, current.circle_size, any_hidden);
 
-        if (pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_TD)) {
+        if (utils::linq::from(mods, mod_count)
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_TD)) {
             difficulty = utils::pow(difficulty, 0.9);
         }
 
-        if (pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_MG)) {
-            for (size_t i = 0; i < mod_count; i++) {
-                if (mods[i].id == pppp::mods::MOD_MG) {
-                    difficulty *= 1.0 - mods[i].magnetised.strength;
-                    break;
-                }
-            }
+        if (utils::linq::from(mods, mod_count)
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_MG)) {
+            double magnetised_strength =
+                utils::linq::from(mods, mod_count)
+                    .first(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_MG)
+                    .magnetised.strength;
+            difficulty *= 1.0 - magnetised_strength;
         }
 
-        if (pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_DF)) {
-            for (size_t i = 0; i < mod_count; i++) {
-                if (mods[i].id == pppp::mods::MOD_DF) {
-                    double deflate_scale = mods[i].scale.start_scale;
-                    double t = utils::reverse_lerp(deflate_scale, 11.0, 1.0);
-                    difficulty *= utils::math::clamp(t, 0.1, 1.0);
-                    break;
-                }
-            }
+        if (utils::linq::from(mods, mod_count)
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_DF)) {
+            double deflate_initial_scale =
+                utils::linq::from(mods, mod_count)
+                    .first(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_DF)
+                    .scale.start_scale;
+            difficulty *= utils::math::clamp(utils::reverse_lerp(deflate_initial_scale, 11.0, 1.0), 0.1, 1.0);
         }
 
-        if (pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_RX)) {
+        if (utils::linq::from(mods, mod_count)
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_RX)) {
             difficulty *= 0.7;
         }
 
-        if (pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_AP)) {
+        if (utils::linq::from(mods, mod_count)
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_AP)) {
             difficulty *= 0.4;
         }
 
@@ -87,10 +92,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
         std::vector<double> peaks;
         get_current_strain_peaks(peaks);
 
-        double sum = 0.0;
-        for (size_t i = 0; i < peaks.size(); i++) {
-            sum += peaks[i];
-        }
+        double sum = utils::linq::from(peaks).sum();
 
         // Account for shorter maps having a higher ratio of 0 combo/100 combo flashlight radius.
         sum *= 0.7 + 0.1 * std::min(1.0, static_cast<double>(total_objects) / 200.0) +

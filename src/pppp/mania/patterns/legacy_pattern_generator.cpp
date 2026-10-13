@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 #include "pppp/mania/patterns/legacy_pattern_generator.h"
+#include "pppp/utils/linq/csharp.h"
 #include "pppp/utils/math/csharp.h"
 #include "pppp/utils/precision.h"
 #include <algorithm>
@@ -32,19 +33,20 @@ namespace pppp { namespace mania { namespace patterns {
 
     namespace {
         double conversion_difficulty_of(const pppp::beatmaps::Beatmap& beatmap) {
-            double total_break_time = 0.0;
-
-            for (size_t i = 0; i < beatmap.breaks.size(); i++) {
-                total_break_time += beatmap.breaks[i].end_time - beatmap.breaks[i].start_time;
-            }
-
-            const double last_time =
-                beatmap.hit_objects.empty() ? 0.0 : beatmap.hit_objects.back().start_time;
-            const double first_time =
-                beatmap.hit_objects.empty() ? 0.0 : beatmap.hit_objects.front().start_time;
+            const pppp::beatmaps::HitObject last_object =
+                pppp::utils::linq::from(beatmap.hit_objects).last_or_default();
+            const pppp::beatmaps::HitObject first_object =
+                pppp::utils::linq::from(beatmap.hit_objects).first_or_default();
+            const double total_break_time =
+                pppp::utils::linq::from(beatmap.breaks)
+                    .sum(pppp::utils::linq::bind(&pppp::beatmaps::timing::BreakPeriod::end_time,
+                                                 pppp::utils::linq::_1) -
+                         pppp::utils::linq::bind(&pppp::beatmaps::timing::BreakPeriod::start_time,
+                                                 pppp::utils::linq::_1));
 
             // Drain time in seconds
-            int drain_time = static_cast<int>((last_time - first_time - total_break_time) / 1000);
+            int drain_time = static_cast<int>(
+                (last_object.start_time - first_object.start_time - total_break_time) / 1000);
 
             if (drain_time == 0) {
                 drain_time = 10000;

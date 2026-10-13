@@ -5,6 +5,7 @@
 #include "pppp/fruits/catch_beatmap.h"
 #include "pppp/utils/difficulty_calculation_utils.h"
 #include "pppp/utils/difficulty_range.h"
+#include "pppp/utils/linq/csharp.h"
 #include "pppp/utils/math/csharp.h"
 #include <algorithm>
 #include <cmath>
@@ -101,7 +102,8 @@ namespace pppp { namespace fruits { namespace difficulty {
 
         value *= approach_rate_factor;
 
-        if (pppp::mods::mod_has(score.mods.data(), score.mods.size(), pppp::mods::MOD_HD)) {
+        if (utils::linq::from(score.mods.data(), score.mods.size())
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_HD)) {
             // Hiddens gives almost nothing on max approach rate, and more the lower it is
             if (approach_rate <= 10.0) {
                 value *= 1.05 + 0.075 * (10.0 - approach_rate); // 7.5% for each AR below 10
@@ -110,13 +112,15 @@ namespace pppp { namespace fruits { namespace difficulty {
             }
         }
 
-        if (pppp::mods::mod_has(score.mods.data(), score.mods.size(), pppp::mods::MOD_FL)) {
+        if (utils::linq::from(score.mods.data(), score.mods.size())
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_FL)) {
             value *= 1.35 * length_bonus;
         }
 
         value *= utils::pow(c.accuracy(), 5.5);
 
-        if (pppp::mods::mod_has(score.mods.data(), score.mods.size(), pppp::mods::MOD_NF)) {
+        if (utils::linq::from(score.mods.data(), score.mods.size())
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_NF)) {
             value *= std::max(0.90, 1.0 - 0.02 * c.num_miss);
         }
 

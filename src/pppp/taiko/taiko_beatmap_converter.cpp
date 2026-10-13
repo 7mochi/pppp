@@ -3,8 +3,10 @@
 
 #include "pppp/taiko/taiko_beatmap_converter.h"
 #include "pppp/beatmaps/control_points/control_point_info.h"
+#include "pppp/utils/linq/csharp.h"
 #include "pppp/utils/precision.h"
 #include <algorithm>
+#include <limits>
 
 namespace pppp { namespace taiko {
     namespace {
@@ -202,7 +204,7 @@ namespace pppp { namespace taiko {
 
                         node = (node + 1) % node_count;
 
-                        if (utils::almost_equals(0.0, tick_spacing, 1e-7)) {
+                        if (utils::almost_equals(0.0, tick_spacing)) {
                             break;
                         }
                     }
@@ -247,7 +249,11 @@ namespace pppp { namespace taiko {
 
         // Objects that a slider burst produced share start times with whatever follows, so the
         // order has to be preserved exactly.
-        std::stable_sort(pb.objects.begin(), pb.objects.end(), hit_object_less);
+        std::vector<TaikoHitObject> sorted =
+            utils::linq::from(pb.objects)
+                .order_by(utils::linq::bind(&TaikoHitObject::time, utils::linq::_1))
+                .to_list();
+        pb.objects.swap(sorted);
 
         // Post processing step to transform standard slider velocity changes into scroll speed changes
         if (pb.is_convert) {
@@ -259,7 +265,8 @@ namespace pppp { namespace taiko {
                 }
 
                 double next_scroll_speed = slider_velocity_at(pb.info.difficulty_points, ho.start_time);
-                if (last_scroll_speed != next_scroll_speed) {
+                if (!utils::almost_equals(last_scroll_speed, next_scroll_speed,
+                                          std::numeric_limits<double>::denorm_min())) {
                     last_scroll_speed = next_scroll_speed;
                     add_effect_point(pb.info.effect_points, ho.start_time,
                                      kiai_at(pb.info.effect_points, ho.start_time), next_scroll_speed);

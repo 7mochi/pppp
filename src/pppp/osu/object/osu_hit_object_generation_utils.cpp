@@ -195,8 +195,7 @@ namespace pppp { namespace osu { namespace object {
             com_modified = rotate_away_from_edge(current.position_modified, com_modified, 0.5f);
             float relative_rotation =
                 std::atan2(com_modified.y, com_modified.x) - std::atan2(com_original.y, com_original.x);
-            // Equal when |a - b| <= 1e-3f
-            if (!(std::fabs(relative_rotation - 0.0f) <= 1e-3f)) {
+            if (!pppp::utils::almost_equals(relative_rotation, 0.0f)) {
                 rotate_slider(pb, ho.slider, relative_rotation);
             }
         }

@@ -3,6 +3,7 @@
 
 #include "pppp/taiko/difficulty/evaluators/colour_evaluator.h"
 #include "pppp/utils/difficulty_calculation_utils.h"
+#include "pppp/utils/linq/csharp.h"
 #include <cmath>
 #include <vector>
 
@@ -68,23 +69,18 @@ namespace pppp { namespace taiko { namespace difficulty { namespace evaluators {
                 return 1.0;
             }
 
-            double sum = 0.0;
-            for (size_t i = 0; i < recent_ratios.size(); i++) {
-                sum += recent_ratios[i];
-            }
-            double average = sum / static_cast<double>(recent_ratios.size());
-
             // As a fallback, calculate the maximum deviation from the average of the recent ratios to ensure
             // slightly off-snapped objects don't bypass the penalty.
-            double max_deviation = 0.0;
-            for (size_t i = 0; i < recent_ratios.size(); i++) {
-                double deviation = std::fabs(recent_ratios[i] - average);
-                if (i == 0 || deviation > max_deviation) {
-                    max_deviation = deviation;
-                }
-            }
+            double max_ratio_deviation =
+                pppp::utils::linq::from(recent_ratios)
+                    .max(pppp::utils::linq::bind(static_cast<double (*)(double)>(&std::fabs),
+                                                 pppp::utils::linq::_1 -
+                                                     pppp::utils::linq::from(recent_ratios).average()));
 
-            return 0.7 + 0.3 * pppp::utils::smootherstep(max_deviation, 0.0, 1.0);
+            double consistent_ratio_penalty =
+                0.7 + 0.3 * pppp::utils::smootherstep(max_ratio_deviation, 0.0, 1.0);
+
+            return consistent_ratio_penalty;
         }
     } // namespace
 

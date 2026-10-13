@@ -58,10 +58,6 @@ namespace pppp { namespace fruits { namespace object {
         static float calculate_catch_width(double circle_size);
     };
 
-    inline bool hit_object_earlier(const CatchHitObject* a, const CatchHitObject* b) {
-        return a->time < b->time;
-    }
-
     const double PLAYFIELD_WIDTH = 512.0;
 
     const float CATCHER_BASE_SIZE = 106.75f;

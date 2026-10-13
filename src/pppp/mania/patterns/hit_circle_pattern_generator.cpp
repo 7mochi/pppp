@@ -3,6 +3,7 @@
 
 #include "pppp/mania/patterns/hit_circle_pattern_generator.h"
 #include "pppp/beatmaps/control_points/control_point_info.h"
+#include "pppp/utils/linq/csharp.h"
 #include "pppp/utils/math/csharp.h"
 #include "pppp/utils/precision.h"
 #include <algorithm>
@@ -249,9 +250,10 @@ namespace pppp { namespace mania { namespace patterns {
         }
 
         const int last_column =
-            previous_pattern.hit_objects.empty() ? 0 : previous_pattern.hit_objects.front().column;
+            pppp::utils::linq::from(previous_pattern.hit_objects).first_or_default().column;
 
-        if (has_flag(convert_type, PATTERN_REVERSE) && !previous_pattern.hit_objects.empty()) {
+        if (has_flag(convert_type, PATTERN_REVERSE) &&
+            pppp::utils::linq::from(previous_pattern.hit_objects).any()) {
             // Generate a new pattern by copying the last hit objects in reverse-column order
             for (int i = random_start; i < total_columns; i++) {
                 if (previous_pattern.column_has_object(i)) {
@@ -262,7 +264,7 @@ namespace pppp { namespace mania { namespace patterns {
         }
 
         if (has_flag(convert_type, PATTERN_CYCLE) &&
-            previous_pattern.hit_objects.size() == 1
+            pppp::utils::linq::from(previous_pattern.hit_objects).count() == 1
             // If we convert to 7K + 1, let's not overload the special key
             && (total_columns != 8 || last_column != 0)
             // Make sure the last column was not the centre column
@@ -273,7 +275,8 @@ namespace pppp { namespace mania { namespace patterns {
             return pattern;
         }
 
-        if (has_flag(convert_type, PATTERN_FORCE_STACK) && !previous_pattern.hit_objects.empty()) {
+        if (has_flag(convert_type, PATTERN_FORCE_STACK) &&
+            pppp::utils::linq::from(previous_pattern.hit_objects).any()) {
             // Generate a new pattern by placing on the already filled columns
             for (int i = random_start; i < total_columns; i++) {
                 if (previous_pattern.column_has_object(i)) {
@@ -283,7 +286,7 @@ namespace pppp { namespace mania { namespace patterns {
             return pattern;
         }
 
-        if (previous_pattern.hit_objects.size() == 1) {
+        if (pppp::utils::linq::from(previous_pattern.hit_objects).count() == 1) {
             if (has_flag(convert_type, PATTERN_STAIR)) {
                 // Generate a new pattern by placing on the next column, cycling back to the start
                 // if there is no "next"

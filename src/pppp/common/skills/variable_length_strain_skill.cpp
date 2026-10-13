@@ -3,6 +3,7 @@
 
 #include "pppp/common/skills/variable_length_strain_skill.h"
 #include "pppp/utils/difficulty_calculation_utils.h"
+#include "pppp/utils/linq/csharp.h"
 #include "pppp/utils/math/csharp.h"
 #include "pppp/utils/search/csharp.h"
 #include <algorithm>
@@ -78,11 +79,9 @@ namespace pppp { namespace common { namespace skills {
         }
 
         // Use a weighted sum of all strains. Constants are arbitrary and give nice values
-        double sum = 0.0;
-        for (size_t i = 0; i < object_difficulties.size(); i++) {
-            sum += utils::logistic(object_difficulties[i] / consistent_top_strain, 0.88, 10.0, 1.1);
-        }
-        return sum;
+        return utils::linq::from(object_difficulties)
+            .sum(utils::linq::bind(&utils::logistic, utils::linq::_1 / consistent_top_strain, 0.88, 10.0,
+                                   1.1));
     }
 
     const std::vector<StrainPeak>& VariableLengthStrainSkill::get_current_strain_peaks() {

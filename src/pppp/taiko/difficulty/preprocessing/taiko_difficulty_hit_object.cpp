@@ -3,24 +3,10 @@
 
 #include "pppp/taiko/difficulty/preprocessing/taiko_difficulty_hit_object.h"
 #include "pppp/taiko/taiko_hit_windows.h"
+#include "pppp/utils/linq/csharp.h"
 #include <cmath>
 
 namespace pppp { namespace taiko { namespace difficulty { namespace preprocessing {
-    namespace {
-        double closest_common_ratio(double actual) {
-            double best = rhythm::COMMON_RATIOS[0];
-            double best_distance = std::fabs(rhythm::COMMON_RATIOS[0] - actual);
-            for (int i = 1; i < 9; i++) {
-                double distance = std::fabs(rhythm::COMMON_RATIOS[i] - actual);
-                if (distance < best_distance) {
-                    best_distance = distance;
-                    best = rhythm::COMMON_RATIOS[i];
-                }
-            }
-            return best;
-        }
-    } // namespace
-
     TaikoDifficultyHitObject::TaikoDifficultyHitObject(
         const TaikoHitObject& object, const TaikoHitObject& last, double rate,
         const std::vector<DifficultyHitObject*>& objects,
@@ -57,7 +43,13 @@ namespace pppp { namespace taiko { namespace difficulty { namespace preprocessin
         if (index >= 1) {
             const TaikoDifficultyHitObject* previous =
                 static_cast<const TaikoDifficultyHitObject*>(this->previous(0));
-            rhythm.ratio = closest_common_ratio(delta_time / previous->delta_time);
+            double actual_ratio = delta_time / previous->delta_time;
+            double closest_ratio =
+                pppp::utils::linq::from(rhythm::COMMON_RATIOS)
+                    .min_by(pppp::utils::linq::bind(static_cast<double (*)(double)>(&std::fabs),
+                                                    pppp::utils::linq::_1 - actual_ratio));
+
+            rhythm.ratio = closest_ratio;
         }
 
         // Using `hitObject.StartTime` causes floating point error differences
@@ -74,24 +66,15 @@ namespace pppp { namespace taiko { namespace difficulty { namespace preprocessin
         if (mono_objects == 0) {
             return 0;
         }
-        int position = mono_index - (backwards + 1);
-        return position >= 0 && position < static_cast<int>(mono_objects->size())
-                   ? (*mono_objects)[static_cast<size_t>(position)]
-                   : 0;
+        return pppp::utils::linq::from(*mono_objects).element_at_or_default(mono_index - (backwards + 1));
     }
 
     TaikoDifficultyHitObject* TaikoDifficultyHitObject::previous_note(int backwards) const {
-        int position = note_index - (backwards + 1);
-        return position >= 0 && position < static_cast<int>(note_objects->size())
-                   ? (*note_objects)[static_cast<size_t>(position)]
-                   : 0;
+        return pppp::utils::linq::from(*note_objects).element_at_or_default(note_index - (backwards + 1));
     }
 
     TaikoDifficultyHitObject* TaikoDifficultyHitObject::next_note(int forwards) const {
-        int position = note_index + (forwards + 1);
-        return position >= 0 && position < static_cast<int>(note_objects->size())
-                   ? (*note_objects)[static_cast<size_t>(position)]
-                   : 0;
+        return pppp::utils::linq::from(*note_objects).element_at_or_default(note_index + (forwards + 1));
     }
 
     double rhythm::data::SameRhythmHitObjectGrouping::start_time() const {

@@ -3,6 +3,7 @@
 
 #include "pppp/taiko/difficulty/preprocessing/rhythm/taiko_rhythm_difficulty_preprocessor.h"
 #include "pppp/taiko/difficulty/utils/delta_time_normaliser.h"
+#include "pppp/utils/linq/csharp.h"
 #include "pppp/utils/math/csharp.h"
 #include <cmath>
 #include <limits>
@@ -24,10 +25,17 @@ namespace pppp { namespace taiko { namespace difficulty { namespace preprocessin
         std::vector<double> normalised;
         utils::normalise_delta_times(normalised, delta_times, SNAP_TOLERANCE);
 
-        const bool has_delta = normalised.size() > 1;
-        const double modal_delta = has_delta ? pppp::utils::math::round_half_even(normalised[1]) : 0.0;
+        const pppp::utils::linq::Enumerable<double> normalised_hit_object_delta_time =
+            pppp::utils::linq::from(normalised).skip(1);
 
-        if (has_delta) {
+        // Secondary check to ensure there isn't any 'noise' or outliers by taking the modal delta time.
+        const double modal_delta =
+            normalised_hit_object_delta_time.count() > 0
+                ? pppp::utils::math::round_half_even(normalised_hit_object_delta_time.element_at(0))
+                : 0.0;
+
+        // Calculate the average interval between hitobjects.
+        if (normalised_hit_object_delta_time.count() > 0) {
             if (previous && previous->hit_object_interval.has_value() &&
                 std::fabs(modal_delta - previous->hit_object_interval.value()) <= SNAP_TOLERANCE) {
                 hit_object_interval = previous->hit_object_interval.value();

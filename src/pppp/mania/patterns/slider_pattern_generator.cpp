@@ -3,6 +3,7 @@
 
 #include "pppp/mania/patterns/slider_pattern_generator.h"
 #include "pppp/beatmaps/control_points/control_point_info.h"
+#include "pppp/utils/linq/csharp.h"
 #include "pppp/utils/math/csharp.h"
 #include "pppp/utils/precision.h"
 #include <algorithm>
@@ -438,7 +439,7 @@ namespace pppp { namespace mania { namespace patterns {
     void SliderPatternGenerator::generate(std::vector<Pattern>& out) {
         const Pattern original = generate_core();
 
-        if (original.hit_objects.size() == 1) {
+        if (pppp::utils::linq::from(original.hit_objects).count() == 1) {
             out.push_back(original);
             return;
         }

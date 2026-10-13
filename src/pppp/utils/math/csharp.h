@@ -39,6 +39,7 @@ namespace pppp { namespace utils { namespace math {
         return x;
     }
 
+    /// `double.CompareTo` as .NET 8 runs it:
     /// https://github.com/dotnet/runtime/blob/26d2fafe1c84107e03ccdd8d6d8974ee7b49d9a5/src/libraries/System.Private.CoreLib/src/System/Double.cs#L258
     inline int compare_to(double value, double other) {
         if (value < other) {

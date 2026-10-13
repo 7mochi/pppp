@@ -7,6 +7,7 @@
 #include "pppp/osu/difficulty/evaluators/aim/flow_aim_evaluator.h"
 #include "pppp/osu/difficulty/evaluators/aim/snap_aim_evaluator.h"
 #include "pppp/utils/difficulty_calculation_utils.h"
+#include "pppp/utils/linq/csharp.h"
 #include "pppp/utils/math/csharp.h"
 #include <algorithm>
 #include <cmath>
@@ -29,7 +30,8 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
     double Aim::strain_value_at(const DifficultyHitObject& base_current) {
         const preprocessing::OsuDifficultyHitObject& current =
             static_cast<const preprocessing::OsuDifficultyHitObject&>(base_current);
-        if (pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_AP)) {
+        if (utils::linq::from(mods, mod_count)
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_AP)) {
             return 0;
         }
 
@@ -65,13 +67,13 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
 
         double total_difficulty = calculate_total_value(snap_difficulty, agility_difficulty, flow_difficulty);
 
-        if (pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_MG)) {
-            for (size_t i = 0; i < mod_count; i++) {
-                if (mods[i].id == pppp::mods::MOD_MG) {
-                    total_difficulty *= 1.0 - mods[i].magnetised.strength;
-                    break;
-                }
-            }
+        if (utils::linq::from(mods, mod_count)
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_MG)) {
+            double magnetised_strength =
+                utils::linq::from(mods, mod_count)
+                    .first(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_MG)
+                    .magnetised.strength;
+            total_difficulty *= 1.0 - magnetised_strength;
         }
 
         double od = std::max(0.0, current.overall_difficulty);
@@ -95,14 +97,16 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
         double p_snap = calculate_snap_flow_probability(flow_difficulty / combined_snap_difficulty);
         double p_flow = 1.0 - p_snap;
 
-        if (pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_TD)) {
+        if (utils::linq::from(mods, mod_count)
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_TD)) {
             // we don't adjust agility here since agility represents TD difficulty in a decent enough way
             snap_difficulty = utils::pow(snap_difficulty, 0.89);
             combined_snap_difficulty =
                 utils::norm(combined_snap_norm_exponent, snap_difficulty, agility_difficulty);
         }
 
-        if (pppp::mods::mod_has(mods, mod_count, pppp::mods::MOD_RX)) {
+        if (utils::linq::from(mods, mod_count)
+                .any(utils::linq::bind(&pppp::mods::Mod::id, utils::linq::_1) == pppp::mods::MOD_RX)) {
             combined_snap_difficulty *= 0.75;
             flow_difficulty *= 0.6;
         }
@@ -133,17 +137,14 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
             return 0;
         }
 
-        double max_slider_strain = *std::max_element(slider_strains.begin(), slider_strains.end());
+        double max_slider_strain = utils::linq::from(slider_strains).max();
 
         if (max_slider_strain == 0) {
             return 0;
         }
 
-        double sum = 0.0;
-        for (size_t i = 0; i < slider_strains.size(); i++) {
-            sum += utils::logistic(slider_strains[i] / max_slider_strain, 0.5, 12.0);
-        }
-        return sum;
+        return utils::linq::from(slider_strains)
+            .sum(utils::linq::bind(&utils::logistic, utils::linq::_1 / max_slider_strain, 0.5, 12.0, 1.0));
     }
 
     double Aim::count_top_weighted_sliders(double difficulty_value) {
@@ -160,26 +161,21 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
         }
 
         // Use a weighted sum of all strains. Constants are arbitrary and give nice values
-        double sum = 0.0;
-        for (size_t i = 0; i < slider_strains.size(); i++) {
-            sum += utils::logistic(slider_strains[i] / consistent_top_strain, 0.88, 10.0, 1.1);
-        }
-        return sum;
+        return utils::linq::from(slider_strains)
+            .sum(utils::linq::bind(&utils::logistic, utils::linq::_1 / consistent_top_strain, 0.88, 10.0,
+                                   1.1));
     }
 
     std::vector<StrainPeak> Aim::get_reduced_strain_peaks() {
         const int reduced_section_time = 4000;
         const double reduced_strain_baseline = 0.727;
 
-        std::vector<StrainPeak> strains;
-        const std::vector<StrainPeak>& raw_peaks = get_current_strain_peaks();
-        for (size_t i = 0; i < raw_peaks.size(); i++) {
-            // Sections with 0 strain are excluded to avoid worst-case time complexity of the following sort
-            // (e.g. /b/2351871). These sections will not contribute to the difficulty.
-            if (raw_peaks[i].value > 0) {
-                strains.push_back(raw_peaks[i]);
-            }
-        }
+        // Sections with 0 strain are excluded to avoid worst-case time complexity of the following sort
+        // (e.g. /b/2351871). These sections will not contribute to the difficulty.
+        std::vector<StrainPeak> strains =
+            utils::linq::from(get_current_strain_peaks())
+                .where(utils::linq::bind(&StrainPeak::value, utils::linq::_1) > 0)
+                .to_list();
 
         const int chunk_size = 20;
         double red_time = 0.0;
@@ -208,10 +204,10 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
             skip_count++;
         }
 
-        std::vector<StrainPeak> reduced(strains.begin() + skip_count, strains.end());
-        // Stable, so equal peaks keep their order.
-        std::stable_sort(reduced.begin(), reduced.end(), pppp::common::skills::strain_peak_greater);
-        return reduced;
+        return utils::linq::from(strains)
+            .skip(skip_count)
+            .order_by_descending(utils::linq::bind(&StrainPeak::value, utils::linq::_1))
+            .to_list();
     }
 
     double Aim::difficulty_value() {

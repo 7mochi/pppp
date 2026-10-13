@@ -737,5 +737,21 @@
       "count_miss": 1,
       "max_combo": 2000
     }
+  },
+  {
+    "case": "a taiko control line listed out of time order",
+    "map": "taiko/out-of-order-lines.osu",
+    "ruleset": 1,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "a taiko control line listed out of time order",
+    "map": "taiko/out-of-order-lines.osu",
+    "ruleset": 1,
+    "mods": [
+      "DT"
+    ]
   }
 ]

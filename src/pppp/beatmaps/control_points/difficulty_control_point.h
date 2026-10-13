@@ -15,9 +15,15 @@ namespace pppp { namespace beatmaps { namespace control_points {
         /// when the beat length is not negative.
         double slider_velocity;
 
+        /// Whether or not slider ticks should be generated at this control point.
+        /// This exists for backwards compatibility with maps that abuse NaN slider velocity behavior on
+        /// osu!stable (e.g. /b/2628991).
+        bool generate_ticks;
+
         DifficultyControlPoint(double time_in, double slider_velocity_in)
             : ControlPoint(time_in),
-              slider_velocity(slider_velocity_in) {}
+              slider_velocity(slider_velocity_in),
+              generate_ticks(true) {}
 
         double clamped_slider_velocity() const {
             if (slider_velocity < 0.1) {
@@ -27,6 +33,11 @@ namespace pppp { namespace beatmaps { namespace control_points {
                 return 10.0;
             }
             return slider_velocity;
+        }
+
+        bool is_redundant(const DifficultyControlPoint* existing) const {
+            return existing != 0 && generate_ticks == existing->generate_ticks &&
+                   clamped_slider_velocity() == existing->clamped_slider_velocity();
         }
     };
 }}} // namespace pppp::beatmaps::control_points

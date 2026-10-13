@@ -22,6 +22,11 @@ namespace pppp { namespace beatmaps { namespace control_points {
               time_signature(time_signature_in),
               beat_length(beat_length_in < 6.0 ? 6.0
                                                : (beat_length_in > 60000.0 ? 60000.0 : beat_length_in)) {}
+
+        bool is_redundant(const TimingControlPoint* existing) const {
+            (void)existing;
+            return false;
+        }
     };
 }}} // namespace pppp::beatmaps::control_points
 

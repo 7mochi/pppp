@@ -97,43 +97,6 @@ namespace pppp { namespace taiko {
             return *tick_spacing > 0 && distance / osu_velocity * 1000.0 < 2.0 * beat_length;
         }
 
-        void add_effect_point(std::vector<control_points::EffectControlPoint>& points, double time, bool kiai,
-                              double scroll_speed) {
-            bool existing_kiai = false;
-            double existing_scroll = 1.0; // the default scroll speed
-            size_t position = 0;
-            while (position < points.size() && points[position].time <= time) {
-                existing_kiai = points[position].kiai_mode;
-                existing_scroll = points[position].scroll_speed;
-                position++;
-            }
-
-            if (kiai == existing_kiai && scroll_speed == existing_scroll) {
-                return;
-            }
-
-            if (position > 0 && points[position - 1].time == time) {
-                points[position - 1].kiai_mode = kiai;
-                points[position - 1].scroll_speed = scroll_speed;
-                return;
-            }
-
-            control_points::EffectControlPoint ep(time, kiai);
-            ep.scroll_speed = scroll_speed;
-            points.insert(points.begin() + static_cast<ptrdiff_t>(position), ep);
-        }
-
-        bool kiai_at(const std::vector<control_points::EffectControlPoint>& points, double time) {
-            bool kiai = false;
-            for (size_t i = 0; i < points.size(); i++) {
-                if (points[i].time > time) {
-                    break;
-                }
-                kiai = points[i].kiai_mode;
-            }
-            return kiai;
-        }
-
     } // namespace
 
     void convert(TaikoBeatmap& pb, const beatmaps::Beatmap& beatmap,
@@ -145,30 +108,6 @@ namespace pppp { namespace taiko {
         pb.is_convert = beatmap.mode == 0;
 
         pb.info.build(beatmap);
-
-        // An effect point is dropped when neither the kiai flag nor the scroll speed differ from
-        // whatever is already in force at that time, which is why most of a convert's control lines
-        // leave no effect point at all.
-        std::vector<control_points::EffectControlPoint> effect_points;
-        for (size_t i = 0; i < pb.info.effect_points.size(); i++) {
-            // Only taiko and mania read the point's velocity into the effect point; for a convert
-            // it stays at 1 and the slider reconstruction below inserts the real values on top.
-            double scroll_speed = 1.0;
-            if (!pb.is_convert) {
-                const control_points::DifficultyControlPoint* dp =
-                    pb.info.difficulty_point_at(pb.info.effect_points[i].time);
-                scroll_speed = dp != 0 ? dp->slider_velocity : 1.0;
-                if (scroll_speed < 0.01) {
-                    scroll_speed = 0.01;
-                }
-                if (scroll_speed > 10.0) {
-                    scroll_speed = 10.0;
-                }
-            }
-            add_effect_point(effect_points, pb.info.effect_points[i].time, pb.info.effect_points[i].kiai_mode,
-                             scroll_speed);
-        }
-        pb.info.effect_points.swap(effect_points);
 
         for (size_t i = 0; i < beatmap.hit_objects.size(); i++) {
             const beatmaps::HitObject& ho = beatmap.hit_objects[i];
@@ -262,11 +201,15 @@ namespace pppp { namespace taiko {
                 }
 
                 double next_scroll_speed = slider_velocity_at(pb.info.difficulty_points, ho.start_time);
+                const control_points::EffectControlPoint* current_effect_point =
+                    pb.info.effect_point_at(ho.start_time);
+
                 if (!utils::almost_equals(last_scroll_speed, next_scroll_speed,
                                           std::numeric_limits<double>::denorm_min())) {
-                    last_scroll_speed = next_scroll_speed;
-                    add_effect_point(pb.info.effect_points, ho.start_time,
-                                     kiai_at(pb.info.effect_points, ho.start_time), next_scroll_speed);
+                    control_points::EffectControlPoint effect_point(
+                        ho.start_time, current_effect_point != 0 && current_effect_point->kiai_mode);
+                    effect_point.scroll_speed = last_scroll_speed = next_scroll_speed;
+                    pb.info.add(ho.start_time, effect_point);
                 }
             }
         }

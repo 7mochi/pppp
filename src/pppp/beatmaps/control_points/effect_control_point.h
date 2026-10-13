@@ -23,6 +23,11 @@ namespace pppp { namespace beatmaps { namespace control_points {
         double clamped_scroll_speed() const {
             return scroll_speed < 0.01 ? 0.01 : (scroll_speed > 10.0 ? 10.0 : scroll_speed);
         }
+
+        bool is_redundant(const EffectControlPoint* existing) const {
+            return existing != 0 && kiai_mode == existing->kiai_mode &&
+                   clamped_scroll_speed() == existing->clamped_scroll_speed();
+        }
     };
 }}} // namespace pppp::beatmaps::control_points
 

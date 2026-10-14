@@ -19,9 +19,9 @@ namespace pppp { namespace osu { namespace object {
         /// @param rotation The angle, measured in radians, to rotate the vector by.
         /// @returns The rotated vector.
         utils::Vector2 rotate_vector(utils::Vector2 v, float rotation) {
-            float angle = std::atan2(v.y, v.x) + rotation;
+            float angle = math::atan2f(v.y, v.x) + rotation;
             float len = length(v);
-            return utils::vec2(len * std::cos(angle), len * std::sin(angle));
+            return utils::vec2(len * math::cosf(angle), len * math::sinf(angle));
         }
 
         struct WorkingObject {
@@ -43,7 +43,7 @@ namespace pppp { namespace osu { namespace object {
         /// @returns The angle in radians.
         float get_slider_rotation(const PlayableSlider& sl) {
             utils::Vector2 end = slider_position_at(sl, 1);
-            return std::atan2(end.y, end.x);
+            return math::atan2f(end.y, end.x);
         }
 
         /// Get the absolute difference between 2 angles measured in Radians.
@@ -115,8 +115,8 @@ namespace pppp { namespace osu { namespace object {
 
     utils::Vector2 rotate_vector_towards_vector(utils::Vector2 initial, utils::Vector2 destination,
                                                 float rotation_ratio) {
-        float initial_angle = std::atan2(initial.y, initial.x);
-        float dest_angle = std::atan2(destination.y, destination.x);
+        float initial_angle = math::atan2f(initial.y, initial.x);
+        float dest_angle = math::atan2f(destination.y, destination.x);
         float diff = dest_angle - initial_angle;
         while (diff < -utils::PI_F) {
             diff += 2 * utils::PI_F;
@@ -126,7 +126,7 @@ namespace pppp { namespace osu { namespace object {
         }
         float final_angle = initial_angle + rotation_ratio * diff;
         float len = length(initial);
-        return utils::vec2(len * std::cos(final_angle), len * std::sin(final_angle));
+        return utils::vec2(len * math::cosf(final_angle), len * math::sinf(final_angle));
     }
 
     utils::Vector2 rotate_away_from_edge(utils::Vector2 prev_object_pos, utils::Vector2 pos_relative_to_prev,
@@ -170,14 +170,14 @@ namespace pppp { namespace osu { namespace object {
                         before_previous ? object_end_position(pb, infos[before_previous->info].object)
                                         : playfield_centre();
                     utils::Vector2 relative = prev_ho.position - earliest;
-                    previous_absolute_angle = std::atan2(relative.y, relative.x);
+                    previous_absolute_angle = math::atan2f(relative.y, relative.x);
                 }
             }
 
             float absolute_angle = previous_absolute_angle + pi.relative_angle;
             utils::Vector2 pos_relative_to_prev =
-                utils::vec2(pi.distance_from_previous * std::cos(absolute_angle),
-                            pi.distance_from_previous * std::sin(absolute_angle));
+                utils::vec2(pi.distance_from_previous * math::cosf(absolute_angle),
+                            pi.distance_from_previous * math::sinf(absolute_angle));
             utils::Vector2 last_end_position =
                 previous ? previous->end_position_modified : playfield_centre();
             pos_relative_to_prev = rotate_away_from_edge(last_end_position, pos_relative_to_prev, 0.5f);
@@ -187,14 +187,14 @@ namespace pppp { namespace osu { namespace object {
                 return;
             }
 
-            absolute_angle = std::atan2(pos_relative_to_prev.y, pos_relative_to_prev.x);
+            absolute_angle = math::atan2f(pos_relative_to_prev.y, pos_relative_to_prev.x);
             const PlayableSlider& sl = pb.sliders[ho.slider];
             utils::Vector2 com_original = calculate_centre_of_mass(sl);
             utils::Vector2 com_modified =
                 rotate_vector(com_original, pi.rotation + absolute_angle - get_slider_rotation(sl));
             com_modified = rotate_away_from_edge(current.position_modified, com_modified, 0.5f);
             float relative_rotation =
-                std::atan2(com_modified.y, com_modified.x) - std::atan2(com_original.y, com_original.x);
+                math::atan2f(com_modified.y, com_modified.x) - math::atan2f(com_original.y, com_original.x);
             if (!utils::almost_equals(relative_rotation, 0.0f)) {
                 rotate_slider(pb, ho.slider, relative_rotation);
             }
@@ -302,7 +302,7 @@ namespace pppp { namespace osu { namespace object {
         for (size_t i = 0; i < pb.objects.size(); i++) {
             const OsuHitObject& ho = pb.objects[i];
             utils::Vector2 relative = ho.position - previous_position;
-            float absolute_angle = std::atan2(relative.y, relative.x);
+            float absolute_angle = math::atan2f(relative.y, relative.x);
             float relative_angle = absolute_angle - previous_angle;
             ObjectPositionInfo info;
             info.relative_angle = relative_angle;

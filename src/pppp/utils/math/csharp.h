@@ -4,9 +4,6 @@
 #include <cmath>
 
 namespace pppp { namespace utils { namespace math {
-    /// Rounds `x` to the nearest integer, breaking a tie towards the even neighbour.
-    /// @param x The value to round.
-    /// @returns The rounded value.
     inline double round_half_even(double x) {
         double r = std::floor(x);
         double diff = x - r;
@@ -18,22 +15,13 @@ namespace pppp { namespace utils { namespace math {
         } else {
             rounded = (std::fmod(r, 2.0) == 0.0) ? r : r + 1.0;
         }
-        // `Math.Round` keeps the sign of its argument when it rounds to zero: -0.4 gives -0.0.
         return rounded == 0.0 ? x * 0.0 : rounded;
     }
 
-    /// Rounds `x` half-even and truncates the result to `int`.
-    /// @param x The value to round.
-    /// @returns The rounded value.
     inline double truncate(double x) { return x < 0.0 ? std::ceil(x) : std::floor(x); }
 
     inline int round_half_even_int(double x) { return static_cast<int>(round_half_even(x)); }
 
-    /// Rounds `x` to two decimals, breaking a tie towards the even neighbour. From 1e16 up a double
-    /// has no decimals left, and `Math.Round(x, 2)` returns it untouched instead of scaling it, which
-    /// near the top of the range would overflow to infinity.
-    /// @param x The value to round.
-    /// @returns The rounded value.
     inline double round2_to_even(double x) {
         if (std::fabs(x) < 1e16) {
             return round_half_even(x * 100.0) / 100.0;
@@ -41,8 +29,6 @@ namespace pppp { namespace utils { namespace math {
         return x;
     }
 
-    /// `double.CompareTo` as .NET 8 runs it:
-    /// https://github.com/dotnet/runtime/blob/26d2fafe1c84107e03ccdd8d6d8974ee7b49d9a5/src/libraries/System.Private.CoreLib/src/System/Double.cs#L258
     inline int compare_to(double value, double other) {
         if (value < other) {
             return -1;
@@ -61,24 +47,12 @@ namespace pppp { namespace utils { namespace math {
         return 1;
     }
 
-    /// Takes a float and answers -1, 0 or 1.
     inline int sign(float value) { return value > 0 ? 1 : (value < 0 ? -1 : 0); }
 
-    /// Takes a double and answers -1, 0 or 1.
     inline int sign(double value) { return value > 0 ? 1 : (value < 0 ? -1 : 0); }
 
-    /// Clamps `x` into `[lo, hi]`.
-    /// @param x The value to clamp.
-    /// @param lo The inclusive lower bound.
-    /// @param hi The inclusive upper bound.
-    /// @returns The clamped value.
     double clamp(double x, double lo, double hi);
 
-    /// Clamps `value` into `[low, high]`, preferring the lower bound when the bounds are inverted.
-    /// @param value The value to clamp.
-    /// @param low The lower bound.
-    /// @param high The upper bound.
-    /// @returns The clamped value.
     inline int clamp_int(int value, int low, int high) {
         if (high < low || value < low) {
             return low;
@@ -86,37 +60,24 @@ namespace pppp { namespace utils { namespace math {
         return value > high ? high : value;
     }
 
-    /// The lesser of two integers.
     inline int imin(int a, int b) { return a < b ? a : b; }
 
-    /// The greater of two integers.
-    inline int imax(int a, int b) { return a > b ? a : b; }
-
-    /// `a - b`, floored at zero.
-    inline int sub_sat(int a, int b) { return a > b ? a - b : 0; }
-
-    /// Linear interpolation, `a + (b - a) * t`.
-    /// @param a The value at `t = 0`.
-    /// @param b The value at `t = 1`.
-    /// @param t The weight.
-    /// @returns The interpolated value.
     double lerp(double a, double b, double t);
 
-    /// Linear interpolation in the framework's own form,
-    /// `value1 * (1 - amount) + value2 * amount`, which rounds differently from the `a + (b - a) * t`
-    /// form next to it. The settings that go through this form keep their last bits only if it is the
-    /// one that runs:
-    /// https://github.com/dotnet/runtime/blob/1d1bf92fcf43aa6981804dc53c5174445069c9e4/src/libraries/System.Private.CoreLib/src/System/Double.cs#L841
-    /// @param a The value at `t = 0`.
-    /// @param b The value at `t = 1`.
-    /// @param t The weight.
+    /// Performs a linear interpolation between two values based on the given weight.
+    /// @param value1 The first value, which is intended to be the lower bound.
+    /// @param value2 The second value, which is intended to be the upper bound.
+    /// @param amount A value, intended to be between 0 and 1, that indicates the weight of the
+    /// interpolation.
     /// @returns The interpolated value.
-    double lerp_dotnet(double a, double b, double t);
+    /// @remarks This method presumes inputs are well formed and does not validate that `value1 < value2`
+    /// nor that `0 <= amount <= 1`.
+    double lerp_dotnet(double value1, double value2, double amount);
 
-    /// Converts degrees to radians.
-    /// @param deg The angle in degrees.
-    /// @returns The angle in radians.
-    double degrees_to_radians(double deg);
+    /// Converts a given value from degrees to radians.
+    /// @param degrees The value to convert to radians.
+    /// @returns The value of `degrees` converted to radians.
+    double degrees_to_radians(double degrees);
 
     /// 2^(1/3)
     const double CBRT2 = 1.2599210498948731648;
@@ -124,17 +85,33 @@ namespace pppp { namespace utils { namespace math {
     /// 2^(2/3)
     const double SQR_CBRT2 = 1.5874010519681994748;
 
-    /// glibc's `factor`: 2^(e/3) for the remainders -2 to 2 of the exponent divided by three.
     const double CBRT_FACTOR[5] = {1.0 / SQR_CBRT2, 1.0 / CBRT2, 1.0, CBRT2, SQR_CBRT2};
 
-    /// The cube root. `Math.Cbrt` is the platform libm's, and parity is proven against .NET 8 on
-    /// glibc, so this is glibc's own algorithm, reproduced bit for bit rather than taken from the
-    /// target's libm, where `cbrt` is C99 and differs between libms:
-    /// https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/ieee754/dbl-64/s_cbrt.c;hb=refs/tags/glibc-2.42
-    /// `pow(x, 1.0 / 3.0)` is not the same function: it is off by an ulp on four inputs in five.
-    /// @param x The value to take the root of.
-    /// @returns The cube root of `x`.
+    /// Compute cubic root of double value.
     double cbrt(double x);
+
+    /// 2PI * 2^-64.
+    const double SINCOSF_PI63 = 3.4061215800865545e-19;
+
+    /// PI / 4.
+    const float SINCOSF_PIO4 = 0.78539818525314331f;
+
+    const double SINCOSF_HPI_HI = 1.5707963267948912;
+
+    const double SINCOSF_HPI_LO = 5.3290705182007514e-15;
+
+    /// Fast sinf implementation. Worst-case ULP is 0.5607, maximum relative error is 0.5303 * 2^-23.
+    /// A single-step range reduction is used for small values. Large inputs have their range reduced
+    /// using fast integer arithmetic.
+    float sinf(float y);
+
+    /// Fast cosf implementation. Worst-case ULP is 0.5607, maximum relative error is 0.5303 * 2^-23.
+    /// A single-step range reduction is used for small values. Large inputs have their range reduced
+    /// using fast integer arithmetic.
+    float cosf(float y);
+
+    /// Correctly-rounded arctangent function of two binary32 values.
+    float atan2f(float y, float x);
 }}} // namespace pppp::utils::math
 
 #endif

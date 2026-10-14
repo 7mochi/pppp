@@ -6,6 +6,7 @@
 #include "pppp/osu/object/osu_hit_object_generation_utils.h"
 #include "pppp/osu/object/osu_playfield.h"
 #include "pppp/utils/linq/csharp.h"
+#include "pppp/utils/math/csharp.h"
 #include "pppp/utils/precision.h"
 #include "pppp/utils/random/csharp.h"
 #include <algorithm>
@@ -15,6 +16,7 @@
 namespace pppp { namespace osu { namespace mods {
     namespace control_points = ::pppp::beatmaps::control_points;
     namespace linq = ::pppp::utils::linq;
+    namespace math = ::pppp::utils::math;
     namespace timing = ::pppp::beatmaps::timing;
 
     namespace {
@@ -183,10 +185,10 @@ namespace pppp { namespace osu { namespace mods {
                         direction = two_pi * static_cast<float>(rng.next_double() * 1.0f);
                     }
                     utils::Vector2 relative =
-                        utils::vec2(distance * std::cos(direction), distance * std::sin(direction));
+                        utils::vec2(distance * math::cosf(direction), distance * math::sinf(direction));
                     // Rotate the new circle away from playfield border
                     relative = object::rotate_away_from_edge(last_pos, relative, EDGE_ROTATION_MULTIPLIER);
-                    direction = std::atan2(relative.y, relative.x);
+                    direction = math::atan2f(relative.y, relative.x);
                     obj.position = last_pos + relative;
                     clamp_to_playfield(obj, radius);
                     try_count++;

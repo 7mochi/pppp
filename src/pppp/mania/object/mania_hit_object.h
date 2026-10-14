@@ -10,15 +10,19 @@ namespace pppp { namespace mania { namespace object {
     struct ManiaHitObject {
         int column;
         double start_time;
-        double end_time;
+        double duration;
         bool hold;
 
         ManiaHitObject()
             : column(0),
               start_time(0.0),
-              end_time(0.0),
+              duration(0.0),
               hold(false) {}
+
+        double end_time() const { return start_time + duration; }
     };
+
+    inline double get_end_time(const ManiaHitObject& hit_object) { return hit_object.end_time(); }
 
     /// Orders by start time rounded half to even.
     inline int hit_object_start_time_rounded(const ManiaHitObject& a, const ManiaHitObject& b) {

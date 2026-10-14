@@ -18,6 +18,9 @@ namespace pppp { namespace mania {
     /// Maximum number of previous notes to consider for density calculation.
     const size_t MAX_NOTES_FOR_DENSITY = 7;
 
+    /// Scoring distance with a speed-adjusted beat length of 1 second.
+    const float BASE_SCORING_DISTANCE = 100;
+
     class ManiaBeatmapConverter {
     public:
         const pppp::beatmaps::Beatmap& beatmap;

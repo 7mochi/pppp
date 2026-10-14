@@ -377,7 +377,7 @@ PPPP_C_API const char* pppp_result_message(pppp_result result);
 PPPP_C_API pppp_result pppp_mods_parse(const char* specification, pppp_mods** out);
 
 /// Convert osu!stable's mod bitmask, classic is not added.
-PPPP_C_API pppp_result pppp_mods_from_legacy(pppp_uint32 bits, pppp_mods** out);
+PPPP_C_API pppp_result pppp_mods_from_legacy(pppp_uint32 bits, pppp_int32 ruleset, pppp_mods** out);
 
 /// Add the Classic mod, for scores that osu!stable set and that should calculate the way stable
 /// does. Adding it twice is allowed and does nothing the second time; null fails with

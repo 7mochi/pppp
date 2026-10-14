@@ -74,6 +74,10 @@ namespace pppp { namespace utils {
     /// @returns The output of the smoothstep bell curve function of `x`
     double smoothstep_bell_curve(double x, double mean, double width);
 
+    /// Calculates a Smoothstep bell curve that returns 1 for x = mean, and smoothly reducing it's value to 0
+    /// over width
+    double smoothstep_bell_curve(double x);
+
     /// Smoothstep function (https://en.wikipedia.org/wiki/Smoothstep)
     /// @param x Value to calculate the function for
     /// @param start Value at which function returns 0

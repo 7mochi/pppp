@@ -10,11 +10,10 @@ namespace pppp { namespace beatmaps { namespace control_points {
     /// @remarks Note that going forward, this control point type should always be assigned directly
     /// to HitObjects.
     class DifficultyControlPoint : public ControlPoint {
-    public:
-        /// The slider velocity, unclamped, as the timing point states it: 100 / -beat_length, or 1
-        /// when the beat length is not negative.
-        double slider_velocity;
+    private:
+        double slider_velocity_value;
 
+    public:
         /// Whether or not slider ticks should be generated at this control point.
         /// This exists for backwards compatibility with maps that abuse NaN slider velocity behavior on
         /// osu!stable (e.g. /b/2628991).
@@ -22,22 +21,21 @@ namespace pppp { namespace beatmaps { namespace control_points {
 
         DifficultyControlPoint(double time_in, double slider_velocity_in)
             : ControlPoint(time_in),
-              slider_velocity(slider_velocity_in),
-              generate_ticks(true) {}
+              slider_velocity_value(1),
+              generate_ticks(true) {
+            set_slider_velocity(slider_velocity_in);
+        }
 
-        double clamped_slider_velocity() const {
-            if (slider_velocity < 0.1) {
-                return 0.1;
-            }
-            if (slider_velocity > 10.0) {
-                return 10.0;
-            }
-            return slider_velocity;
+        /// The slider velocity at this control point.
+        double slider_velocity() const { return slider_velocity_value; }
+
+        void set_slider_velocity(double value) {
+            slider_velocity_value = value < 0.1 ? 0.1 : (value > 10 ? 10 : value);
         }
 
         bool is_redundant(const DifficultyControlPoint* existing) const {
             return existing != 0 && generate_ticks == existing->generate_ticks &&
-                   clamped_slider_velocity() == existing->clamped_slider_velocity();
+                   slider_velocity() == existing->slider_velocity();
         }
     };
 }}} // namespace pppp::beatmaps::control_points

@@ -6,7 +6,10 @@
 #include "pppp/config.h" // IWYU pragma: export
 #include "pppp/mods/mod.h"
 #include "pppp/osu/difficulty/base_performance.h"
+#include "pppp/osu/difficulty/osu_difficulty_calculator.h"
 #include "pppp/osu/difficulty/osu_legacy_score_miss_calculator.h"
+#include "pppp/osu/difficulty/skills/flashlight.h"
+#include "pppp/osu/difficulty/skills/speed.h"
 #include "pppp/osu/object/osu_hit_object.h"
 #include "pppp/osu/osu_hit_windows.h"
 #include "pppp/utils/difficulty_calculation_utils.h"
@@ -252,7 +255,8 @@ namespace pppp { namespace osu { namespace difficulty {
                 if (!speed_deviation.has_value()) {
                     return 0;
                 }
-                double speed_value = difficulty::difficulty_to_performance(attributes.speed_difficulty);
+                double speed_value =
+                    skills::HarmonicSkill::difficulty_to_performance(attributes.speed_difficulty);
 
                 // Decides a point where the PP value achieved compared to the speed deviation is assumed to
                 // be tapped improperly. Any PP above this point is considered "excess" speed difficulty.
@@ -362,7 +366,7 @@ namespace pppp { namespace osu { namespace difficulty {
                     !speed_deviation.has_value()) {
                     return 0.0;
                 }
-                double value = difficulty::difficulty_to_performance(attributes.speed_difficulty);
+                double value = skills::HarmonicSkill::difficulty_to_performance(attributes.speed_difficulty);
                 if (effective_miss_count > 0) {
                     double relevant_miss_count =
                         std::min(effective_miss_count + speed_estimated_slider_breaks,
@@ -448,7 +452,7 @@ namespace pppp { namespace osu { namespace difficulty {
                     return 0.0;
                 }
                 double value =
-                    difficulty::flashlight_difficulty_to_performance(attributes.flashlight_difficulty);
+                    skills::Flashlight::difficulty_to_performance(attributes.flashlight_difficulty);
 
                 // Penalize misses by assessing # of misses relative to the total # of objects. Default a 3%
                 // reduction for any # of misses.
@@ -464,7 +468,8 @@ namespace pppp { namespace osu { namespace difficulty {
             }
 
             double compute_reading_value() const {
-                double value = difficulty::difficulty_to_performance(attributes.reading_difficulty);
+                double value =
+                    skills::HarmonicSkill::difficulty_to_performance(attributes.reading_difficulty);
                 if (effective_miss_count > 0) {
                     value *= calculate_miss_penalty(effective_miss_count + aim_estimated_slider_breaks,
                                                     attributes.reading_difficult_note_count);

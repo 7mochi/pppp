@@ -42,9 +42,13 @@ namespace pppp { namespace taiko { namespace difficulty {
 
             int total_hits() const { return count_great + count_ok + count_meh + count_miss; }
 
+            /// Computes an upper bound on the player's tap deviation based on the OD, number of circles and
+            /// sliders, and the hit judgements, assuming the player's mean hit error is 0. The estimation is
+            /// consistent in that two SS scores on the same map with the same settings will always return the
+            /// same deviation.
             double compute_deviation_upper_bound(double accuracy) const {
-                // 99% critical value for the normal distribution (one-tailed).
-                const double z = 2.32634787404;
+                const double z =
+                    2.32634787404; // 99% critical value for the normal distribution (one-tailed).
 
                 double n = total_hits();
 

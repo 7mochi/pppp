@@ -151,15 +151,12 @@ namespace fosu { namespace internal {
             }
             // osu!/catch (lazer Slider.ApplyDefaultsToSelf): Velocity = 100 * SliderMultiplier /
             // GetPrecisionAdjustedBeatLength(), where the slider-velocity beat length goes through a
-            // float cast and a [10, 1000] clamp to match stable. Other modes keep the plain value.
-            double pixels_per_millisecond;
-            if (map.mode == 0 || map.mode == 2) {
-                const double bpm_multiplier =
-                    clamp_value(static_cast<float>(100 / velocity), 10.0f, 1000.0f) / 100.0;
-                pixels_per_millisecond = 100 * map.slider_multiplier / (beat_length * bpm_multiplier);
-            } else {
-                pixels_per_millisecond = 100 * map.slider_multiplier * velocity / beat_length;
-            }
+            // float cast and a [10, 1000] clamp to match stable. It applies to every mode, because a
+            // beatmap of any mode can be converted to osu! or osu!catch.
+            const double bpm_multiplier =
+                clamp_value(static_cast<float>(100 / velocity), 10.0f, 1000.0f) / 100.0;
+            const double pixels_per_millisecond =
+                100 * map.slider_multiplier / (beat_length * bpm_multiplier);
             // osu! suppresses repeats on effectively zero-length paths. Keep the
             // encoded span count on Slider, but use the effective count for duration.
             const int spans = distance <= 1e-7 ? 1 : slider.slides;
@@ -178,9 +175,8 @@ namespace fosu { namespace internal {
                 const double catch_tick_distance = pixels_per_millisecond * beat_length /
                                                    map.slider_tick_rate *
                                                    (map.format_version < 8 ? 1 / velocity : 1);
-                const double tick_distance = generate_ticks || map.mode == 2
-                                                 ? catch_tick_distance
-                                                 : std::numeric_limits<double>::infinity();
+                const double tick_distance =
+                    generate_ticks ? catch_tick_distance : std::numeric_limits<double>::infinity();
                 SliderTiming& timing = timings[object.slider];
                 timing.velocity = pixels_per_millisecond;
                 timing.tick_distance = tick_distance;

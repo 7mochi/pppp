@@ -22,10 +22,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
     double Flashlight::strain_decay(double ms) const { return utils::pow(0.15, ms / 1000.0); }
 
     double Flashlight::calculate_initial_strain(double time, const DifficultyHitObject& base_current) {
-        const preprocessing::OsuDifficultyHitObject& current =
-            static_cast<const preprocessing::OsuDifficultyHitObject&>(base_current);
-        double prev_start = current.last_object_start_time / current.clock_rate;
-        return current_strain * strain_decay(time - prev_start);
+        return current_strain * strain_decay(time - base_current.previous(0)->start_time);
     }
 
     double Flashlight::strain_value_at(const DifficultyHitObject& base_current) {
@@ -58,7 +55,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
 
         if (linq::from(mods, mod_count)
                 .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_MG)) {
-            double magnetised_strength =
+            float magnetised_strength =
                 linq::from(mods, mod_count)
                     .first(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_MG)
                     .magnetised.strength;
@@ -67,7 +64,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
 
         if (linq::from(mods, mod_count)
                 .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_DF)) {
-            double deflate_initial_scale =
+            float deflate_initial_scale =
                 linq::from(mods, mod_count)
                     .first(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_DF)
                     .scale.start_scale;

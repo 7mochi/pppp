@@ -206,10 +206,9 @@ namespace pppp { namespace osu {
         for (int i = 0; i < n; i++) {
             raw[i] = pb.objects[i].position;
             end_pos[i] = object_end_position(pb, i);
-            path_end_pos[i] = raw[i];
-            if (pb.objects[i].slider >= 0 && !pb.sliders[pb.objects[i].slider].path.empty()) {
-                path_end_pos[i] = raw[i] + pb.sliders[pb.objects[i].slider].path.back();
-            }
+            path_end_pos[i] = pb.objects[i].slider >= 0
+                                  ? raw[i] + slider_position_at(pb.sliders[pb.objects[i].slider], 1)
+                                  : raw[i];
         }
 
         const float stack_threshold = calculate_stack_threshold(pb);

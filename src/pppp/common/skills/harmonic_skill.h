@@ -5,24 +5,25 @@
 #define PPPP_COMMON_SKILLS_HARMONIC_SKILL_H
 
 #include "pppp/common/skills/skill.h"
+#include "pppp/utils/difficulty_calculation_utils.h"
 #include <vector>
 namespace pppp { namespace common { namespace skills {
     class HarmonicSkill : public Skill {
-    public:
+    protected:
         /// The sum of object weights, calculated during summation.
         /// Required for any calculations which need to normalise difficulty value.
         double object_weight_sum;
 
         /// Scaling factor applied as HarmonicScale / (1 + index) during weight calculations.
         /// A higher value will increase the influence of the hardest object difficulties during summation.
-        const double harmonic_scale;
+        virtual double harmonic_scale() const { return 1.0; }
 
         /// Exponent that controls the rate of which decay increases as the index increases.
         /// Values closer to 1 decay faster whilst lower values give more weight to lower object difficulties.
-        const double decay_exponent;
+        virtual double decay_exponent() const { return 0.9; }
 
-        HarmonicSkill(const pppp::mods::Mod* mods_in, size_t mod_count_in, double harmonic_scale_in = 1.0,
-                      double decay_exponent_in = 0.9);
+    public:
+        HarmonicSkill(const pppp::mods::Mod* mods_in, size_t mod_count_in);
 
         /// Returns the difficulty value of the current DifficultyHitObject. This value is calculated with or
         /// without respect to previous objects.
@@ -40,7 +41,11 @@ namespace pppp { namespace common { namespace skills {
         double difficulty_value();
 
         /// Calculates the number of object difficulties weighted against the top object difficulty.
-        double count_top_weighted_object_difficulties(double difficulty_value);
+        virtual double count_top_weighted_object_difficulties(double difficulty_value);
+
+        static double difficulty_to_performance(double difficulty) {
+            return 4.0 * pppp::utils::pow(difficulty, 3);
+        }
     };
 }}} // namespace pppp::common::skills
 

@@ -8,7 +8,7 @@
 
 namespace pppp { namespace taiko { namespace difficulty { namespace skills {
     Rhythm::Rhythm(const pppp::mods::Mod* mods_in, size_t mod_count_in)
-        : StrainDecaySkill(mods_in, mod_count_in, 1.0, 0.4) {}
+        : StrainDecaySkill(mods_in, mod_count_in) {}
 
     double Rhythm::strain_value_of(const common::preprocessing::DifficultyHitObject& base_current) {
         const preprocessing::TaikoDifficultyHitObject& current =

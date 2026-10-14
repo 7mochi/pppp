@@ -451,7 +451,7 @@ namespace {
         return true;
     }
 
-    int read_mods(napi_env env, napi_value value, pppp::Mods& mods) {
+    int read_mods(napi_env env, napi_value value, int ruleset, pppp::Mods& mods) {
         mods.clear();
         bool absent = false;
         if (!is_absent(env, value, &absent) || absent) {
@@ -469,7 +469,7 @@ namespace {
                 napi_throw_error(env, "ERR_PPPP_MODS", "invalid mod specification");
                 return -1;
             }
-            mods = pppp::Mods::from_legacy(static_cast<unsigned>(bits));
+            mods = pppp::Mods::from_legacy(static_cast<unsigned>(bits), ruleset);
             return 0;
         }
         size_t length = 0;
@@ -496,7 +496,7 @@ namespace {
         return 0;
     }
 
-    int read_ruleset(napi_env env, napi_value value, pppp::Difficulty& difficulty) {
+    int read_ruleset(napi_env env, napi_value value, pppp::Difficulty& difficulty, int* effective) {
         bool absent = false;
         if (!is_absent(env, value, &absent)) {
             return -1;
@@ -514,6 +514,7 @@ namespace {
             return -1;
         }
         difficulty.ruleset(static_cast<pppp::Ruleset::Value>(ruleset));
+        *effective = ruleset;
         return 0;
     }
 
@@ -553,18 +554,20 @@ namespace {
         return 0;
     }
 
-    int configure_difficulty(napi_env env, const napi_value* argv, pppp::Difficulty& difficulty) {
+    int configure_difficulty(napi_env env, const napi_value* argv, const pppp::Beatmap& map,
+                             pppp::Difficulty& difficulty) {
+        int ruleset = map.mode;
+        if (read_ruleset(env, argv[2], difficulty, &ruleset) < 0) {
+            return -1;
+        }
         pppp::Mods mods;
-        if (read_mods(env, argv[1], mods) < 0) {
+        if (read_mods(env, argv[1], ruleset, mods) < 0) {
             return -1;
         }
         if (read_classic(env, argv[4], mods) < 0) {
             return -1;
         }
         difficulty.mods(mods);
-        if (read_ruleset(env, argv[2], difficulty) < 0) {
-            return -1;
-        }
         return read_clock_rate(env, argv[3], difficulty);
     }
 
@@ -900,14 +903,8 @@ namespace {
         return 0;
     }
 
-    int configure_performance(napi_env env, const napi_value* argv, pppp::Performance& performance) {
-        pppp::Mods mods;
-        if (read_mods(env, argv[1], mods) < 0) {
-            return -1;
-        }
-        if (read_classic(env, argv[8], mods) < 0) {
-            return -1;
-        }
+    int configure_performance(napi_env env, const napi_value* argv, const pppp::Beatmap& map,
+                              pppp::Performance& performance) {
         int max_combo = 0;
         int misses = 0;
         bool has_max_combo = false;
@@ -950,12 +947,21 @@ namespace {
             return -1;
         }
 
+        int ruleset = map.mode;
         if (!attributes_absent) {
             pppp::DifficultyAttributes provided;
             if (read_attributes(env, attributes_value, provided) < 0) {
                 return -1;
             }
             performance.attributes(provided);
+            ruleset = static_cast<int>(provided.ruleset());
+        }
+        pppp::Mods mods;
+        if (read_mods(env, argv[1], ruleset, mods) < 0) {
+            return -1;
+        }
+        if (read_classic(env, argv[8], mods) < 0) {
+            return -1;
         }
         performance.score(score);
         if (!mods.empty()) {
@@ -1124,8 +1130,8 @@ namespace {
             return NULL;
         }
         const int configured = call->kind == Job::PERFORMANCE
-                                   ? configure_performance(env, argv, job->performance)
-                                   : configure_difficulty(env, argv, job->difficulty);
+                                   ? configure_performance(env, argv, map, job->performance)
+                                   : configure_difficulty(env, argv, map, job->difficulty);
         if (configured < 0) {
             if (call->async) {
                 delete job;

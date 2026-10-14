@@ -13,7 +13,7 @@ namespace pppp { namespace fruits { namespace difficulty { namespace preprocessi
                                                        float half_catcher_width,
                                                        const std::vector<DifficultyHitObject*>& objects,
                                                        int object_index)
-        : DifficultyHitObject(object.time, last.time, rate, objects, object_index),
+        : DifficultyHitObject(object.time, object.time, last.time, rate, 0, objects, object_index),
           normalized_position(0.0),
           last_normalized_position(0.0),
           player_position(0.0),
@@ -25,9 +25,6 @@ namespace pppp { namespace fruits { namespace difficulty { namespace preprocessi
           last_hyper_dash(false) {
         // We will scale everything by this factor, so we can assume a uniform CircleSize among beatmaps.
         float scaling_factor = NORMALIZED_HALF_CATCHER_WIDTH / half_catcher_width;
-
-        end_time = object.time / rate;
-        hit_window_great = 0.0;
 
         normalized_position = static_cast<float>(object.effective_x()) * scaling_factor;
         last_normalized_position = static_cast<float>(last.effective_x()) * scaling_factor;

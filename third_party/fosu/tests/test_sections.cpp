@@ -205,6 +205,27 @@ TEST_CASE("mania hold") {
     CHECK(h.hit_sample == nonstd::string_view("0:0:0:0:"));
 }
 
+TEST_CASE("spinner and hold end times are the start time plus the duration") {
+    // Duration and EndTime read back from osu!lazer 2026.730.0's LegacyBeatmapDecoder: EndTime is
+    // StartTime + Duration, which is not the parsed end when the end is more than twice a negative
+    // fractional start away.
+    const Beatmap spinner = parse_str("osu file format v14\n"
+                                      "[HitObjects]\n"
+                                      "256,192,-7563.24,12,0,124356,0:0:0:0:\n");
+    REQUIRE(spinner.hit_objects.size() == 1u);
+    CHECK(spinner.hit_objects[0].duration == 131919.24);
+    CHECK(spinner.hit_objects[0].end_time == 124355.99999999999);
+
+    const Beatmap hold = parse_str("osu file format v14\n"
+                                   "[General]\n"
+                                   "Mode: 3\n"
+                                   "[HitObjects]\n"
+                                   "64,192,-8219.221,128,0,123514:0:0:0:0:\n");
+    REQUIRE(hold.hit_objects.size() == 1u);
+    CHECK(hold.hit_objects[0].duration == 131733.221);
+    CHECK(hold.hit_objects[0].end_time == 123513.99999999999);
+}
+
 TEST_CASE("aspire edge cases") {
     const Beatmap bm = parse_str("osu file format v14\n"
                                  "[HitObjects]\n"
@@ -217,17 +238,33 @@ TEST_CASE("aspire edge cases") {
                                  "100,100,5000,2,0,B|-64:-32|700:512,1,600\n"); // negative ctrl points
     CHECK(bm.hit_objects.size() == 6u);
     CHECK(bm.hit_objects[0].time == -1000);
-    // Object positions clamp to [0, 512]; slider control points do not.
-    CHECK_UNARY(bm.hit_objects[1].x == 0);
-    CHECK(bm.hit_objects[2].x == 512);
-    CHECK_UNARY(bm.hit_objects[2].y == 0);
-    CHECK(bm.hit_objects[3].x == 512);
+    // osu!lazer keeps object positions as parsed; slider control points are never clamped.
+    CHECK(bm.hit_objects[1].x == -48);
+    CHECK(bm.hit_objects[2].x == 640);
+    CHECK(bm.hit_objects[2].y == -24);
+    CHECK(bm.hit_objects[3].x == 5120);
     CHECK(bm.hit_objects[4].x == 256); // truncated
     CHECK(bm.hit_objects[4].y == 112);
     const Slider& s = bm.sliders[bm.hit_objects[5].slider];
     CHECK(bm.slider_points[s.point_begin].x == -64);
     CHECK(bm.slider_points[s.point_begin].y == -32);
     CHECK(bm.stats.malformed_lines == 1u);
+}
+
+TEST_CASE("the stable client clamps object positions") {
+    fosu::ParseOptions options;
+    options.client = fosu::Client::Stable;
+    const Beatmap bm = parse_str("osu file format v14\n"
+                                 "[HitObjects]\n"
+                                 "-48,192,1000,1,0\n"
+                                 "640,-24,2000,1,0\n"
+                                 "5120,192,3000,1,0\n",
+                                 options);
+    CHECK(bm.hit_objects.size() == 3u);
+    CHECK_UNARY(bm.hit_objects[0].x == 0);
+    CHECK(bm.hit_objects[1].x == 512);
+    CHECK_UNARY(bm.hit_objects[1].y == 0);
+    CHECK(bm.hit_objects[2].x == 512);
 }
 
 TEST_CASE("modern curve segments") {
@@ -688,7 +725,7 @@ TEST_CASE("timing point spellings") {
     const Beatmap meter = parse_str("[TimingPoints]\n0,500,0meter,0,0,100,1,0\n0,500,0,0,0,100,1,0\n");
     CHECK(meter.timing_points.size() == 2u);
     CHECK(meter.timing_points[0].meter == 4);
-    CHECK_UNARY(meter.timing_points[1].meter == 0);
+    CHECK(meter.timing_points[1].meter == 4);
     const Beatmap nan = parse_str("[TimingPoints]\n0,NaN,4,0,0,100,0,0\n");
     CHECK_UNARY(nan.timing_points.size() == 1u &&
                 nan.timing_points[0].beat_length != nan.timing_points[0].beat_length);
@@ -803,9 +840,10 @@ TEST_CASE("enum contracts") {
     for (size_t i = 0; i < 5; i++) {
         const Beatmap map = parse_str(std::string("[TimingPoints]\n0,500,4,") + invalid_points[i] +
                                       ",0,100,1,0\n1,500,4,2,0,100,1,0\n");
-        CHECK(map.stats.malformed_lines == 1u);
-        CHECK(map.timing_points.size() == 1u);
-        CHECK(map.timing_points[0].sample_set == SampleSet::Soft);
+        CHECK(map.stats.malformed_lines == 0u);
+        CHECK(map.timing_points.size() == 2u);
+        CHECK(map.timing_points[0].sample_set == SampleSet::None);
+        CHECK(map.timing_points[1].sample_set == SampleSet::Soft);
     }
     // Both clients read an unknown curve letter as Catmull. stable also ignores another
     // one-character marker, which lazer rejects. The parser tests drive the lazer client.

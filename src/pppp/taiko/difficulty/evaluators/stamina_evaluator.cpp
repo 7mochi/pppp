@@ -10,18 +10,26 @@ namespace pppp { namespace taiko { namespace difficulty { namespace evaluators {
         /// @param interval The interval between the current and previous note hit using the same finger.
         double speed_bonus(double interval) {
             // Interval is capped at a very small value to prevent infinite values.
-            return 20.0 / std::max(interval, 1.0);
+            interval = std::max(interval, 1.0);
+
+            return 20 / interval;
         }
 
-        int available_fingers_for(const preprocessing::TaikoDifficultyHitObject& object) {
-            const preprocessing::TaikoDifficultyHitObject* previous_change =
-                object.colour.previous_colour_change();
-            if (previous_change && object.start_time - previous_change->start_time < 300.0) {
+        /// Determines the number of fingers available to hit the current TaikoDifficultyHitObject.
+        /// Any mono notes that is more than 300ms apart from a colour change will be considered to have more
+        /// than 2 fingers available, since players can hit the same key with multiple fingers.
+        int available_fingers_for(const preprocessing::TaikoDifficultyHitObject& hit_object) {
+            const preprocessing::TaikoDifficultyHitObject* previous_colour_change =
+                hit_object.colour.previous_colour_change();
+            const preprocessing::TaikoDifficultyHitObject* next_colour_change =
+                hit_object.colour.next_colour_change();
+
+            if (previous_colour_change != 0 &&
+                hit_object.start_time - previous_colour_change->start_time < 300) {
                 return 2;
             }
 
-            const preprocessing::TaikoDifficultyHitObject* next_change = object.colour.next_colour_change();
-            if (next_change && next_change->start_time - object.start_time < 300.0) {
+            if (next_colour_change != 0 && next_colour_change->start_time - hit_object.start_time < 300) {
                 return 2;
             }
 
@@ -36,19 +44,20 @@ namespace pppp { namespace taiko { namespace difficulty { namespace evaluators {
 
         // Find the previous hit object hit by the current finger, which is n notes prior, n being the number
         // of available fingers.
-        const preprocessing::TaikoDifficultyHitObject* previous =
+        const preprocessing::TaikoDifficultyHitObject& taiko_current = current;
+        const preprocessing::TaikoDifficultyHitObject* taiko_previous =
             static_cast<const preprocessing::TaikoDifficultyHitObject*>(current.previous(1));
-        const preprocessing::TaikoDifficultyHitObject* previous_same_finger =
-            current.previous_mono(available_fingers_for(current) - 1);
+        const preprocessing::TaikoDifficultyHitObject* previous_mono =
+            taiko_current.previous_mono(available_fingers_for(taiko_current) - 1);
 
         double object_strain = 0.5; // Add a base strain to all objects
-        if (!previous) {
+        if (taiko_previous == 0) {
             return object_strain;
         }
 
-        if (previous_same_finger) {
-            object_strain += speed_bonus(current.start_time - previous_same_finger->start_time) +
-                             0.5 * speed_bonus(current.start_time - previous->start_time);
+        if (previous_mono != 0) {
+            object_strain += speed_bonus(taiko_current.start_time - previous_mono->start_time) +
+                             0.5 * speed_bonus(taiko_current.start_time - taiko_previous->start_time);
         }
 
         return object_strain;

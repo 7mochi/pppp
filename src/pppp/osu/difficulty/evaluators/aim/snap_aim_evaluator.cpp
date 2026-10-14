@@ -20,16 +20,10 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
             return utils::smoothstep(angle, math::degrees_to_radians(40), math::degrees_to_radians(140));
         }
 
-        double vector_angle_repetition(const preprocessing::OsuDifficultyHitObject& current) {
-            if (!current.angle.has_value() || current.index < 1) {
-                return 1.0;
-            }
-
-            const preprocessing::OsuDifficultyHitObject* previous =
-                static_cast<const preprocessing::OsuDifficultyHitObject*>(current.previous(0));
-
-            if (!previous->angle.has_value()) {
-                return 1.0;
+        double vector_angle_repetition(const preprocessing::OsuDifficultyHitObject& current,
+                                       const preprocessing::OsuDifficultyHitObject& previous) {
+            if (!current.angle.has_value() || !previous.angle.has_value()) {
+                return 1;
             }
 
             const double note_limit = 6;
@@ -57,7 +51,8 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
                     double angle_difference = std::fabs(current.normalised_vector_angle.value() -
                                                         prev_obj->normalised_vector_angle.value());
                     // Refer to this desmos for tuning, constants need to be precise so that values stay
-                    // within the range of 0 and 1. https://www.desmos.com/calculator/a8jesv5sv2
+                    // within the range of 0 and 1.
+                    // https://www.desmos.com/calculator/a8jesv5sv2
                     constant_angle_count +=
                         std::cos(8 * std::min(math::degrees_to_radians(11.25), angle_difference));
                 }
@@ -69,7 +64,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
                 utils::smootherstep(current.lazy_jump_distance, 0, preprocessing::NORMALISED_DIAMETER);
 
             double curr_angle = current.angle.value();
-            double last_angle = previous->angle.value();
+            double last_angle = previous.angle.value();
 
             double angle_difference_adjusted =
                 std::cos(2 * std::min(math::degrees_to_radians(45),
@@ -131,7 +126,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
         double snap_difficulty = curr_velocity; // Start difficulty with regular velocity.
 
         // Penalize angle repetition.
-        snap_difficulty *= vector_angle_repetition(current);
+        snap_difficulty *= vector_angle_repetition(current, *prev);
 
         if (current.angle.has_value() && prev->angle.has_value()) {
             double curr_angle = current.angle.value();
@@ -190,10 +185,10 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
                 // bonus
                 // Use previous(2) and previous(0) because angles calculation is done prevprev-prev-curr,
                 // so any object's angle's center point is always the previous object
-                float dist = length(prev->base_stacked_position - prev2->base_stacked_position);
+                float distance = length(prev2->base_stacked_position - prev->base_stacked_position);
 
-                if (dist < 1) {
-                    wide_angle_bonus *= 1.0 - 0.55 * (1.0 - dist);
+                if (distance < 1) {
+                    wide_angle_bonus *= 1 - 0.55 * (1 - distance);
                 }
             }
 

@@ -10,6 +10,14 @@ namespace pppp { namespace fruits { namespace difficulty { namespace skills {
     typedef pppp::common::skills::StrainDecaySkill StrainDecaySkill;
 
     class Movement : public StrainDecaySkill {
+    protected:
+        double skill_multiplier() const { return 1; }
+        double strain_decay_base() const { return 0.2; }
+
+        double decay_weight() const { return 0.94; }
+
+        int section_length() const { return 750; }
+
     public:
         Movement(const pppp::mods::Mod* mods_in, size_t mod_count_in);
 

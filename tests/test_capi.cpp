@@ -459,7 +459,7 @@ TEST_SUITE("the C ABI") {
 
     TEST_CASE("adding classic is allowed twice and a null set is rejected") {
         pppp_mods* mods = 0;
-        REQUIRE(pppp_mods_from_legacy(0u, &mods) == PPPP_OK);
+        REQUIRE(pppp_mods_from_legacy(0u, 0, &mods) == PPPP_OK);
 
         CHECK(pppp_mods_add_classic(mods) == PPPP_OK);
         CHECK(pppp_mods_add_classic(mods) == PPPP_OK);
@@ -506,7 +506,8 @@ TEST_SUITE("the C ABI") {
         CHECK(pppp_mods_parse("NO_SUCH_MOD", &mods) == PPPP_INVALID_ARGUMENT);
         CHECK(!mods);
         CHECK(pppp_mods_parse(0, &mods) == PPPP_INVALID_ARGUMENT);
-        CHECK(pppp_mods_from_legacy(0, 0) == PPPP_INVALID_ARGUMENT);
+        CHECK(pppp_mods_from_legacy(0, 0, 0) == PPPP_INVALID_ARGUMENT);
+        CHECK(pppp_mods_from_legacy(0, 4, &mods) == PPPP_INVALID_ARGUMENT);
         pppp_mods_free(0);
 
         pppp_beatmap_free(map);
@@ -518,7 +519,7 @@ TEST_SUITE("the C ABI") {
 
         const ModsHandle acronyms("HD,DT");
         pppp_mods* legacy = 0;
-        REQUIRE(pppp_mods_from_legacy(8u | 64u, &legacy) == PPPP_OK);
+        REQUIRE(pppp_mods_from_legacy(8u | 64u, 0, &legacy) == PPPP_OK);
 
         pppp_difficulty_options options;
         std::memset(&options, 0, sizeof(options));

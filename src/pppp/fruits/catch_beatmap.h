@@ -15,8 +15,8 @@
 namespace pppp { namespace fruits {
     struct CatchBeatmap {
         double clock_rate;
-        double circle_size;
-        double approach_rate;
+        float circle_size;
+        float approach_rate;
         bool is_convert;
 
         std::vector<object::CatchHitObject> objects;
@@ -31,15 +31,12 @@ namespace pppp { namespace fruits {
                      pppp::beatmaps::ObjectConverted<object::CatchHitObject>());
 
     struct ModdedDifficulty {
-        double circle_size;
-        double approach_rate;
-        double overall_difficulty;
-        double drain_rate;
+        float circle_size;
+        float approach_rate;
+        float overall_difficulty;
+        float drain_rate;
     };
 
-    /// Applies the difficulty-changing mods (Easy, Hard Rock, Difficulty Adjust) to the beatmap
-    /// difficulty: Easy scales everything by 0.5, Hard Rock scales circle size by 1.3 and the rest
-    /// by 1.4. The multipliers are kept on floats to match stable.
     ModdedDifficulty modded_difficulty(const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
                                        size_t mod_count);
 

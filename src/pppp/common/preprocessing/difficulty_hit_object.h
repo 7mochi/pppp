@@ -35,12 +35,16 @@ namespace pppp { namespace common { namespace preprocessing {
 
         /// Creates a new DifficultyHitObject.
         /// @param base_object_time_in The start time of the HitObject which this DifficultyHitObject wraps.
+        /// @param base_object_end_time The end time of the HitObject which this DifficultyHitObject wraps.
         /// @param last_object_time_in The start time of the last HitObject which occurs before the wrapped
         /// one in the beatmap.
         /// @param clock_rate_in The rate at which the gameplay clock is run at.
+        /// @param raw_hit_window_great The great hit window of the wrapped HitObject, or of its first
+        /// nested object with hit windows.
         /// @param objects The list of DifficultyHitObjects in the current beatmap.
         /// @param index_in The index of this DifficultyHitObject in the objects list.
-        DifficultyHitObject(double base_object_time_in, double last_object_time_in, double clock_rate_in,
+        DifficultyHitObject(double base_object_time_in, double base_object_end_time,
+                            double last_object_time_in, double clock_rate_in, double raw_hit_window_great,
                             const std::vector<DifficultyHitObject*>& objects, int index_in);
 
         DifficultyHitObject* previous(int skip_count = 0) const;

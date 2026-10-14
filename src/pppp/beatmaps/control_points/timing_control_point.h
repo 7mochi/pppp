@@ -10,19 +10,28 @@ namespace pppp { namespace beatmaps { namespace control_points {
     const double DEFAULT_BEAT_LENGTH = 1000.0;
 
     class TimingControlPoint : public ControlPoint {
+    private:
+        double beat_length_value;
+
     public:
         /// The time signature at this control point.
         int time_signature;
 
-        /// The beat length at this control point.
-        double beat_length;
-
         TimingControlPoint(double time_in, double beat_length_in, int time_signature_in)
             : ControlPoint(time_in),
-              time_signature(time_signature_in),
-              beat_length(beat_length_in < 6.0 ? 6.0
-                                               : (beat_length_in > 60000.0 ? 60000.0 : beat_length_in)) {}
+              beat_length_value(DEFAULT_BEAT_LENGTH),
+              time_signature(time_signature_in) {
+            set_beat_length(beat_length_in);
+        }
 
+        /// The beat length at this control point.
+        double beat_length() const { return beat_length_value; }
+
+        void set_beat_length(double value) {
+            beat_length_value = value < 6 ? 6 : (value > 60000 ? 60000 : value);
+        }
+
+        // Timing points are never redundant as they can change the time signature.
         bool is_redundant(const TimingControlPoint* existing) const {
             (void)existing;
             return false;

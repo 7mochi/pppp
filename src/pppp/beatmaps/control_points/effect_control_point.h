@@ -8,25 +8,28 @@
 
 namespace pppp { namespace beatmaps { namespace control_points {
     class EffectControlPoint : public ControlPoint {
+    private:
+        double scroll_speed_value;
+
     public:
         /// Whether this control point enables Kiai mode.
         bool kiai_mode;
 
-        /// The relative scroll speed.
-        double scroll_speed;
-
         EffectControlPoint(double time_in, bool kiai_mode_in)
             : ControlPoint(time_in),
-              kiai_mode(kiai_mode_in),
-              scroll_speed(1.0) {}
+              scroll_speed_value(1),
+              kiai_mode(kiai_mode_in) {}
 
-        double clamped_scroll_speed() const {
-            return scroll_speed < 0.01 ? 0.01 : (scroll_speed > 10.0 ? 10.0 : scroll_speed);
+        /// The relative scroll speed.
+        double scroll_speed() const { return scroll_speed_value; }
+
+        void set_scroll_speed(double value) {
+            scroll_speed_value = value < 0.01 ? 0.01 : (value > 10 ? 10 : value);
         }
 
         bool is_redundant(const EffectControlPoint* existing) const {
             return existing != 0 && kiai_mode == existing->kiai_mode &&
-                   clamped_scroll_speed() == existing->clamped_scroll_speed();
+                   scroll_speed() == existing->scroll_speed();
         }
     };
 }}} // namespace pppp::beatmaps::control_points

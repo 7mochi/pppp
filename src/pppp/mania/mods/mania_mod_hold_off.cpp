@@ -19,7 +19,7 @@ namespace pppp { namespace mania { namespace mods {
             ManiaHitObject note;
             note.column = hold_notes[i].column;
             note.start_time = hold_notes[i].start_time;
-            note.end_time = hold_notes[i].start_time;
+            note.duration = 0;
             new_objects.push_back(note);
         }
 

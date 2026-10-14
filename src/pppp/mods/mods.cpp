@@ -5,9 +5,9 @@ namespace pppp { namespace mods {
     Mods::Mods()
         : list() {}
 
-    Mods Mods::from_legacy(unsigned bits) {
+    Mods Mods::from_legacy(unsigned bits, int ruleset) {
         Mod converted[32];
-        const int count = mod_from_legacy(converted, 32, bits);
+        const int count = mod_from_legacy(converted, 32, bits, ruleset);
         Mods out;
         if (count > 0) {
             out.list.assign(converted, converted + count);
@@ -29,7 +29,10 @@ namespace pppp { namespace mods {
         return StatusCode::OK;
     }
 
-    void Mods::push_back(const Mod& mod) { list.push_back(mod); }
+    void Mods::push_back(const Mod& mod) {
+        list.push_back(mod);
+        mod_apply_setting_rules(&list.back());
+    }
 
     void Mods::push_back(ModId id) {
         Mod mod;
@@ -49,7 +52,7 @@ namespace pppp { namespace mods {
 
     double Mods::clock_rate() const { return mod_calculate_rate(data(), list.size()); }
 
-    unsigned Mods::to_legacy() const { return mod_to_legacy(data(), list.size()); }
+    unsigned Mods::to_legacy(int ruleset) const { return mod_to_legacy(data(), list.size(), ruleset); }
 
     bool Mods::empty() const { return list.empty(); }
 

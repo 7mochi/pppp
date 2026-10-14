@@ -97,14 +97,7 @@ namespace pppp { namespace osu { namespace mods {
         }
 
         int seed = mod.random.seed.value();
-        float sharpness = static_cast<float>(mod.random.angle_sharpness);
-        if (sharpness < 1) {
-            sharpness = 1;
-        }
-        if (sharpness > 10) {
-            sharpness = 10;
-        }
-        RandomState st(seed, sharpness);
+        RandomState st(seed, mod.random.angle_sharpness);
 
         std::vector<object::ObjectPositionInfo> infos = object::generate_position_infos(pb);
 

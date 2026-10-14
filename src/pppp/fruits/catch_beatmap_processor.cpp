@@ -3,6 +3,7 @@
 
 #include "pppp/fruits/catch_beatmap_processor.h"
 #include "pppp/fruits/catch_beatmap.h"
+#include "pppp/utils/linq/csharp.h"
 #include "pppp/utils/math/csharp.h"
 #include "pppp/utils/precision.h"
 #include "pppp/utils/random/osu.h"
@@ -10,6 +11,7 @@
 #include <cmath>
 
 namespace pppp { namespace fruits {
+    namespace linq = ::pppp::utils::linq;
     namespace math = ::pppp::utils::math;
 
     void apply_offset(float& position, float amount) {
@@ -94,8 +96,13 @@ namespace pppp { namespace fruits {
     }
 
     void initialise_hyper_dash(CatchBeatmap& pb) {
-        std::vector<object::CatchHitObject*> palpable;
-        palpable_objects(palpable, pb);
+        std::vector<object::CatchHitObject*> all_palpable_objects;
+        palpable_objects(all_palpable_objects, pb);
+        const std::vector<object::CatchHitObject*> palpable =
+            linq::from(all_palpable_objects)
+                .where(linq::bind(&object::CatchHitObject::kind, linq::_1) == object::OBJECT_FRUIT ||
+                       linq::bind(&object::CatchHitObject::kind, linq::_1) == object::OBJECT_DROPLET)
+                .to_list();
 
         double half_catcher_width = object::CatchHitObject::calculate_catch_width(pb.circle_size) / 2;
 

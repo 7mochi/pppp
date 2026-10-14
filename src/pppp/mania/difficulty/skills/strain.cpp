@@ -9,7 +9,7 @@
 
 namespace pppp { namespace mania { namespace difficulty { namespace skills {
     Strain::Strain(const pppp::mods::Mod* mods_in, size_t mod_count_in, int total_columns)
-        : StrainDecaySkill(mods_in, mod_count_in, 1.0, 1.0),
+        : StrainDecaySkill(mods_in, mod_count_in),
           individual_strains(static_cast<size_t>(total_columns > 0 ? total_columns : 0), 0.0),
           highest_individual_strain(0.0),
           overall_strain(1.0) {}
@@ -46,9 +46,8 @@ namespace pppp { namespace mania { namespace difficulty { namespace skills {
 
     double Strain::calculate_initial_strain(double time,
                                             const common::preprocessing::DifficultyHitObject& current) {
-        const double previous_start = current.last_object_start_time / current.clock_rate;
-
-        return apply_decay(highest_individual_strain, time - previous_start, INDIVIDUAL_DECAY_BASE) +
-               apply_decay(overall_strain, time - previous_start, OVERALL_DECAY_BASE);
+        return apply_decay(highest_individual_strain, time - current.previous(0)->start_time,
+                           INDIVIDUAL_DECAY_BASE) +
+               apply_decay(overall_strain, time - current.previous(0)->start_time, OVERALL_DECAY_BASE);
     }
 }}}} // namespace pppp::mania::difficulty::skills

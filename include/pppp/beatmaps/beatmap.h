@@ -14,16 +14,16 @@ namespace pppp { namespace beatmaps {
     /// A representation of all top-level difficulty settings for a beatmap.
     struct BeatmapDifficulty {
         /// The drain rate of the associated beatmap.
-        double drain_rate;
+        float drain_rate;
 
         /// The circle size of the associated beatmap.
-        double circle_size;
+        float circle_size;
 
         /// The overall difficulty of the associated beatmap.
-        double overall_difficulty;
+        float overall_difficulty;
 
         /// The approach rate of the associated beatmap.
-        double approach_rate;
+        float approach_rate;
 
         /// The base slider velocity of the associated beatmap.
         /// This was known as "SliderMultiplier" in the .osu format and stable editor.
@@ -56,13 +56,17 @@ namespace pppp { namespace beatmaps {
         /// The time at which the HitObject starts.
         double start_time;
 
+        /// The time at which the HitObject ends.
         double end_time;
+
+        /// The duration of the HitObject.
+        double duration;
+
         bool new_combo;
         int combo_offset;
         int slider;
     };
 
-    // The raw timing point line the decoder reads, before the control point classes.
     struct TimingPoint {
         double time;
 
@@ -88,7 +92,7 @@ namespace pppp { namespace beatmaps {
     public:
         int format_version;
         int mode;
-        double stack_leniency;
+        float stack_leniency;
 
         BeatmapDifficulty difficulty;
         std::vector<HitObject> hit_objects;

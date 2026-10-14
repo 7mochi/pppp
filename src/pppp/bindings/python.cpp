@@ -1065,7 +1065,7 @@ namespace {
          "Parse a `Beatmap` by providing the content of a `.osu` file as a slice of bytes."},
         {NULL, NULL, 0, NULL}};
 
-    int read_mods(State* state, PyObject* object, pppp::Mods& mods) {
+    int read_mods(State* state, PyObject* object, int ruleset, pppp::Mods& mods) {
         mods.clear();
         if (object == Py_None) {
             return 0;
@@ -1081,7 +1081,7 @@ namespace {
                 PyErr_SetString(state->mods_error, "invalid mod specification");
                 return -1;
             }
-            mods = pppp::Mods::from_legacy(static_cast<unsigned>(bits));
+            mods = pppp::Mods::from_legacy(static_cast<unsigned>(bits), ruleset);
             return 0;
         }
         if (!PyUnicode_Check(object)) {
@@ -1155,17 +1155,19 @@ namespace {
             return NULL;
         }
 
+        if (read_ruleset(ruleset_object, difficulty) < 0) {
+            return NULL;
+        }
         pppp::Mods mods;
-        if (read_mods(state, mods_object, mods) < 0) {
+        const int ruleset =
+            ruleset_object == Py_None ? beatmap->map->mode : static_cast<int>(PyLong_AsLong(ruleset_object));
+        if (read_mods(state, mods_object, ruleset, mods) < 0) {
             return NULL;
         }
         if (read_classic(classic_object, mods) < 0) {
             return NULL;
         }
         difficulty.mods(mods);
-        if (read_ruleset(ruleset_object, difficulty) < 0) {
-            return NULL;
-        }
         if (clock_rate_object != Py_None) {
             const double value = PyFloat_AsDouble(clock_rate_object);
             if (value == -1.0 && PyErr_Occurred()) {
@@ -1399,13 +1401,6 @@ namespace {
             return NULL;
         }
 
-        pppp::Mods mods;
-        if (read_mods(state, mods_object, mods) < 0) {
-            return NULL;
-        }
-        if (read_classic(classic_object, mods) < 0) {
-            return NULL;
-        }
         long max_combo = 0;
         long misses = 0;
         bool has_max_combo = false;
@@ -1436,12 +1431,21 @@ namespace {
         }
 
         pppp::Performance performance(*beatmap->map);
+        int ruleset = beatmap->map->mode;
         if (attributes_object != Py_None) {
             pppp::DifficultyAttributes provided;
             if (read_attributes(state, attributes_object, provided) < 0) {
                 return NULL;
             }
             performance.attributes(provided);
+            ruleset = static_cast<int>(provided.ruleset());
+        }
+        pppp::Mods mods;
+        if (read_mods(state, mods_object, ruleset, mods) < 0) {
+            return NULL;
+        }
+        if (read_classic(classic_object, mods) < 0) {
+            return NULL;
         }
         performance.score(score);
         if (!mods.empty()) {

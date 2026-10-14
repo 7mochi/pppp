@@ -11,21 +11,21 @@ namespace pppp { namespace common { namespace skills {
     /// processed objects and to calculate a final difficulty value representing the difficulty of hitting all
     /// the processed objects.
     class StrainSkill : public Skill {
-    public:
+    protected:
         /// The weight by which each strain value decays.
-        const double decay_weight;
+        virtual double decay_weight() const { return 0.9; }
 
         /// The length of each strain section.
-        const int section_length;
+        virtual int section_length() const { return 400; }
 
-        // We also keep track of the peak strain level in the current section.
-        double current_section_peak;
+    private:
+        double current_section_peak; // We also keep track of the peak strain level in the current section.
         double current_section_end;
 
         std::vector<double> strain_peaks;
 
-        StrainSkill(const pppp::mods::Mod* mods_in, size_t mod_count_in, double decay_weight_in = 0.9,
-                    int section_length_in = 400);
+    public:
+        StrainSkill(const pppp::mods::Mod* mods_in, size_t mod_count_in);
 
         /// Returns the strain value at DifficultyHitObject. This value is calculated with or without respect
         /// to previous objects.

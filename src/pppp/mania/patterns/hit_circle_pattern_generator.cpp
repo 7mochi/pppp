@@ -24,7 +24,7 @@ namespace pppp { namespace mania { namespace patterns {
           stair_type(last_stair),
           convert_type(PATTERN_NONE) {
         const control_points::TimingControlPoint* tp = info.timing_point_at(hit_object.start_time);
-        const double beat_length = tp != 0 ? tp->beat_length : control_points::DEFAULT_BEAT_LENGTH;
+        const double beat_length = tp != 0 ? tp->beat_length() : control_points::DEFAULT_BEAT_LENGTH;
         const control_points::EffectControlPoint* ep = info.effect_point_at(hit_object.start_time);
         const bool kiai = ep != 0 && ep->kiai_mode;
 
@@ -183,8 +183,8 @@ namespace pppp { namespace mania { namespace patterns {
         default: break;
         }
 
-        // The stable values were allowed to exceed 1, which indicate <0% probability. These values
-        // needs to be clamped otherwise the note count would be drawn from an invalid range.
+        // The stable values were allowed to exceed 1, which indicate <0% probability.
+        // These values needs to be clamped otherwise get_random_note_count() will throw an exception.
         p2 = math::clamp(p2, 0, 1);
         p3 = math::clamp(p3, 0, 1);
 

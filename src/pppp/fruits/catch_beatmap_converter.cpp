@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 #include "pppp/fruits/catch_beatmap_converter.h"
+#include "pppp/beatmaps/legacy_hit_object_type.h"
 #include "pppp/fruits/object/banana_shower.h"
 #include "pppp/fruits/object/juice_stream.h"
 #include "pppp/utils/math/csharp.h"
@@ -34,7 +35,7 @@ namespace pppp { namespace fruits {
                 pb.objects.push_back(object::create_juice_stream(
                     slider, math::clamp(ho.position.x, 0.0, object::PLAYFIELD_WIDTH), ho.start_time,
                     ho.end_time, static_cast<int>(ho.slider)));
-            } else if ((ho.type & 8) != 0) {
+            } else if ((ho.type & (beatmaps::spinner | beatmaps::hold)) != 0) {
                 pb.objects.push_back(object::create_banana_shower(ho.start_time, ho.end_time));
             } else {
                 object::CatchHitObject fruit;

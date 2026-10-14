@@ -18,10 +18,10 @@ namespace pppp { namespace common { namespace skills {
         : Skill(mods_in, mod_count_in),
           decay_weight(decay_weight_in),
           max_section_length(max_section_length_in),
-          max_stored_length(11.0 / (1.0 - decay_weight_in)),
           current_section_peak(0.0),
           current_section_begin(0.0),
           current_section_end(0.0),
+          max_stored_length(11 / (1 - decay_weight)),
           total_length(0.0),
           final_peak(0) {}
 
@@ -43,8 +43,7 @@ namespace pppp { namespace common { namespace skills {
         // If the current strain is larger than the current peak, begin a new peak
         // Otherwise, add the current strain to the queue
         if (current_strain > current_section_peak) {
-            // Clear the queue since none of the strains inside of it will be contributing to the
-            // difficulty.
+            // Clear the queue since none of the strains inside of it will be contributing to the difficulty.
             queued_strains.clear();
 
             // End the current section with the new peak
@@ -100,33 +99,37 @@ namespace pppp { namespace common { namespace skills {
     }
 
     void VariableLengthStrainSkill::backfill_peaks(const preprocessing::DifficultyHitObject& current) {
-        // If the current object starts after the current section ends, then we want to start a new
-        // section without any harsh drop-off. If we have previous strains that influence the current
-        // difficulty we will prioritise those first. Otherwise, start with the current object's
-        // initial strain.
+        // If the current object starts after the current section ends
+        // then we want to start a new section without any harsh drop-off.
+        // If we have previous strains that influence the current difficulty we will prioritise those first.
+        // Otherwise, start with the current object's initial strain.
         while (current.start_time > current_section_end) {
             // Save the current peak, marking the end of the section.
             save_current_peak(current_section_end - current_section_begin);
             current_section_begin = current_section_end;
 
-            // If we have any strains queued, then we will use those until the object falls into the
-            // new section.
+            // If we have any strains queued, then we will use those until the object falls into the new
+            // section.
             if (!queued_strains.empty()) {
                 QueuedStrain qs = queued_strains[0];
                 queued_strains.erase(queued_strains.begin());
 
-                // We want the section to end `MaxSectionLength` after the strain we're using as an
-                // influence. This effectively means the queued strain will exist in its own section
-                // if the gap between the queued strain and current object is large enough. This is
-                // required to make sure there's no harsh difficulty difference between 2 sections
-                // if there was a large gap.
+                // We want the section to end `MaxSectionLength` after the strain we're using as an influence.
+                // This effectively means the queued strain will exist in its own section if the gap between
+                // the queued strain and current object is large enough.
+                // This is required to make sure there's no harsh difficulty difference between 2 sections if
+                // there was a large gap.
                 current_section_end = qs.start_time + max_section_length;
                 start_new_section_from(current_section_begin, current);
 
-                // If the current object's peak was higher, we don't want to override it with a
-                // lower strain. Only use the queued strain if it contributes more difficulty.
+                // If the current object's peak was higher, we don't want to override it with a lower strain.
+                // Only use the queued strain if it contributes more difficulty.
                 current_section_peak = std::max(current_section_peak, qs.strain_value);
-            } else {
+            }
+            // If the queue is empty then we should start the section from the current object instead.
+            // The queue can be empty if we're starting off of the back of a new peak, or if we drained
+            // through all the queue and the current object is still later than the section end.
+            else {
                 // We don't have any prior strains to take as a reference, so end the new section
                 // `MaxSectionLength` after it starts.
                 current_section_end = current_section_begin + max_section_length;
@@ -153,9 +156,10 @@ namespace pppp { namespace common { namespace skills {
         add_in_place(peak);
         total_length += section_length;
 
-        // Remove from the back of our strain peaks if there's any which are too deep to contribute
-        // to difficulty. `maxStoredLength` dictates for us how many sections will preserve at least
-        // 99.999% of the difficulty value.
+        // Remove from the back of our strain peaks if there's any which are too deep to contribute to
+        // difficulty.
+        // `maxStoredLength` dictates for us how many sections will preserve at least 99.999% of the
+        // difficulty value.
         while (total_length > max_stored_length * max_section_length && !strain_peaks.empty()) {
             total_length -= strain_peaks.back().section_length;
             strain_peaks.pop_back();
@@ -174,9 +178,9 @@ namespace pppp { namespace common { namespace skills {
     void
     VariableLengthStrainSkill::start_new_section_from(double time,
                                                       const preprocessing::DifficultyHitObject& current) {
-        // The maximum strain of the new section is not zero by default. This means we need to
-        // capture the strain level at the beginning of the new section, and use that as the initial
-        // peak level.
+        // The maximum strain of the new section is not zero by default
+        // This means we need to capture the strain level at the beginning of the new section, and use that as
+        // the initial peak level.
         current_section_peak = calculate_initial_strain(time, current);
     }
 }}} // namespace pppp::common::skills

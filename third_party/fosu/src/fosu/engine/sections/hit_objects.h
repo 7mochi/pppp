@@ -106,8 +106,10 @@ namespace fosu { namespace internal {
             return false;
         }
 
-        x = x < 0.0f ? 0.0f : (x > 512.0f ? 512.0f : x);
-        y = y < 0.0f ? 0.0f : (y > 512.0f ? 512.0f : y);
+        if (client == Client::Stable) {
+            x = x < 0.0f ? 0.0f : (x > 512.0f ? 512.0f : x);
+            y = y < 0.0f ? 0.0f : (y > 512.0f ? 512.0f : y);
+        }
         if (!lazer_format) {
             x = static_cast<float>(static_cast<fosu::i32>(x));
             y = static_cast<float>(static_cast<fosu::i32>(y));
@@ -213,14 +215,19 @@ namespace fosu { namespace internal {
             object.new_combo = !preceding_count || explicit_combo || preceding_was_spinner;
             object.combo_skip = explicit_combo ? static_cast<fosu::u8>((object.type >> 4) & 7) : 0;
             object.end_time = kind == HitObjectKind::Circle ? object.time : 0;
+            object.duration = 0;
         } else if (kind == HitObjectKind::Spinner) {
             object.new_combo = explicit_combo;
             object.x = 256;
             object.y = 192;
-            object.end_time = std::max(object.time, object.end_time + offset);
+            // lazer keeps the duration and reads EndTime as StartTime + Duration, which is not always the
+            // parsed end to the last bit.
+            object.duration = std::max(0.0, object.end_time + offset - object.time);
+            object.end_time = object.time + object.duration;
         } else {
             // Legacy holds clamp against the offset start before offsetting the end.
-            object.end_time = std::max(object.time, object.end_time) + offset;
+            object.duration = std::max(object.time, object.end_time) + offset - object.time;
+            object.end_time = object.time + object.duration;
         }
         return object;
     }
@@ -392,8 +399,10 @@ namespace fosu { namespace internal {
 
             const u32 first_ending = first_line_end32(ascii);
             const char* line_end = first_ending < 32 ? p + first_ending : find_line_end(p + 32, file_end);
-            fields[0] = clamp_value(fields[0], static_cast<u32>(0), static_cast<u32>(512));
-            fields[1] = clamp_value(fields[1], static_cast<u32>(0), static_cast<u32>(512));
+            if (client == Client::Stable) {
+                fields[0] = clamp_value(fields[0], static_cast<u32>(0), static_cast<u32>(512));
+                fields[1] = clamp_value(fields[1], static_cast<u32>(0), static_cast<u32>(512));
+            }
             ++fast_lines;
             HitObject object;
             object.x = static_cast<float>(fields[0]);

@@ -15,6 +15,10 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
     /// Represents the skill required to press keys with regards to keeping up with the speed at which objects
     /// need to be hit.
     class Speed : public HarmonicSkill {
+    protected:
+        double harmonic_scale() const { return 20; }
+        double decay_exponent() const { return 0.9; }
+
     public:
         Speed(const pppp::mods::Mod* mods_in, size_t mod_count_in);
 

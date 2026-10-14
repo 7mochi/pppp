@@ -1,3 +1,6 @@
+// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
+// See the LICENCE file in the repository root for full licence text.
+
 #ifndef PPPP_UTILS_SORT_OSU_LEGACY_H
 #define PPPP_UTILS_SORT_OSU_LEGACY_H
 
@@ -70,11 +73,13 @@ namespace pppp { namespace utils { namespace sort {
                 int i = left;
                 int j = right;
 
-                // Pre-sorting low, middle and high in place is what keeps already sorted runs fast.
+                // pre-sort the low, middle (pivot), and high values in place.
+                // this improves performance in the face of already sorted data, or
+                // data that is made up of multiple sorted runs appended together.
                 const int middle = i + ((j - i) >> 1);
-                swap_if_greater(keys, compare, i, middle);
-                swap_if_greater(keys, compare, i, j);
-                swap_if_greater(keys, compare, middle, j);
+                swap_if_greater(keys, compare, i, middle); // swap the low with the mid point
+                swap_if_greater(keys, compare, i, j); // swap the low with the high
+                swap_if_greater(keys, compare, middle, j); // swap the middle with the high
 
                 const T x = keys[middle];
 
@@ -97,8 +102,9 @@ namespace pppp { namespace utils { namespace sort {
                     j--;
                 } while (i <= j);
 
-                // The larger half is sorted by the next turn of this loop and the smaller half by
-                // the recursive call, so both see the decremented limit.
+                // The next iteration of the while loop is to "recursively" sort the larger half of the array
+                // and the following calls recrusively sort the smaller half.  So we subtrack one from
+                // depthLimit here so both sorts see the new value.
                 depth_limit--;
 
                 if (j - left <= right - i) {
@@ -116,14 +122,10 @@ namespace pppp { namespace utils { namespace sort {
         }
     } // namespace legacy_sort_detail
 
-    /// Sorts `count` keys with the legacy order the osu!mania difficulty calculation depends on: the
-    /// exact order equal-time notes come out in decides which column each note is charged to. This is
-    /// the depth-limited quicksort the game's converter used, which is deliberately not stable:
-    /// `std::sort` is a different introsort and `std::stable_sort` keeps the input order, so neither
-    /// reproduces the permutation the game produced.
-    /// @param keys The keys to sort.
-    /// @param count How many keys are in `keys`.
-    /// @param compare The three-way comparison of two keys; negative, zero or positive.
+    /// Provides access to .NET4.0 unstable sorting methods.
+    /// @remarks Source:
+    /// https://referencesource.microsoft.com/#mscorlib/system/collections/generic/arraysorthelper.cs
+    /// Copyright (c) Microsoft Corporation.  All rights reserved.
     template <typename T, typename Compare>
     void legacy_sort(T* keys, size_t count, Compare compare) {
         if (count == 0) {

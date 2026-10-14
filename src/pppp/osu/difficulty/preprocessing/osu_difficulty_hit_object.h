@@ -26,8 +26,8 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
 
     const double MIN_DELTA_TIME = 25.0;
 
-    const double MAXIMUM_SLIDER_RADIUS = NORMALISED_RADIUS * 2.4;
-    const double ASSUMED_SLIDER_RADIUS = NORMALISED_RADIUS * 1.8;
+    const float MAXIMUM_SLIDER_RADIUS = static_cast<float>(NORMALISED_RADIUS) * 2.4f;
+    const float ASSUMED_SLIDER_RADIUS = static_cast<float>(NORMALISED_RADIUS) * 1.8f;
 
     typedef pppp::common::preprocessing::DifficultyHitObject DifficultyHitObject;
 
@@ -64,6 +64,8 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
         double preempt;
 
         double time_fade_in;
+
+        double base_time_preempt;
 
         /// Normalised distance from the start position of the previous object to the start position
         /// of this object.
@@ -122,17 +124,17 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
         OsuDifficultyHitObject(const object::OsuHitObject& object, const object::OsuHitObject& last,
                                double rate, const std::vector<DifficultyHitObject*>& objects,
                                int object_index, const OsuBeatmap& pb, const PositionCtx& pos);
+
+        double opacity_at(double time, bool hidden) const;
+
+        /// Returns how possible is it to doubletap this object together with the next one and get perfect
+        /// judgement in range from 0 to 1
+        double calculate_double_tap_feasibility(const OsuDifficultyHitObject* next_obj) const;
     };
 
     void create_hit_objects(std::vector<OsuDifficultyHitObject>& out,
                             std::vector<DifficultyHitObject*>& object_ptrs, const OsuBeatmap& pb);
 
-    double opacity_at(const OsuDifficultyHitObject& obj, double time, bool hidden);
-
-    /// Returns how possible is it to doubletap this object together with the next one and get perfect
-    /// judgement in range from 0 to 1
-    double calculate_double_tap_feasibility(const OsuDifficultyHitObject& prev_obj,
-                                            const OsuDifficultyHitObject& curr_obj);
 }}}} // namespace pppp::osu::difficulty::preprocessing
 
 #endif

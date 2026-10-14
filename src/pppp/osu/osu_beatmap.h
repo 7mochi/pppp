@@ -19,11 +19,11 @@ namespace pppp { namespace osu {
     struct OsuBeatmap {
         const pppp::beatmaps::Beatmap* source;
         int format_version;
-        double stack_leniency;
-        double circle_size;
-        double approach_rate;
-        double overall_difficulty;
-        double drain_rate;
+        float stack_leniency;
+        float circle_size;
+        float approach_rate;
+        float overall_difficulty;
+        float drain_rate;
         double clock_rate;
         std::vector<object::OsuHitObject> objects;
         std::vector<object::PlayableSlider> sliders;

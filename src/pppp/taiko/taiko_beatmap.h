@@ -27,12 +27,10 @@ namespace pppp { namespace taiko {
     /// https://github.com/ppy/osu/issues/5685).
     const double HARD_ROCK_SLIDER_MULTIPLIER = 1.4 * 4 / 3;
 
-    bool hit_object_less(const TaikoHitObject& a, const TaikoHitObject& b);
-
     struct TaikoBeatmap {
         double clock_rate;
-        double overall_difficulty;
-        double drain_rate;
+        float overall_difficulty;
+        float drain_rate;
         double slider_multiplier;
         bool is_convert;
 
@@ -43,8 +41,8 @@ namespace pppp { namespace taiko {
     };
 
     struct ModdedDifficulty {
-        double overall_difficulty;
-        double drain_rate;
+        float overall_difficulty;
+        float drain_rate;
         double slider_multiplier;
     };
 

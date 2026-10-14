@@ -278,7 +278,7 @@ namespace pppp { namespace osu { namespace object {
     bool is_hit_object_on_beat(const OsuBeatmap& pb, const OsuHitObject& ho, bool downbeats_only) {
         const beatmaps::control_points::TimingControlPoint* tp = timing_point_at(pb, ho.time);
         double tp_time = tp ? tp->time : 0.0;
-        double beat_length = tp ? tp->beat_length : 1000.0;
+        double beat_length = tp ? tp->beat_length() : 1000.0;
         int meter = tp ? tp->time_signature : 4;
         double time_since = ho.time - tp_time;
         if (downbeats_only) {

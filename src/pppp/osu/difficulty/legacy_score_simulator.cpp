@@ -68,7 +68,7 @@ namespace pppp { namespace osu { namespace difficulty {
                     linq::from(sl.events).count(linq::bind(&beatmaps::SliderEventDescriptor::type,
                                                            linq::_1) == beatmaps::SLIDER_EVENT_TICK);
             } else if (ho.type & 8) {
-                spinner_score += calculate_spinner_score(ho.end_time - ho.time);
+                spinner_score += calculate_spinner_score(ho.duration);
             }
         }
         double slider_score = big_ticks * big_tick_score + small_ticks * small_tick_score;
@@ -248,7 +248,7 @@ namespace pppp { namespace osu { namespace difficulty {
                 }
                 sim.simulate_hit(300, false, true, false, 0);
             } else if (ho.type & 8) {
-                sim.spinner(ho.end_time - ho.time);
+                sim.spinner(ho.duration);
             } else {
                 sim.simulate_hit(300, true, true, false, 0);
             }

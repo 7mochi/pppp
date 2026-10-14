@@ -48,13 +48,15 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
             double tail_leniency = beatmaps::TAIL_LENIENCY;
 
             // TODO: This commented version is actually correct by the new lazer implementation, but
-            // intentionally held back from difficulty calculator to preserve known behaviour. double
-            // tracking_end_time = std::max(
-            //     // SliderTailCircle always occurs at the final end time of the slider, but the player only
-            //     needs to hold until within a lenience before it. ho.time + duration + tail_leniency,
+            // intentionally held back from difficulty calculator to preserve known behaviour.
+            // double trackingEndTime = Math.Max(
+            //     // SliderTailCircle always occurs at the final end time of the slider, but the player
+            //     // only needs to hold until within a lenience before it.
+            //     slider.Duration + SliderEventGenerator.TAIL_LENIENCY,
             //     // There's an edge case where one or more ticks/repeats fall within that leniency range.
             //     // In such a case, the player needs to track until the final tick or repeat.
-            //     last_nested_start_time
+            //     slider.NestedHitObjects.LastOrDefault(n => n is not SliderTailCircle)?.StartTime ??
+            //     double.MinValue
             // );
 
             double tracking_end_time = std::max(ho.time + duration + tail_leniency, ho.time + duration / 2.0);
@@ -187,37 +189,38 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
             dho.lazy_jump_distance = length(base_pos - last_cursor_pos) * scaling_factor;
             dho.minimum_jump_distance = dho.lazy_jump_distance;
 
-            //
-            // There are two types of slider-to-object patterns to consider in order to better approximate the
-            // real movement a player will take to jump between the hitobjects.
-            //
-            // 1. The anti-flow pattern, where players cut the slider short in order to move to the next
-            // hitobject.
-            //
-            //      <======o==>  ← slider
-            //             |     ← most natural jump path
-            //             o     ← a follow-up hitcircle
-            //
-            // In this case the most natural jump path is approximated by the lazy jump distance.
-            //
-            // 2. The flow pattern, where players follow through the slider to its visual extent into the next
-            // hitobject.
-            //
-            //      <======o==>---o
-            //                  ↑
-            //        most natural jump path
-            //
-            // In this case the most natural jump path is better approximated by a new distance, the
-            // distance between the slider's tail and the next hitobject.
-            //
-            // Thus, the player is assumed to jump the minimum of these two distances in all cases.
-            //
             if (dho.last_is_slider && dho.index > 0) {
                 const OsuDifficultyHitObject* prev_dho =
                     static_cast<const OsuDifficultyHitObject*>(dho.previous(0));
                 double last_travel_time_raw = prev_dho ? prev_dho->lazy_travel_time : 0.0;
                 double last_travel_time = std::max(last_travel_time_raw / clock_rate, MIN_DELTA_TIME);
                 dho.minimum_jump_time = std::max(dho.adjusted_delta_time - last_travel_time, MIN_DELTA_TIME);
+
+                //
+                // There are two types of slider-to-object patterns to consider in order to better approximate
+                // the real movement a player will take to jump between the hitobjects.
+                //
+                // 1. The anti-flow pattern, where players cut the slider short in order to move to the next
+                // hitobject.
+                //
+                //      <======o==>  ← slider
+                //             |     ← most natural jump path
+                //             o     ← a follow-up hitcircle
+                //
+                // In this case the most natural jump path is approximated by LazyJumpDistance.
+                //
+                // 2. The flow pattern, where players follow through the slider to its visual extent into the
+                // next hitobject.
+                //
+                //      <======o==>---o
+                //                  ↑
+                //        most natural jump path
+                //
+                // In this case the most natural jump path is better approximated by a new distance called
+                // "tailJumpDistance" - the distance between the slider's tail and the next hitobject.
+                //
+                // Thus, the player is assumed to jump the minimum of these two distances in all cases.
+                //
 
                 utils::Vector2 tail_pos = last_raw_pos;
                 if (last_ho.slider >= 0) {
@@ -231,7 +234,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
 
                 dho.minimum_jump_distance = std::max(
                     0.0, std::min(dho.lazy_jump_distance - (MAXIMUM_SLIDER_RADIUS - ASSUMED_SLIDER_RADIUS),
-                                  tail_jump_dist - MAXIMUM_SLIDER_RADIUS));
+                                  static_cast<double>(tail_jump_dist - MAXIMUM_SLIDER_RADIUS)));
             }
 
             {
@@ -289,6 +292,14 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
             }
         }
 
+        double raw_hit_window_great(const object::OsuHitObject& object, const OsuBeatmap& pb) {
+            if ((object.type & 8) != 0) {
+                return 0;
+            }
+            OsuHitWindows hit_windows;
+            hit_windows.set_difficulty(pb.overall_difficulty);
+            return hit_windows.window_for(common::HIT_RESULT_GREAT);
+        }
     } // namespace
 
     OsuDifficultyHitObject::OsuDifficultyHitObject(const object::OsuHitObject& object,
@@ -296,7 +307,8 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
                                                    const std::vector<DifficultyHitObject*>& objects,
                                                    int object_index, const OsuBeatmap& pb,
                                                    const PositionCtx& pos)
-        : DifficultyHitObject(object.time, last.time, rate, objects, object_index),
+        : DifficultyHitObject(object.time, object.end_time, last.time, rate, raw_hit_window_great(object, pb),
+                              objects, object_index),
           base_is_slider(false),
           base_is_spinner(false),
           last_is_slider(false),
@@ -304,6 +316,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
           last_object_end_delta_time(0.0),
           preempt(0.0),
           time_fade_in(0.0),
+          base_time_preempt(0.0),
           jump_distance(0.0),
           lazy_jump_distance(0.0),
           minimum_jump_distance(0.0),
@@ -324,9 +337,6 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
         last_stacked_position = utils::vec2(0.0f, 0.0f);
 
         double cs = pb.circle_size;
-        OsuHitWindows hit_windows;
-        hit_windows.set_difficulty(pb.overall_difficulty);
-
         size_t i = static_cast<size_t>(object_index) + 1;
 
         base_stacked_position = pos.stacked[i];
@@ -344,9 +354,6 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
         last_stacked_position = pos.stacked[i - 1];
         last_is_slider = (last.type & 2) != 0;
 
-        end_time = object.end_time / rate;
-        hit_window_great = 2.0 * hit_windows.window_for(common::HIT_RESULT_GREAT) / rate;
-
         adjusted_delta_time = std::max(delta_time, MIN_DELTA_TIME);
 
         if (object_index >= 1) {
@@ -357,6 +364,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
 
         preempt = object.time_preempt / rate;
         time_fade_in = object.time_fade_in;
+        base_time_preempt = object.time_preempt;
         small_circle_bonus = std::max(1.0, 1.0 + (30.0 - object::OsuHitObject::calculate_radius(cs)) / 70.0);
         overall_difficulty = (79.5 - hit_window_great / 2.0) / 6.0;
         circle_size = cs;
@@ -398,28 +406,29 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
         set_distances(*this, pb, pos, rate, cs);
     }
 
-    double calculate_double_tap_feasibility(const OsuDifficultyHitObject& prev_obj,
-                                            const OsuDifficultyHitObject& curr_obj) {
-        double curr_delta = std::max(1.0, prev_obj.delta_time);
-        double next_delta = std::max(1.0, curr_obj.delta_time);
+    double
+    OsuDifficultyHitObject::calculate_double_tap_feasibility(const OsuDifficultyHitObject* next_obj) const {
+        if (next_obj == 0) {
+            return 0;
+        }
 
-        double delta_difference = std::fabs(next_delta - curr_delta);
+        double curr_delta_time = std::max(1.0, delta_time);
+        double next_delta_time = std::max(1.0, next_obj->delta_time);
 
-        double speed_ratio = curr_delta / std::max(curr_delta, delta_difference);
-        double window_ratio = utils::pow(std::min(1.0, curr_delta / prev_obj.hit_window_great), 5);
+        double delta_difference = std::fabs(next_delta_time - curr_delta_time);
+
+        double speed_ratio = curr_delta_time / std::max(curr_delta_time, delta_difference);
+        double window_ratio = utils::pow(std::min(1.0, curr_delta_time / hit_window_great), 5);
 
         // Can't doubletap if circles don't intersect
-        double distance_factor = utils::pow(
-            utils::reverse_lerp(prev_obj.lazy_jump_distance, NORMALISED_DIAMETER, NORMALISED_RADIUS), 2);
+        double distance_factor =
+            utils::pow(utils::reverse_lerp(lazy_jump_distance, NORMALISED_DIAMETER, NORMALISED_RADIUS), 2);
 
-        return 1.0 - utils::pow(speed_ratio, distance_factor * (1.0 - window_ratio));
+        return 1.0 - utils::pow(speed_ratio, distance_factor * (1 - window_ratio));
     }
 
-    double opacity_at(const OsuDifficultyHitObject& obj, double time, bool hidden) {
-        double obj_start_time = obj.base_object_start_time;
-        double time_preempt = obj.preempt * obj.clock_rate;
-
-        if (time > obj_start_time) {
+    double OsuDifficultyHitObject::opacity_at(double time, bool hidden) const {
+        if (time > base_object_start_time) {
             // Consider a hitobject as being invisible when its start time is passed.
             // In reality the hitobject will be visible beyond its start time up until its hittable window has
             // passed, but this is an approximation and such a case is unlikely to be hit where this function
@@ -427,14 +436,15 @@ namespace pppp { namespace osu { namespace difficulty { namespace preprocessing 
             return 0.0;
         }
 
-        double fade_in_start_time = obj_start_time - time_preempt;
+        double fade_in_start_time = base_object_start_time - base_time_preempt;
 
-        // Equal to the hit object's fade-in time minus any adjustments from the HD mod.
-        double fade_in_duration = 400.0 * std::min(1.0, time_preempt / object::PREEMPT_MIN);
+        // Equal to `OsuHitObject.TimeFadeIn` minus any adjustments from the HD mod.
+        double fade_in_duration = 400 * std::min(1.0, base_time_preempt / object::PREEMPT_MIN);
 
         if (hidden) {
-            double fade_out_start_time = obj_start_time - time_preempt + obj.time_fade_in;
-            double fade_out_duration = time_preempt * mods::FADE_OUT_DURATION_MULTIPLIER;
+            // Taken from OsuModHidden.
+            double fade_out_start_time = base_object_start_time - base_time_preempt + time_fade_in;
+            double fade_out_duration = base_time_preempt * mods::FADE_OUT_DURATION_MULTIPLIER;
 
             return std::min(math::clamp((time - fade_in_start_time) / fade_in_duration, 0.0, 1.0),
                             1.0 - math::clamp((time - fade_out_start_time) / fade_out_duration, 0.0, 1.0));

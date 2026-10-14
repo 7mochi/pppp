@@ -16,9 +16,13 @@ namespace pppp { namespace mods {
 
         template <class InputIterator>
         Mods(InputIterator first, InputIterator last)
-            : list(first, last) {}
+            : list(first, last) {
+            for (size_t i = 0; i < list.size(); i++) {
+                mod_apply_setting_rules(&list[i]);
+            }
+        }
 
-        static Mods from_legacy(unsigned bits);
+        static Mods from_legacy(unsigned bits, int ruleset);
 
         Status parse(const char* specification);
 
@@ -29,7 +33,7 @@ namespace pppp { namespace mods {
 
         bool contains(ModId id) const;
         double clock_rate() const;
-        unsigned to_legacy() const;
+        unsigned to_legacy(int ruleset) const;
 
         bool empty() const;
         size_t size() const;

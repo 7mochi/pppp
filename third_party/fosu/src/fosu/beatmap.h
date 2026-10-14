@@ -20,6 +20,7 @@ namespace fosu {
         fosu::u32 hitsound;
         double time;
         double end_time; // milliseconds; 0 for sliders unless calculation is requested
+        double duration; // milliseconds; a spinner's or a hold's, 0 for circles and sliders
         fosu::u32 slider; // index into Beatmap::sliders, or kNoSlider
         bool new_combo;
         fosu::u8 combo_skip;

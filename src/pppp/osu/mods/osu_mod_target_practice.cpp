@@ -60,7 +60,7 @@ namespace pppp { namespace osu { namespace mods {
                    timing_point_at(pb, current_time) == &tp) {
                 beats.push_back(std::floor(current_time));
                 i++;
-                current_time = tp.time + i * tp.beat_length;
+                current_time = tp.time + i * tp.beat_length();
             }
         }
 
@@ -95,7 +95,7 @@ namespace pppp { namespace osu { namespace mods {
             for (int i = static_cast<int>(beats.size()) - 2; i >= 0; i--) {
                 double beat = beats[i];
                 const control_points::TimingControlPoint* tp = timing_point_at(pb, beat);
-                double beat_length = tp ? tp->beat_length : 1000.0;
+                double beat_length = tp ? tp->beat_length() : 1000.0;
                 if (!definitely_bigger(beats[i + 1] - beat, beat_length / 2)) {
                     beats.erase(beats.begin() + i);
                 }
@@ -224,6 +224,7 @@ namespace pppp { namespace osu { namespace mods {
             o.type = 1;
             o.time = beats[i];
             o.end_time = beats[i];
+            o.duration = 0;
             o.position = utils::vec2(0.0f, 0.0f);
             o.new_combo = false;
             o.combo_offset = 0;

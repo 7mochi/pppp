@@ -11,7 +11,7 @@ namespace pppp { namespace taiko { namespace difficulty { namespace evaluators {
 
     struct RhythmEvaluator {
         /// Evaluate the difficulty of a hitobject considering its interval change.
-        static double evaluate_difficulty_of(const preprocessing::TaikoDifficultyHitObject& object);
+        static double evaluate_difficulty_of(const preprocessing::TaikoDifficultyHitObject& hit_object);
     };
 }}}} // namespace pppp::taiko::difficulty::evaluators
 

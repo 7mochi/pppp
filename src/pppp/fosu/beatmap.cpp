@@ -1,4 +1,5 @@
 #include "pppp/beatmap.h"
+#include "pppp/utils/precision.h"
 #include <new>
 
 #include <fosu/parser.h>
@@ -163,6 +164,7 @@ namespace pppp { namespace beatmaps {
                 o.hitsound = ho.hitsound;
                 o.start_time = ho.time;
                 o.end_time = ho.end_time;
+                o.duration = ho.duration;
                 o.new_combo = ho.new_combo;
                 o.combo_offset = ho.combo_skip;
                 o.slider =
@@ -230,6 +232,38 @@ namespace pppp { namespace beatmaps {
                     }
                 }
 
+                const std::vector<double>& decoder_lengths = sl.undecimated_cumulative_lengths.empty()
+                                                                 ? sl.cumulative_lengths
+                                                                 : sl.undecimated_cumulative_lengths;
+                const double distance = decoder_lengths.empty() ? 0 : decoder_lengths.back();
+
+                // there are known instances of beatmaps (https://osu.ppy.sh/beatmapsets/594828#osu/1258033)
+                // which contain zero-length sliders with non-zero numbers of repeats. this was exploiting a
+                // bug in stable in which the slider repeats would be generated as objects but never actually
+                // judged as a hit *or* miss during gameplay, therefore increasing the theoretical possible
+                // max combo to be gained from a slider while in practice never giving that extra combo. due
+                // to lazer ensuring that an object has its nested part fully judged, this would result in
+                // broken behaviours (either the zero-length slider giving hundreds of combo for nothing if
+                // the repeats are judged as hit, or insta-failing the player due to HP if judged as miss). to
+                // remedy this in a way that seems least damaging, detect this situation via a heuristic and
+                // reset the number of repeats to zero. this technically *does not* match stable beatmap
+                // parsing or conversion, *does not* match in-gameplay behaviour of such broken sliders, and
+                // *will* fail conversion mapping tests, but again, this is supposed to be a least-worst
+                // measure to prevent exploits. it is also applied centrally to all rulesets rather than in
+                // specific ruleset converters because this failure scenario translates across rulesets (osu!
+                // and catch are both affected).
+                if (utils::almost_equals(distance, 0.0)) {
+                    const int nodes = sl.slides + 1;
+                    const unsigned first = sl.node_sounds.empty() ? ho.hitsound : sl.node_sounds[0];
+                    const unsigned last = static_cast<size_t>(nodes - 1) < sl.node_sounds.size()
+                                              ? sl.node_sounds[static_cast<size_t>(nodes - 1)]
+                                              : ho.hitsound;
+                    sl.slides = 1;
+                    sl.node_sounds.clear();
+                    sl.node_sounds.push_back(first);
+                    sl.node_sounds.push_back(last);
+                }
+
                 if (ho.slider < map.slider_events.size()) {
                     copy_events(sl.events, map.slider_events[ho.slider]);
                 }
@@ -265,12 +299,12 @@ namespace pppp { namespace beatmaps {
         void copy_from_fosu(Beatmap& out, const fosu::Beatmap& map) {
             out.format_version = map.format_version;
             out.mode = map.mode;
-            out.stack_leniency = map.stack_leniency;
+            out.stack_leniency = static_cast<float>(map.stack_leniency);
 
-            out.difficulty.drain_rate = map.hp;
-            out.difficulty.circle_size = map.cs;
-            out.difficulty.overall_difficulty = map.od;
-            out.difficulty.approach_rate = map.ar;
+            out.difficulty.drain_rate = static_cast<float>(map.hp);
+            out.difficulty.circle_size = static_cast<float>(map.cs);
+            out.difficulty.overall_difficulty = static_cast<float>(map.od);
+            out.difficulty.approach_rate = static_cast<float>(map.ar);
             out.difficulty.slider_multiplier = map.slider_multiplier;
             out.difficulty.slider_tick_rate = map.slider_tick_rate;
 

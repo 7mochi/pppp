@@ -34,12 +34,8 @@ namespace fosu { namespace internal {
             if (i == 4) {
                 rest[i] = *p == '1';
             } else if (i == 0 && *p == '0') {
-                // The official decoder treats any meter field beginning in 0 as
-                // 4/4. Preserve a plain raw zero; use 4 for nonnumeric spellings.
-                q = parse_osu_int(p, field_end, rest[i]);
-                if (q != field_end) {
-                    rest[i] = 4;
-                }
+                // The official decoder treats any meter field beginning in 0 as 4/4.
+                rest[i] = 4;
             } else {
                 q = parse_osu_int(p, field_end, rest[i]);
                 if (q == p || q != field_end || (i == 0 && rest[i] <= 0)) {
@@ -52,14 +48,12 @@ namespace fosu { namespace internal {
         if ((p < end && *p != ',') || (rest[4] != 0 && beat_length != beat_length)) {
             return false;
         }
+        // The official decoder casts any integer to its sample bank enum without validating it.
         const nonstd::optional<SampleSet::Value> sample_set = parse_sample_set(rest[1]);
-        if (!sample_set.has_value()) {
-            return false;
-        }
         out.time = time + time_offset;
         out.beat_length = beat_length;
         out.meter = clamp_i32(rest[0]);
-        out.sample_set = *sample_set;
+        out.sample_set = sample_set.has_value() ? *sample_set : SampleSet::None;
         out.sample_index = clamp_i32(rest[2]);
         out.volume = clamp_i32(rest[3]);
         out.uninherited = rest[4] != 0;

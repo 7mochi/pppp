@@ -56,7 +56,7 @@ namespace pppp { namespace mania { namespace patterns {
     /// model so a generator does not depend on it.
     struct SourceObject {
         double start_time;
-        double end_time;
+        double duration;
         pppp::utils::Vector2 position;
         unsigned hitsound;
         const std::vector<unsigned>* node_sounds;
@@ -67,7 +67,7 @@ namespace pppp { namespace mania { namespace patterns {
 
         SourceObject()
             : start_time(0.0),
-              end_time(0.0),
+              duration(0.0),
               hitsound(0),
               node_sounds(0),
               slides(1),
@@ -77,6 +77,8 @@ namespace pppp { namespace mania { namespace patterns {
             position.x = 0.0;
             position.y = 0.0;
         }
+
+        double end_time() const { return start_time + duration; }
     };
 
     /// Generator to create a pattern from a hit object.

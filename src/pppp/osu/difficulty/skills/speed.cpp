@@ -13,7 +13,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
     namespace speed = ::pppp::osu::difficulty::evaluators::speed;
 
     Speed::Speed(const pppp::mods::Mod* mods_in, size_t mod_count_in)
-        : HarmonicSkill(mods_in, mod_count_in, 20.0, 0.9),
+        : HarmonicSkill(mods_in, mod_count_in),
           current_strain(0.0) {}
 
     double Speed::strain_decay(double ms) const { return utils::pow(0.3, ms / 1000.0); }

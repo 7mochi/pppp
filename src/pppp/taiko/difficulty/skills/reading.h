@@ -11,6 +11,10 @@ namespace pppp { namespace taiko { namespace difficulty { namespace skills {
 
     /// Calculates the reading coefficient of taiko difficulty.
     class Reading : public StrainDecaySkill {
+    protected:
+        double skill_multiplier() const { return 1.0; }
+        double strain_decay_base() const { return 0.4; }
+
     public:
         Reading(const pppp::mods::Mod* mods_in, size_t mod_count_in);
 

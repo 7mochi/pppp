@@ -17,7 +17,7 @@ namespace pppp { namespace mania { namespace patterns {
 
     ManiaHitObject make_note(int column, double start_time);
 
-    ManiaHitObject make_hold(int column, double start_time, double end_time);
+    ManiaHitObject make_hold(int column, double start_time, double duration);
 
     /// A pattern generator for legacy hit objects.
     class LegacyPatternGenerator : public PatternGenerator {

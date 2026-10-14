@@ -1,6 +1,7 @@
 #include "common.h"
 #include "parity/decode.h"
 
+#include <cstddef>
 #include <doctest.h>
 #include <fosu/parser.h>
 #include <string>
@@ -15,9 +16,11 @@ TEST_CASE("the decoder matches upstream over the curated maps") {
 
         const std::string path = std::string(PPPP_TEST_RESOURCES) + "/" + row.map;
         fosu::Parser parser;
-        fosu::Result<fosu::Beatmap*> parsed = parser.parse_file(path.c_str(), fosu::ParseOptions());
-        REQUIRE(parsed.ok());
-        const fosu::Beatmap& beatmap = *parsed.value();
+        fosu::ParseOptions options;
+        options.client = fosu::Client::Lazer;
+        const fosu::Beatmap* parsed = parser.parse_file(path.c_str(), options);
+        REQUIRE_UNARY(parsed != NULL);
+        const fosu::Beatmap& beatmap = *parsed;
 
         CHECK(static_cast<int>(beatmap.format_version) == row.format);
         CHECK(static_cast<int>(beatmap.mode) == row.mode);

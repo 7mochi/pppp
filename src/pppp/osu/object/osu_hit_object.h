@@ -28,6 +28,7 @@ namespace pppp { namespace osu { namespace object {
         unsigned type;
         double time;
         double end_time;
+        double duration;
         pppp::utils::Vector2 position;
         bool new_combo;
         int combo_offset;

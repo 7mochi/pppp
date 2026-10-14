@@ -118,7 +118,7 @@ namespace pppp { namespace beatmaps { namespace control_points {
             // osu!taiko and osu!mania use effect points rather than difficulty points for scroll speed
             // adjustments.
             if (beatmap.mode == 1 || beatmap.mode == 3) {
-                effect_point.scroll_speed = speed_multiplier;
+                effect_point.set_scroll_speed(speed_multiplier);
             }
 
             decoder.add_control_point(time, effect_point, timing_change);
@@ -178,6 +178,22 @@ namespace pppp { namespace beatmaps { namespace control_points {
         const EffectControlPoint fallback(0.0, false);
         const EffectControlPoint* existing = effect_point_at(time);
         return new_point.is_redundant(existing != 0 ? existing : &fallback);
+    }
+
+    ControlPointInfo ControlPointInfo::deep_clone() const {
+        ControlPointInfo control_point_info;
+
+        for (size_t i = 0; i < timing_points.size(); i++) {
+            control_point_info.add(timing_points[i].time, timing_points[i]);
+        }
+        for (size_t i = 0; i < difficulty_points.size(); i++) {
+            control_point_info.add(difficulty_points[i].time, difficulty_points[i]);
+        }
+        for (size_t i = 0; i < effect_points.size(); i++) {
+            control_point_info.add(effect_points[i].time, effect_points[i]);
+        }
+
+        return control_point_info;
     }
 
     const TimingControlPoint* ControlPointInfo::timing_point_at(double time) const {

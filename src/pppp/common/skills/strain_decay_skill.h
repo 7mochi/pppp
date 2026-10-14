@@ -10,22 +10,21 @@ namespace pppp { namespace common { namespace skills {
     /// processed objects and to calculate a final difficulty value representing the difficulty of hitting all
     /// the processed objects.
     class StrainDecaySkill : public StrainSkill {
-    public:
+    protected:
         /// Strain values are multiplied by this number for the given skill. Used to balance the value of
         /// different skills between each other.
-        const double skill_multiplier;
+        virtual double skill_multiplier() const = 0;
 
         /// Determines how quickly strain decays for the given skill.
         /// For example a value of 0.15 indicates that strain decays to 15% of its original value in one
         /// second.
-        const double strain_decay_base;
+        virtual double strain_decay_base() const = 0;
 
         /// The current strain level.
         double current_strain;
 
-        StrainDecaySkill(const pppp::mods::Mod* mods_in, size_t mod_count_in,
-                         double skill_multiplier_in = 1.0, double strain_decay_base_in = 0.15,
-                         double decay_weight_in = 0.9, int section_length_in = 400);
+    public:
+        StrainDecaySkill(const pppp::mods::Mod* mods_in, size_t mod_count_in);
 
         /// Calculates the strain value of a DifficultyHitObject. This value is affected by previously
         /// processed objects.

@@ -119,6 +119,7 @@ namespace fosu {
             for (size_t i = 0; i < map.hit_objects.size(); i++) {
                 map.hit_objects[i].time /= rate;
                 map.hit_objects[i].end_time /= rate;
+                map.hit_objects[i].duration /= rate;
             }
             for (size_t i = 0; i < map.timing_points.size(); i++) {
                 map.timing_points[i].time /= rate;

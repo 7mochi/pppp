@@ -47,7 +47,7 @@ namespace Pppp {
                 options.has_difficulty = 1;
             }
 
-            options.mods = Native.CreateMods(Mods);
+            options.mods = Native.CreateMods(Mods, attributes != null ? (int)attributes.Ruleset : beatmap.Mode);
             try {
                 Native.PerformanceAttributes result;
                 Native.Check(Native.pppp_calculate_performance(beatmap.Handle, ref options, out result));

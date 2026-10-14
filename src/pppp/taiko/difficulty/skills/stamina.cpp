@@ -44,14 +44,8 @@ namespace pppp { namespace taiko { namespace difficulty { namespace skills {
 
     double Stamina::calculate_initial_strain(double time,
                                              const common::preprocessing::DifficultyHitObject& base_current) {
-        const preprocessing::TaikoDifficultyHitObject& current =
-            static_cast<const preprocessing::TaikoDifficultyHitObject&>(base_current);
-        if (single_colour_stamina) {
-            return 0.0;
-        }
-        const preprocessing::TaikoDifficultyHitObject* previous =
-            static_cast<const preprocessing::TaikoDifficultyHitObject*>(current.previous(0));
-        double previous_start = previous ? previous->start_time : 0.0;
-        return current_strain * strain_decay(time - previous_start);
+        return single_colour_stamina
+                   ? 0
+                   : current_strain * strain_decay(time - base_current.previous(0)->start_time);
     }
 }}}} // namespace pppp::taiko::difficulty::skills

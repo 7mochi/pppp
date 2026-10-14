@@ -13,14 +13,12 @@ namespace pppp { namespace common { namespace skills {
         double value;
         double section_length;
 
-        /// Reverse sort, highest is first.
+        // Reverse sort, highest is first.
         int compare_to(const StrainPeak& other) const {
             return pppp::utils::math::compare_to(other.value, value);
         }
     };
 
-    /// Stores previous strains so that, if a high difficulty hit object is followed by a lower
-    /// difficulty hit object, the high difficulty hit object gets a full strain instead of being cut short.
     struct QueuedStrain {
         double strain_value;
         double start_time;
@@ -33,22 +31,24 @@ namespace pppp { namespace common { namespace skills {
     /// Has not yet been applied globally as it changes resultant PP values in ways which may require
     /// discretion.
     class VariableLengthStrainSkill : public Skill {
-    public:
+    protected:
         /// The weight by which each strain value decays.
         const double decay_weight;
 
         /// The maximum length of each strain section.
         const int max_section_length;
 
-        /// The number of `MaxSectionLength` sections calculated such that enough of the difficulty value is
-        /// preserved. This variable operates under the assumption that final difficulty calculation uses a
-        /// standard geometric sum, and that strain_peaks is not required for any other purpose.
-        const double max_stored_length;
-
-        // We also keep track of the peak strain in the current section.
-        double current_section_peak;
+    private:
+        double current_section_peak; // We also keep track of the peak strain in the current section.
         double current_section_begin;
         double current_section_end;
+
+        /// The number of `MaxSectionLength` sections calculated such that enough of the difficulty value is
+        /// preserved.
+        /// @remarks This variable operates under the assumption that final difficulty calculation uses a
+        /// standard geometric sum,
+        /// and that strain_peaks is not required for any other purpose
+        const double max_stored_length;
 
         std::vector<StrainPeak> strain_peaks;
         double total_length;
@@ -59,6 +59,7 @@ namespace pppp { namespace common { namespace skills {
         std::vector<QueuedStrain> queued_strains;
         StrainPeak* final_peak;
 
+    public:
         /// Create a new VariableLengthStrainSkill.
         /// @param mods_in The mods.
         /// @param mod_count_in The number of mods.
@@ -83,7 +84,7 @@ namespace pppp { namespace common { namespace skills {
 
         /// Calculates the number of strains weighted against the top strain. The result is scaled by
         /// clock rate as it affects the total number of strains.
-        double count_top_weighted_strains(double difficulty_value);
+        virtual double count_top_weighted_strains(double difficulty_value);
 
         /// Returns the peak strains for each MaxSectionLength section of the beatmap, including the
         /// peak of the current section.
@@ -98,7 +99,6 @@ namespace pppp { namespace common { namespace skills {
         /// calculate an overall difficulty.
         void save_current_peak(double section_length);
 
-        /// Inserts a peak keeping the list ordered by value, highest first.
         size_t add_in_place(const StrainPeak& peak);
 
         /// Sets the initial strain level for a new section.

@@ -7,7 +7,7 @@
 
 namespace pppp { namespace taiko { namespace difficulty { namespace skills {
     Reading::Reading(const pppp::mods::Mod* mods_in, size_t mod_count_in)
-        : StrainDecaySkill(mods_in, mod_count_in, 1.0, 0.4),
+        : StrainDecaySkill(mods_in, mod_count_in),
           current_strain(0.0) {}
 
     double Reading::strain_value_of(const common::preprocessing::DifficultyHitObject& base_current) {
@@ -22,8 +22,8 @@ namespace pppp { namespace taiko { namespace difficulty { namespace skills {
         int index = current.colour.mono_streak ? current.colour.mono_streak->index_of(&current) : 0;
 
         current_strain *= pppp::utils::logistic(index, 4.0, -1.0 / 25.0, 0.5) + 0.5;
-        current_strain *= strain_decay_base;
-        current_strain += evaluators::ReadingEvaluator::evaluate_difficulty_of(current) * skill_multiplier;
+        current_strain *= strain_decay_base();
+        current_strain += evaluators::ReadingEvaluator::evaluate_difficulty_of(current) * skill_multiplier();
 
         return current_strain;
     }

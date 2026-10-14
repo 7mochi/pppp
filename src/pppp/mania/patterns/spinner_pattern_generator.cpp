@@ -5,7 +5,7 @@
 
 namespace pppp { namespace mania { namespace patterns {
     void SpinnerPatternGenerator::generate(std::vector<Pattern>& out) {
-        const int end_time = static_cast<int>(hit_object.end_time);
+        const int end_time = static_cast<int>(hit_object.end_time());
         const int convert_type =
             previous_pattern.column_with_objects == total_columns ? PATTERN_NONE : PATTERN_FORCE_NOT_STACK;
 
@@ -35,10 +35,10 @@ namespace pppp { namespace mania { namespace patterns {
     }
 
     void SpinnerPatternGenerator::add_to_pattern(Pattern& pattern, int column, bool hold_note) const {
-        const int end_time = static_cast<int>(hit_object.end_time);
+        const int end_time = static_cast<int>(hit_object.end_time());
 
         if (hold_note) {
-            pattern.add(make_hold(column, hit_object.start_time, end_time));
+            pattern.add(make_hold(column, hit_object.start_time, end_time - hit_object.start_time));
         } else {
             pattern.add(make_note(column, hit_object.start_time));
         }

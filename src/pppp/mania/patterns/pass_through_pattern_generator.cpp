@@ -9,7 +9,7 @@ namespace pppp { namespace mania { namespace patterns {
 
         Pattern pattern;
         if (hit_object.has_duration) {
-            pattern.add(make_hold(column, hit_object.start_time, hit_object.end_time));
+            pattern.add(make_hold(column, hit_object.start_time, hit_object.duration));
         } else {
             pattern.add(make_note(column, hit_object.start_time));
         }

@@ -57,7 +57,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators {
                 // Bonus based on how visible the object is.
                 double opacity_bonus =
                     1.0 + max_opacity_bonus *
-                              (1.0 - opacity_at(current, current_obj.base_object_start_time, has_hidden));
+                              (1.0 - current.opacity_at(current_obj.base_object_start_time, has_hidden));
 
                 flashlight_difficulty +=
                     stack_nerf * opacity_bonus * scaling_factor * jump_distance / cumulative_strain_time;

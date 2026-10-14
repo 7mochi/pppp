@@ -17,7 +17,7 @@ namespace pppp { namespace osu {
                        pppp::beatmaps::ObjectConverted<object::OsuHitObject>());
     void apply_defaults(OsuBeatmap& pb);
     Status reflect(OsuBeatmap& pb, int axes);
-    Status apply_beatmap_mods(OsuBeatmap& pb, const pppp::mods::Mod* mods, size_t mod_count);
+    Status apply_beatmap_mods(OsuBeatmap& pb, pppp::mods::Mod* mods, size_t mod_count);
 
     bool can_recompute_sliders(const OsuBeatmap& pb);
     Status slider_recompute(OsuBeatmap& pb, size_t slider_index);

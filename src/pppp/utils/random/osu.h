@@ -7,14 +7,11 @@
 namespace pppp { namespace utils { namespace random {
     const unsigned MASK32 = 0xFFFFFFFFu;
     const unsigned INT_MASK = 0x7FFFFFFFu;
-    const double INT_TO_REAL = 1.0 / 2147483648.0; // 1 / 2^31
+    const double INT_TO_REAL = 1.0 / (2147483647 + 1.0);
 
-    /// A four-word xorshift pseudo-random generator, kept for the draws that have to reproduce the
-    /// game's legacy sequence rather than a better one. The game knows it as `FastRandom`, and it is
-    /// the only generator whose draws a legacy beatmap's object placement can be read back from.
-    ///
-    /// The state is 32 bits wide by contract, and `unsigned` is only guaranteed to be at least
-    /// that, so every write back into it is masked.
+    /// A PRNG specified in http://heliosphan.org/fastrandom.html.
+    /// Should only be used to match legacy behaviour. See RNG for a newer alternative.
+    /// @remarks Known in osu-stable code as `FastRandom`.
     class LegacyRandom {
     public:
         unsigned x;
@@ -64,7 +61,6 @@ namespace pppp { namespace utils { namespace random {
     };
 }}} // namespace pppp::utils::random
 
-// The generators are seeded across every ruleset, so the type is re-exported under its short name.
 namespace pppp { namespace utils {
     typedef random::LegacyRandom LegacyRandom;
 }} // namespace pppp::utils

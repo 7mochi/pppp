@@ -106,9 +106,9 @@ namespace pppp { namespace osu { namespace difficulty {
             }
 
             double base_aim_perf = difficulty_to_performance(aim_rating);
-            double base_speed_perf = difficulty_to_performance(speed_rating);
-            double base_reading_perf = difficulty_to_performance(reading_rating);
-            double base_flashlight_perf = flashlight_difficulty_to_performance(flashlight_rating);
+            double base_speed_perf = skills::HarmonicSkill::difficulty_to_performance(speed_rating);
+            double base_reading_perf = skills::HarmonicSkill::difficulty_to_performance(reading_rating);
+            double base_flashlight_perf = skills::Flashlight::difficulty_to_performance(flashlight_rating);
             double base_cognition_perf = sum_cognition_difficulty(base_reading_perf, base_flashlight_perf);
 
             double base_performance = utils::norm(1.1, base_aim_perf, base_speed_perf, base_cognition_perf);
@@ -212,6 +212,20 @@ namespace pppp { namespace osu { namespace difficulty {
                                                                 static_cast<int>(out.size()), pb, pos));
             object_ptrs.push_back(&out.back());
         }
+    }
+
+    double sum_cognition_difficulty(double reading, double flashlight) {
+        if (reading <= 0) {
+            return flashlight;
+        }
+
+        if (flashlight <= 0) {
+            return reading;
+        }
+
+        // Nerf flashlight value in cognition sum when reading is greater than flashlight
+        return utils::norm(PERFORMANCE_NORM_EXPONENT, reading,
+                           flashlight * math::clamp(flashlight / reading, 0.25, 1.0));
     }
 
     Status calculate_difficulty(OsuDifficultyAttributes& out, const beatmaps::Beatmap& beatmap,

@@ -7,6 +7,7 @@
 #include "pppp/utils/precision.h"
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
 namespace pppp { namespace osu { namespace difficulty { namespace evaluators {
     namespace math = ::pppp::utils::math;
@@ -26,10 +27,11 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators {
 
             const preprocessing::OsuDifficultyHitObject* hit_object =
                 static_cast<const preprocessing::OsuDifficultyHitObject*>(current.next(0));
-            while (hit_object) {
-                // Object not visible at the time current object needs to be clicked.
+            while (hit_object != 0) {
                 if (hit_object->start_time - current.start_time > READING_WINDOW_SIZE ||
-                    current.start_time < hit_object->start_time - hit_object->preempt) {
+                    current.start_time <
+                        hit_object->start_time - hit_object->preempt) { // Object not visible at the time
+                                                                        // current object needs to be clicked.
                     break;
                 }
 
@@ -37,7 +39,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators {
                 double time_nerf_factor = get_time_nerf_factor(time_between_curr_and_loop_obj);
 
                 visible_object_count +=
-                    opacity_at(*hit_object, current.base_object_start_time, false) * time_nerf_factor;
+                    hit_object->opacity_at(current.base_object_start_time, false) * time_nerf_factor;
 
                 hit_object = static_cast<const preprocessing::OsuDifficultyHitObject*>(hit_object->next(0));
             }
@@ -45,22 +47,41 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators {
             return visible_object_count;
         }
 
-        double get_past_object_difficulty_influence(const preprocessing::OsuDifficultyHitObject& curr_obj) {
-            double past_object_difficulty_influence = 0.0;
+        // Returns a list of objects that are visible on screen at the point in time the current object
+        // becomes visible.
+        std::vector<const preprocessing::OsuDifficultyHitObject*>
+        retrieve_past_visible_objects(const preprocessing::OsuDifficultyHitObject& current) {
+            std::vector<const preprocessing::OsuDifficultyHitObject*> objects;
 
-            for (int i = 0; i < curr_obj.index; i++) {
-                const preprocessing::OsuDifficultyHitObject* loop_obj =
-                    static_cast<const preprocessing::OsuDifficultyHitObject*>(curr_obj.previous(i));
-                // Current object not visible at the time object needs to be clicked
-                if (!loop_obj || curr_obj.start_time - loop_obj->start_time > READING_WINDOW_SIZE ||
-                    loop_obj->start_time < curr_obj.start_time - curr_obj.preempt) {
+            for (int i = 0; i < current.index; i++) {
+                const preprocessing::OsuDifficultyHitObject* hit_object =
+                    static_cast<const preprocessing::OsuDifficultyHitObject*>(current.previous(i));
+
+                if (hit_object == 0 || current.start_time - hit_object->start_time > READING_WINDOW_SIZE ||
+                    hit_object->start_time <
+                        current.start_time - current.preempt) { // Current object not visible at the time
+                                                                // object needs to be clicked
                     break;
                 }
 
+                objects.push_back(hit_object);
+            }
+
+            return objects;
+        }
+
+        double get_past_object_difficulty_influence(const preprocessing::OsuDifficultyHitObject& curr_obj) {
+            double past_object_difficulty_influence = 0;
+
+            const std::vector<const preprocessing::OsuDifficultyHitObject*> past_visible_objects =
+                retrieve_past_visible_objects(curr_obj);
+            for (size_t i = 0; i < past_visible_objects.size(); i++) {
+                const preprocessing::OsuDifficultyHitObject* loop_obj = past_visible_objects[i];
+
+                double loop_difficulty = curr_obj.opacity_at(loop_obj->base_object_start_time, false);
+
                 // When aiming an object small distances mean previous objects may be cheesed, so it doesn't
                 // matter whether they were arranged confusingly.
-                double loop_difficulty = opacity_at(curr_obj, loop_obj->base_object_start_time, false);
-
                 loop_difficulty *=
                     utils::smootherstep(loop_obj->lazy_jump_distance, 15, DISTANCE_INFLUENCE_THRESHOLD);
 
@@ -245,7 +266,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators {
             // Buff perfect stacks only if current note is completely invisible at the time you click the
             // previous note.
             if (curr_obj.lazy_jump_distance == 0 &&
-                opacity_at(curr_obj, previous_obj->base_object_start_time, true) == 0 &&
+                curr_obj.opacity_at(previous_obj->base_object_start_time, true) == 0 &&
                 previous_obj->start_time > curr_obj.start_time - curr_obj.preempt) {
                 hidden_difficulty += hidden_multiplier * 2500.0 /
                                      utils::pow(curr_obj.adjusted_delta_time,

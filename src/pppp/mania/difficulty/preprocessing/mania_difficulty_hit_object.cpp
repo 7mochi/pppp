@@ -8,10 +8,10 @@ namespace pppp { namespace mania { namespace difficulty { namespace preprocessin
         const ManiaHitObject& object, const ManiaHitObject& last_object, double rate,
         const std::vector<DifficultyHitObject*>& objects,
         const std::vector<const ManiaDifficultyHitObject*>& previous_in_column, int object_index)
-        : DifficultyHitObject(object.start_time, last_object.start_time, rate, objects, object_index),
+        : DifficultyHitObject(object.start_time, object.end_time(), last_object.start_time, rate, 0, objects,
+                              object_index),
           column(0),
           column_strain_time(0.0) {
-        end_time = object.end_time / rate;
         column = object.column;
         const ManiaDifficultyHitObject* previous_in_column_object =
             previous_in_column[static_cast<size_t>(object.column)];

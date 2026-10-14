@@ -22,16 +22,16 @@ namespace pppp { namespace mania { namespace patterns {
         ManiaHitObject note;
         note.column = column;
         note.start_time = start_time;
-        note.end_time = start_time;
+        note.duration = 0;
         note.hold = false;
         return note;
     }
 
-    ManiaHitObject make_hold(int column, double start_time, double end_time) {
+    ManiaHitObject make_hold(int column, double start_time, double duration) {
         ManiaHitObject hold;
         hold.column = column;
         hold.start_time = start_time;
-        hold.end_time = end_time;
+        hold.duration = duration;
         hold.hold = true;
         return hold;
     }
@@ -52,10 +52,11 @@ namespace pppp { namespace mania { namespace patterns {
                 drain_time = 10000;
             }
 
-            const double difficulty =
-                ((beatmap.difficulty.drain_rate + math::clamp(beatmap.difficulty.approach_rate, 4, 7)) / 1.5 +
-                 static_cast<double>(beatmap.hit_objects.size()) / drain_time * 9.0) /
-                38.0 * 5.0 / 1.15;
+            const double difficulty = (utils::f32(beatmap.difficulty.drain_rate +
+                                                  math::clamp(beatmap.difficulty.approach_rate, 4, 7)) /
+                                           1.5 +
+                                       static_cast<double>(beatmap.hit_objects.size()) / drain_time * 9.0) /
+                                      38.0 * 5.0 / 1.15;
 
             return std::min(difficulty, 12.0);
         }

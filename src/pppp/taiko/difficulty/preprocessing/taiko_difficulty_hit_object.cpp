@@ -9,13 +9,25 @@
 namespace pppp { namespace taiko { namespace difficulty { namespace preprocessing {
     namespace linq = ::pppp::utils::linq;
 
+    namespace {
+        double raw_hit_window_great(const TaikoHitObject& object, const TaikoBeatmap& pb) {
+            if (object.kind != object::OBJECT_HIT) {
+                return 0;
+            }
+            TaikoHitWindows hit_windows;
+            hit_windows.set_difficulty(pb.overall_difficulty);
+            return hit_windows.great;
+        }
+    } // namespace
+
     TaikoDifficultyHitObject::TaikoDifficultyHitObject(
         const TaikoHitObject& object, const TaikoHitObject& last, double rate,
         const std::vector<DifficultyHitObject*>& objects,
         std::vector<TaikoDifficultyHitObject*>& centre_objects_in,
         std::vector<TaikoDifficultyHitObject*>& rim_objects_in,
         std::vector<TaikoDifficultyHitObject*>& note_objects_in, int object_index, const TaikoBeatmap& pb)
-        : DifficultyHitObject(object.time, last.time, rate, objects, object_index),
+        : DifficultyHitObject(object.time, object.time + object.duration, last.time, rate,
+                              raw_hit_window_great(object, pb), objects, object_index),
           kind(object::OBJECT_HIT),
           type(object::HIT_TYPE_CENTRE),
           mono_objects(0),
@@ -23,13 +35,6 @@ namespace pppp { namespace taiko { namespace difficulty { namespace preprocessin
           mono_index(-1),
           note_index(0),
           effective_bpm(0.0) {
-        TaikoHitWindows hit_windows;
-        hit_windows.set_difficulty(pb.overall_difficulty);
-
-        end_time = (object.time + object.duration) / rate;
-        // Drum rolls and swells carry empty hit windows, and so do their nested objects.
-        hit_window_great = object.kind == object::OBJECT_HIT ? 2.0 * hit_windows.great / rate : 0.0;
-
         kind = object.kind;
         type = object.type;
 

@@ -24,7 +24,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
 
         const preprocessing::OsuDifficultyHitObject* next =
             static_cast<const preprocessing::OsuDifficultyHitObject*>(current.next(0));
-        double double_tap_feasibility = 1.0 - (next ? calculate_double_tap_feasibility(current, *next) : 0.0);
+        double double_tap_feasibility = 1.0 - current.calculate_double_tap_feasibility(next);
 
         // Cap deltatime to the OD 300 hitwindow.
         // 0.93 is derived from making sure 260bpm OD8 streams aren't nerfed harshly, whilst 0.92 limits

@@ -25,6 +25,8 @@ namespace pppp { namespace utils { namespace math {
     /// Rounds `x` half-even and truncates the result to `int`.
     /// @param x The value to round.
     /// @returns The rounded value.
+    inline double truncate(double x) { return x < 0.0 ? std::ceil(x) : std::floor(x); }
+
     inline int round_half_even_int(double x) { return static_cast<int>(round_half_even(x)); }
 
     /// Rounds `x` to two decimals, breaking a tie towards the even neighbour. From 1e16 up a double

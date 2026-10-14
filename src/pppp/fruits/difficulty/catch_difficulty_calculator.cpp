@@ -30,30 +30,37 @@ namespace pppp { namespace fruits { namespace difficulty {
         out.clear();
         object_ptrs.clear();
 
-        std::vector<object::CatchHitObject*> palpable;
-
-        // In 2B beatmaps, it is possible that a normal Fruit is placed in the middle of a JuiceStream.
-        palpable_objects(palpable, pb);
-        if (palpable.size() < 2) {
-            return;
-        }
-
         float half_catcher_width =
             static_cast<float>(object::CatchHitObject::calculate_catch_width(pb.circle_size)) * 0.5f;
 
         // For circle sizes above 5.5, reduce the catcher width further to simulate imperfect gameplay.
         half_catcher_width *= 1 - (std::max(0.0f, static_cast<float>(pb.circle_size) - 5.5f) * 0.0625f);
 
-        out.reserve(palpable.size() - 1);
-        object_ptrs.reserve(palpable.size() - 1);
+        std::vector<object::CatchHitObject*> palpable;
 
-        for (size_t i = 1; i < palpable.size(); i++) {
-            const object::CatchHitObject& object = *palpable[i];
-            const object::CatchHitObject& last = *palpable[i - 1];
+        // In 2B beatmaps, it is possible that a normal Fruit is placed in the middle of a JuiceStream.
+        palpable_objects(palpable, pb);
 
-            out.push_back(preprocessing::CatchDifficultyHitObject(
-                object, last, pb.clock_rate, half_catcher_width, object_ptrs, static_cast<int>(out.size())));
-            object_ptrs.push_back(&out.back());
+        out.reserve(palpable.size());
+        object_ptrs.reserve(palpable.size());
+
+        const object::CatchHitObject* last_object = 0;
+        for (size_t i = 0; i < palpable.size(); i++) {
+            const object::CatchHitObject& hit_object = *palpable[i];
+
+            // We want to only consider fruits that contribute to the combo.
+            if (hit_object.kind == object::OBJECT_BANANA || hit_object.kind == object::OBJECT_TINY_DROPLET) {
+                continue;
+            }
+
+            if (last_object != 0) {
+                out.push_back(preprocessing::CatchDifficultyHitObject(hit_object, *last_object, pb.clock_rate,
+                                                                      half_catcher_width, object_ptrs,
+                                                                      static_cast<int>(out.size())));
+                object_ptrs.push_back(&out.back());
+            }
+
+            last_object = &hit_object;
         }
     }
 
@@ -121,13 +128,21 @@ namespace pppp { namespace fruits { namespace difficulty {
 
         std::vector<object::CatchHitObject*> palpable;
         palpable_objects(palpable, pb);
+        std::vector<const object::CatchHitObject*> base_objects;
+        for (size_t i = 0; i < palpable.size(); i++) {
+            if (palpable[i]->kind != object::OBJECT_BANANA &&
+                palpable[i]->kind != object::OBJECT_TINY_DROPLET) {
+                base_objects.push_back(palpable[i]);
+            }
+        }
 
         size_t current = 0;
 
         for (size_t i = 0; i < pb.objects.size(); i++) {
             flatten(progressive.all_objects, pb.objects[i]);
 
-            while (current < dho_list.size() && palpable[current + 1]->end_time <= pb.objects[i].end_time) {
+            while (current < dho_list.size() &&
+                   base_objects[current + 1]->end_time <= pb.objects[i].end_time) {
                 movement.process(dho_list[current]);
 
                 current++;

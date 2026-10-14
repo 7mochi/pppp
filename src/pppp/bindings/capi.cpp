@@ -457,15 +457,15 @@ pppp_result pppp_mods_parse(const char* specification, pppp_mods** out) {
     return PPPP_OK;
 }
 
-pppp_result pppp_mods_from_legacy(pppp_uint32 bits, pppp_mods** out) {
-    if (!out) {
+pppp_result pppp_mods_from_legacy(pppp_uint32 bits, pppp_int32 ruleset, pppp_mods** out) {
+    if (!out || ruleset < 0 || ruleset > 3) {
         return PPPP_INVALID_ARGUMENT;
     }
     pppp_mods* mods = new (std::nothrow) pppp_mods;
     if (!mods) {
         return PPPP_ALLOCATION;
     }
-    mods->mods = pppp::Mods::from_legacy(bits);
+    mods->mods = pppp::Mods::from_legacy(bits, ruleset);
     *out = mods;
     return PPPP_OK;
 }

@@ -10,24 +10,21 @@
 namespace pppp { namespace common { namespace skills {
     namespace linq = ::pppp::utils::linq;
 
-    StrainSkill::StrainSkill(const mods::Mod* mods_in, size_t mod_count_in, double decay_weight_in,
-                             int section_length_in)
+    StrainSkill::StrainSkill(const mods::Mod* mods_in, size_t mod_count_in)
         : Skill(mods_in, mod_count_in),
-          decay_weight(decay_weight_in),
-          section_length(section_length_in),
           current_section_peak(0.0),
           current_section_end(0.0) {}
 
     double StrainSkill::process_internal(const preprocessing::DifficultyHitObject& current) {
         // The first object doesn't generate a strain, so we begin with an incremented section end
         if (current.index == 0) {
-            current_section_end = std::ceil(current.start_time / section_length) * section_length;
+            current_section_end = std::ceil(current.start_time / section_length()) * section_length();
         }
 
         while (current.start_time > current_section_end) {
             save_current_peak();
             start_new_section_from(current_section_end, current);
-            current_section_end += section_length;
+            current_section_end += section_length();
         }
 
         double strain = strain_value_at(current);
@@ -51,7 +48,7 @@ namespace pppp { namespace common { namespace skills {
         const std::vector<double> strains = peaks.order_descending().to_list();
         for (size_t i = 0; i < strains.size(); i++) {
             difficulty += strains[i] * weight;
-            weight *= decay_weight;
+            weight *= decay_weight();
         }
 
         return difficulty;
@@ -60,9 +57,9 @@ namespace pppp { namespace common { namespace skills {
     void StrainSkill::save_current_peak() { strain_peaks.push_back(current_section_peak); }
 
     void StrainSkill::start_new_section_from(double time, const preprocessing::DifficultyHitObject& current) {
-        // The maximum strain of the new section is not zero by default. This means we need to
-        // capture the strain level at the beginning of the new section, and use that as the
-        // initial peak level.
+        // The maximum strain of the new section is not zero by default
+        // This means we need to capture the strain level at the beginning of the new section, and use that as
+        // the initial peak level.
         current_section_peak = calculate_initial_strain(time, current);
     }
 
@@ -78,7 +75,7 @@ namespace pppp { namespace common { namespace skills {
 
         double consistent_top_strain =
             difficulty_value *
-            (1.0 - decay_weight); // What would the top strain be if all strain values were identical
+            (1.0 - decay_weight()); // What would the top strain be if all strain values were identical
 
         if (consistent_top_strain == 0) {
             return static_cast<double>(object_difficulties.size());

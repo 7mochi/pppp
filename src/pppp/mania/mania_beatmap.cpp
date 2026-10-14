@@ -10,7 +10,7 @@ namespace pppp { namespace mania {
     namespace {
         int max_combo_for_object(const ManiaHitObject& hit_object) {
             if (hit_object.hold) {
-                return 1 + static_cast<int>((hit_object.end_time - hit_object.start_time) / 100);
+                return 1 + static_cast<int>((hit_object.end_time() - hit_object.start_time) / 100);
             }
 
             return 1;

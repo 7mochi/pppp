@@ -56,6 +56,8 @@ namespace pppp { namespace beatmaps { namespace control_points {
         /// @returns The effect control point.
         const EffectControlPoint* effect_point_at(double time) const;
 
+        ControlPointInfo deep_clone() const;
+
     private:
         /// Check whether `new_point` should be added.
         /// @param time The time to find the timing control point at.

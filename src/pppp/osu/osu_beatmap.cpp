@@ -107,7 +107,6 @@ namespace pppp { namespace osu {
         pb.approach_rate = static_cast<float>(ds.approach_rate);
         pb.overall_difficulty = static_cast<float>(ds.overall_difficulty);
         pb.drain_rate = static_cast<float>(ds.drain_rate);
-        pb.clock_rate = pppp::mods::mod_calculate_rate(mods, mod_count);
 
         update_combo_information(pb);
         apply_defaults(pb);
@@ -116,6 +115,15 @@ namespace pppp { namespace osu {
             return rc;
         }
         apply_stacking(pb);
-        return apply_beatmap_mods(pb, mods, mod_count);
+
+        std::vector<pppp::mods::Mod> playable_mods(mods, mods + mod_count);
+        rc = apply_beatmap_mods(pb, playable_mods.empty() ? 0 : &playable_mods[0], playable_mods.size());
+        if (!rc.ok()) {
+            return rc;
+        }
+
+        pb.clock_rate = pppp::mods::mod_calculate_rate(playable_mods.empty() ? 0 : &playable_mods[0],
+                                                       playable_mods.size());
+        return StatusCode::OK;
     }
 }} // namespace pppp::osu

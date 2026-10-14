@@ -6,6 +6,7 @@
 
 #include "pppp/common/skills/strain_skill.h"
 #include "pppp/osu/difficulty/preprocessing/osu_difficulty_hit_object.h"
+#include "pppp/utils/difficulty_calculation_utils.h"
 
 namespace pppp { namespace osu { namespace difficulty { namespace skills {
     typedef pppp::common::skills::StrainSkill StrainSkill;
@@ -18,6 +19,10 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
         int total_objects;
 
         Flashlight(const pppp::mods::Mod* mods_in, size_t mod_count_in, int total_objects_in);
+
+        static double difficulty_to_performance(double difficulty) {
+            return 25 * pppp::utils::pow(difficulty, 2);
+        }
 
         double strain_value_at(const DifficultyHitObject& base_current);
         double calculate_initial_strain(double time, const DifficultyHitObject& base_current);

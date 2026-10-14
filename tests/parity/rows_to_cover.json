@@ -753,5 +753,670 @@
     "mods": [
       "DT"
     ]
+  },
+  {
+    "case": "a rate setting rounded to its precision",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      {
+        "acronym": "DT",
+        "settings": {
+          "speed_change": 1.234
+        }
+      }
+    ],
+    "score": {
+      "count_great": 908,
+      "max_combo": 909
+    }
+  },
+  {
+    "case": "a rate setting rounded to its precision",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      {
+        "acronym": "HT",
+        "settings": {
+          "speed_change": 0.755
+        }
+      }
+    ],
+    "score": {
+      "count_great": 908,
+      "max_combo": 909
+    }
+  },
+  {
+    "case": "a rate setting clamped to its range",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      {
+        "acronym": "DT",
+        "settings": {
+          "speed_change": 1.0
+        }
+      }
+    ],
+    "score": {
+      "count_great": 908,
+      "max_combo": 909
+    }
+  },
+  {
+    "case": "a wind up initial rate rounded to its precision",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      {
+        "acronym": "WU",
+        "settings": {
+          "initial_rate": 1.245
+        }
+      }
+    ],
+    "score": {
+      "count_great": 908,
+      "max_combo": 909
+    }
+  },
+  {
+    "case": "a wind up initial rate pushed by its final rate",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      {
+        "acronym": "WU",
+        "settings": {
+          "initial_rate": 1.6,
+          "final_rate": 1.55
+        }
+      }
+    ],
+    "score": {
+      "count_great": 908,
+      "max_combo": 909
+    }
+  },
+  {
+    "case": "an adaptive speed initial rate rounded to its precision",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      {
+        "acronym": "AS",
+        "settings": {
+          "initial_rate": 1.245
+        }
+      }
+    ],
+    "score": {
+      "count_great": 908,
+      "max_combo": 909
+    }
+  },
+  {
+    "case": "a magnetised strength rounded to its precision",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      {
+        "acronym": "MG",
+        "settings": {
+          "attraction_strength": 0.63
+        }
+      }
+    ],
+    "score": {
+      "count_great": 908,
+      "max_combo": 909
+    }
+  },
+  {
+    "case": "a deflate start scale rounded to its precision",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      "FL",
+      {
+        "acronym": "DF",
+        "settings": {
+          "start_scale": 3.33
+        }
+      }
+    ],
+    "score": {
+      "count_great": 908,
+      "max_combo": 909
+    }
+  },
+  {
+    "case": "a random angle sharpness rounded to its precision",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      {
+        "acronym": "RD",
+        "settings": {
+          "seed": 42,
+          "angle_sharpness": 7.35
+        }
+      }
+    ],
+    "score": {
+      "count_great": 908,
+      "max_combo": 909
+    }
+  },
+  {
+    "case": "a difficulty adjust value clamped to its extended limits",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      {
+        "acronym": "DA",
+        "settings": {
+          "approach_rate": 12
+        }
+      }
+    ],
+    "score": {
+      "count_great": 908,
+      "max_combo": 909
+    }
+  },
+  {
+    "case": "a difficulty adjust value clamped to its extended limits",
+    "map": "osu/2785319.osu",
+    "ruleset": 0,
+    "mods": [
+      {
+        "acronym": "DA",
+        "settings": {
+          "approach_rate": -12,
+          "circle_size": 4.3
+        }
+      }
+    ],
+    "score": {
+      "count_great": 908,
+      "max_combo": 909
+    }
+  },
+  {
+    "case": "a difficulty adjust value clamped to its extended limits",
+    "map": "fruits/2118524.osu",
+    "ruleset": 2,
+    "mods": [
+      {
+        "acronym": "DA",
+        "settings": {
+          "approach_rate": -3
+        }
+      }
+    ],
+    "score": {
+      "count_great": 728,
+      "count_large_tick_hit": 2,
+      "count_small_tick_hit": 263
+    }
+  },
+  {
+    "case": "a difficulty adjust value clamped to its extended limits",
+    "map": "taiko/1028484.osu",
+    "ruleset": 1,
+    "mods": [
+      {
+        "acronym": "DA",
+        "settings": {
+          "scroll_speed": 5
+        }
+      }
+    ],
+    "score": {
+      "count_great": 289
+    }
+  },
+  {
+    "case": "a difficulty adjust value kept as a float",
+    "map": "taiko/1028484.osu",
+    "ruleset": 1,
+    "mods": [
+      {
+        "acronym": "DA",
+        "settings": {
+          "scroll_speed": 1.15,
+          "overall_difficulty": 8.3
+        }
+      }
+    ],
+    "score": {
+      "count_great": 289
+    }
+  },
+  {
+    "case": "a difficulty adjust value kept as a float",
+    "map": "fruits/2118524.osu",
+    "ruleset": 2,
+    "mods": [
+      {
+        "acronym": "DA",
+        "settings": {
+          "approach_rate": 8.3,
+          "circle_size": 4.3
+        }
+      }
+    ],
+    "score": {
+      "count_great": 728,
+      "count_large_tick_hit": 2,
+      "count_small_tick_hit": 263
+    }
+  },
+  {
+    "case": "a time ramp over a map that starts before zero",
+    "map": "osu/negative-start-time.osu",
+    "ruleset": 0,
+    "mods": [
+      "WU"
+    ]
+  },
+  {
+    "case": "a time ramp over a map that starts before zero",
+    "map": "osu/negative-start-time.osu",
+    "ruleset": 0,
+    "mods": [
+      "WD"
+    ]
+  },
+  {
+    "case": "a time ramp over a map that starts before zero",
+    "map": "osu/negative-start-time.osu",
+    "ruleset": 0,
+    "mods": [
+      {
+        "acronym": "WU",
+        "settings": {
+          "initial_rate": 0.9,
+          "final_rate": 1.9
+        }
+      }
+    ]
+  },
+  {
+    "case": "a time ramp over a map that starts before zero",
+    "map": "osu/negative-start-time.osu",
+    "ruleset": 1,
+    "mods": [
+      "WU"
+    ]
+  },
+  {
+    "case": "a time ramp over a map that starts before zero",
+    "map": "osu/negative-start-time.osu",
+    "ruleset": 1,
+    "mods": [
+      "WD"
+    ]
+  },
+  {
+    "case": "a time ramp over a map that starts before zero",
+    "map": "osu/negative-start-time.osu",
+    "ruleset": 1,
+    "mods": [
+      {
+        "acronym": "WU",
+        "settings": {
+          "initial_rate": 0.9,
+          "final_rate": 1.9
+        }
+      }
+    ]
+  },
+  {
+    "case": "a time ramp over a map that starts before zero",
+    "map": "osu/negative-start-time.osu",
+    "ruleset": 2,
+    "mods": [
+      "WU"
+    ]
+  },
+  {
+    "case": "a time ramp over a map that starts before zero",
+    "map": "osu/negative-start-time.osu",
+    "ruleset": 2,
+    "mods": [
+      "WD"
+    ]
+  },
+  {
+    "case": "a time ramp over a map that starts before zero",
+    "map": "osu/negative-start-time.osu",
+    "ruleset": 2,
+    "mods": [
+      {
+        "acronym": "WU",
+        "settings": {
+          "initial_rate": 0.9,
+          "final_rate": 1.9
+        }
+      }
+    ]
+  },
+  {
+    "case": "a time ramp over a map that starts before zero",
+    "map": "osu/negative-start-time.osu",
+    "ruleset": 3,
+    "mods": [
+      "WU"
+    ]
+  },
+  {
+    "case": "a time ramp over a map that starts before zero",
+    "map": "osu/negative-start-time.osu",
+    "ruleset": 3,
+    "mods": [
+      "WD"
+    ]
+  },
+  {
+    "case": "a time ramp over a map that starts before zero",
+    "map": "osu/negative-start-time.osu",
+    "ruleset": 3,
+    "mods": [
+      {
+        "acronym": "WU",
+        "settings": {
+          "initial_rate": 0.9,
+          "final_rate": 1.9
+        }
+      }
+    ]
+  },
+  {
+    "case": "simplified rhythm over notes that share a time",
+    "map": "taiko/simplified-rhythm-equal-times-1.osu",
+    "ruleset": 1,
+    "mods": [
+      "SR"
+    ]
+  },
+  {
+    "case": "simplified rhythm over notes that share a time",
+    "map": "taiko/simplified-rhythm-equal-times-1.osu",
+    "ruleset": 1,
+    "mods": [
+      {
+        "acronym": "SR",
+        "settings": {
+          "one_third_conversion": true,
+          "one_sixth_conversion": true,
+          "one_eighth_conversion": true
+        }
+      }
+    ]
+  },
+  {
+    "case": "simplified rhythm over notes that share a time",
+    "map": "taiko/simplified-rhythm-equal-times-2.osu",
+    "ruleset": 1,
+    "mods": [
+      "SR"
+    ]
+  },
+  {
+    "case": "simplified rhythm over notes that share a time",
+    "map": "taiko/simplified-rhythm-equal-times-2.osu",
+    "ruleset": 1,
+    "mods": [
+      {
+        "acronym": "SR",
+        "settings": {
+          "one_third_conversion": true,
+          "one_sixth_conversion": true,
+          "one_eighth_conversion": true
+        }
+      }
+    ]
+  },
+  {
+    "case": "an osu!mania map converted to another ruleset",
+    "map": "mania/1638954.osu",
+    "ruleset": 0,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "an osu!mania map converted to another ruleset",
+    "map": "mania/1638954.osu",
+    "ruleset": 1,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "an osu!mania map converted to another ruleset",
+    "map": "mania/1638954.osu",
+    "ruleset": 2,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "an osu!mania map converted to another ruleset",
+    "map": "mania/keys_4_holds.osu",
+    "ruleset": 0,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "an osu!mania map converted to another ruleset",
+    "map": "mania/keys_4_holds.osu",
+    "ruleset": 1,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "an osu!mania map converted to another ruleset",
+    "map": "mania/keys_4_holds.osu",
+    "ruleset": 2,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "an osu!mania map converted to another ruleset",
+    "map": "mania/diffcalc-test.osu",
+    "ruleset": 0,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "an osu!mania map converted to another ruleset",
+    "map": "mania/diffcalc-test.osu",
+    "ruleset": 1,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "an osu!mania map converted to another ruleset",
+    "map": "mania/diffcalc-test.osu",
+    "ruleset": 2,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "an osu!catch map converted to osu!taiko",
+    "map": "fruits/2118524.osu",
+    "ruleset": 1,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "objects placed outside the playfield",
+    "map": "osu/positions-outside-playfield.osu",
+    "ruleset": 0,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "objects placed outside the playfield",
+    "map": "osu/positions-outside-playfield.osu",
+    "ruleset": 2,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "an osu!taiko map converted to another ruleset",
+    "map": "taiko/1028484.osu",
+    "ruleset": 2,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "an osu!taiko map converted to another ruleset",
+    "map": "taiko/1028484.osu",
+    "ruleset": 0,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "an osu!taiko map converted to another ruleset",
+    "map": "taiko/v9.osu",
+    "ruleset": 2,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "control points left redundant once sorted",
+    "map": "osu/control-points-redundant-after-sorting.osu",
+    "ruleset": 0,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "a zero-length slider with repeats",
+    "map": "osu/zero-length-slider-repeats.osu",
+    "ruleset": 0,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "control points left redundant once sorted",
+    "map": "osu/control-points-redundant-after-sorting.osu",
+    "ruleset": 1,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "a zero-length slider with repeats",
+    "map": "osu/zero-length-slider-repeats.osu",
+    "ruleset": 1,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "control points left redundant once sorted",
+    "map": "osu/control-points-redundant-after-sorting.osu",
+    "ruleset": 2,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "a zero-length slider with repeats",
+    "map": "osu/zero-length-slider-repeats.osu",
+    "ruleset": 2,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "control points left redundant once sorted",
+    "map": "osu/control-points-redundant-after-sorting.osu",
+    "ruleset": 3,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "a zero-length slider with repeats",
+    "map": "osu/zero-length-slider-repeats.osu",
+    "ruleset": 3,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "timing lines the official decoder accepts",
+    "map": "taiko/timing-lines-official-rules.osu",
+    "ruleset": 1,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "timing lines the official decoder accepts",
+    "map": "taiko/timing-lines-official-rules.osu",
+    "ruleset": 3,
+    "mods": [
+      "NM"
+    ]
+  },
+  {
+    "case": "hard rock offsets left to the last mod that sets them",
+    "map": "fruits/2118524.osu",
+    "ruleset": 2,
+    "mods": [
+      "HR",
+      {
+        "acronym": "DA",
+        "settings": {
+          "hard_rock_offsets": false
+        }
+      }
+    ],
+    "score": {
+      "count_great": 728,
+      "count_large_tick_hit": 2,
+      "count_small_tick_hit": 263
+    }
+  },
+  {
+    "case": "hard rock offsets left to the last mod that sets them",
+    "map": "fruits/2118524.osu",
+    "ruleset": 2,
+    "mods": [
+      {
+        "acronym": "DA",
+        "settings": {
+          "hard_rock_offsets": false
+        }
+      },
+      "HR"
+    ],
+    "score": {
+      "count_great": 728,
+      "count_large_tick_hit": 2,
+      "count_small_tick_hit": 263
+    }
   }
 ]

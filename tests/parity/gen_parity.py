@@ -145,7 +145,7 @@ def difficulty_tables(schema, by_mode):
     for mode_id, mode in MODE_NAMES.items():
         entries = schema["difficulty"][str(mode_id)]
         fields = LEADING_FIELDS["difficulty"] + attribute_fields("difficulty", entries)
-        body = [[quote(row["case"]), quote("/" + row["map"].lstrip("/")), quote(",".join(row["mods"]))]
+        body = [[quote(row["case"]), quote("/" + row["map"].lstrip("/")), quote(mods_spec(row["mods"]))]
                 + [number(row["difficulty"][entry["name"]], ctype)
                    for entry, (ctype, _) in zip(entries, fields[3:])]
                 for row in by_mode.get(mode, [])]
@@ -165,7 +165,7 @@ def performance_tables(schema, scored_by_mode):
                      for entry in entries])
         body = []
         for row in scored_by_mode.get(mode, []):
-            values = [quote(row["case"]), quote("/" + row["map"].lstrip("/")), quote(",".join(row["mods"])),
+            values = [quote(row["case"]), quote("/" + row["map"].lstrip("/")), quote(mods_spec(row["mods"])),
                       quote(",".join("%s=%s" % (key, value) for key, value in row["score"].items()))]
             for _name, key, ctype in score_fields:
                 value = score_value(row, key)
@@ -176,6 +176,12 @@ def performance_tables(schema, scored_by_mode):
         tables.append({"struct": mode.title() + "PpRow", "array": mode + "_pp_rows",
                        "fields": fields, "rows": body})
     return tables
+
+
+def mods_spec(mods):
+    return ",".join(mod if isinstance(mod, str)
+                    else mod["acronym"] + "".join(":%s=%s" % (key, value) for key, value in mod["settings"].items())
+                    for mod in mods)
 
 
 def quote(value):

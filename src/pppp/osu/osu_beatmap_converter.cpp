@@ -2,104 +2,17 @@
 // See the LICENCE file in the repository root for full licence text.
 
 #include "pppp/osu/osu_beatmap_converter.h"
+#include "pppp/beatmaps/legacy_hit_object_type.h"
 #include "pppp/osu/mods/osu_mod_hidden.h"
 #include "pppp/osu/mods/osu_mod_random.h"
 #include "pppp/osu/mods/osu_mod_target_practice.h"
 #include "pppp/osu/object/osu_hit_object.h"
 #include "pppp/osu/object/osu_playfield.h"
+#include "pppp/utils/linq/csharp.h"
 #include <algorithm>
 
 namespace pppp { namespace osu {
-    namespace {
-        void add_timing_point(OsuBeatmap& pb, double time, double beat_length, int meter) {
-            const beatmaps::control_points::TimingControlPoint tp(time, beat_length, meter);
-
-            for (size_t i = 0; i < pb.info.timing_points.size(); i++) {
-                if (pb.info.timing_points[i].time == time) {
-                    pb.info.timing_points[i] = tp;
-                    return;
-                }
-                if (pb.info.timing_points[i].time > time) {
-                    pb.info.timing_points.insert(pb.info.timing_points.begin() + static_cast<ptrdiff_t>(i),
-                                                 tp);
-                    return;
-                }
-            }
-            pb.info.timing_points.push_back(tp);
-        }
-
-        void add_effect_point(OsuBeatmap& pb, double time, bool kiai) {
-            if (kiai_at(pb, time) == kiai) {
-                return;
-            }
-
-            const beatmaps::control_points::EffectControlPoint ep(time, kiai);
-
-            for (size_t i = 0; i < pb.info.effect_points.size(); i++) {
-                if (pb.info.effect_points[i].time == time) {
-                    pb.info.effect_points[i] = ep;
-                    return;
-                }
-                if (pb.info.effect_points[i].time > time) {
-                    pb.info.effect_points.insert(pb.info.effect_points.begin() + static_cast<ptrdiff_t>(i),
-                                                 ep);
-                    return;
-                }
-            }
-            pb.info.effect_points.push_back(ep);
-        }
-
-        void flush_timing_group(OsuBeatmap& pb, const std::vector<const beatmaps::TimingPoint*>& group) {
-            if (group.empty()) {
-                return;
-            }
-
-            const beatmaps::TimingPoint* first_timing = 0;
-            const beatmaps::TimingPoint* last_inherited = 0;
-
-            for (size_t i = 0; i < group.size(); i++) {
-                if (group[i]->uninherited) {
-                    if (!first_timing) {
-                        first_timing = group[i];
-                    }
-                } else {
-                    last_inherited = group[i];
-                }
-            }
-
-            if (first_timing) {
-                double bl = first_timing->beat_length;
-                if (bl == bl) {
-                    add_timing_point(pb, first_timing->time, bl,
-                                     first_timing->meter > 0 ? first_timing->meter : 4);
-                }
-            }
-
-            const beatmaps::TimingPoint* effect_source = last_inherited ? last_inherited : first_timing;
-            if (effect_source) {
-                add_effect_point(pb, effect_source->time, (effect_source->effects & 1) != 0);
-            }
-        }
-
-        void build_control_points(OsuBeatmap& pb, const beatmaps::Beatmap& beatmap) {
-            pb.info.timing_points.clear();
-            pb.info.effect_points.clear();
-
-            std::vector<const beatmaps::TimingPoint*> group;
-            double group_time = 0.0;
-
-            for (size_t i = 0; i < beatmap.timing_points.size(); i++) {
-                const beatmaps::TimingPoint* tp = &beatmap.timing_points[i];
-                if (!group.empty() && tp->time != group_time) {
-                    flush_timing_group(pb, group);
-                    group.clear();
-                }
-                group.push_back(tp);
-                group_time = tp->time;
-            }
-            flush_timing_group(pb, group);
-        }
-    } // namespace
+    namespace linq = ::pppp::utils::linq;
 
     Status convert(OsuBeatmap& pb, const beatmaps::Beatmap& beatmap,
                    const beatmaps::ObjectConverted<object::OsuHitObject>& object_converted) {
@@ -116,9 +29,12 @@ namespace pppp { namespace osu {
         for (size_t i = 0; i < beatmap.hit_objects.size(); i++) {
             const beatmaps::HitObject& ho = beatmap.hit_objects[i];
             object::OsuHitObject& o = pb.objects[i];
-            o.type = ho.type;
+            o.type = (ho.type & beatmaps::hold) != 0 && (ho.type & beatmaps::slider) == 0
+                         ? (ho.type & ~static_cast<unsigned>(beatmaps::hold)) | beatmaps::spinner
+                         : ho.type;
             o.time = ho.start_time;
             o.end_time = ho.end_time;
+            o.duration = ho.duration;
             utils::Vector2 raw = ho.position;
             if (ho.type & 8) {
                 raw.x = 256.0f;
@@ -174,7 +90,9 @@ namespace pppp { namespace osu {
             }
         }
 
-        build_control_points(pb, beatmap);
+        beatmaps::control_points::ControlPointInfo original;
+        original.build(beatmap);
+        pb.info = original.deep_clone();
 
         pb.breaks.resize(beatmap.breaks.size());
         for (size_t i = 0; i < beatmap.breaks.size(); i++) {
@@ -238,7 +156,7 @@ namespace pppp { namespace osu {
         return StatusCode::OK;
     }
 
-    Status apply_beatmap_mods(OsuBeatmap& pb, const pppp::mods::Mod* mods, size_t mod_count) {
+    Status apply_beatmap_mods(OsuBeatmap& pb, pppp::mods::Mod* mods, size_t mod_count) {
         for (size_t m = 0; m < mod_count; m++) {
             switch (mods[m].id) {
             case pppp::mods::MOD_HD:
@@ -275,6 +193,14 @@ namespace pppp { namespace osu {
                     return rc;
                 }
             } break;
+            case pppp::mods::MOD_WU:
+            case pppp::mods::MOD_WD:
+                pppp::mods::mod_time_ramp_apply_to_beatmap(
+                    &mods[m], !pb.objects.empty(), pb.objects.empty() ? 0.0 : pb.objects[0].time,
+                    pb.objects.empty()
+                        ? 0.0
+                        : linq::from(pb.objects).max(linq::bind(&object::OsuHitObject::end_time, linq::_1)));
+                break;
             default: break;
             }
         }

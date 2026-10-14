@@ -43,6 +43,12 @@ namespace pppp { namespace utils {
         return smoothstep(x, 0.0, width);
     }
 
+    double smoothstep_bell_curve(double x) {
+        x = 0.5 - std::fabs(x - 0.5);
+        x = math::clamp(x * 2.0, 0.0, 1.0);
+        return x * x * (3.0 - 2.0 * x);
+    }
+
     double smoothstep(double x, double start, double end_val) {
         x = math::clamp((x - start) / (end_val - start), 0.0, 1.0);
         return x * x * (3.0 - 2.0 * x);

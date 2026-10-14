@@ -2,18 +2,30 @@
 // See the LICENCE file in the repository root for full licence text.
 
 #include "pppp/taiko/taiko_beatmap.h"
+#include "pppp/mods/mod_setting_value.h"
 #include "pppp/taiko/mods/taiko_mod_random.h"
 #include "pppp/taiko/mods/taiko_mod_swap.h"
 #include "pppp/taiko/taiko_beatmap_converter.h"
+#include "pppp/utils/linq/csharp.h"
+#include "pppp/utils/math/csharp.h"
 #include "pppp/utils/precision.h"
+#include "pppp/utils/sort/csharp.h"
 #include <algorithm>
 #include <cmath>
 
 namespace pppp { namespace taiko {
     namespace control_points = ::pppp::beatmaps::control_points;
+    namespace linq = ::pppp::utils::linq;
+    namespace math = ::pppp::utils::math;
+    namespace sort = ::pppp::utils::sort;
 
     namespace {
-        double round_away_from_zero(double x) { return x >= 0.0 ? std::floor(x + 0.5) : std::ceil(x - 0.5); }
+        double round_away_from_zero(double value) {
+            // manually fold BitDecrement(0.5)
+            double sum = value + (value < 0.0 || (value == 0.0 && 1.0 / value < 0.0) ? -0.49999999999999994
+                                                                                     : 0.49999999999999994);
+            return sum < 0.0 ? std::ceil(sum) : std::floor(sum);
+        }
 
         double closest_positive_snapped_time(double point_time, double point_beat_length, double time,
                                              int beat_divisor) {
@@ -32,7 +44,7 @@ namespace pppp { namespace taiko {
         int closest_beat_divisor(const TaikoBeatmap& pb, double time) {
             const control_points::TimingControlPoint* point = pb.info.timing_point_at(time);
             double point_time = point ? point->time : 0.0;
-            double point_beat_length = point ? point->beat_length : 1000.0;
+            double point_beat_length = point ? point->beat_length() : 1000.0;
 
             // getClosestSnappedTime() only returns positive time values.
             // due to that, if time is allowed to be negative, the loop lower below could return bogus results
@@ -66,6 +78,49 @@ namespace pppp { namespace taiko {
             return closest_beat_divisor(pb, point_time + (next_time - current_time));
         }
 
+        void process_pattern(TaikoBeatmap& pb, const std::vector<int>& hits, std::vector<bool>& removed,
+                             int base_rhythm, int adjusted_rhythm, int pattern_start_index,
+                             int pattern_end_index) {
+            // Iterate through the pattern
+            for (int j = pattern_start_index; j < pattern_end_index; j++) {
+                int index_in_pattern = j - pattern_start_index;
+
+                switch (base_rhythm) {
+                // 1/8: Remove every second note
+                case 8: {
+                    if (index_in_pattern % 2 == 1) {
+                        removed[hits[j]] = true;
+                    }
+
+                    break;
+                }
+
+                // 1/6 and 1/3: Remove every second note and adjust time of every third
+                case 6:
+                case 3: {
+                    if (index_in_pattern % 3 == 1) {
+                        removed[hits[j]] = true;
+                    } else if (index_in_pattern % 3 == 2) {
+                        const control_points::TimingControlPoint* point =
+                            pb.info.timing_point_at(pb.objects[hits[j]].time);
+                        pb.objects[hits[j]].time =
+                            pb.objects[hits[j - 2]].time +
+                            (point ? point->beat_length() : control_points::DEFAULT_BEAT_LENGTH) /
+                                adjusted_rhythm;
+                    }
+
+                    break;
+                }
+
+                default: break;
+                }
+            }
+        }
+
+        int compare_start_time(const TaikoHitObject& a, const TaikoHitObject& b) {
+            return math::compare_to(a.time, b.time);
+        }
+
         void apply_simplified_rhythm(TaikoBeatmap& pb, bool one_third, bool one_sixth, bool one_eighth) {
             std::vector<int> hits;
             for (size_t i = 0; i < pb.objects.size(); i++) {
@@ -78,83 +133,51 @@ namespace pppp { namespace taiko {
                 return;
             }
 
-            int conversions[3][2];
-            int conversion_count = 0;
+            std::vector<std::pair<int, int> > conversions;
+
             if (one_eighth) {
-                conversions[conversion_count][0] = 8;
-                conversions[conversion_count][1] = 4;
-                conversion_count++;
+                conversions.push_back(std::make_pair(8, 4));
             }
             if (one_sixth) {
-                conversions[conversion_count][0] = 6;
-                conversions[conversion_count][1] = 4;
-                conversion_count++;
+                conversions.push_back(std::make_pair(6, 4));
             }
             if (one_third) {
-                conversions[conversion_count][0] = 3;
-                conversions[conversion_count][1] = 2;
-                conversion_count++;
+                conversions.push_back(std::make_pair(3, 2));
             }
 
             std::vector<bool> removed(pb.objects.size(), false);
             bool in_pattern = false;
 
-            for (int c = 0; c < conversion_count; c++) {
-                int base_rhythm = conversions[c][0];
-                int adjusted_rhythm = conversions[c][1];
-                int pattern_start = 0;
+            for (size_t c = 0; c < conversions.size(); c++) {
+                int base_rhythm = conversions[c].first;
+                int adjusted_rhythm = conversions[c].second;
+                int pattern_start_index = 0;
 
-                for (size_t i = 1; i <= hits.size(); i++) {
-                    int pattern_end = -1;
+                for (int i = 1; i < static_cast<int>(hits.size()); i++) {
+                    double snap_value =
+                        snap_between_notes(pb, pb.objects[hits[i - 1]].time, pb.objects[hits[i]].time);
 
-                    if (i < hits.size()) {
-                        int snap =
-                            snap_between_notes(pb, pb.objects[hits[i - 1]].time, pb.objects[hits[i]].time);
-                        if (in_pattern) {
-                            // pattern continues
-                            if (snap == base_rhythm) {
-                                continue;
-                            }
-                            in_pattern = false;
-                            pattern_end = static_cast<int>(i);
-                        } else {
-                            if (snap == base_rhythm) {
-                                pattern_start = static_cast<int>(i) - 1;
-                                in_pattern = true;
-                            }
+                    if (in_pattern) {
+                        // pattern continues
+                        if (snap_value == base_rhythm) {
                             continue;
                         }
+
+                        in_pattern = false;
+                        process_pattern(pb, hits, removed, base_rhythm, adjusted_rhythm, pattern_start_index,
+                                        i);
                     } else {
-                        // Process the last pattern if we reached the end of the beatmap and are still in a
-                        // pattern.
-                        if (!in_pattern) {
-                            break;
-                        }
-                        pattern_end = static_cast<int>(hits.size());
-                    }
-
-                    // Iterate through the pattern
-                    for (int j = pattern_start; j < pattern_end; j++) {
-                        int index_in_pattern = j - pattern_start;
-
-                        // 1/8: Remove every second note
-                        if (base_rhythm == 8) {
-                            if (index_in_pattern % 2 == 1) {
-                                removed[hits[j]] = true;
-                            }
-                        } else {
-                            // 1/6 and 1/3: Remove every second note and adjust time of every third
-                            if (index_in_pattern % 3 == 1) {
-                                removed[hits[j]] = true;
-                            } else if (index_in_pattern % 3 == 2) {
-                                const control_points::TimingControlPoint* point =
-                                    pb.info.timing_point_at(pb.objects[hits[j]].time);
-                                double beat_length = point ? point->beat_length : 1000.0;
-                                pb.objects[hits[j]].time =
-                                    pb.objects[hits[j - 2]].time + beat_length / adjusted_rhythm;
-                            }
+                        if (snap_value == base_rhythm) {
+                            pattern_start_index = i - 1;
+                            in_pattern = true;
                         }
                     }
+                }
+
+                // Process the last pattern if we reached the end of the beatmap and are still in a pattern.
+                if (in_pattern) {
+                    process_pattern(pb, hits, removed, base_rhythm, adjusted_rhythm, pattern_start_index,
+                                    static_cast<int>(hits.size()));
                 }
             }
 
@@ -167,12 +190,10 @@ namespace pppp { namespace taiko {
             }
             pb.objects.swap(kept);
 
-            std::stable_sort(pb.objects.begin(), pb.objects.end(), hit_object_less);
+            sort::introspective_sort(pb.objects, compare_start_time);
         }
 
     } // namespace
-
-    bool hit_object_less(const TaikoHitObject& a, const TaikoHitObject& b) { return a.time < b.time; }
 
     ModdedDifficulty modded_difficulty(const beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
                                        size_t mod_count) {
@@ -184,26 +205,33 @@ namespace pppp { namespace taiko {
         for (size_t i = 0; i < mod_count; i++) {
             switch (mods[i].id) {
             case pppp::mods::MOD_EZ:
-                out.drain_rate = utils::f32(out.drain_rate * pppp::mods::EASY_ADJUST_RATIO);
-                out.overall_difficulty = utils::f32(out.overall_difficulty * pppp::mods::EASY_ADJUST_RATIO);
+                out.drain_rate *= pppp::mods::EASY_ADJUST_RATIO;
+
+                out.overall_difficulty *= pppp::mods::EASY_ADJUST_RATIO;
                 out.slider_multiplier *= EASY_SLIDER_MULTIPLIER;
                 break;
-            case pppp::mods::MOD_HR: {
-                double ratio = pppp::mods::HARD_ROCK_ADJUST_RATIO;
-                out.drain_rate = std::min(utils::f32(out.drain_rate * ratio), 10.0);
-                out.overall_difficulty = std::min(utils::f32(out.overall_difficulty * ratio), 10.0);
+            case pppp::mods::MOD_HR:
+                out.drain_rate = std::min(out.drain_rate * pppp::mods::HARD_ROCK_ADJUST_RATIO, 10.0f);
+
+                out.overall_difficulty =
+                    std::min(out.overall_difficulty * pppp::mods::HARD_ROCK_ADJUST_RATIO, 10.0f);
                 out.slider_multiplier *= HARD_ROCK_SLIDER_MULTIPLIER;
                 break;
-            }
             case pppp::mods::MOD_DA:
-                if (mods[i].difficulty_adjust.drain_rate.value() >= 0.0) {
-                    out.drain_rate = mods[i].difficulty_adjust.drain_rate.value();
+                if (mods[i].difficulty_adjust.drain_rate.has_value()) {
+                    out.drain_rate =
+                        pppp::mods::clamp_to_extended_limits(mods[i].difficulty_adjust.drain_rate.value(), 0,
+                                                             10, nonstd::optional<float>(), 11.0f);
                 }
-                if (mods[i].difficulty_adjust.overall_difficulty.value() >= 0.0) {
-                    out.overall_difficulty = mods[i].difficulty_adjust.overall_difficulty.value();
+                if (mods[i].difficulty_adjust.overall_difficulty.has_value()) {
+                    out.overall_difficulty = pppp::mods::clamp_to_extended_limits(
+                        mods[i].difficulty_adjust.overall_difficulty.value(), 0, 10,
+                        nonstd::optional<float>(), 11.0f);
                 }
-                if (mods[i].difficulty_adjust.scroll_speed.value() >= 0.0) {
-                    out.slider_multiplier *= mods[i].difficulty_adjust.scroll_speed.value();
+                if (mods[i].difficulty_adjust.scroll_speed.has_value()) {
+                    out.slider_multiplier *= pppp::mods::clamp_to_extended_limits(
+                        mods[i].difficulty_adjust.scroll_speed.value(), 0.25f, 4, nonstd::optional<float>(),
+                        nonstd::optional<float>());
                 }
                 break;
             default: break;
@@ -222,37 +250,50 @@ namespace pppp { namespace taiko {
 
     double beat_length_at(const TaikoBeatmap& pb, double time) {
         const control_points::TimingControlPoint* point = pb.info.timing_point_at(time);
-        return point != 0 ? point->beat_length : control_points::DEFAULT_BEAT_LENGTH;
+        return point != 0 ? point->beat_length() : control_points::DEFAULT_BEAT_LENGTH;
     }
 
     double scroll_speed_at(const TaikoBeatmap& pb, double time) {
         const control_points::EffectControlPoint* point = pb.info.effect_point_at(time);
-        return point != 0 ? point->clamped_scroll_speed() : 1.0;
+        return point != 0 ? point->scroll_speed() : 1.0;
     }
 
     Status build(TaikoBeatmap& pb, const beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
                  size_t mod_count, const beatmaps::ObjectConverted<TaikoHitObject>& object_converted) {
         convert(pb, beatmap, object_converted);
-        pb.clock_rate = pppp::mods::mod_calculate_rate(mods, mod_count);
 
         ModdedDifficulty modded = modded_difficulty(beatmap, mods, mod_count);
         pb.overall_difficulty = modded.overall_difficulty;
         pb.drain_rate = modded.drain_rate;
         pb.slider_multiplier = modded.slider_multiplier;
 
-        for (size_t i = 0; i < mod_count; i++) {
-            switch (mods[i].id) {
-            case pppp::mods::MOD_RD: mods::apply_random(pb, mods[i].random.seed.value()); break;
+        std::vector<pppp::mods::Mod> playable_mods(mods, mods + mod_count);
+        for (size_t i = 0; i < playable_mods.size(); i++) {
+            switch (playable_mods[i].id) {
+            case pppp::mods::MOD_RD: mods::apply_random(pb, playable_mods[i].random.seed.value()); break;
             case pppp::mods::MOD_SW: mods::apply_swap(pb); break;
             case pppp::mods::MOD_SR:
-                apply_simplified_rhythm(pb, mods[i].simplified_rhythm.one_third_conversion,
-                                        mods[i].simplified_rhythm.one_sixth_conversion,
-                                        mods[i].simplified_rhythm.one_eighth_conversion);
+                apply_simplified_rhythm(pb, playable_mods[i].simplified_rhythm.one_third_conversion,
+                                        playable_mods[i].simplified_rhythm.one_sixth_conversion,
+                                        playable_mods[i].simplified_rhythm.one_eighth_conversion);
                 break;
+            case pppp::mods::MOD_WU:
+            case pppp::mods::MOD_WD: {
+                std::vector<double> end_times;
+                for (size_t o = 0; o < pb.objects.size(); o++) {
+                    end_times.push_back(pb.objects[o].time + pb.objects[o].duration);
+                }
+                pppp::mods::mod_time_ramp_apply_to_beatmap(
+                    &playable_mods[i], !pb.objects.empty(), pb.objects.empty() ? 0.0 : pb.objects[0].time,
+                    end_times.empty() ? 0.0 : linq::from(end_times).max());
+                break;
+            }
             default: break;
             }
         }
 
+        pb.clock_rate = pppp::mods::mod_calculate_rate(playable_mods.empty() ? 0 : &playable_mods[0],
+                                                       playable_mods.size());
         return StatusCode::OK;
     }
 

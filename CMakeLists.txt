@@ -63,6 +63,7 @@ add_library(pppp_utils
   src/pppp/utils/difficulty_calculation_utils.cpp
   src/pppp/utils/difficulty_range.cpp
   src/pppp/utils/math/csharp.cpp
+  src/pppp/utils/math/decimal.cpp
   src/pppp/utils/math/legacy_score.cpp
   src/pppp/utils/math/uint128.cpp
   src/pppp/utils/random/csharp.cpp
@@ -94,6 +95,7 @@ target_sources(pppp_beatmaps PUBLIC FILE_SET HEADERS
 add_library(pppp_mods
   src/pppp/mods/mod.cpp
   src/pppp/mods/mod_legacy.cpp
+  src/pppp/mods/mod_setting_value.cpp
   src/pppp/mods/mod_settings.cpp
   src/pppp/mods/mods.cpp)
 add_library(pppp::mods ALIAS pppp_mods)
@@ -366,9 +368,7 @@ add_library(pppp::pppp ALIAS pppp)
 set_target_properties(pppp PROPERTIES EXPORT_NAME pppp)
 target_link_libraries(pppp INTERFACE pppp_api)
 
-# nonstd headers (they install into include/nonstd; their licences are named apart). optional-bare
-# backs pppp/config.h and the parser; variant-lite backs pppp/config.h; span/string-view back the
-# installed fosu headers alone, so they follow PPPP_WITH_FOSU.
+# nonstd
 if(PPPP_INSTALL)
   install(DIRECTORY third_party/optional-bare/include/nonstd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
   install(DIRECTORY third_party/variant-lite/include/nonstd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
@@ -450,9 +450,6 @@ if(PPPP_INSTALL)
     pppp_taiko_base pppp_taiko_difficulty pppp_taiko_performance pppp_taiko)
   if(PPPP_WITH_FOSU)
     list(APPEND PPPP_INSTALL_TARGETS pppp_fosu fosu)
-    # The loader anchors its engine search on the consumer executable (the core is static), so an
-    # installed consumer must copy fosu_engine_* beside its own binary; this rule puts it in
-    # ${CMAKE_INSTALL_LIBDIR} for packaging. D12 owns the bindings' engine placement.
     if(TARGET fosu_engine_avx2)
       list(APPEND PPPP_INSTALL_TARGETS fosu_engine_avx2)
     elseif(TARGET fosu_engine_neon)

@@ -2,8 +2,8 @@
 // See the LICENCE file in the repository root for full licence text.
 
 #include "pppp/mods/mod.h"
+#include "pppp/mods/mod_setting_value.h"
 #include "pppp/utils/math/csharp.h"
-#include "pppp/utils/precision.h"
 #include <algorithm>
 #include <cstring>
 
@@ -226,21 +226,45 @@ namespace pppp { namespace mods {
         return -1;
     }
 
+    namespace {
+        double time_ramp_apply_to_rate(const Mod& mod, double time, double rate) {
+            double amount = (time - mod.time_ramp.begin_ramp_time) /
+                            std::max(1.0, mod.time_ramp.final_rate_time - mod.time_ramp.begin_ramp_time);
+            double ramp =
+                mod.variable_rate.initial_rate +
+                (mod.variable_rate.final_rate - mod.variable_rate.initial_rate) * math::clamp(amount, 0, 1);
+
+            // round the end result to match SpeedChange's precision, in case this is called
+            // externally.
+            return rate * math::round2_to_even(ramp);
+        }
+
+    } // namespace
+
     double mod_calculate_rate(const Mod* mods, size_t mod_count) {
         double rate = 1.0;
         for (size_t i = 0; i < mod_count; i++) {
             switch (mods[i].id) {
             case MOD_DT:
-            case MOD_NC: rate *= mods[i].rate.speed_change > 0.0 ? mods[i].rate.speed_change : 1.5; break;
+            case MOD_NC:
             case MOD_HT:
-            case MOD_DC: rate *= mods[i].rate.speed_change > 0.0 ? mods[i].rate.speed_change : 0.75; break;
+            case MOD_DC: rate *= mods[i].rate.speed_change; break;
             case MOD_WU:
-            case MOD_WD: rate *= math::round2_to_even(mods[i].variable_rate.initial_rate); break;
+            case MOD_WD: rate = time_ramp_apply_to_rate(mods[i], 0, rate); break;
             case MOD_AS: rate *= mods[i].variable_rate.initial_rate; break;
             default: break;
             }
         }
         return rate;
+    }
+
+    void mod_time_ramp_apply_to_beatmap(Mod* mod, bool any_objects, double first_object_start,
+                                        double last_object_end) {
+        double first_object = any_objects ? first_object_start : 0;
+        double last_object = any_objects ? last_object_end : 0;
+
+        mod->time_ramp.begin_ramp_time = first_object;
+        mod->time_ramp.final_rate_time = first_object + FINAL_RATE_PROGRESS * (last_object - first_object);
     }
 
     void mod_apply_to_difficulty(const Mod* mods, size_t mod_count, DifficultySettings* settings) {
@@ -249,47 +273,46 @@ namespace pppp { namespace mods {
         }
 
         for (size_t i = 0; i < mod_count; i++) {
-            if (mods[i].id != MOD_DA) {
-                continue;
-            }
-            const DifficultyAdjustSettings& st = mods[i].difficulty_adjust;
-            if (st.circle_size.value() >= 0.0) {
-                settings->circle_size = utils::f32(st.circle_size.value());
-            }
-            if (st.approach_rate.value() >= 0.0) {
-                settings->approach_rate = utils::f32(st.approach_rate.value());
-            }
-            if (st.drain_rate.value() >= 0.0) {
-                settings->drain_rate = utils::f32(st.drain_rate.value());
-            }
-            if (st.overall_difficulty.value() >= 0.0) {
-                settings->overall_difficulty = utils::f32(st.overall_difficulty.value());
-            }
-        }
-
-        for (size_t i = 0; i < mod_count; i++) {
             switch (mods[i].id) {
+            case MOD_DA: {
+                const DifficultyAdjustSettings& st = mods[i].difficulty_adjust;
+                if (st.drain_rate.has_value()) {
+                    settings->drain_rate = clamp_to_extended_limits(st.drain_rate.value(), 0, 10,
+                                                                    nonstd::optional<float>(), 11.0f);
+                }
+                if (st.overall_difficulty.has_value()) {
+                    settings->overall_difficulty = clamp_to_extended_limits(
+                        st.overall_difficulty.value(), 0, 10, nonstd::optional<float>(), 11.0f);
+                }
+                if (st.circle_size.has_value()) {
+                    settings->circle_size = clamp_to_extended_limits(st.circle_size.value(), 0, 10,
+                                                                     nonstd::optional<float>(), 11.0f);
+                }
+                if (st.approach_rate.has_value()) {
+                    settings->approach_rate =
+                        clamp_to_extended_limits(st.approach_rate.value(), 0, 10, -10.0f, 11.0f);
+                }
+                break;
+            }
             case MOD_HR:
-                settings->drain_rate =
-                    std::min(utils::f32(utils::f32(settings->drain_rate) * HARD_ROCK_ADJUST_RATIO), 10.0);
-                settings->overall_difficulty = std::min(
-                    utils::f32(utils::f32(settings->overall_difficulty) * HARD_ROCK_ADJUST_RATIO), 10.0);
-                // CS uses a custom 1.3 ratio.
+                settings->drain_rate = std::min(settings->drain_rate * HARD_ROCK_ADJUST_RATIO, 10.0f);
+
+                settings->overall_difficulty =
+                    std::min(settings->overall_difficulty * HARD_ROCK_ADJUST_RATIO, 10.0f);
                 settings->circle_size =
-                    std::min(utils::f32(utils::f32(settings->circle_size) * 1.2999999523162842), 10.0);
-                settings->approach_rate =
-                    std::min(utils::f32(utils::f32(settings->approach_rate) * HARD_ROCK_ADJUST_RATIO), 10.0);
+                    std::min(settings->circle_size * 1.3f, 10.0f); // CS uses a custom 1.3 ratio.
+                settings->approach_rate = std::min(settings->approach_rate * HARD_ROCK_ADJUST_RATIO, 10.0f);
                 break;
             case MOD_TP:
                 // Decrease AR to increase preempt time
-                settings->approach_rate = utils::f32(utils::f32(settings->approach_rate) * 0.5);
+                settings->approach_rate *= 0.5f;
                 break;
             case MOD_EZ:
-                settings->circle_size = utils::f32(utils::f32(settings->circle_size) * EASY_ADJUST_RATIO);
-                settings->approach_rate = utils::f32(utils::f32(settings->approach_rate) * EASY_ADJUST_RATIO);
-                settings->drain_rate = utils::f32(utils::f32(settings->drain_rate) * EASY_ADJUST_RATIO);
-                settings->overall_difficulty =
-                    utils::f32(utils::f32(settings->overall_difficulty) * EASY_ADJUST_RATIO);
+                settings->circle_size *= EASY_ADJUST_RATIO;
+                settings->approach_rate *= EASY_ADJUST_RATIO;
+                settings->drain_rate *= EASY_ADJUST_RATIO;
+
+                settings->overall_difficulty *= EASY_ADJUST_RATIO;
                 break;
             default: break;
             }
@@ -334,17 +357,5 @@ namespace pppp { namespace mods {
             }
         }
         return 0;
-    }
-
-    void mod_sort(Mod* mods, size_t mod_count) {
-        for (size_t i = 1; i < mod_count; i++) {
-            const Mod key = mods[i];
-            size_t j = i;
-            while (j > 0 && mods[j - 1].id > key.id) {
-                mods[j] = mods[j - 1];
-                j--;
-            }
-            mods[j] = key;
-        }
     }
 }} // namespace pppp::mods

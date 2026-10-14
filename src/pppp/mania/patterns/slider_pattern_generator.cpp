@@ -24,11 +24,10 @@ namespace pppp { namespace mania { namespace patterns {
           convert_type(PATTERN_NONE) {
         const control_points::TimingControlPoint* timing_point = info.timing_point_at(hit_object.start_time);
         const double timing_beat_length =
-            timing_point != 0 ? timing_point->beat_length : control_points::DEFAULT_BEAT_LENGTH;
+            timing_point != 0 ? timing_point->beat_length() : control_points::DEFAULT_BEAT_LENGTH;
         const control_points::DifficultyControlPoint* difficulty_point =
             info.difficulty_point_at(hit_object.start_time);
-        const double slider_velocity =
-            difficulty_point != 0 ? difficulty_point->clamped_slider_velocity() : 1.0;
+        const double slider_velocity = difficulty_point != 0 ? difficulty_point->slider_velocity() : 1.0;
 
         double beat_length = timing_beat_length;
         const double slider_velocity_as_beat_length = -100.0 / slider_velocity;
@@ -72,7 +71,7 @@ namespace pppp { namespace mania { namespace patterns {
         if (time == note_end) {
             pattern.add(make_note(column, time));
         } else {
-            pattern.add(make_hold(column, time, note_end));
+            pattern.add(make_hold(column, time, note_end - time));
         }
     }
 
@@ -283,8 +282,8 @@ namespace pppp { namespace mania { namespace patterns {
 
         const int column_repeat = std::min(span_count, total_columns);
 
-        // Due to integer rounding, this is not guaranteed to be the same as the end time (the
-        // class-level variable).
+        // Due to integer rounding, this is not guaranteed to be the same as end_time (the class-level
+        // variable).
         const int end = time + segment_duration * span_count;
 
         int next_column = get_column(static_cast<float>(hit_object.position.x), true);
@@ -447,23 +446,23 @@ namespace pppp { namespace mania { namespace patterns {
         }
 
         // We need to split the intermediate pattern into two new patterns:
-        // 1. A pattern containing all objects that do not end at our end time.
-        // 2. A pattern containing all objects that end at our end time. This will be used for
-        // further pattern generation.
+        // 1. A pattern containing all objects that do not end at our end_time.
+        // 2. A pattern containing all objects that end at our end_time. This will be used for further pattern
+        // generation.
         Pattern intermediate;
-        Pattern end_timepattern;
+        Pattern end_time_pattern;
 
         for (size_t i = 0; i < original.hit_objects.size(); i++) {
             const ManiaHitObject& obj = original.hit_objects[i];
 
-            if (end_time != static_cast<int>(math::round_half_even(obj.end_time))) {
+            if (end_time != static_cast<int>(math::round_half_even(obj.end_time()))) {
                 intermediate.add(obj);
             } else {
-                end_timepattern.add(obj);
+                end_time_pattern.add(obj);
             }
         }
 
         out.push_back(intermediate);
-        out.push_back(end_timepattern);
+        out.push_back(end_time_pattern);
     }
 }}} // namespace pppp::mania::patterns

@@ -37,7 +37,7 @@ namespace pppp { namespace mania { namespace mods {
 
                 // Beat length at the end of the hold note.
                 const double beat_length = (info.timing_point_at(locations[i + 1]) != 0
-                                                ? info.timing_point_at(locations[i + 1])->beat_length
+                                                ? info.timing_point_at(locations[i + 1])->beat_length()
                                                 : control_points::DEFAULT_BEAT_LENGTH);
 
                 // Decrease the duration by at most a 1/4 beat to ensure there's no instantaneous notes.
@@ -46,7 +46,7 @@ namespace pppp { namespace mania { namespace mods {
                 ManiaHitObject hold;
                 hold.column = column.key;
                 hold.start_time = locations[i];
-                hold.end_time = locations[i] + duration;
+                hold.duration = duration;
                 hold.hold = true;
                 new_column_objects.push_back(hold);
             }

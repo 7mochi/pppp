@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <climits>
 #include <cmath>
+#include <deque>
 
 namespace pppp { namespace osu { namespace difficulty { namespace evaluators { namespace speed {
     namespace math = ::pppp::utils::math;
@@ -55,12 +56,17 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
 
             // Take only the fractional part of the value since we're only interested in punishing
             // multiples
-            double delta_difference_fraction = delta_difference_ratio - std::floor(delta_difference_ratio);
+            double delta_difference_fraction =
+                delta_difference_ratio - math::truncate(delta_difference_ratio);
 
             return 1.0 + rhythm_ratio_difficulty_multiplier *
-                             std::min(0.5, utils::smoothstep_bell_curve(delta_difference_fraction, 0.5, 0.5));
+                             std::min(0.5, utils::smoothstep_bell_curve(delta_difference_fraction));
         }
 
+        Island* new_island(std::deque<Island>& allocated_islands, int delta) {
+            allocated_islands.push_back(Island(delta));
+            return &allocated_islands.back();
+        }
     } // namespace
 
     double RhythmEvaluator::evaluate_difficulty_of(const preprocessing::OsuDifficultyHitObject& current) {
@@ -75,9 +81,11 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
         double rhythm_complexity_sum = 0.0;
         double delta_difference_epsilon = current.hit_window_great * 0.3;
 
-        Island island(INT_MAX);
-        Island previous_island(INT_MAX);
-        std::vector<Island> islands;
+        std::deque<Island> allocated_islands;
+        Island* island = new_island(allocated_islands, INT_MAX);
+        Island* previous_island = new_island(allocated_islands, INT_MAX);
+
+        std::vector<Island*> islands;
 
         double start_difficulty =
             0.0; // store the difficulty of the current start of an island to buff for tighter rhythms
@@ -124,8 +132,8 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
 
             // Make sure to always have the current island initialised - if we don't do it here it will
             // only initialise on the next rhythm change
-            if (island.delta == INT_MAX) {
-                island = Island(static_cast<int>(curr_delta));
+            if (island->delta == INT_MAX) {
+                island = new_island(allocated_islands, static_cast<int>(curr_delta));
             }
 
             // calculate how much current delta difference deserves a rhythm bonus
@@ -164,7 +172,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
 
             if (delta_difference < delta_difference_epsilon) {
                 // island is still progressing
-                island.add_delta(static_cast<int>(curr_delta));
+                island->add_delta(static_cast<int>(curr_delta));
             }
 
             if (first_delta_switch) {
@@ -175,7 +183,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
                     }
 
                     // repeated island polarity (2 -> 4, 3 -> 5)
-                    if (island.is_similar_polarity(previous_island, delta_difference_epsilon)) {
+                    if (island->is_similar_polarity(*previous_island, delta_difference_epsilon)) {
                         effective_difficulty *= 0.5;
                     }
 
@@ -189,7 +197,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
                     // repeated island size (ex: triplet -> triplet)
                     // TODO: remove this nerf since its staying here only for balancing purposes because
                     // of the flawed ratio calculation
-                    if (previous_island.delta_count == island.delta_count) {
+                    if (previous_island->delta_count == island->delta_count) {
                         effective_difficulty *= 0.5;
                     }
 
@@ -202,32 +210,32 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
                     bool found = false;
 
                     for (size_t j = 0; j < islands.size(); j++) {
-                        if (islands[j].almost_equals(island, delta_difference_epsilon)) {
+                        if (islands[j]->almost_equals(*island, delta_difference_epsilon)) {
                             // only increase island occurrences if they're going one after another
-                            if (previous_island.almost_equals(island, delta_difference_epsilon)) {
-                                islands[j].occurrences++;
+                            if (previous_island->almost_equals(*island, delta_difference_epsilon)) {
+                                islands[j]->occurrences++;
                             }
 
                             // repeated island (ex: triplet -> triplet)
                             double power =
-                                utils::logistic(static_cast<double>(island.delta), 58.33, 0.24, 2.75);
-                            effective_difficulty *= std::min(3.0 / islands[j].occurrences,
-                                                             utils::pow(1.0 / islands[j].occurrences, power));
+                                utils::logistic(static_cast<double>(island->delta), 58.33, 0.24, 2.75);
+                            effective_difficulty *=
+                                std::min(3.0 / islands[j]->occurrences,
+                                         utils::pow(1.0 / islands[j]->occurrences, power));
 
                             found = true;
                             break;
                         }
                     }
 
-                    if (!found && island.delta_count > 0) {
+                    if (!found && island->delta_count > 0) {
                         islands.push_back(island);
                     }
 
                     // scale down the difficulty if the object is double-tappable
-                    effective_difficulty *=
-                        1.0 - calculate_double_tap_feasibility(*prev_obj, *curr_obj) * 0.75;
+                    effective_difficulty *= 1.0 - prev_obj->calculate_double_tap_feasibility(curr_obj) * 0.75;
 
-                    if (island.delta_count > 1) {
+                    if (island->delta_count > 1) {
                         rhythm_complexity_sum +=
                             std::sqrt(effective_difficulty * start_difficulty) * curr_historical_decay;
                     } else {
@@ -244,7 +252,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
                     }
 
                     previous_island = island;
-                    island = Island(static_cast<int>(curr_delta));
+                    island = new_island(allocated_islands, static_cast<int>(curr_delta));
                 }
             } else if (prev_delta > curr_delta + delta_difference_epsilon) { // we're speeding up
                 // Begin counting island until we change speed again.
@@ -264,7 +272,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
 
                 start_difficulty = effective_difficulty;
 
-                island = Island(static_cast<int>(curr_delta));
+                island = new_island(allocated_islands, static_cast<int>(curr_delta));
             }
 
             prev_prev_obj = prev_obj;
@@ -272,7 +280,7 @@ namespace pppp { namespace osu { namespace difficulty { namespace evaluators { n
         }
 
         // If the current island is long we don't want the sum to have as big of an effect
-        rhythm_complexity_sum *= utils::reverse_lerp(static_cast<double>(island.delta_count), 22, 3);
+        rhythm_complexity_sum *= utils::reverse_lerp(static_cast<double>(island->delta_count), 22, 3);
 
         return std::sqrt(4.0 + rhythm_complexity_sum * rhythm_overall_multiplier) /
                2.0; // produces multiplier that can be applied to strain. range [1, infinity) (not really

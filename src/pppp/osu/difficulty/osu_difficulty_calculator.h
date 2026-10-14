@@ -21,6 +21,8 @@ namespace pppp { namespace osu { namespace difficulty {
                                       const pppp::beatmaps::Beatmap& beatmap, const pppp::mods::Mod* mods,
                                       size_t mod_count);
 
+    double sum_cognition_difficulty(double reading, double flashlight);
+
     Status calculate_strains(OsuStrains& out, const pppp::beatmaps::Beatmap& beatmap,
                              const pppp::mods::Mod* mods, size_t mod_count);
 }}} // namespace pppp::osu::difficulty

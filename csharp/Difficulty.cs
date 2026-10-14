@@ -106,7 +106,7 @@ namespace Pppp {
                 options.clock_rate = ClockRate.Value;
                 options.has_clock_rate = 1;
             }
-            options.mods = Native.CreateMods(Mods);
+            options.mods = Native.CreateMods(Mods, Ruleset.HasValue ? (int)Ruleset.Value : beatmap.Mode);
             return options;
         }
     }

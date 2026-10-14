@@ -121,7 +121,7 @@ namespace pppp { namespace mania { namespace difficulty {
         for (size_t i = 0; i < pb.objects.size(); i++) {
             progressive.objects.push_back(pb.objects[i]);
 
-            while (current < dho_list.size() && sorted[current + 1].end_time <= pb.objects[i].end_time) {
+            while (current < dho_list.size() && sorted[current + 1].end_time() <= pb.objects[i].end_time()) {
                 strain.process(dho_list[current]);
 
                 current++;
@@ -129,7 +129,7 @@ namespace pppp { namespace mania { namespace difficulty {
 
             ManiaDifficultyAttributes step;
             create_difficulty_attributes(step, progressive, strain);
-            times.push_back(pb.objects[i].end_time);
+            times.push_back(pb.objects[i].end_time());
             attributes.push_back(step);
         }
 

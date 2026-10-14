@@ -5,8 +5,8 @@
 #include "pppp/fruits/catch_beatmap_converter.h"
 #include "pppp/fruits/catch_beatmap_processor.h"
 #include "pppp/fruits/mods/catch_mod_mirror.h"
+#include "pppp/mods/mod_setting_value.h"
 #include "pppp/utils/linq/csharp.h"
-#include "pppp/utils/precision.h"
 #include <algorithm>
 
 namespace pppp { namespace fruits {
@@ -30,11 +30,12 @@ namespace pppp { namespace fruits {
     }
 
     void palpable_objects(std::vector<object::CatchHitObject*>& out, CatchBeatmap& pb) {
-        // We want to only consider fruits that contribute to the combo.
         std::vector<object::CatchHitObject*> objects =
             linq::from(pb.all_objects)
                 .where(linq::bind(&object::CatchHitObject::kind, linq::_1) == object::OBJECT_FRUIT ||
-                       linq::bind(&object::CatchHitObject::kind, linq::_1) == object::OBJECT_DROPLET)
+                       linq::bind(&object::CatchHitObject::kind, linq::_1) == object::OBJECT_DROPLET ||
+                       linq::bind(&object::CatchHitObject::kind, linq::_1) == object::OBJECT_TINY_DROPLET ||
+                       linq::bind(&object::CatchHitObject::kind, linq::_1) == object::OBJECT_BANANA)
                 .order_by(linq::bind(&object::CatchHitObject::time, linq::_1))
                 .to_list();
         out.swap(objects);
@@ -51,33 +52,37 @@ namespace pppp { namespace fruits {
         for (size_t i = 0; i < mod_count; i++) {
             switch (mods[i].id) {
             case pppp::mods::MOD_EZ:
-                out.circle_size = utils::f32(utils::f32(out.circle_size) * 0.5);
-                out.approach_rate = utils::f32(utils::f32(out.approach_rate) * 0.5);
-                out.drain_rate = utils::f32(utils::f32(out.drain_rate) * 0.5);
-                out.overall_difficulty = utils::f32(utils::f32(out.overall_difficulty) * 0.5);
+                out.circle_size *= pppp::mods::EASY_ADJUST_RATIO;
+                out.approach_rate *= pppp::mods::EASY_ADJUST_RATIO;
+                out.drain_rate *= pppp::mods::EASY_ADJUST_RATIO;
+
+                out.overall_difficulty *= pppp::mods::EASY_ADJUST_RATIO;
                 break;
             case pppp::mods::MOD_HR:
-                out.circle_size = std::min(utils::f32(utils::f32(out.circle_size) * 1.2999999523162842),
-                                           10.0); // CS uses a custom 1.3 ratio.
-                out.approach_rate =
-                    std::min(utils::f32(utils::f32(out.approach_rate) * 1.399999976158142), 10.0);
-                out.drain_rate = std::min(utils::f32(utils::f32(out.drain_rate) * 1.399999976158142), 10.0);
+                out.drain_rate = std::min(out.drain_rate * pppp::mods::HARD_ROCK_ADJUST_RATIO, 10.0f);
+
                 out.overall_difficulty =
-                    std::min(utils::f32(utils::f32(out.overall_difficulty) * 1.399999976158142), 10.0);
+                    std::min(out.overall_difficulty * pppp::mods::HARD_ROCK_ADJUST_RATIO, 10.0f);
+                out.circle_size = std::min(out.circle_size * 1.3f, 10.0f); // CS uses a custom 1.3 ratio.
+                out.approach_rate = std::min(out.approach_rate * pppp::mods::HARD_ROCK_ADJUST_RATIO, 10.0f);
                 break;
             case pppp::mods::MOD_DA: {
                 const pppp::mods::DifficultyAdjustSettings& st = mods[i].difficulty_adjust;
-                if (st.circle_size.value() >= 0.0) {
-                    out.circle_size = st.circle_size.value();
+                if (st.drain_rate.has_value()) {
+                    out.drain_rate = pppp::mods::clamp_to_extended_limits(st.drain_rate.value(), 0, 10,
+                                                                          nonstd::optional<float>(), 11.0f);
                 }
-                if (st.approach_rate.value() >= 0.0) {
-                    out.approach_rate = st.approach_rate.value();
+                if (st.overall_difficulty.has_value()) {
+                    out.overall_difficulty = pppp::mods::clamp_to_extended_limits(
+                        st.overall_difficulty.value(), 0, 10, nonstd::optional<float>(), 11.0f);
                 }
-                if (st.drain_rate.value() >= 0.0) {
-                    out.drain_rate = st.drain_rate.value();
+                if (st.circle_size.has_value()) {
+                    out.circle_size = pppp::mods::clamp_to_extended_limits(st.circle_size.value(), 0, 10,
+                                                                           nonstd::optional<float>(), 11.0f);
                 }
-                if (st.overall_difficulty.value() >= 0.0) {
-                    out.overall_difficulty = st.overall_difficulty.value();
+                if (st.approach_rate.has_value()) {
+                    out.approach_rate = pppp::mods::clamp_to_extended_limits(
+                        st.approach_rate.value(), 0, 10, nonstd::optional<float>(), 11.0f);
                 }
                 break;
             }
@@ -92,7 +97,6 @@ namespace pppp { namespace fruits {
                  size_t mod_count,
                  const beatmaps::ObjectConverted<object::CatchHitObject>& object_converted) {
         pb = CatchBeatmap();
-        pb.clock_rate = pppp::mods::mod_calculate_rate(mods, mod_count);
         pb.is_convert = beatmap.mode == 0;
 
         convert(pb, beatmap, object_converted);
@@ -106,19 +110,29 @@ namespace pppp { namespace fruits {
             if (mods[i].id == pppp::mods::MOD_HR) {
                 hard_rock_offsets = true;
             }
-            if (mods[i].id == pppp::mods::MOD_DA && mods[i].difficulty_adjust.hard_rock_offsets) {
-                hard_rock_offsets = true;
+            if (mods[i].id == pppp::mods::MOD_DA) {
+                hard_rock_offsets = mods[i].difficulty_adjust.hard_rock_offsets;
             }
         }
 
         apply_position_offsets(pb, beatmap, hard_rock_offsets);
 
-        for (size_t i = 0; i < mod_count; i++) {
-            if (mods[i].id == pppp::mods::MOD_MR) {
+        std::vector<pppp::mods::Mod> playable_mods(mods, mods + mod_count);
+        for (size_t i = 0; i < playable_mods.size(); i++) {
+            if (playable_mods[i].id == pppp::mods::MOD_MR) {
                 mods::apply_mirror(pb);
+            }
+            if (playable_mods[i].id == pppp::mods::MOD_WU || playable_mods[i].id == pppp::mods::MOD_WD) {
+                pppp::mods::mod_time_ramp_apply_to_beatmap(
+                    &playable_mods[i], !pb.objects.empty(), pb.objects.empty() ? 0.0 : pb.objects[0].time,
+                    pb.objects.empty() ? 0.0
+                                       : linq::from(pb.objects)
+                                             .max(linq::bind(&object::CatchHitObject::end_time, linq::_1)));
             }
         }
 
+        pb.clock_rate = pppp::mods::mod_calculate_rate(playable_mods.empty() ? 0 : &playable_mods[0],
+                                                       playable_mods.size());
         return StatusCode::OK;
     }
 }} // namespace pppp::fruits

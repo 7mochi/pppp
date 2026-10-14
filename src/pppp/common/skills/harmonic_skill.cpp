@@ -9,12 +9,9 @@
 namespace pppp { namespace common { namespace skills {
     namespace linq = ::pppp::utils::linq;
 
-    HarmonicSkill::HarmonicSkill(const mods::Mod* mods_in, size_t mod_count_in, double harmonic_scale_in,
-                                 double decay_exponent_in)
+    HarmonicSkill::HarmonicSkill(const mods::Mod* mods_in, size_t mod_count_in)
         : Skill(mods_in, mod_count_in),
-          object_weight_sum(0.0),
-          harmonic_scale(harmonic_scale_in),
-          decay_exponent(decay_exponent_in) {}
+          object_weight_sum(0.0) {}
 
     double HarmonicSkill::process_internal(const preprocessing::DifficultyHitObject& current) {
         return object_difficulty_of(current);
@@ -34,13 +31,13 @@ namespace pppp { namespace common { namespace skills {
         // Objects with 0 difficulty are excluded to avoid worst-case time complexity of the following sort
         // (e.g. /b/2351871). These objects will not contribute to the difficulty.
         const std::vector<double> sorted_diffs =
-            linq::from(difficulties).where(linq::_1 > 0).order_descending().to_list();
+            linq::from(difficulties).order_descending().where(linq::_1 > 0).to_list();
         for (size_t i = 0; i < sorted_diffs.size(); i++) {
             // Use a harmonic sum that considers each object of the map according to a predefined
             // weight.
-            double weight = (1.0 + harmonic_scale / (1.0 + static_cast<double>(i))) /
-                            (utils::pow(static_cast<double>(i), decay_exponent) + 1.0 +
-                             harmonic_scale / (1.0 + static_cast<double>(i)));
+            double weight = (1.0 + harmonic_scale() / (1.0 + static_cast<double>(i))) /
+                            (utils::pow(static_cast<double>(i), decay_exponent()) + 1.0 +
+                             harmonic_scale() / (1.0 + static_cast<double>(i)));
 
             object_weight_sum += weight;
 

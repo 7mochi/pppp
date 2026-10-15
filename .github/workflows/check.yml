@@ -53,12 +53,12 @@ jobs:
     name: All Succeeded
     if: always()
     runs-on: ubuntu-latest
-    needs: [changes, check, check-windows, check-configurations, pre-commit]
+    needs: [changes, check, check-windows, check-configurations, parity-freshness, pre-commit]
     steps:
       - uses: re-actors/alls-green@v1.3.0
         with:
           jobs: ${{ toJSON(needs) }}
-          allowed-skips: check,check-windows,check-configurations
+          allowed-skips: check,check-windows,check-configurations,parity-freshness
 
   check:
     name: Check on ${{ matrix.os }}
@@ -92,6 +92,9 @@ jobs:
         run: |
           nix develop -c npm install
           nix develop -c npm test
+      - name: Check the Node types
+        if: needs.changes.outputs.core == 'true' || needs.changes.outputs.node == 'true'
+        run: nix develop -c npm run types
       - name: Test the C# bindings
         if: matrix.os == 'ubuntu-latest' && (needs.changes.outputs.core == 'true' || needs.changes.outputs.csharp == 'true')
         run: |
@@ -128,6 +131,8 @@ jobs:
         run: |
           npm install
           npm test
+      - name: Check the node types
+        run: npm run types
       - uses: actions/cache@v6.1.0
         with:
           path: ~/.nuget/packages
@@ -162,6 +167,22 @@ jobs:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
       - name: Build and test (${{ matrix.isa }})
         run: nix develop -c make test-${{ matrix.isa }}
+
+  parity-freshness:
+    name: Check the parity fixture is current
+    needs: changes
+    if: needs.changes.outputs.core == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: nixbuild/nix-quick-install-action@v35
+      - uses: nix-community/cache-nix-action@v7.0.2
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
+      - name: Regenerate the parity fixture
+        run: nix develop -c make generate-parity-tests
+      - name: Fail if the committed fixture moved
+        run: git diff --exit-code -- tests/parity/parity.json
 
   pre-commit:
     name: pre-commit

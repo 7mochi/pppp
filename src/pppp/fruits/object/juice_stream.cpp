@@ -5,9 +5,8 @@
 #include "pppp/beatmaps/slider_path.h"
 
 namespace pppp { namespace fruits { namespace object {
-    CatchHitObject create_juice_stream(const beatmaps::Slider& slider, double head_x, double time,
-                                       double end_time, int slider_index) {
-        CatchHitObject stream;
+    void create_juice_stream(CatchHitObject& stream, const beatmaps::Slider& slider, double head_x,
+                             double time, double end_time, int slider_index) {
         stream.kind = OBJECT_JUICE_STREAM;
         stream.time = time;
         stream.end_time = end_time;
@@ -78,7 +77,5 @@ namespace pppp { namespace fruits { namespace object {
             object.slider_index = -1;
             stream.nested.push_back(object);
         }
-
-        return stream;
     }
 }}} // namespace pppp::fruits::object

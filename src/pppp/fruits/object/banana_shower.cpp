@@ -4,8 +4,7 @@
 #include "pppp/fruits/object/banana_shower.h"
 
 namespace pppp { namespace fruits { namespace object {
-    CatchHitObject create_banana_shower(double start_time, double end_time) {
-        CatchHitObject shower;
+    void create_banana_shower(CatchHitObject& shower, double start_time, double end_time) {
         shower.kind = OBJECT_BANANA_SHOWER;
         shower.time = start_time;
         shower.end_time = end_time;
@@ -24,7 +23,7 @@ namespace pppp { namespace fruits { namespace object {
         }
 
         if (spacing <= 0) {
-            return shower;
+            return;
         }
 
         // NOLINTNEXTLINE(cert-flp30-c)
@@ -40,7 +39,5 @@ namespace pppp { namespace fruits { namespace object {
             banana.slider_index = -1;
             shower.nested.push_back(banana);
         }
-
-        return shower;
     }
 }}} // namespace pppp::fruits::object

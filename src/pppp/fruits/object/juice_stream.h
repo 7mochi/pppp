@@ -8,8 +8,8 @@
 #include "pppp/fruits/object/catch_hit_object.h"
 
 namespace pppp { namespace fruits { namespace object {
-    CatchHitObject create_juice_stream(const pppp::beatmaps::Slider& slider, double head_x, double time,
-                                       double end_time, int slider_index);
+    void create_juice_stream(CatchHitObject& stream, const pppp::beatmaps::Slider& slider, double head_x,
+                             double time, double end_time, int slider_index);
 }}} // namespace pppp::fruits::object
 
 #endif

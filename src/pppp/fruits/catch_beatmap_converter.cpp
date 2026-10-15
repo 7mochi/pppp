@@ -23,6 +23,8 @@ namespace pppp { namespace fruits {
 
     Status convert(CatchBeatmap& pb, const beatmaps::Beatmap& beatmap,
                    const beatmaps::ObjectConverted<object::CatchHitObject>& object_converted) {
+        pb.objects.reserve(beatmap.hit_objects.size());
+
         for (size_t i = 0; i < beatmap.hit_objects.size(); i++) {
             const beatmaps::HitObject& ho = beatmap.hit_objects[i];
             const size_t first = pb.objects.size();
@@ -32,11 +34,13 @@ namespace pppp { namespace fruits {
                 // prior to v8, speed multipliers don't adjust for how many ticks are generated over the same
                 // distance. this results in more (or less) ticks being generated in <v8 maps for the same
                 // time duration.
-                pb.objects.push_back(object::create_juice_stream(
-                    slider, math::clamp(ho.position.x, 0.0, object::PLAYFIELD_WIDTH), ho.start_time,
-                    ho.end_time, static_cast<int>(ho.slider)));
+                pb.objects.push_back(object::CatchHitObject());
+                object::create_juice_stream(pb.objects.back(), slider,
+                                            math::clamp(ho.position.x, 0.0, object::PLAYFIELD_WIDTH),
+                                            ho.start_time, ho.end_time, static_cast<int>(ho.slider));
             } else if ((ho.type & (beatmaps::spinner | beatmaps::hold)) != 0) {
-                pb.objects.push_back(object::create_banana_shower(ho.start_time, ho.end_time));
+                pb.objects.push_back(object::CatchHitObject());
+                object::create_banana_shower(pb.objects.back(), ho.start_time, ho.end_time);
             } else {
                 object::CatchHitObject fruit;
                 fruit.kind = object::OBJECT_FRUIT;

@@ -7,7 +7,7 @@
 #include "pppp/fruits/object/catch_hit_object.h"
 
 namespace pppp { namespace fruits { namespace object {
-    CatchHitObject create_banana_shower(double start_time, double end_time);
+    void create_banana_shower(CatchHitObject& shower, double start_time, double end_time);
 }}} // namespace pppp::fruits::object
 
 #endif

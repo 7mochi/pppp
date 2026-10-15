@@ -40,8 +40,17 @@ include(GNUInstallDirs)
 include(cmake/Warnings.cmake)
 include(cmake/Numerics.cmake)
 include(cmake/Performance.cmake)
+include(cmake/Targets.cmake)
 include(cmake/Checks.cmake)
-include(cmake/PGO.cmake)
+
+if(PROJECT_IS_TOP_LEVEL)
+  include(cmake/PGO.cmake)
+endif()
+
+# cJSON (tests) and the C bindings both need the C language
+if(PPPP_BUILD_TESTS OR PPPP_BUILD_CAPI)
+  enable_language(C)
+endif()
 
 add_library(pppp_options INTERFACE)
 target_compile_features(pppp_options INTERFACE cxx_std_98)
@@ -69,10 +78,8 @@ add_library(pppp_utils
   src/pppp/utils/random/osu.cpp
   src/pppp/utils/vector2.cpp)
 add_library(pppp::utils ALIAS pppp_utils)
-set_target_properties(pppp_utils PROPERTIES EXPORT_NAME utils)
-target_include_directories(pppp_utils PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+pppp_apply_defaults(pppp_utils utils)
 target_link_libraries(pppp_utils PUBLIC pppp_options)
-target_link_libraries(pppp_utils PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_utils PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
   FILES include/pppp/config.h include/pppp/status.h include/pppp/utils/vector2.h)
@@ -82,10 +89,8 @@ add_library(pppp_beatmaps
   src/pppp/beatmaps/control_points/control_point_info.cpp
   src/pppp/beatmaps/slider_path.cpp)
 add_library(pppp::beatmaps ALIAS pppp_beatmaps)
-set_target_properties(pppp_beatmaps PROPERTIES EXPORT_NAME beatmaps)
-target_include_directories(pppp_beatmaps PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+pppp_apply_defaults(pppp_beatmaps beatmaps)
 target_link_libraries(pppp_beatmaps PUBLIC pppp_utils)
-target_link_libraries(pppp_beatmaps PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_beatmaps PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
   FILES include/pppp/beatmaps/beatmap.h include/pppp/beatmaps/timing/break_period.h
@@ -98,10 +103,8 @@ add_library(pppp_mods
   src/pppp/mods/mod_settings.cpp
   src/pppp/mods/mods.cpp)
 add_library(pppp::mods ALIAS pppp_mods)
-set_target_properties(pppp_mods PROPERTIES EXPORT_NAME mods)
-target_include_directories(pppp_mods PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+pppp_apply_defaults(pppp_mods mods)
 target_link_libraries(pppp_mods PUBLIC pppp_utils)
-target_link_libraries(pppp_mods PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_mods PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
   FILES include/pppp/mods/mod.h include/pppp/mods/mods.h)
@@ -117,10 +120,8 @@ add_library(pppp_common
   src/pppp/common/skills/variable_length_strain_skill.cpp
   src/pppp/common/score_info.cpp)
 add_library(pppp::common ALIAS pppp_common)
-set_target_properties(pppp_common PROPERTIES EXPORT_NAME common)
-target_include_directories(pppp_common PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+pppp_apply_defaults(pppp_common common)
 target_link_libraries(pppp_common PUBLIC pppp_utils pppp_mods)
-target_link_libraries(pppp_common PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_common PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
   FILES include/pppp/common/difficulty_attributes.h
@@ -137,10 +138,8 @@ add_library(pppp_catch_base
   src/pppp/fruits/object/catch_hit_object.cpp
   src/pppp/fruits/object/juice_stream.cpp)
 add_library(pppp::catch::base ALIAS pppp_catch_base)
-set_target_properties(pppp_catch_base PROPERTIES EXPORT_NAME catch::base)
-target_include_directories(pppp_catch_base PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+pppp_apply_defaults(pppp_catch_base catch::base)
 target_link_libraries(pppp_catch_base PUBLIC pppp_utils pppp_beatmaps pppp_common pppp_mods)
-target_link_libraries(pppp_catch_base PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 
 add_library(pppp_catch_difficulty
   src/pppp/fruits/difficulty/catch_difficulty_calculator.cpp
@@ -148,10 +147,8 @@ add_library(pppp_catch_difficulty
   src/pppp/fruits/difficulty/preprocessing/catch_difficulty_hit_object.cpp
   src/pppp/fruits/difficulty/skills/movement.cpp)
 add_library(pppp::catch::difficulty ALIAS pppp_catch_difficulty)
-set_target_properties(pppp_catch_difficulty PROPERTIES EXPORT_NAME catch::difficulty)
-target_include_directories(pppp_catch_difficulty PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+pppp_apply_defaults(pppp_catch_difficulty catch::difficulty)
 target_link_libraries(pppp_catch_difficulty PUBLIC pppp_catch_base pppp_common)
-target_link_libraries(pppp_catch_difficulty PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_catch_difficulty PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
   FILES include/pppp/fruits/difficulty/catch_difficulty_attributes.h
@@ -162,10 +159,8 @@ add_library(pppp_catch_performance
   src/pppp/fruits/difficulty/catch_performance_calculator.cpp
   )
 add_library(pppp::catch::performance ALIAS pppp_catch_performance)
-set_target_properties(pppp_catch_performance PROPERTIES EXPORT_NAME catch::performance)
-target_include_directories(pppp_catch_performance PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+pppp_apply_defaults(pppp_catch_performance catch::performance)
 target_link_libraries(pppp_catch_performance PUBLIC pppp_catch_difficulty)
-target_link_libraries(pppp_catch_performance PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_catch_performance PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
   FILES include/pppp/fruits/difficulty/catch_performance_attributes.h
@@ -189,10 +184,8 @@ add_library(pppp_mania_base
   src/pppp/mania/patterns/slider_pattern_generator.cpp
   src/pppp/mania/patterns/spinner_pattern_generator.cpp)
 add_library(pppp::mania::base ALIAS pppp_mania_base)
-set_target_properties(pppp_mania_base PROPERTIES EXPORT_NAME mania::base)
-target_include_directories(pppp_mania_base PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+pppp_apply_defaults(pppp_mania_base mania::base)
 target_link_libraries(pppp_mania_base PUBLIC pppp_utils pppp_beatmaps pppp_common pppp_mods)
-target_link_libraries(pppp_mania_base PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 
 add_library(pppp_mania_difficulty
   src/pppp/mania/difficulty/evaluators/individual_strain_evaluator.cpp
@@ -202,10 +195,8 @@ add_library(pppp_mania_difficulty
   src/pppp/mania/difficulty/preprocessing/mania_difficulty_hit_object.cpp
   src/pppp/mania/difficulty/skills/strain.cpp)
 add_library(pppp::mania::difficulty ALIAS pppp_mania_difficulty)
-set_target_properties(pppp_mania_difficulty PROPERTIES EXPORT_NAME mania::difficulty)
-target_include_directories(pppp_mania_difficulty PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+pppp_apply_defaults(pppp_mania_difficulty mania::difficulty)
 target_link_libraries(pppp_mania_difficulty PUBLIC pppp_mania_base pppp_common)
-target_link_libraries(pppp_mania_difficulty PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_mania_difficulty PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
   FILES include/pppp/mania/difficulty/mania_difficulty_attributes.h
@@ -216,10 +207,8 @@ add_library(pppp_mania_performance
   src/pppp/mania/difficulty/mania_performance_calculator.cpp
   )
 add_library(pppp::mania::performance ALIAS pppp_mania_performance)
-set_target_properties(pppp_mania_performance PROPERTIES EXPORT_NAME mania::performance)
-target_include_directories(pppp_mania_performance PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+pppp_apply_defaults(pppp_mania_performance mania::performance)
 target_link_libraries(pppp_mania_performance PUBLIC pppp_mania_difficulty)
-target_link_libraries(pppp_mania_performance PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_mania_performance PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
   FILES include/pppp/mania/difficulty/mania_performance_attributes.h
@@ -242,10 +231,8 @@ add_library(pppp_osu_base
   src/pppp/osu/object/osu_playfield.cpp
   src/pppp/osu/osu_hit_windows.cpp)
 add_library(pppp::osu::base ALIAS pppp_osu_base)
-set_target_properties(pppp_osu_base PROPERTIES EXPORT_NAME osu::base)
-target_include_directories(pppp_osu_base PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+pppp_apply_defaults(pppp_osu_base osu::base)
 target_link_libraries(pppp_osu_base PUBLIC pppp_utils pppp_beatmaps pppp_common pppp_mods)
-target_link_libraries(pppp_osu_base PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 
 add_library(pppp_osu_difficulty
   src/pppp/osu/difficulty/evaluators/aim/agility_evaluator.cpp
@@ -264,10 +251,8 @@ add_library(pppp_osu_difficulty
   src/pppp/osu/difficulty/skills/reading.cpp
   src/pppp/osu/difficulty/skills/speed.cpp)
 add_library(pppp::osu::difficulty ALIAS pppp_osu_difficulty)
-set_target_properties(pppp_osu_difficulty PROPERTIES EXPORT_NAME osu::difficulty)
-target_include_directories(pppp_osu_difficulty PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+pppp_apply_defaults(pppp_osu_difficulty osu::difficulty)
 target_link_libraries(pppp_osu_difficulty PUBLIC pppp_osu_base pppp_common)
-target_link_libraries(pppp_osu_difficulty PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_osu_difficulty PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
   FILES include/pppp/osu/difficulty/osu_difficulty_attributes.h
@@ -279,10 +264,8 @@ add_library(pppp_osu_performance
   src/pppp/osu/difficulty/osu_performance_calculator.cpp
   )
 add_library(pppp::osu::performance ALIAS pppp_osu_performance)
-set_target_properties(pppp_osu_performance PROPERTIES EXPORT_NAME osu::performance)
-target_include_directories(pppp_osu_performance PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+pppp_apply_defaults(pppp_osu_performance osu::performance)
 target_link_libraries(pppp_osu_performance PUBLIC pppp_osu_difficulty)
-target_link_libraries(pppp_osu_performance PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_osu_performance PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
   FILES include/pppp/osu/difficulty/osu_performance_attributes.h
@@ -300,10 +283,8 @@ add_library(pppp_taiko_base
   src/pppp/taiko/taiko_beatmap_converter.cpp
   src/pppp/taiko/taiko_hit_windows.cpp)
 add_library(pppp::taiko::base ALIAS pppp_taiko_base)
-set_target_properties(pppp_taiko_base PROPERTIES EXPORT_NAME taiko::base)
-target_include_directories(pppp_taiko_base PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+pppp_apply_defaults(pppp_taiko_base taiko::base)
 target_link_libraries(pppp_taiko_base PUBLIC pppp_utils pppp_beatmaps pppp_common pppp_mods)
-target_link_libraries(pppp_taiko_base PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 
 add_library(pppp_taiko_difficulty
   src/pppp/taiko/difficulty/evaluators/colour_evaluator.cpp
@@ -322,10 +303,8 @@ add_library(pppp_taiko_difficulty
   src/pppp/taiko/difficulty/utils/delta_time_normaliser.cpp
   src/pppp/taiko/difficulty/utils/interval_grouping_utils.cpp)
 add_library(pppp::taiko::difficulty ALIAS pppp_taiko_difficulty)
-set_target_properties(pppp_taiko_difficulty PROPERTIES EXPORT_NAME taiko::difficulty)
-target_include_directories(pppp_taiko_difficulty PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+pppp_apply_defaults(pppp_taiko_difficulty taiko::difficulty)
 target_link_libraries(pppp_taiko_difficulty PUBLIC pppp_taiko_base pppp_common)
-target_link_libraries(pppp_taiko_difficulty PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_taiko_difficulty PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
   FILES include/pppp/taiko/difficulty/taiko_difficulty_attributes.h
@@ -336,10 +315,8 @@ add_library(pppp_taiko_performance
   src/pppp/taiko/difficulty/taiko_performance_calculator.cpp
   )
 add_library(pppp::taiko::performance ALIAS pppp_taiko_performance)
-set_target_properties(pppp_taiko_performance PROPERTIES EXPORT_NAME taiko::performance)
-target_include_directories(pppp_taiko_performance PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+pppp_apply_defaults(pppp_taiko_performance taiko::performance)
 target_link_libraries(pppp_taiko_performance PUBLIC pppp_taiko_difficulty)
-target_link_libraries(pppp_taiko_performance PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_taiko_performance PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
   FILES include/pppp/taiko/difficulty/taiko_performance_attributes.h
@@ -354,10 +331,8 @@ add_library(pppp_api
   src/pppp/difficulty.cpp
   src/pppp/performance.cpp)
 add_library(pppp::api ALIAS pppp_api)
-set_target_properties(pppp_api PROPERTIES EXPORT_NAME api)
-target_include_directories(pppp_api PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+pppp_apply_defaults(pppp_api api)
 target_link_libraries(pppp_api PUBLIC pppp_catch pppp_mania pppp_osu pppp_taiko)
-target_link_libraries(pppp_api PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
 target_sources(pppp_api PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
   FILES include/pppp/pppp.h include/pppp/difficulty.h include/pppp/performance.h)
@@ -366,27 +341,6 @@ add_library(pppp INTERFACE)
 add_library(pppp::pppp ALIAS pppp)
 set_target_properties(pppp PROPERTIES EXPORT_NAME pppp)
 target_link_libraries(pppp INTERFACE pppp_api)
-
-# nonstd
-if(PPPP_INSTALL)
-  install(DIRECTORY third_party/optional-bare/include/nonstd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-  install(DIRECTORY third_party/variant-lite/include/nonstd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-  install(FILES third_party/optional-bare/LICENSE.txt
-          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nonstd RENAME optional-bare-LICENSE.txt)
-  install(FILES third_party/variant-lite/LICENSE.txt
-          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nonstd RENAME variant-lite-LICENSE.txt)
-  if(PPPP_WITH_FOSU)
-    install(DIRECTORY third_party/span-lite/include/nonstd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-    install(DIRECTORY third_party/string-view-lite/include/nonstd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-    install(DIRECTORY third_party/atomic-lite/include/nonstd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-    install(FILES third_party/span-lite/LICENSE.txt
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nonstd RENAME span-lite-LICENSE.txt)
-    install(FILES third_party/string-view-lite/LICENSE.txt
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nonstd RENAME string-view-lite-LICENSE.txt)
-    install(FILES third_party/atomic-lite/LICENSE.txt
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nonstd RENAME atomic-lite-LICENSE.txt)
-  endif()
-endif()
 
 # doctest, cJSON
 if(PPPP_BUILD_TESTS)
@@ -409,11 +363,10 @@ if(PPPP_WITH_FOSU)
   add_library(pppp_fosu src/pppp/fosu/beatmap.cpp src/pppp/fosu/backend.cpp)
   add_library(pppp::fosu ALIAS pppp_fosu)
 
+  pppp_apply_defaults(pppp_fosu fosu)
   target_compile_features(pppp_fosu PUBLIC cxx_std_98)
-  target_include_directories(pppp_fosu PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
   target_link_libraries(pppp_fosu PUBLIC pppp fosu)
-  target_link_libraries(pppp_fosu PRIVATE $<BUILD_INTERFACE:pppp_warnings> $<BUILD_INTERFACE:pppp_numerics> $<BUILD_INTERFACE:pppp_performance>)
-  set_target_properties(pppp_fosu PROPERTIES EXPORT_NAME fosu VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
+  set_target_properties(pppp_fosu PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
   target_sources(pppp_fosu PUBLIC FILE_SET HEADERS
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
     FILES include/pppp/beatmap.h include/pppp/backend.h)
@@ -440,47 +393,5 @@ if(PPPP_BUILD_TESTS)
 endif()
 
 if(PPPP_INSTALL)
-  include(CMakePackageConfigHelpers)
-
-  set(PPPP_INSTALL_TARGETS pppp pppp_options pppp_api
-    pppp_utils pppp_beatmaps pppp_mods pppp_common
-    pppp_catch_base pppp_catch_difficulty pppp_catch_performance pppp_catch
-    pppp_mania_base pppp_mania_difficulty pppp_mania_performance pppp_mania
-    pppp_osu_base pppp_osu_difficulty pppp_osu_performance pppp_osu
-    pppp_taiko_base pppp_taiko_difficulty pppp_taiko_performance pppp_taiko)
-  if(PPPP_WITH_FOSU)
-    list(APPEND PPPP_INSTALL_TARGETS pppp_fosu fosu)
-    if(TARGET fosu_engine_avx2)
-      list(APPEND PPPP_INSTALL_TARGETS fosu_engine_avx2)
-    elseif(TARGET fosu_engine_neon)
-      list(APPEND PPPP_INSTALL_TARGETS fosu_engine_neon)
-    endif()
-    if(PPPP_BUILD_CAPI)
-      list(APPEND PPPP_INSTALL_TARGETS pppp_c)
-    endif()
-  endif()
-
-  install(TARGETS ${PPPP_INSTALL_TARGETS} EXPORT ppppTargets
-    FILE_SET HEADERS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
-  if(PPPP_WITH_FOSU)
-    install(DIRECTORY third_party/fosu/src/fosu DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-      FILES_MATCHING PATTERN "*.h")
-  endif()
-  install(EXPORT ppppTargets NAMESPACE pppp:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/pppp)
-
-  configure_package_config_file(cmake/ppppConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/ppppConfig.cmake
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/pppp)
-  write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/ppppConfigVersion.cmake
-    COMPATIBILITY SameMajorVersion)
-  install(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/ppppConfig.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/ppppConfigVersion.cmake
-    cmake/ppppPlaceEngine.cmake
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/pppp)
+  include(cmake/Install.cmake)
 endif()

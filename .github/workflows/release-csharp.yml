@@ -37,49 +37,78 @@ jobs:
           - os: windows-2022
             rid: win-x64
             args: -A x64
+            pgort: Hostx64\x64
           - os: windows-2022
             rid: win-x86
             args: -A Win32
+            pgort: Hostx86\x86
           - os: windows-11-arm
             rid: win-arm64
             args: -A ARM64
+            pgort: arm64
           - os: ubuntu-latest
             rid: linux-x64
           - os: ubuntu-24.04-arm
             rid: linux-arm64
           - os: macos-latest
             rid: osx-arm64
-          - os: macos-latest
+          - os: macos-26-intel
             rid: osx-x64
-            args: -DCMAKE_OSX_ARCHITECTURES=x86_64
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: nixbuild/nix-quick-install-action@v35
-        if: runner.os != 'Windows'
-      - name: Configure and build
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          nix develop -c bash -c "cmake -S . -B build -DPPPP_BUILD_CAPI=ON -DCMAKE_BUILD_TYPE=Release ${{ matrix.args }}"
-          nix develop -c cmake --build build
-      - name: Configure and build
+        if: runner.os == 'Linux'
+      - name: Configure and build with PGO
+        if: runner.os == 'Linux'
+        run: nix develop -c make build-pgo
+      - name: Configure and build with PGO
+        if: runner.os == 'macOS'
+        run: make build-pgo
+      - name: Build the instrumented native
         if: runner.os == 'Windows'
-        shell: bash
         run: |
-          cmake -S . -B build -DPPPP_BUILD_CAPI=ON ${{ matrix.args }}
+          cmake -S . -B build -DPPPP_BUILD_CAPI=ON -DPPPP_BUILD_TESTS=ON -DPPPP_PGO=GENERATE ${{ matrix.args }}
           cmake --build build --config Release
+      - name: Copy the PGO runtime beside the training executable
+        if: runner.os == 'Windows'
+        run: |
+          compiler="$(sed -n 's/^CMAKE_CXX_COMPILER:FILEPATH=//p' build/CMakeCache.txt)"
+          find "${compiler%%/bin/*}/bin" -name pgort140.dll
+          cp "${compiler%%/bin/*}/bin/${{ matrix.pgort }}/pgort140.dll" build/tests/Release/
+      - name: Generate the PGO data
+        if: runner.os == 'Windows'
+        run: ctest --test-dir build -C Release -R "^capi$" --output-on-failure
+      - name: Check the PGO data
+        if: runner.os == 'Windows'
+        run: |
+          find build -name '*.pgd' -o -name '*.pgc'
+          ls build/Release/pppp_c!*.pgc || { echo "PGO run did not succeed (no pppp_c!*.pgc files) and there is no data to merge"; exit 1; }
+      - name: Build the PGO-optimized native
+        if: runner.os == 'Windows'
+        run: |
+          cmake -S . -B build -DPPPP_PGO=USE
+          cmake --build build --config Release
+          rm build/tests/Release/pgort140.dll
+      - name: Test the PGO native
+        run: |
+          case "$RUNNER_OS" in
+            Linux) nix develop -c ctest --test-dir build_pgo --output-on-failure ;;
+            macOS) ctest --test-dir build_pgo --output-on-failure ;;
+            Windows) ctest --test-dir build -C Release --output-on-failure ;;
+          esac
       - name: Collect the native
         if: runner.os != 'Windows'
-        shell: bash
         run: |
           extension="so"
           if [ "${{ runner.os }}" = "macOS" ]; then extension="dylib"; fi
           mkdir -p "csharp/native/${{ matrix.rid }}"
-          cp "build/pppp_c.$extension" "csharp/native/${{ matrix.rid }}/pppp_c.$extension"
-          cp build/*fosu_engine_* "csharp/native/${{ matrix.rid }}/" 2>/dev/null || true
+          cp "build_pgo/pppp_c.$extension" "csharp/native/${{ matrix.rid }}/pppp_c.$extension"
+          cp build_pgo/*fosu_engine_* "csharp/native/${{ matrix.rid }}/" 2>/dev/null || true
       - name: Collect the native
         if: runner.os == 'Windows'
-        shell: bash
         run: |
           mkdir -p "csharp/native/${{ matrix.rid }}"
           cp "build/Release/pppp_c.dll" "csharp/native/${{ matrix.rid }}/pppp_c.dll"

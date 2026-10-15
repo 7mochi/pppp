@@ -40,11 +40,13 @@ jobs:
         include:
           - os: windows-2022
             arch: x64
+            pgort: Hostx64\x64
           - os: windows-11-arm
             arch: arm64
+            pgort: arm64
           - os: macos-latest
             arch: arm64
-          - os: macos-latest
+          - os: macos-26-intel
             arch: x64
           - os: ubuntu-latest
             arch: x64
@@ -55,7 +57,39 @@ jobs:
       - uses: actions/setup-node@v7.0.0
         with:
           node-version: 24.x
-      - run: npm install
+      - name: Install the dependencies
+        run: npm install --ignore-scripts
+      - name: Build the instrumented binding
+        working-directory: node
+        shell: bash
+        run: |
+          npx cmake-js configure -d .. --out build --CDPPPP_PGO=GENERATE --CDPPPP_PGO_DIR="${{ github.workspace }}/profdata"
+          npx cmake-js build -d .. --out build
+      - name: Copy the PGO runtime beside the binding
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          compiler="$(sed -n 's/^CMAKE_CXX_COMPILER:FILEPATH=//p' node/build/CMakeCache.txt)"
+          find "${compiler%%/bin/*}/bin" -name pgort140.dll
+          cp "${compiler%%/bin/*}/bin/${{ matrix.pgort }}/pgort140.dll" node/build/Release/
+      - name: Generate the PGO data
+        run: npm test
+      - name: Check the PGO data
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          find node/build -name '*.pgd' -o -name '*.pgc'
+          ls node/build/Release/pppp_node!*.pgc || { echo "PGO run did not succeed (no pppp_node!*.pgc files) and there is no data to merge"; exit 1; }
+      - name: Merge the PGO data
+        if: runner.os == 'macOS'
+        run: xcrun llvm-profdata merge -output="${{ github.workspace }}/profdata/default.profdata" "${{ github.workspace }}"/profdata/*.profraw
+      - name: Build the PGO-optimized binding
+        working-directory: node
+        shell: bash
+        run: |
+          npx cmake-js configure -d .. --out build --CDPPPP_PGO=USE --CDPPPP_PGO_DIR="${{ github.workspace }}/profdata"
+          npx cmake-js build -d .. --out build
+          rm -f build/Release/pgort140.dll
       - run: npm test
         env:
           FOSU_BACKEND: scalar

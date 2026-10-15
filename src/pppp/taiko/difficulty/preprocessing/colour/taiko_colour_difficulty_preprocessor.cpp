@@ -66,8 +66,6 @@ namespace pppp { namespace taiko { namespace difficulty { namespace preprocessin
     namespace {
         void encode_mono_streaks(std::vector<TaikoDifficultyHitObject>& objects,
                                  std::vector<MonoStreak>& mono_streaks) {
-            nonstd::optional<size_t> current;
-
             for (size_t i = 0; i < objects.size(); i++) {
                 TaikoDifficultyHitObject& object = objects[i];
 
@@ -76,7 +74,7 @@ namespace pppp { namespace taiko { namespace difficulty { namespace preprocessin
 
                 // If this is the first object in the list or the colour changed, create a new mono streak
                 bool colour_changed = true;
-                if (current.has_value() && previous) {
+                if (!mono_streaks.empty() && previous) {
                     bool this_is_hit = object.is_hit();
                     bool previous_is_hit = previous->is_hit();
                     colour_changed =
@@ -85,36 +83,31 @@ namespace pppp { namespace taiko { namespace difficulty { namespace preprocessin
 
                 if (colour_changed) {
                     mono_streaks.push_back(MonoStreak());
-                    current = mono_streaks.size() - 1;
                 }
 
                 // Add the current object to the encoded payload.
-                mono_streaks[current.value()].hit_objects.push_back(&object);
+                mono_streaks.back().hit_objects.push_back(&object);
             }
         }
 
         void
         encode_alternating_mono_patterns(std::vector<MonoStreak>& mono_streaks,
                                          std::vector<AlternatingMonoPattern>& alternating_mono_patterns) {
-            nonstd::optional<size_t> current;
-
             for (size_t i = 0; i < mono_streaks.size(); i++) {
                 // Start a new AlternatingMonoPattern if the previous MonoStreak has a different mono length,
                 // or if this is the first MonoStreak in the list.
-                if (!current.has_value() ||
+                if (alternating_mono_patterns.empty() ||
                     mono_streaks[i].run_length() != mono_streaks[i - 1].run_length()) {
                     alternating_mono_patterns.push_back(AlternatingMonoPattern());
-                    current = alternating_mono_patterns.size() - 1;
                 }
 
                 // Add the current MonoStreak to the encoded payload.
-                alternating_mono_patterns[current.value()].mono_streaks.push_back(&mono_streaks[i]);
+                alternating_mono_patterns.back().mono_streaks.push_back(&mono_streaks[i]);
             }
         }
 
         void encode_repeating_hit_patterns(std::vector<AlternatingMonoPattern>& alternating_mono_patterns,
                                            std::vector<RepeatingHitPatterns>& repeating_hit_patterns) {
-            nonstd::optional<size_t> current;
             size_t count = alternating_mono_patterns.size();
 
             repeating_hit_patterns.reserve(alternating_mono_patterns.size());
@@ -123,9 +116,8 @@ namespace pppp { namespace taiko { namespace difficulty { namespace preprocessin
                 // Start a new RepeatingHitPattern. AlternatingMonoPatterns that should be grouped together
                 // will be handled later within this loop.
                 RepeatingHitPatterns pattern;
-                pattern.previous = current.has_value() ? &repeating_hit_patterns[current.value()] : 0;
+                pattern.previous = repeating_hit_patterns.empty() ? 0 : &repeating_hit_patterns.back();
                 repeating_hit_patterns.push_back(pattern);
-                current = repeating_hit_patterns.size() - 1;
 
                 // Determine if future AlternatingMonoPatterns should be grouped.
                 bool coupled = i + 2 < count && alternating_mono_patterns[i].is_repetition_of(
@@ -133,14 +125,14 @@ namespace pppp { namespace taiko { namespace difficulty { namespace preprocessin
 
                 if (!coupled) {
                     // If not, add the current AlternatingMonoPattern to the encoded payload and continue.
-                    repeating_hit_patterns[current.value()].alternating_mono_patterns.push_back(
+                    repeating_hit_patterns.back().alternating_mono_patterns.push_back(
                         &alternating_mono_patterns[i]);
                 } else {
                     // If so, add the current AlternatingMonoPattern to the encoded payload and start
                     // repeatedly checking if the subsequent AlternatingMonoPatterns should be grouped by
                     // increasing i and doing the appropriate isCoupled check.
                     while (coupled) {
-                        repeating_hit_patterns[current.value()].alternating_mono_patterns.push_back(
+                        repeating_hit_patterns.back().alternating_mono_patterns.push_back(
                             &alternating_mono_patterns[i]);
                         i++;
                         coupled = i + 2 < count && alternating_mono_patterns[i].is_repetition_of(
@@ -148,9 +140,9 @@ namespace pppp { namespace taiko { namespace difficulty { namespace preprocessin
                     }
 
                     // Skip over viewed data and add the rest to the payload
-                    repeating_hit_patterns[current.value()].alternating_mono_patterns.push_back(
+                    repeating_hit_patterns.back().alternating_mono_patterns.push_back(
                         &alternating_mono_patterns[i]);
-                    repeating_hit_patterns[current.value()].alternating_mono_patterns.push_back(
+                    repeating_hit_patterns.back().alternating_mono_patterns.push_back(
                         &alternating_mono_patterns[i + 1]);
                     i++;
                 }

@@ -1,14 +1,19 @@
 #include "pppp/utils/math/legacy_score.h"
-#include <cstdio>
 #include <cstdlib>
+#include <iomanip>
+#include <locale>
+#include <sstream>
+#include <string>
 
 namespace pppp { namespace utils { namespace math {
     pppp_uint64 decimal15_scaled(double x, bool* negative) {
-        char buf[64];
-        std::sprintf(buf, "%.15g", x);
+        std::ostringstream out;
+        out.imbue(std::locale::classic());
+        out << std::setprecision(15) << x;
+        const std::string text = out.str();
 
         *negative = false;
-        const char* s = buf;
+        const char* s = text.c_str();
         if (*s == '-') {
             *negative = true;
             s++;

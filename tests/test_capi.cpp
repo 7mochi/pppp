@@ -1,11 +1,13 @@
 #include "common.h"
 #include "maps.h"
+#include "parity.h"
 #include "pppp/capi.h"
 #include "pppp/pppp.h"
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
 #include <doctest.h>
+#include <string>
 #include <vector>
 
 namespace beatmaps = ::pppp::beatmaps;
@@ -120,6 +122,77 @@ namespace {
             CHECK(attributes.mania.star_rating == pppp_test::difficulty_approx(mania.star_rating));
             break;
         }
+    }
+
+    pppp_difficulty_attributes parity_difficulty(const char* map, const char* spec, pppp_int32 ruleset) {
+        const std::string path = std::string(PPPP_TEST_RESOURCES) + "/" + map;
+        pppp_beatmap* beatmap = 0;
+        REQUIRE(pppp_beatmap_from_file(path.c_str(), &beatmap) == PPPP_OK);
+
+        const ModsHandle mods(spec);
+        pppp_difficulty_options options;
+        std::memset(&options, 0, sizeof(options));
+        options.mods = mods.handle;
+        options.ruleset = ruleset;
+        options.has_ruleset = 1;
+
+        pppp_difficulty_attributes attributes;
+        REQUIRE(pppp_calculate_difficulty(beatmap, &options, &attributes) == PPPP_OK);
+        pppp_beatmap_free(beatmap);
+
+        CHECK(attributes.ruleset == ruleset);
+        return attributes;
+    }
+
+    void check_parity_difficulty(const char* mode, pppp_int32 ruleset) {
+        const parity::Table rows("difficulty", mode);
+        REQUIRE(rows.size() > 0);
+
+        for (int i = 0; i < rows.size(); i++) {
+            const parity::Row row = rows[i];
+            const parity::Row expected = row.object("attributes");
+            const char* name = row.text("name");
+            const char* map = row.text("map");
+            const char* mods = row.text("mods");
+            INFO(name << " " << map << " " << mods);
+
+            const pppp_difficulty_attributes attributes = parity_difficulty(map, mods, ruleset);
+            CHECK(attributes.star_rating == pppp_test::difficulty_approx(expected.number("star_rating")));
+            CHECK(attributes.max_combo == expected.integer("max_combo"));
+        }
+    }
+
+    pppp_performance_attributes parity_performance(const char* map, const char* spec,
+                                                   const pppp_difficulty_attributes& difficulty,
+                                                   const common::ScoreInfo& score) {
+        const std::string path = std::string(PPPP_TEST_RESOURCES) + "/" + map;
+        pppp_beatmap* beatmap = 0;
+        REQUIRE(pppp_beatmap_from_file(path.c_str(), &beatmap) == PPPP_OK);
+
+        const ModsHandle mods(spec);
+        pppp_performance_options options;
+        std::memset(&options, 0, sizeof(options));
+        options.mods = mods.handle;
+        options.has_score = 1;
+        for (int i = 0; i < PPPP_HIT_RESULT_COUNT; i++) {
+            options.score.statistics[i] = score.statistics[i];
+            options.score.maximum_statistics[i] = score.maximum_statistics[i];
+        }
+        options.score.max_combo = score.max_combo;
+        options.score.accuracy = score.accuracy;
+        if (score.legacy_total_score.has_value()) {
+            options.score.has_legacy_total_score = 1;
+            options.score.legacy_total_score = score.legacy_total_score.value();
+        }
+        options.difficulty = &difficulty;
+        options.has_difficulty = 1;
+
+        pppp_performance_attributes attributes;
+        REQUIRE(pppp_calculate_performance(beatmap, &options, &attributes) == PPPP_OK);
+        pppp_beatmap_free(beatmap);
+
+        CHECK(attributes.ruleset == difficulty.ruleset);
+        return attributes;
     }
 } // namespace
 
@@ -665,5 +738,136 @@ TEST_SUITE("the C ABI") {
         CHECK(pppp_strains_info(0, 0, 0, 0) == PPPP_INVALID_ARGUMENT);
         CHECK(pppp_strains_osu(0, 0) == PPPP_INVALID_ARGUMENT);
         pppp_strains_free(0);
+    }
+}
+
+TEST_SUITE("the C ABI") {
+    TEST_CASE("the parity difficulty rows match upstream across the ABI") {
+        check_parity_difficulty("osu", PPPP_RULESET_OSU);
+        check_parity_difficulty("taiko", PPPP_RULESET_TAIKO);
+        check_parity_difficulty("catch", PPPP_RULESET_CATCH);
+        check_parity_difficulty("mania", PPPP_RULESET_MANIA);
+    }
+
+    TEST_CASE("the parity performance rows match upstream across the ABI") {
+        const parity::Table osu("performance", "osu");
+        REQUIRE(osu.size() > 0);
+        for (int i = 0; i < osu.size(); i++) {
+            const parity::Row row = osu[i];
+            const parity::Row given = row.object("score");
+            const char* name = row.text("name");
+            const char* map = row.text("map");
+            const char* mods = row.text("mods");
+            INFO(name << " " << map << " " << mods);
+
+            const int great = given.integer("great");
+            const int ok = given.integer("ok");
+            const int meh = given.integer("meh");
+            const int miss = given.integer("miss");
+            const pppp_difficulty_attributes difficulty = parity_difficulty(map, mods, PPPP_RULESET_OSU);
+            common::ScoreInfo score;
+            score.statistics[common::HIT_RESULT_GREAT] = great;
+            score.statistics[common::HIT_RESULT_OK] = ok;
+            score.statistics[common::HIT_RESULT_MEH] = meh;
+            score.statistics[common::HIT_RESULT_MISS] = miss;
+            score.statistics[common::HIT_RESULT_SLIDER_TAIL_HIT] = difficulty.osu.slider_count;
+            score.max_combo = given.integer("combo");
+            score.accuracy = given.number("accuracy") < 0.0
+                                 ? pppp_test::classic_accuracy(great, ok, meh, miss)
+                                 : given.number("accuracy");
+            if (given.integer("legacy_total_score") != 0) {
+                score.legacy_total_score = given.integer("legacy_total_score");
+            }
+
+            const pppp_performance_attributes pp = parity_performance(map, mods, difficulty, score);
+            CHECK(pp.total == pppp_test::pp_approx(row.object("attributes").number("total")));
+        }
+
+        const parity::Table taiko("performance", "taiko");
+        REQUIRE(taiko.size() > 0);
+        for (int i = 0; i < taiko.size(); i++) {
+            const parity::Row row = taiko[i];
+            const parity::Row given = row.object("score");
+            const char* name = row.text("name");
+            const char* map = row.text("map");
+            const char* mods = row.text("mods");
+            INFO(name << " " << map << " " << mods);
+
+            const int great = given.integer("great");
+            const int ok = given.integer("ok");
+            const int miss = given.integer("miss");
+            const pppp_difficulty_attributes difficulty = parity_difficulty(map, mods, PPPP_RULESET_TAIKO);
+            common::ScoreInfo score;
+            score.statistics[common::HIT_RESULT_GREAT] = great;
+            score.statistics[common::HIT_RESULT_OK] = ok;
+            score.statistics[common::HIT_RESULT_MISS] = miss;
+            score.max_combo = given.integer("combo") != 0 ? given.integer("combo") : difficulty.max_combo;
+            score.accuracy = (great * 300.0 + ok * 150.0) / ((great + ok + miss) * 300.0);
+
+            const pppp_performance_attributes pp = parity_performance(map, mods, difficulty, score);
+            CHECK(pp.total == pppp_test::pp_approx(row.object("attributes").number("total")));
+        }
+
+        const parity::Table fruits("performance", "catch");
+        REQUIRE(fruits.size() > 0);
+        for (int i = 0; i < fruits.size(); i++) {
+            const parity::Row row = fruits[i];
+            const parity::Row given = row.object("score");
+            const char* name = row.text("name");
+            const char* map = row.text("map");
+            const char* mods = row.text("mods");
+            INFO(name << " " << map << " " << mods);
+
+            const int great = given.integer("fruits");
+            const int droplets = given.integer("droplets");
+            const int tiny_droplets = given.integer("tiny_droplets");
+            const int tiny_misses = given.integer("tiny_misses");
+            const int miss = given.integer("miss");
+            const pppp_difficulty_attributes difficulty = parity_difficulty(map, mods, PPPP_RULESET_CATCH);
+            common::ScoreInfo score;
+            score.statistics[common::HIT_RESULT_GREAT] = great;
+            score.statistics[common::HIT_RESULT_LARGE_TICK_HIT] = droplets;
+            score.statistics[common::HIT_RESULT_SMALL_TICK_HIT] = tiny_droplets;
+            score.statistics[common::HIT_RESULT_SMALL_TICK_MISS] = tiny_misses;
+            score.statistics[common::HIT_RESULT_MISS] = miss;
+            score.max_combo = given.integer("combo") != 0 ? given.integer("combo") : difficulty.max_combo;
+            score.accuracy = static_cast<double>(great + droplets + tiny_droplets) /
+                             (great + droplets + tiny_droplets + tiny_misses + miss);
+
+            const pppp_performance_attributes pp = parity_performance(map, mods, difficulty, score);
+            CHECK(pp.total == pppp_test::pp_approx(row.object("attributes").number("total")));
+        }
+
+        const parity::Table mania("performance", "mania");
+        REQUIRE(mania.size() > 0);
+        for (int i = 0; i < mania.size(); i++) {
+            const parity::Row row = mania[i];
+            const parity::Row given = row.object("score");
+            const char* name = row.text("name");
+            const char* map = row.text("map");
+            const char* mods = row.text("mods");
+            INFO(name << " " << map << " " << mods);
+
+            const int perfect = given.integer("perfect");
+            const int great = given.integer("great");
+            const int good = given.integer("good");
+            const int ok = given.integer("ok");
+            const int meh = given.integer("meh");
+            const int miss = given.integer("miss");
+            const pppp_difficulty_attributes difficulty = parity_difficulty(map, mods, PPPP_RULESET_MANIA);
+            common::ScoreInfo score;
+            score.statistics[common::HIT_RESULT_PERFECT] = perfect;
+            score.statistics[common::HIT_RESULT_GREAT] = great;
+            score.statistics[common::HIT_RESULT_GOOD] = good;
+            score.statistics[common::HIT_RESULT_OK] = ok;
+            score.statistics[common::HIT_RESULT_MEH] = meh;
+            score.statistics[common::HIT_RESULT_MISS] = miss;
+            score.max_combo = given.integer("combo") != 0 ? given.integer("combo") : difficulty.max_combo;
+            score.accuracy = (perfect * 305.0 + great * 300.0 + good * 200.0 + ok * 100.0 + meh * 50.0) /
+                             ((perfect + great + good + ok + meh + miss) * 305.0);
+
+            const pppp_performance_attributes pp = parity_performance(map, mods, difficulty, score);
+            CHECK(pp.total == pppp_test::pp_approx(row.object("attributes").number("total")));
+        }
     }
 }

@@ -313,3 +313,79 @@ test("backend ships beside the binding", () => {
 test("FOSU_BACKEND=scalar forces the scalar engine", () => {
   expect(probeBackend("scalar")).toBe("scalar");
 });
+
+const PARITY = require("../../tests/parity/parity.json");
+
+function approx(actual, expected, epsilon) {
+  return Math.abs(actual - expected) < epsilon * (1.0 + Math.max(Math.abs(actual), Math.abs(expected)));
+}
+
+function classicAccuracy(great, ok, meh, miss) {
+  const total = great + ok + meh + miss;
+  return total <= 0 ? 1.0 : (great * 300.0 + ok * 100.0 + meh * 50.0) / (total * 300.0);
+}
+
+const RULESETS = { osu: pppp.Ruleset.Osu, taiko: pppp.Ruleset.Taiko, catch: pppp.Ruleset.Catch, mania: pppp.Ruleset.Mania };
+
+const SCORES = {
+  osu: (s, difficulty) => ({
+    maxCombo: s.combo,
+    accuracy: s.accuracy < 0.0 ? classicAccuracy(s.great, s.ok, s.meh, s.miss) : s.accuracy,
+    statistics: { great: s.great, ok: s.ok, meh: s.meh, miss: s.miss, sliderTailHit: difficulty.sliderCount },
+    legacyTotalScore: s.legacy_total_score !== 0 ? s.legacy_total_score : null,
+  }),
+  taiko: (s, difficulty) => ({
+    maxCombo: s.combo !== 0 ? s.combo : difficulty.maxCombo,
+    accuracy: (s.great * 300.0 + s.ok * 150.0) / ((s.great + s.ok + s.miss) * 300.0),
+    statistics: { great: s.great, ok: s.ok, miss: s.miss },
+  }),
+  catch: (s, difficulty) => ({
+    maxCombo: s.combo !== 0 ? s.combo : difficulty.maxCombo,
+    accuracy:
+      (s.fruits + s.droplets + s.tiny_droplets) / (s.fruits + s.droplets + s.tiny_droplets + s.tiny_misses + s.miss),
+    statistics: {
+      great: s.fruits,
+      largeTickHit: s.droplets,
+      smallTickHit: s.tiny_droplets,
+      smallTickMiss: s.tiny_misses,
+      miss: s.miss,
+    },
+  }),
+  mania: (s, difficulty) => ({
+    maxCombo: s.combo !== 0 ? s.combo : difficulty.maxCombo,
+    accuracy:
+      (s.perfect * 305.0 + s.great * 300.0 + s.good * 200.0 + s.ok * 100.0 + s.meh * 50.0) /
+      ((s.perfect + s.great + s.good + s.ok + s.meh + s.miss) * 305.0),
+    statistics: { perfect: s.perfect, great: s.great, good: s.good, ok: s.ok, meh: s.meh, miss: s.miss },
+  }),
+};
+
+test.each(Object.keys(RULESETS))("the %s parity difficulty rows match upstream", (mode) => {
+  for (const row of PARITY.difficulty[mode]) {
+    const attributes = new pppp.Difficulty({ mods: row.mods, ruleset: RULESETS[mode] }).calculate(beatmapOf(row.map));
+    expect([row.name, row.map, row.mods, approx(attributes.starRating, row.attributes.star_rating, 1e-6)]).toEqual([
+      row.name,
+      row.map,
+      row.mods,
+      true,
+    ]);
+    expect(attributes.maxCombo).toBe(row.attributes.max_combo);
+  }
+});
+
+test.each(Object.keys(RULESETS))("the %s parity performance rows match upstream", (mode) => {
+  for (const row of PARITY.performance[mode]) {
+    const beatmap = beatmapOf(row.map);
+    const difficulty = new pppp.Difficulty({ mods: row.mods, ruleset: RULESETS[mode] }).calculate(beatmap);
+    const play = new pppp.Performance({ mods: row.mods, ...SCORES[mode](row.score, difficulty) }).calculate(
+      beatmap,
+      difficulty
+    );
+    expect([row.name, row.map, row.mods, approx(play.total, row.attributes.total, 1e-9)]).toEqual([
+      row.name,
+      row.map,
+      row.mods,
+      true,
+    ]);
+  }
+});

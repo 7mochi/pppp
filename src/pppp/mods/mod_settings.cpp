@@ -64,8 +64,11 @@ namespace pppp { namespace mods {
                 if (setting.id != id || std::strcmp(setting.key, key) != 0) {
                     continue;
                 }
-                bool b;
-                return setting.is_bool ? utils::parse_bool(val, &b) : 0;
+                if (setting.is_bool) {
+                    bool b;
+                    return utils::parse_bool(val, &b);
+                }
+                return val != 0 && val[0] != 0 ? 0 : -1;
             }
             return -1;
         }
@@ -433,11 +436,16 @@ namespace pppp { namespace mods {
 
         char* pieces[64];
         size_t n = 0;
-        for (char* tok = std::strtok(buf, ","); tok && n < 64; tok = std::strtok(0, ",")) {
+        bool too_many = false;
+        for (char* tok = std::strtok(buf, ","); tok; tok = std::strtok(0, ",")) {
+            if (n >= sizeof(pieces) / sizeof(pieces[0])) {
+                too_many = true;
+                break;
+            }
             pieces[n++] = tok;
         }
 
-        if (n > max_count) {
+        if (too_many || n > max_count) {
             return -1;
         }
 

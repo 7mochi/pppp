@@ -7,6 +7,7 @@
 #include "pppp/performance.h"
 #include <cstddef>
 #include <doctest.h>
+#include <string>
 
 namespace common = ::pppp::common;
 
@@ -408,4 +409,21 @@ TEST_CASE("a mod built by hand keeps the value its bindable would") {
     pppp::mods::Mods pushed;
     pushed.push_back(magnetised);
     CHECK(pushed[0].magnetised.strength == 0.65f);
+}
+
+TEST_CASE("an empty value for an ignored setting is refused") {
+    pppp::Mods mods;
+    CHECK_FALSE(mods.parse("CO:coverage=").ok());
+}
+
+TEST_CASE("a mod list of more than 64 pieces is refused") {
+    std::string specification;
+    for (int i = 0; i < 65; i++) {
+        if (i != 0) {
+            specification += ",";
+        }
+        specification += "HD";
+    }
+    pppp::Mods mods;
+    CHECK_FALSE(mods.parse(specification.c_str()).ok());
 }

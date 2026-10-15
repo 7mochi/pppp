@@ -38,6 +38,7 @@ namespace pppp { namespace mods {
         Mod mod;
         mod_make(&mod, id);
         list.push_back(mod);
+        mod_apply_setting_rules(&list.back());
     }
 
     void Mods::add_classic() {

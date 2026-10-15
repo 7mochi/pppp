@@ -167,9 +167,9 @@ namespace pppp { namespace utils { namespace linq {
               stop(other.stop),
               owned(other.owned),
               is_list(other.is_list) {
-            if (other.owned) {
-                items.swap(other.items);
-                other.owned = false;
+            if (owned) {
+                items = other.items;
+                data = items.empty() ? 0 : &items[0];
             }
         }
 
@@ -297,10 +297,7 @@ namespace pppp { namespace utils { namespace linq {
 
         std::vector<T> to_list() const {
             std::vector<T> list;
-            if (owned && start == 0 && stop == items.size()) {
-                list.swap(items);
-                owned = false;
-            } else {
+            if (stop > start) {
                 list.assign(data + start, data + stop);
             }
             return list;
@@ -331,7 +328,12 @@ namespace pppp { namespace utils { namespace linq {
             return count;
         }
 
-        const T& element_at(int index) const { return data[start + static_cast<size_t>(index)]; }
+        const T& element_at(int index) const {
+            static const T empty = T();
+            return index >= 0 && static_cast<size_t>(index) < stop - start
+                       ? data[start + static_cast<size_t>(index)]
+                       : empty;
+        }
 
         T element_at_or_default(int index) const {
             return index >= 0 && static_cast<size_t>(index) < stop - start
@@ -339,18 +341,26 @@ namespace pppp { namespace utils { namespace linq {
                        : T();
         }
 
-        const T& first() const { return data[start]; }
+        const T& first() const {
+            static const T empty = T();
+            return stop > start ? data[start] : empty;
+        }
 
         template <typename Pred>
         const T& first(Pred pred) const {
-            size_t i = start;
-            while (!pred(data[i])) {
-                i++;
+            static const T empty = T();
+            for (size_t i = start; i < stop; i++) {
+                if (pred(data[i])) {
+                    return data[i];
+                }
             }
-            return data[i];
+            return empty;
         }
 
-        const T& last() const { return data[stop - 1]; }
+        const T& last() const {
+            static const T empty = T();
+            return stop > start ? data[stop - 1] : empty;
+        }
 
         T first_or_default() const { return stop > start ? data[start] : T(); }
 
@@ -374,6 +384,9 @@ namespace pppp { namespace utils { namespace linq {
         }
 
         double average() const {
+            if (stop == start) {
+                return 0.0;
+            }
             if (is_list) {
                 return sum() / static_cast<double>(stop - start);
             }
@@ -389,6 +402,10 @@ namespace pppp { namespace utils { namespace linq {
         }
 
         T max() const {
+            if (stop == start) {
+                return T();
+            }
+
             size_t i = start;
             while (i < stop && data[i] != data[i]) {
                 i++;
@@ -410,8 +427,13 @@ namespace pppp { namespace utils { namespace linq {
 
         template <typename Sel>
         typename Sel::template Result<T>::type max(Sel selector) const {
+            typedef typename Sel::template Result<T>::type R;
+            if (stop == start) {
+                return R();
+            }
+
             size_t i = start;
-            typename Sel::template Result<T>::type value = selector(data[i]);
+            R value = selector(data[i]);
             while (value != value) {
                 if (++i == stop) {
                     return value;
@@ -421,7 +443,7 @@ namespace pppp { namespace utils { namespace linq {
             }
 
             while (++i < stop) {
-                typename Sel::template Result<T>::type x = selector(data[i]);
+                R x = selector(data[i]);
                 if (x > value) {
                     value = x;
                 }

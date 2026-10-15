@@ -14,17 +14,14 @@ namespace pppp { namespace beatmaps { namespace control_points {
         void add_to_group(std::vector<T>& points, double time, T point) {
             point.time = time;
 
-            size_t i = 0;
-            while (i < points.size() && points[i].time < time) {
-                i++;
-            }
+            const int i = ControlPointInfo::binary_search(points, time, first_found);
 
-            if (i < points.size() && points[i].time == time) {
-                points[i] = point;
+            if (i >= 0) {
+                points[static_cast<size_t>(i)] = point;
                 return;
             }
 
-            points.insert(points.begin() + static_cast<ptrdiff_t>(i), point);
+            points.insert(points.begin() + static_cast<ptrdiff_t>(~i), point);
         }
 
         class LegacyBeatmapDecoder {
@@ -156,13 +153,7 @@ namespace pppp { namespace beatmaps { namespace control_points {
 
     bool ControlPointInfo::check_already_existing(double time, const TimingControlPoint& new_point) const {
         // Timing points are a special case and need to be added regardless of fallback availability.
-        const TimingControlPoint* existing = 0;
-        for (size_t i = 0; i < timing_points.size(); i++) {
-            if (timing_points[i].time == time) {
-                existing = &timing_points[i];
-                break;
-            }
-        }
+        const TimingControlPoint* existing = binary_search(timing_points, time);
 
         return new_point.is_redundant(existing);
     }
@@ -197,43 +188,15 @@ namespace pppp { namespace beatmaps { namespace control_points {
     }
 
     const TimingControlPoint* ControlPointInfo::timing_point_at(double time) const {
-        const TimingControlPoint* first = 0;
-        const TimingControlPoint* found = 0;
-
-        for (size_t i = 0; i < timing_points.size(); i++) {
-            if (first == 0) {
-                first = &timing_points[i];
-            }
-            if (timing_points[i].time > time) {
-                break;
-            }
-            found = &timing_points[i];
-        }
-
-        return found != 0 ? found : first;
+        return binary_search_with_fallback(timing_points, time,
+                                           timing_points.size() > 0 ? &timing_points[0] : 0);
     }
 
     const DifficultyControlPoint* ControlPointInfo::difficulty_point_at(double time) const {
-        const DifficultyControlPoint* found = 0;
-
-        for (size_t i = 0; i < difficulty_points.size(); i++) {
-            if (difficulty_points[i].time > time) {
-                break;
-            }
-            found = &difficulty_points[i];
-        }
-        return found;
+        return binary_search(difficulty_points, time);
     }
 
     const EffectControlPoint* ControlPointInfo::effect_point_at(double time) const {
-        const EffectControlPoint* found = 0;
-
-        for (size_t i = 0; i < effect_points.size(); i++) {
-            if (effect_points[i].time > time) {
-                break;
-            }
-            found = &effect_points[i];
-        }
-        return found;
+        return binary_search(effect_points, time);
     }
 }}} // namespace pppp::beatmaps::control_points

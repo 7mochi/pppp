@@ -13,29 +13,35 @@ function(pppp_add_test name label)
   set_tests_properties(${name} PROPERTIES LABELS ${label} TIMEOUT 300)
 endfunction()
 
+function(pppp_place_engine test_name)
+  if(TARGET fosu_engine_avx2)
+    set(engine $<TARGET_FILE:fosu_engine_avx2>)
+  elseif(TARGET fosu_engine_neon)
+    set(engine $<TARGET_FILE:fosu_engine_neon>)
+  else()
+    return()
+  endif()
+  add_custom_command(TARGET test_${test_name} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${engine} $<TARGET_FILE_DIR:test_${test_name}>)
+  add_test(NAME ${test_name}_scalar COMMAND test_${test_name})
+  set_tests_properties(${test_name}_scalar PROPERTIES LABELS library TIMEOUT 300
+    ENVIRONMENT "FOSU_BACKEND=scalar")
+endfunction()
+
 if(PPPP_WITH_FOSU)
   pppp_add_test(beatmap library pppp_fosu fosu)
   pppp_add_test(timed_and_strains library pppp_fosu)
   pppp_add_test(mod_behaviour library pppp_fosu)
   pppp_add_test(backend library pppp_fosu)
-  # The engine sits in the build tree, not beside the test binary; put it there so the default run
-  # exercises the real load, and run a second time with the scalar override.
-  if(TARGET fosu_engine_avx2)
-    add_custom_command(TARGET test_backend POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different
-              $<TARGET_FILE:fosu_engine_avx2> $<TARGET_FILE_DIR:test_backend>)
-  elseif(TARGET fosu_engine_neon)
-    add_custom_command(TARGET test_backend POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different
-              $<TARGET_FILE:fosu_engine_neon> $<TARGET_FILE_DIR:test_backend>)
-  endif()
-  add_test(NAME backend_scalar COMMAND test_backend)
-  set_tests_properties(backend_scalar PROPERTIES LABELS library TIMEOUT 300
-    ENVIRONMENT "FOSU_BACKEND=scalar")
+  pppp_place_engine(backend)
+  pppp_add_test(linq library)
 
   pppp_add_test(parity_decode library pppp_fosu pppp_cjson)
+  pppp_place_engine(parity_decode)
   pppp_add_test(parity_difficulty library pppp_fosu pppp_cjson)
+  pppp_place_engine(parity_difficulty)
   pppp_add_test(parity_performance library pppp_fosu pppp_cjson)
+  pppp_place_engine(parity_performance)
 endif()
 
 if(PPPP_WITH_FOSU AND PPPP_BUILD_CAPI)

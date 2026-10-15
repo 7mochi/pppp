@@ -3,8 +3,7 @@ include(CheckCSourceCompiles)
 add_library(pppp_c SHARED src/pppp/bindings/capi.cpp)
 set_target_properties(pppp_c PROPERTIES
   PREFIX ""
-  CXX_VISIBILITY_PRESET hidden
-  INTERPROCEDURAL_OPTIMIZATION OFF)
+  CXX_VISIBILITY_PRESET hidden)
 target_include_directories(pppp_c PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_compile_definitions(pppp_c PRIVATE PPPP_C_BUILD)
 target_link_libraries(pppp_c PRIVATE

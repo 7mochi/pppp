@@ -15,8 +15,7 @@ endif()
 Python_add_library(_core MODULE USE_SABI 3.10 WITH_SOABI
   ${CMAKE_CURRENT_SOURCE_DIR}/src/pppp/bindings/python.cpp)
 set_target_properties(_core PROPERTIES
-  CXX_VISIBILITY_PRESET hidden
-  INTERPROCEDURAL_OPTIMIZATION OFF)
+  CXX_VISIBILITY_PRESET hidden)
 target_include_directories(_core PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(_core PRIVATE
   pppp_fosu

@@ -1,8 +1,7 @@
 add_library(pppp_node SHARED src/pppp/bindings/node.cpp ${CMAKE_JS_SRC})
 set_target_properties(pppp_node PROPERTIES
   PREFIX ""
-  SUFFIX ".node"
-  INTERPROCEDURAL_OPTIMIZATION OFF)
+  SUFFIX ".node")
 target_compile_features(pppp_node PRIVATE cxx_std_11)
 target_compile_definitions(pppp_node PRIVATE NAPI_VERSION=8)
 target_include_directories(pppp_node PRIVATE ${CMAKE_JS_INC} ${CMAKE_CURRENT_SOURCE_DIR}/src)

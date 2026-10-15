@@ -27,8 +27,6 @@ set_property(CACHE PPPP_ISA PROPERTY STRINGS auto scalar avx2 neon)
 if(PPPP_BUILD_PYTHON OR PPPP_BUILD_NODE OR PPPP_BUILD_CAPI)
   # The library is static and the extension is a shared object.
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-  # Nothing links LTO objects across the extension boundary.
-  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
 endif()
 
 if(PROJECT_IS_TOP_LEVEL)

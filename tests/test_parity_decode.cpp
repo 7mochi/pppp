@@ -1,5 +1,5 @@
 #include "common.h"
-#include "parity/decode.h"
+#include "parity.h"
 
 #include <cstddef>
 #include <doctest.h>
@@ -7,14 +7,16 @@
 #include <string>
 
 TEST_CASE("the decoder matches upstream over the curated maps") {
-    const size_t rows = sizeof(parity::decode_rows) / sizeof(parity::decode_rows[0]);
-    REQUIRE(rows > 0);
+    const parity::Table rows("decode");
+    REQUIRE(rows.size() > 0);
 
-    for (size_t i = 0; i < rows; i++) {
-        const parity::DecodeRow& row = parity::decode_rows[i];
-        INFO(row.map);
+    for (int i = 0; i < rows.size(); i++) {
+        const parity::Row row = rows[i];
+        const parity::Row expected = row.object("decode");
+        const char* map = row.text("map");
+        INFO(map);
 
-        const std::string path = std::string(PPPP_TEST_RESOURCES) + "/" + row.map;
+        const std::string path = std::string(PPPP_TEST_RESOURCES) + "/" + map;
         fosu::Parser parser;
         fosu::ParseOptions options;
         options.client = fosu::Client::Lazer;
@@ -22,15 +24,16 @@ TEST_CASE("the decoder matches upstream over the curated maps") {
         REQUIRE_UNARY(parsed != NULL);
         const fosu::Beatmap& beatmap = *parsed;
 
-        CHECK(static_cast<int>(beatmap.format_version) == row.format);
-        CHECK(static_cast<int>(beatmap.mode) == row.mode);
-        CHECK(beatmap.ar == pppp_test::difficulty_approx(row.ar));
-        CHECK(beatmap.od == pppp_test::difficulty_approx(row.od));
-        CHECK(beatmap.cs == pppp_test::difficulty_approx(row.cs));
-        CHECK(beatmap.hp == pppp_test::difficulty_approx(row.hp));
-        CHECK(beatmap.slider_multiplier == pppp_test::difficulty_approx(row.slider_multiplier));
-        CHECK(beatmap.slider_tick_rate == pppp_test::difficulty_approx(row.slider_tick_rate));
-        CHECK(static_cast<int>(beatmap.hit_objects.size()) == row.hit_objects);
+        CHECK(static_cast<int>(beatmap.format_version) == expected.integer("format"));
+        CHECK(static_cast<int>(beatmap.mode) == expected.integer("mode"));
+        CHECK(beatmap.ar == pppp_test::difficulty_approx(expected.number("ar")));
+        CHECK(beatmap.od == pppp_test::difficulty_approx(expected.number("od")));
+        CHECK(beatmap.cs == pppp_test::difficulty_approx(expected.number("cs")));
+        CHECK(beatmap.hp == pppp_test::difficulty_approx(expected.number("hp")));
+        CHECK(beatmap.slider_multiplier ==
+              pppp_test::difficulty_approx(expected.number("slider_multiplier")));
+        CHECK(beatmap.slider_tick_rate == pppp_test::difficulty_approx(expected.number("slider_tick_rate")));
+        CHECK(static_cast<int>(beatmap.hit_objects.size()) == expected.integer("hit_objects"));
 
         int uninherited = 0;
         for (size_t point = 0; point < beatmap.timing_points.size(); point++) {
@@ -38,9 +41,9 @@ TEST_CASE("the decoder matches upstream over the curated maps") {
                 uninherited++;
             }
         }
-        CHECK(uninherited == row.uninherited_points);
+        CHECK(uninherited == expected.integer("uninherited_points"));
 
-        CHECK(static_cast<int>(beatmap.breaks.size()) == row.breaks);
-        CHECK(beatmap.stack_leniency == pppp_test::difficulty_approx(row.stack_leniency));
+        CHECK(static_cast<int>(beatmap.breaks.size()) == expected.integer("breaks"));
+        CHECK(beatmap.stack_leniency == pppp_test::difficulty_approx(expected.number("stack_leniency")));
     }
 }

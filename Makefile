@@ -100,4 +100,3 @@ check-tidy:
 
 generate-parity-tests:
 	python3 tests/parity/gen_parity.py
-	$(MAKE) format

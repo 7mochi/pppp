@@ -1,0 +1,5665 @@
+{
+  "version": "2026.730.0",
+  "decode": [
+    {
+      "map": "osu/diffcalc-test.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 8.300000190734863,
+        "od": 7,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.6,
+        "slider_tick_rate": 1,
+        "hit_objects": 124,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.30000001192092896
+      }
+    },
+    {
+      "map": "osu/zero-length-sliders.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 4.5,
+        "od": 3,
+        "cs": 3,
+        "hp": 3,
+        "slider_multiplier": 0.799999999999999,
+        "slider_tick_rate": 1,
+        "hit_objects": 9,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/very-fast-slider.osu",
+      "decode": {
+        "format": 128,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 9,
+        "cs": 4,
+        "hp": 3,
+        "slider_multiplier": 3.59999990463257,
+        "slider_tick_rate": 1,
+        "hit_objects": 2,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/nan-slider.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 10,
+        "od": 9.600000381469727,
+        "cs": 4,
+        "hp": 5.800000190734863,
+        "slider_multiplier": 2,
+        "slider_tick_rate": 1,
+        "hit_objects": 5,
+        "uninherited_points": 3,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/801165.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8,
+        "cs": 4,
+        "hp": 6,
+        "slider_multiplier": 2,
+        "slider_tick_rate": 1,
+        "hit_objects": 1612,
+        "uninherited_points": 1,
+        "breaks": 3,
+        "stack_leniency": 0.20000000298023224
+      }
+    },
+    {
+      "map": "osu/diffcalc-test.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 8.300000190734863,
+        "od": 7,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.6,
+        "slider_tick_rate": 1,
+        "hit_objects": 124,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.30000001192092896
+      }
+    },
+    {
+      "map": "osu/zero-length-sliders.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 4.5,
+        "od": 3,
+        "cs": 3,
+        "hp": 3,
+        "slider_multiplier": 0.799999999999999,
+        "slider_tick_rate": 1,
+        "hit_objects": 9,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/very-fast-slider.osu",
+      "decode": {
+        "format": 128,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 9,
+        "cs": 4,
+        "hp": 3,
+        "slider_multiplier": 3.59999990463257,
+        "slider_tick_rate": 1,
+        "hit_objects": 2,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/diffcalc-test.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 8.300000190734863,
+        "od": 7,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.6,
+        "slider_tick_rate": 1,
+        "hit_objects": 124,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.30000001192092896
+      }
+    },
+    {
+      "map": "osu/zero-length-sliders.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 4.5,
+        "od": 3,
+        "cs": 3,
+        "hp": 3,
+        "slider_multiplier": 0.799999999999999,
+        "slider_tick_rate": 1,
+        "hit_objects": 9,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/very-fast-slider.osu",
+      "decode": {
+        "format": 128,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 9,
+        "cs": 4,
+        "hp": 3,
+        "slider_multiplier": 3.59999990463257,
+        "slider_tick_rate": 1,
+        "hit_objects": 2,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/diffcalc-test.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 8.300000190734863,
+        "od": 7,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.6,
+        "slider_tick_rate": 1,
+        "hit_objects": 238,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/diffcalc-test-strong.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 8.300000190734863,
+        "od": 7,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.6,
+        "slider_tick_rate": 1,
+        "hit_objects": 238,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/diffcalc-test.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 8.300000190734863,
+        "od": 7,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.6,
+        "slider_tick_rate": 1,
+        "hit_objects": 238,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/diffcalc-test-strong.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 8.300000190734863,
+        "od": 7,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.6,
+        "slider_tick_rate": 1,
+        "hit_objects": 238,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "fruits/diffcalc-test.osu",
+      "decode": {
+        "format": 14,
+        "mode": 2,
+        "ar": 8.300000190734863,
+        "od": 7,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.6,
+        "slider_tick_rate": 1,
+        "hit_objects": 93,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.30000001192092896
+      }
+    },
+    {
+      "map": "fruits/diffcalc-test.osu",
+      "decode": {
+        "format": 14,
+        "mode": 2,
+        "ar": 8.300000190734863,
+        "od": 7,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.6,
+        "slider_tick_rate": 1,
+        "hit_objects": 93,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.30000001192092896
+      }
+    },
+    {
+      "map": "mania/diffcalc-test.osu",
+      "decode": {
+        "format": 14,
+        "mode": 3,
+        "ar": 8.300000190734863,
+        "od": 7,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.6,
+        "slider_tick_rate": 1,
+        "hit_objects": 137,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "mania/diffcalc-test.osu",
+      "decode": {
+        "format": 14,
+        "mode": 3,
+        "ar": 8.300000190734863,
+        "od": 7,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.6,
+        "slider_tick_rate": 1,
+        "hit_objects": 137,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "taiko/1028484.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 8,
+        "od": 5,
+        "cs": 2,
+        "hp": 6,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 295,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/1028484.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 8,
+        "od": 5,
+        "cs": 2,
+        "hp": 6,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 295,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/1028484.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 8,
+        "od": 5,
+        "cs": 2,
+        "hp": 6,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 295,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/nan-slider.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 10,
+        "od": 9.600000381469727,
+        "cs": 4,
+        "hp": 5.800000190734863,
+        "slider_multiplier": 2,
+        "slider_tick_rate": 1,
+        "hit_objects": 5,
+        "uninherited_points": 3,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/nan-slider.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 10,
+        "od": 9.600000381469727,
+        "cs": 4,
+        "hp": 5.800000190734863,
+        "slider_multiplier": 2,
+        "slider_tick_rate": 1,
+        "hit_objects": 5,
+        "uninherited_points": 3,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "fruits/2118524.osu",
+      "decode": {
+        "format": 14,
+        "mode": 2,
+        "ar": 8,
+        "od": 8,
+        "cs": 3.5,
+        "hp": 5,
+        "slider_multiplier": 1.45,
+        "slider_tick_rate": 1,
+        "hit_objects": 477,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "fruits/2118524.osu",
+      "decode": {
+        "format": 14,
+        "mode": 2,
+        "ar": 8,
+        "od": 8,
+        "cs": 3.5,
+        "hp": 5,
+        "slider_multiplier": 1.45,
+        "slider_tick_rate": 1,
+        "hit_objects": 477,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "fruits/2118524.osu",
+      "decode": {
+        "format": 14,
+        "mode": 2,
+        "ar": 8,
+        "od": 8,
+        "cs": 3.5,
+        "hp": 5,
+        "slider_multiplier": 1.45,
+        "slider_tick_rate": 1,
+        "hit_objects": 477,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "fruits/2118524.osu",
+      "decode": {
+        "format": 14,
+        "mode": 2,
+        "ar": 8,
+        "od": 8,
+        "cs": 3.5,
+        "hp": 5,
+        "slider_multiplier": 1.45,
+        "slider_tick_rate": 1,
+        "hit_objects": 477,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "mania/1638954.osu",
+      "decode": {
+        "format": 14,
+        "mode": 3,
+        "ar": 5,
+        "od": 8,
+        "cs": 4,
+        "hp": 8,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 594,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "mania/1638954.osu",
+      "decode": {
+        "format": 14,
+        "mode": 3,
+        "ar": 5,
+        "od": 8,
+        "cs": 4,
+        "hp": 8,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 594,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "taiko/diffcalc-test.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 8.300000190734863,
+        "od": 7,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.6,
+        "slider_tick_rate": 1,
+        "hit_objects": 238,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/diffcalc-test.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 8.300000190734863,
+        "od": 7,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.6,
+        "slider_tick_rate": 1,
+        "hit_objects": 124,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.30000001192092896
+      }
+    },
+    {
+      "map": "fruits/diffcalc-test.osu",
+      "decode": {
+        "format": 14,
+        "mode": 2,
+        "ar": 8.300000190734863,
+        "od": 7,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.6,
+        "slider_tick_rate": 1,
+        "hit_objects": 93,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.30000001192092896
+      }
+    },
+    {
+      "map": "mania/diffcalc-test.osu",
+      "decode": {
+        "format": 14,
+        "mode": 3,
+        "ar": 8.300000190734863,
+        "od": 7,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.6,
+        "slider_tick_rate": 1,
+        "hit_objects": 137,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "taiko/1028484.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 8,
+        "od": 5,
+        "cs": 2,
+        "hp": 6,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 295,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "fruits/2118524.osu",
+      "decode": {
+        "format": 14,
+        "mode": 2,
+        "ar": 8,
+        "od": 8,
+        "cs": 3.5,
+        "hp": 5,
+        "slider_multiplier": 1.45,
+        "slider_tick_rate": 1,
+        "hit_objects": 477,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "fruits/2118524.osu",
+      "decode": {
+        "format": 14,
+        "mode": 2,
+        "ar": 8,
+        "od": 8,
+        "cs": 3.5,
+        "hp": 5,
+        "slider_multiplier": 1.45,
+        "slider_tick_rate": 1,
+        "hit_objects": 477,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "mania/1638954.osu",
+      "decode": {
+        "format": 14,
+        "mode": 3,
+        "ar": 5,
+        "od": 8,
+        "cs": 4,
+        "hp": 8,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 594,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "taiko/v9.osu",
+      "decode": {
+        "format": 9,
+        "mode": 1,
+        "ar": 5,
+        "od": 5,
+        "cs": 5,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 716,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/v9.osu",
+      "decode": {
+        "format": 9,
+        "mode": 1,
+        "ar": 5,
+        "od": 5,
+        "cs": 5,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 716,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "fruits/v12.osu",
+      "decode": {
+        "format": 12,
+        "mode": 2,
+        "ar": 5,
+        "od": 5,
+        "cs": 3,
+        "hp": 3,
+        "slider_multiplier": 1,
+        "slider_tick_rate": 2,
+        "hit_objects": 292,
+        "uninherited_points": 1,
+        "breaks": 3,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "fruits/v12.osu",
+      "decode": {
+        "format": 12,
+        "mode": 2,
+        "ar": 5,
+        "od": 5,
+        "cs": 3,
+        "hp": 3,
+        "slider_multiplier": 1,
+        "slider_tick_rate": 2,
+        "hit_objects": 292,
+        "uninherited_points": 1,
+        "breaks": 3,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "mania/keys_4_holds.osu",
+      "decode": {
+        "format": 14,
+        "mode": 3,
+        "ar": 8,
+        "od": 0,
+        "cs": 4,
+        "hp": 8.800000190734863,
+        "slider_multiplier": 2.2,
+        "slider_tick_rate": 1,
+        "hit_objects": 520,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "mania/keys_4_holds.osu",
+      "decode": {
+        "format": 14,
+        "mode": 3,
+        "ar": 8,
+        "od": 0,
+        "cs": 4,
+        "hp": 8.800000190734863,
+        "slider_multiplier": 2.2,
+        "slider_tick_rate": 1,
+        "hit_objects": 520,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/out-of-order-lines.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 5,
+        "od": 5,
+        "cs": 5,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 46,
+        "uninherited_points": 2,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/out-of-order-lines.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 5,
+        "od": 5,
+        "cs": 5,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 46,
+        "uninherited_points": 2,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "osu/2785319.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9.300000190734863,
+        "od": 8.800000190734863,
+        "cs": 4.5,
+        "hp": 5,
+        "slider_multiplier": 1.7,
+        "slider_tick_rate": 1,
+        "hit_objects": 601,
+        "uninherited_points": 1,
+        "breaks": 1,
+        "stack_leniency": 0.5
+      }
+    },
+    {
+      "map": "fruits/2118524.osu",
+      "decode": {
+        "format": 14,
+        "mode": 2,
+        "ar": 8,
+        "od": 8,
+        "cs": 3.5,
+        "hp": 5,
+        "slider_multiplier": 1.45,
+        "slider_tick_rate": 1,
+        "hit_objects": 477,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/1028484.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 8,
+        "od": 5,
+        "cs": 2,
+        "hp": 6,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 295,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/1028484.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 8,
+        "od": 5,
+        "cs": 2,
+        "hp": 6,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 295,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "fruits/2118524.osu",
+      "decode": {
+        "format": 14,
+        "mode": 2,
+        "ar": 8,
+        "od": 8,
+        "cs": 3.5,
+        "hp": 5,
+        "slider_multiplier": 1.45,
+        "slider_tick_rate": 1,
+        "hit_objects": 477,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/negative-start-time.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9,
+        "od": 8,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 46,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/negative-start-time.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9,
+        "od": 8,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 46,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/negative-start-time.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9,
+        "od": 8,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 46,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/negative-start-time.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9,
+        "od": 8,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 46,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/negative-start-time.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9,
+        "od": 8,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 46,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/negative-start-time.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9,
+        "od": 8,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 46,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/negative-start-time.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9,
+        "od": 8,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 46,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/negative-start-time.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9,
+        "od": 8,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 46,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/negative-start-time.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9,
+        "od": 8,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 46,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/negative-start-time.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9,
+        "od": 8,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 46,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/negative-start-time.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9,
+        "od": 8,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 46,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/negative-start-time.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9,
+        "od": 8,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 46,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/simplified-rhythm-equal-times-1.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 5,
+        "od": 6,
+        "cs": 5,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 81,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/simplified-rhythm-equal-times-1.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 5,
+        "od": 6,
+        "cs": 5,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 81,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/simplified-rhythm-equal-times-2.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 5,
+        "od": 6,
+        "cs": 5,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 80,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/simplified-rhythm-equal-times-2.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 5,
+        "od": 6,
+        "cs": 5,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 80,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "mania/1638954.osu",
+      "decode": {
+        "format": 14,
+        "mode": 3,
+        "ar": 5,
+        "od": 8,
+        "cs": 4,
+        "hp": 8,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 594,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "mania/1638954.osu",
+      "decode": {
+        "format": 14,
+        "mode": 3,
+        "ar": 5,
+        "od": 8,
+        "cs": 4,
+        "hp": 8,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 594,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "mania/1638954.osu",
+      "decode": {
+        "format": 14,
+        "mode": 3,
+        "ar": 5,
+        "od": 8,
+        "cs": 4,
+        "hp": 8,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 594,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "mania/keys_4_holds.osu",
+      "decode": {
+        "format": 14,
+        "mode": 3,
+        "ar": 8,
+        "od": 0,
+        "cs": 4,
+        "hp": 8.800000190734863,
+        "slider_multiplier": 2.2,
+        "slider_tick_rate": 1,
+        "hit_objects": 520,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "mania/keys_4_holds.osu",
+      "decode": {
+        "format": 14,
+        "mode": 3,
+        "ar": 8,
+        "od": 0,
+        "cs": 4,
+        "hp": 8.800000190734863,
+        "slider_multiplier": 2.2,
+        "slider_tick_rate": 1,
+        "hit_objects": 520,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "mania/keys_4_holds.osu",
+      "decode": {
+        "format": 14,
+        "mode": 3,
+        "ar": 8,
+        "od": 0,
+        "cs": 4,
+        "hp": 8.800000190734863,
+        "slider_multiplier": 2.2,
+        "slider_tick_rate": 1,
+        "hit_objects": 520,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "mania/diffcalc-test.osu",
+      "decode": {
+        "format": 14,
+        "mode": 3,
+        "ar": 8.300000190734863,
+        "od": 7,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.6,
+        "slider_tick_rate": 1,
+        "hit_objects": 137,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "mania/diffcalc-test.osu",
+      "decode": {
+        "format": 14,
+        "mode": 3,
+        "ar": 8.300000190734863,
+        "od": 7,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.6,
+        "slider_tick_rate": 1,
+        "hit_objects": 137,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "mania/diffcalc-test.osu",
+      "decode": {
+        "format": 14,
+        "mode": 3,
+        "ar": 8.300000190734863,
+        "od": 7,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.6,
+        "slider_tick_rate": 1,
+        "hit_objects": 137,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "fruits/2118524.osu",
+      "decode": {
+        "format": 14,
+        "mode": 2,
+        "ar": 8,
+        "od": 8,
+        "cs": 3.5,
+        "hp": 5,
+        "slider_multiplier": 1.45,
+        "slider_tick_rate": 1,
+        "hit_objects": 477,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/positions-outside-playfield.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9,
+        "od": 8,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 60,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/positions-outside-playfield.osu",
+      "decode": {
+        "format": 14,
+        "mode": 0,
+        "ar": 9,
+        "od": 8,
+        "cs": 4,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 60,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/1028484.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 8,
+        "od": 5,
+        "cs": 2,
+        "hp": 6,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 295,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/1028484.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 8,
+        "od": 5,
+        "cs": 2,
+        "hp": 6,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 295,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/v9.osu",
+      "decode": {
+        "format": 9,
+        "mode": 1,
+        "ar": 5,
+        "od": 5,
+        "cs": 5,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 716,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/control-points-redundant-after-sorting.osu",
+      "decode": {
+        "format": 8,
+        "mode": 0,
+        "ar": 10,
+        "od": 3.3333330154418945,
+        "cs": 7.25,
+        "hp": 0,
+        "slider_multiplier": 3.6,
+        "slider_tick_rate": 3,
+        "hit_objects": 32,
+        "uninherited_points": 3,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/zero-length-slider-repeats.osu",
+      "decode": {
+        "format": 8,
+        "mode": 2,
+        "ar": 5,
+        "od": 10,
+        "cs": 3.3333330154418945,
+        "hp": 5,
+        "slider_multiplier": 0.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 26,
+        "uninherited_points": 2,
+        "breaks": 1,
+        "stack_leniency": 0.3333300054073334
+      }
+    },
+    {
+      "map": "osu/control-points-redundant-after-sorting.osu",
+      "decode": {
+        "format": 8,
+        "mode": 0,
+        "ar": 10,
+        "od": 3.3333330154418945,
+        "cs": 7.25,
+        "hp": 0,
+        "slider_multiplier": 3.6,
+        "slider_tick_rate": 3,
+        "hit_objects": 32,
+        "uninherited_points": 3,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/zero-length-slider-repeats.osu",
+      "decode": {
+        "format": 8,
+        "mode": 2,
+        "ar": 5,
+        "od": 10,
+        "cs": 3.3333330154418945,
+        "hp": 5,
+        "slider_multiplier": 0.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 26,
+        "uninherited_points": 2,
+        "breaks": 1,
+        "stack_leniency": 0.3333300054073334
+      }
+    },
+    {
+      "map": "osu/control-points-redundant-after-sorting.osu",
+      "decode": {
+        "format": 8,
+        "mode": 0,
+        "ar": 10,
+        "od": 3.3333330154418945,
+        "cs": 7.25,
+        "hp": 0,
+        "slider_multiplier": 3.6,
+        "slider_tick_rate": 3,
+        "hit_objects": 32,
+        "uninherited_points": 3,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/zero-length-slider-repeats.osu",
+      "decode": {
+        "format": 8,
+        "mode": 2,
+        "ar": 5,
+        "od": 10,
+        "cs": 3.3333330154418945,
+        "hp": 5,
+        "slider_multiplier": 0.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 26,
+        "uninherited_points": 2,
+        "breaks": 1,
+        "stack_leniency": 0.3333300054073334
+      }
+    },
+    {
+      "map": "osu/control-points-redundant-after-sorting.osu",
+      "decode": {
+        "format": 8,
+        "mode": 0,
+        "ar": 10,
+        "od": 3.3333330154418945,
+        "cs": 7.25,
+        "hp": 0,
+        "slider_multiplier": 3.6,
+        "slider_tick_rate": 3,
+        "hit_objects": 32,
+        "uninherited_points": 3,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "osu/zero-length-slider-repeats.osu",
+      "decode": {
+        "format": 8,
+        "mode": 2,
+        "ar": 5,
+        "od": 10,
+        "cs": 3.3333330154418945,
+        "hp": 5,
+        "slider_multiplier": 0.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 26,
+        "uninherited_points": 2,
+        "breaks": 1,
+        "stack_leniency": 0.3333300054073334
+      }
+    },
+    {
+      "map": "taiko/timing-lines-official-rules.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 5,
+        "od": 6,
+        "cs": 5,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 74,
+        "uninherited_points": 2,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "taiko/timing-lines-official-rules.osu",
+      "decode": {
+        "format": 14,
+        "mode": 1,
+        "ar": 5,
+        "od": 6,
+        "cs": 5,
+        "hp": 5,
+        "slider_multiplier": 1.4,
+        "slider_tick_rate": 1,
+        "hit_objects": 74,
+        "uninherited_points": 2,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "fruits/2118524.osu",
+      "decode": {
+        "format": 14,
+        "mode": 2,
+        "ar": 8,
+        "od": 8,
+        "cs": 3.5,
+        "hp": 5,
+        "slider_multiplier": 1.45,
+        "slider_tick_rate": 1,
+        "hit_objects": 477,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    },
+    {
+      "map": "fruits/2118524.osu",
+      "decode": {
+        "format": 14,
+        "mode": 2,
+        "ar": 8,
+        "od": 8,
+        "cs": 3.5,
+        "hp": 5,
+        "slider_multiplier": 1.45,
+        "slider_tick_rate": 1,
+        "hit_objects": 477,
+        "uninherited_points": 1,
+        "breaks": 0,
+        "stack_leniency": 0.699999988079071
+      }
+    }
+  ],
+  "difficulty": {
+    "osu": [
+      {
+        "name": "the difficulty of each test map",
+        "map": "osu/diffcalc-test.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 6.524323005451468,
+          "max_combo": 239,
+          "aim_difficulty": 3.809399008867019,
+          "aim_difficult_slider_count": 11.137949908959307,
+          "speed_difficulty": 1.564710574509105,
+          "speed_note_count": 35.00731556214938,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 1.7803497292117219,
+          "slider_factor": 0.9988227250155558,
+          "aim_top_weighted_slider_factor": 0.0005552512404434412,
+          "speed_top_weighted_slider_factor": 0.00060855352799461,
+          "aim_difficult_strain_count": 28.73087574834563,
+          "speed_difficult_strain_count": 29.206477306149882,
+          "reading_difficult_note_count": 32.18033420358422,
+          "nested_score_per_object": 172.90322580645162,
+          "legacy_score_base_multiplier": 3,
+          "maximum_legacy_combo_score": 389808,
+          "hit_circle_count": 79,
+          "slider_count": 33,
+          "spinner_count": 12
+        }
+      },
+      {
+        "name": "the difficulty of each test map",
+        "map": "osu/zero-length-sliders.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 1.328041079579142,
+          "max_combo": 54,
+          "aim_difficulty": 0.8047199090813555,
+          "aim_difficult_slider_count": 5.5195782106962845,
+          "speed_difficulty": 0.14637104432181036,
+          "speed_note_count": 7.260960156835775,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0,
+          "slider_factor": 0.20034128324520503,
+          "aim_top_weighted_slider_factor": 2.203276177694309,
+          "speed_top_weighted_slider_factor": 4.942465939128777,
+          "aim_difficult_strain_count": 6.586705531118134,
+          "speed_difficult_strain_count": 4.942465939128777,
+          "reading_difficult_note_count": 0,
+          "nested_score_per_object": 100,
+          "legacy_score_base_multiplier": 2,
+          "maximum_legacy_combo_score": 5832,
+          "hit_circle_count": 0,
+          "slider_count": 9,
+          "spinner_count": 0
+        }
+      },
+      {
+        "name": "the difficulty of each test map",
+        "map": "osu/very-fast-slider.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 0.4086732514769756,
+          "max_combo": 4,
+          "aim_difficulty": 0,
+          "aim_difficult_slider_count": 0,
+          "speed_difficulty": 0.24790400430174017,
+          "speed_note_count": 0.9975273768433653,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0,
+          "slider_factor": 1,
+          "aim_top_weighted_slider_factor": 0,
+          "speed_top_weighted_slider_factor": 0.8453772618489194,
+          "aim_difficult_strain_count": 1,
+          "speed_difficult_strain_count": 0.8453772618489194,
+          "reading_difficult_note_count": 0,
+          "nested_score_per_object": 60,
+          "legacy_score_base_multiplier": 4,
+          "maximum_legacy_combo_score": 192,
+          "hit_circle_count": 0,
+          "slider_count": 2,
+          "spinner_count": 0
+        }
+      },
+      {
+        "name": "the difficulty of each test map",
+        "map": "osu/nan-slider.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 0.8705817579435355,
+          "max_combo": 6,
+          "aim_difficulty": 0.0016034639250686739,
+          "aim_difficult_slider_count": 0.9975273768433653,
+          "speed_difficulty": 0.5279682051204058,
+          "speed_note_count": 2.895514698632849,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0.0615058614520768,
+          "slider_factor": 1,
+          "aim_top_weighted_slider_factor": 0.9996986701109517,
+          "speed_top_weighted_slider_factor": 0.7372378195515912,
+          "aim_difficult_strain_count": 2.2003315627877313,
+          "speed_difficult_strain_count": 2.57194339083798,
+          "reading_difficult_note_count": 1.6360630428141953,
+          "nested_score_per_object": 12,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 480,
+          "hit_circle_count": 4,
+          "slider_count": 1,
+          "spinner_count": 0
+        }
+      },
+      {
+        "name": "the difficulty of each test map",
+        "map": "osu/801165.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 6.305978712257887,
+          "max_combo": 2359,
+          "aim_difficulty": 3.5141717095461806,
+          "aim_difficult_slider_count": 253.68984309768354,
+          "speed_difficulty": 2.407992156652434,
+          "speed_note_count": 796.6084994593903,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 1.2807842408799812,
+          "slider_factor": 0.9795548616785261,
+          "aim_top_weighted_slider_factor": 0.6280004197964858,
+          "speed_top_weighted_slider_factor": 0.5384075054455807,
+          "aim_difficult_strain_count": 154.3116239861726,
+          "speed_difficult_strain_count": 432.92911452386227,
+          "reading_difficult_note_count": 97.2298594638484,
+          "nested_score_per_object": 26.39578163771712,
+          "legacy_score_base_multiplier": 4,
+          "maximum_legacy_combo_score": 91937232,
+          "hit_circle_count": 938,
+          "slider_count": 674,
+          "spinner_count": 0
+        }
+      },
+      {
+        "name": "the difficulty of each test map at a changed clock rate",
+        "map": "osu/diffcalc-test.osu",
+        "mods": "DT",
+        "attributes": {
+          "star_rating": 9.467769487798352,
+          "max_combo": 239,
+          "aim_difficulty": 5.5930033565507795,
+          "aim_difficult_slider_count": 2.6651617180509333,
+          "speed_difficulty": 2.1913401312274825,
+          "speed_note_count": 36.9063434987444,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 2.1998562282900487,
+          "slider_factor": 0.9964851154347204,
+          "aim_top_weighted_slider_factor": 0.0038877201036921732,
+          "speed_top_weighted_slider_factor": 0.002625629759056472,
+          "aim_difficult_strain_count": 29.378811798031787,
+          "speed_difficult_strain_count": 28.42851914016024,
+          "reading_difficult_note_count": 36.68311058628488,
+          "nested_score_per_object": 172.90322580645162,
+          "legacy_score_base_multiplier": 3,
+          "maximum_legacy_combo_score": 389808,
+          "hit_circle_count": 79,
+          "slider_count": 33,
+          "spinner_count": 12
+        }
+      },
+      {
+        "name": "the difficulty of each test map at a changed clock rate",
+        "map": "osu/zero-length-sliders.osu",
+        "mods": "DT",
+        "attributes": {
+          "star_rating": 1.6856612715618884,
+          "max_combo": 54,
+          "aim_difficulty": 1.0212972657136223,
+          "aim_difficult_slider_count": 5.364024981273354,
+          "speed_difficulty": 0.19165890402964203,
+          "speed_note_count": 7.1647649413066965,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0,
+          "slider_factor": 0.2004261317557635,
+          "aim_top_weighted_slider_factor": 2.2801353154670405,
+          "speed_top_weighted_slider_factor": 4.982738013041065,
+          "aim_difficult_strain_count": 6.578698588568784,
+          "speed_difficult_strain_count": 4.982738013041065,
+          "reading_difficult_note_count": 0,
+          "nested_score_per_object": 100,
+          "legacy_score_base_multiplier": 2,
+          "maximum_legacy_combo_score": 5832,
+          "hit_circle_count": 0,
+          "slider_count": 9,
+          "spinner_count": 0
+        }
+      },
+      {
+        "name": "the difficulty of each test map at a changed clock rate",
+        "map": "osu/very-fast-slider.osu",
+        "mods": "DT",
+        "attributes": {
+          "star_rating": 0.5358847318657255,
+          "max_combo": 4,
+          "aim_difficulty": 0,
+          "aim_difficult_slider_count": 0,
+          "speed_difficulty": 0.32507136298633504,
+          "speed_note_count": 0.9975273768433653,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0,
+          "slider_factor": 1,
+          "aim_top_weighted_slider_factor": 0,
+          "speed_top_weighted_slider_factor": 0.8453772618489194,
+          "aim_difficult_strain_count": 1,
+          "speed_difficult_strain_count": 0.8453772618489194,
+          "reading_difficult_note_count": 0,
+          "nested_score_per_object": 60,
+          "legacy_score_base_multiplier": 4,
+          "maximum_legacy_combo_score": 192,
+          "hit_circle_count": 0,
+          "slider_count": 2,
+          "spinner_count": 0
+        }
+      },
+      {
+        "name": "the difficulty of each test map with the classic mod",
+        "map": "osu/diffcalc-test.osu",
+        "mods": "CL",
+        "attributes": {
+          "star_rating": 6.524323005451468,
+          "max_combo": 239,
+          "aim_difficulty": 3.809399008867019,
+          "aim_difficult_slider_count": 11.137949908959307,
+          "speed_difficulty": 1.564710574509105,
+          "speed_note_count": 35.00731556214938,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 1.7803497292117219,
+          "slider_factor": 0.9988227250155558,
+          "aim_top_weighted_slider_factor": 0.0005552512404434412,
+          "speed_top_weighted_slider_factor": 0.00060855352799461,
+          "aim_difficult_strain_count": 28.73087574834563,
+          "speed_difficult_strain_count": 29.206477306149882,
+          "reading_difficult_note_count": 32.18033420358422,
+          "nested_score_per_object": 172.90322580645162,
+          "legacy_score_base_multiplier": 3,
+          "maximum_legacy_combo_score": 389808,
+          "hit_circle_count": 79,
+          "slider_count": 33,
+          "spinner_count": 12
+        }
+      },
+      {
+        "name": "the difficulty of each test map with the classic mod",
+        "map": "osu/zero-length-sliders.osu",
+        "mods": "CL",
+        "attributes": {
+          "star_rating": 1.328041079579142,
+          "max_combo": 54,
+          "aim_difficulty": 0.8047199090813555,
+          "aim_difficult_slider_count": 5.5195782106962845,
+          "speed_difficulty": 0.14637104432181036,
+          "speed_note_count": 7.260960156835775,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0,
+          "slider_factor": 0.20034128324520503,
+          "aim_top_weighted_slider_factor": 2.203276177694309,
+          "speed_top_weighted_slider_factor": 4.942465939128777,
+          "aim_difficult_strain_count": 6.586705531118134,
+          "speed_difficult_strain_count": 4.942465939128777,
+          "reading_difficult_note_count": 0,
+          "nested_score_per_object": 100,
+          "legacy_score_base_multiplier": 2,
+          "maximum_legacy_combo_score": 5832,
+          "hit_circle_count": 0,
+          "slider_count": 9,
+          "spinner_count": 0
+        }
+      },
+      {
+        "name": "the difficulty of each test map with the classic mod",
+        "map": "osu/very-fast-slider.osu",
+        "mods": "CL",
+        "attributes": {
+          "star_rating": 0.4086732514769756,
+          "max_combo": 4,
+          "aim_difficulty": 0,
+          "aim_difficult_slider_count": 0,
+          "speed_difficulty": 0.24790400430174017,
+          "speed_note_count": 0.9975273768433653,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0,
+          "slider_factor": 1,
+          "aim_top_weighted_slider_factor": 0,
+          "speed_top_weighted_slider_factor": 0.8453772618489194,
+          "aim_difficult_strain_count": 1,
+          "speed_difficult_strain_count": 0.8453772618489194,
+          "reading_difficult_note_count": 0,
+          "nested_score_per_object": 60,
+          "legacy_score_base_multiplier": 4,
+          "maximum_legacy_combo_score": 192,
+          "hit_circle_count": 0,
+          "slider_count": 2,
+          "spinner_count": 0
+        }
+      },
+      {
+        "name": "a basic osu! map",
+        "map": "osu/2785319.osu",
+        "mods": "",
+        "attributes": {
+          "star_rating": 6.004027372552197,
+          "max_combo": 909,
+          "aim_difficulty": 3.27863857424994,
+          "aim_difficult_slider_count": 192.5269999738169,
+          "speed_difficulty": 2.4917265153109014,
+          "speed_note_count": 183.0639785973236,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0.8229208521405954,
+          "slider_factor": 0.963038689276571,
+          "aim_top_weighted_slider_factor": 1.524202370856421,
+          "speed_top_weighted_slider_factor": 0.536191641231213,
+          "aim_difficult_strain_count": 124.69544446818438,
+          "speed_difficult_strain_count": 81.74921671931915,
+          "reading_difficult_note_count": 34.92251595856365,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "an osu! map at a changed clock rate with HD",
+        "map": "osu/2785319.osu",
+        "mods": "HD,DT",
+        "attributes": {
+          "star_rating": 8.898179651893287,
+          "max_combo": 909,
+          "aim_difficulty": 4.693556954514378,
+          "aim_difficult_slider_count": 207.97415619378023,
+          "speed_difficulty": 3.674242476685813,
+          "speed_note_count": 211.45478779956713,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 2.588679366684501,
+          "slider_factor": 0.9674908735064722,
+          "aim_top_weighted_slider_factor": 1.476888448482664,
+          "speed_top_weighted_slider_factor": 0.6387657108874909,
+          "aim_difficult_strain_count": 144.31095827870723,
+          "speed_difficult_strain_count": 86.60969041721593,
+          "reading_difficult_note_count": 189.92861559542175,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "the difficulty of each test map",
+        "map": "osu/diffcalc-test.osu",
+        "mods": "",
+        "attributes": {
+          "star_rating": 6.524323005451468,
+          "max_combo": 239,
+          "aim_difficulty": 3.809399008867019,
+          "aim_difficult_slider_count": 11.137949908959307,
+          "speed_difficulty": 1.564710574509105,
+          "speed_note_count": 35.00731556214938,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 1.7803497292117219,
+          "slider_factor": 0.9988227250155558,
+          "aim_top_weighted_slider_factor": 0.0005552512404434412,
+          "speed_top_weighted_slider_factor": 0.00060855352799461,
+          "aim_difficult_strain_count": 28.73087574834563,
+          "speed_difficult_strain_count": 29.206477306149882,
+          "reading_difficult_note_count": 32.18033420358422,
+          "nested_score_per_object": 172.90322580645162,
+          "legacy_score_base_multiplier": 3,
+          "maximum_legacy_combo_score": 389808,
+          "hit_circle_count": 79,
+          "slider_count": 33,
+          "spinner_count": 12
+        }
+      },
+      {
+        "name": "a basic osu! map",
+        "map": "osu/2785319.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 6.004027372552197,
+          "max_combo": 909,
+          "aim_difficulty": 3.27863857424994,
+          "aim_difficult_slider_count": 192.5269999738169,
+          "speed_difficulty": 2.4917265153109014,
+          "speed_note_count": 183.0639785973236,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0.8229208521405954,
+          "slider_factor": 0.963038689276571,
+          "aim_top_weighted_slider_factor": 1.524202370856421,
+          "speed_top_weighted_slider_factor": 0.536191641231213,
+          "aim_difficult_strain_count": 124.69544446818438,
+          "speed_difficult_strain_count": 81.74921671931915,
+          "reading_difficult_note_count": 34.92251595856365,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "a basic osu! map",
+        "map": "osu/2785319.osu",
+        "mods": "HD",
+        "attributes": {
+          "star_rating": 6.308336834596954,
+          "max_combo": 909,
+          "aim_difficulty": 3.27863857424994,
+          "aim_difficult_slider_count": 192.5269999738169,
+          "speed_difficulty": 2.4917265153109014,
+          "speed_note_count": 183.0639785973236,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 2.1827264342501156,
+          "slider_factor": 0.963038689276571,
+          "aim_top_weighted_slider_factor": 1.524202370856421,
+          "speed_top_weighted_slider_factor": 0.536191641231213,
+          "aim_difficult_strain_count": 124.69544446818438,
+          "speed_difficult_strain_count": 81.74921671931915,
+          "reading_difficult_note_count": 135.7746987103988,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "a basic osu! map",
+        "map": "osu/2785319.osu",
+        "mods": "EZ,HD",
+        "attributes": {
+          "star_rating": 6.891768477382506,
+          "max_combo": 909,
+          "aim_difficulty": 2.7625488821040367,
+          "aim_difficult_slider_count": 196.89037873007746,
+          "speed_difficulty": 2.3995360680924946,
+          "speed_note_count": 192.2649456376246,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 3.5538685094268883,
+          "slider_factor": 0.9796909646357417,
+          "aim_top_weighted_slider_factor": 1.562739917685155,
+          "speed_top_weighted_slider_factor": 0.5369556982593612,
+          "aim_difficult_strain_count": 129.38126835796155,
+          "speed_difficult_strain_count": 84.40439036292067,
+          "reading_difficult_note_count": 124.55280093376417,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "a basic osu! map",
+        "map": "osu/2785319.osu",
+        "mods": "HR",
+        "attributes": {
+          "star_rating": 6.713673504226164,
+          "max_combo": 909,
+          "aim_difficulty": 3.799232322249643,
+          "aim_difficult_slider_count": 191.8309507640488,
+          "speed_difficulty": 2.4917265153109014,
+          "speed_note_count": 183.0639785973236,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0.9144658746351508,
+          "slider_factor": 0.9475983634088616,
+          "aim_top_weighted_slider_factor": 1.510078933241033,
+          "speed_top_weighted_slider_factor": 0.536191641231213,
+          "aim_difficult_strain_count": 119.62860170592188,
+          "speed_difficult_strain_count": 81.74921671931915,
+          "reading_difficult_note_count": 38.427842331296304,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "a basic osu! map",
+        "map": "osu/2785319.osu",
+        "mods": "DT",
+        "attributes": {
+          "star_rating": 8.762958976840826,
+          "max_combo": 909,
+          "aim_difficulty": 4.693556954514378,
+          "aim_difficult_slider_count": 207.97415619378023,
+          "speed_difficulty": 3.674242476685813,
+          "speed_note_count": 211.45478779956713,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 2.0228172499241897,
+          "slider_factor": 0.9674908735064722,
+          "aim_top_weighted_slider_factor": 1.476888448482664,
+          "speed_top_weighted_slider_factor": 0.6387657108874909,
+          "aim_difficult_strain_count": 144.31095827870723,
+          "speed_difficult_strain_count": 86.60969041721593,
+          "reading_difficult_note_count": 190.90786995621218,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "a basic osu! map",
+        "map": "osu/2785319.osu",
+        "mods": "FL",
+        "attributes": {
+          "star_rating": 7.036258413665859,
+          "max_combo": 909,
+          "aim_difficulty": 3.27863857424994,
+          "aim_difficult_slider_count": 192.5269999738169,
+          "speed_difficulty": 2.4917265153109014,
+          "speed_note_count": 183.0639785973236,
+          "flashlight_difficulty": 2.345608737345168,
+          "reading_difficulty": 0.8229208521405954,
+          "slider_factor": 0.963038689276571,
+          "aim_top_weighted_slider_factor": 1.524202370856421,
+          "speed_top_weighted_slider_factor": 0.536191641231213,
+          "aim_difficult_strain_count": 124.69544446818438,
+          "speed_difficult_strain_count": 81.74921671931915,
+          "reading_difficult_note_count": 34.92251595856365,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "a basic osu! map",
+        "map": "osu/2785319.osu",
+        "mods": "HD,FL",
+        "attributes": {
+          "star_rating": 7.47402836368438,
+          "max_combo": 909,
+          "aim_difficulty": 3.27863857424994,
+          "aim_difficult_slider_count": 192.5269999738169,
+          "speed_difficulty": 2.4917265153109014,
+          "speed_note_count": 183.0639785973236,
+          "flashlight_difficulty": 2.6270894946667935,
+          "reading_difficulty": 2.1827264342501156,
+          "slider_factor": 0.963038689276571,
+          "aim_top_weighted_slider_factor": 1.524202370856421,
+          "speed_top_weighted_slider_factor": 0.536191641231213,
+          "aim_difficult_strain_count": 124.69544446818438,
+          "speed_difficult_strain_count": 81.74921671931915,
+          "reading_difficult_note_count": 135.7746987103988,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "osu!standard scores with misses on 2785319.osu",
+        "map": "osu/2785319.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 6.004027372552197,
+          "max_combo": 909,
+          "aim_difficulty": 3.27863857424994,
+          "aim_difficult_slider_count": 192.5269999738169,
+          "speed_difficulty": 2.4917265153109014,
+          "speed_note_count": 183.0639785973236,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0.8229208521405954,
+          "slider_factor": 0.963038689276571,
+          "aim_top_weighted_slider_factor": 1.524202370856421,
+          "speed_top_weighted_slider_factor": 0.536191641231213,
+          "aim_difficult_strain_count": 124.69544446818438,
+          "speed_difficult_strain_count": 81.74921671931915,
+          "reading_difficult_note_count": 34.92251595856365,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "osu!standard scores with misses on 2785319.osu",
+        "map": "osu/2785319.osu",
+        "mods": "HD,HR,DT,FL",
+        "attributes": {
+          "star_rating": 11.821389464172313,
+          "max_combo": 909,
+          "aim_difficulty": 5.422852242848136,
+          "aim_difficult_slider_count": 206.4671687341945,
+          "speed_difficulty": 3.674242476685813,
+          "speed_note_count": 211.45478779956713,
+          "flashlight_difficulty": 4.743646721503201,
+          "reading_difficulty": 4.001737094954956,
+          "slider_factor": 0.9543512779577711,
+          "aim_top_weighted_slider_factor": 1.4722408526507504,
+          "speed_top_weighted_slider_factor": 0.6387657108874909,
+          "aim_difficult_strain_count": 138.5735240743273,
+          "speed_difficult_strain_count": 86.60969041721593,
+          "reading_difficult_note_count": 163.61762127245393,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "osu!standard scores with misses on 2785319.osu",
+        "map": "osu/2785319.osu",
+        "mods": "CL",
+        "attributes": {
+          "star_rating": 6.004027372552197,
+          "max_combo": 909,
+          "aim_difficulty": 3.27863857424994,
+          "aim_difficult_slider_count": 192.5269999738169,
+          "speed_difficulty": 2.4917265153109014,
+          "speed_note_count": 183.0639785973236,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0.8229208521405954,
+          "slider_factor": 0.963038689276571,
+          "aim_top_weighted_slider_factor": 1.524202370856421,
+          "speed_top_weighted_slider_factor": 0.536191641231213,
+          "aim_difficult_strain_count": 124.69544446818438,
+          "speed_difficult_strain_count": 81.74921671931915,
+          "reading_difficult_note_count": 34.92251595856365,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "a rate setting rounded to its precision",
+        "map": "osu/2785319.osu",
+        "mods": "DT:speed_change=1.234",
+        "attributes": {
+          "star_rating": 7.195475021327139,
+          "max_combo": 909,
+          "aim_difficulty": 3.938637817622695,
+          "aim_difficult_slider_count": 200.35770657749478,
+          "speed_difficulty": 2.9741807090227237,
+          "speed_note_count": 206.77996577022242,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0.9056281562205635,
+          "slider_factor": 0.9644221477143284,
+          "aim_top_weighted_slider_factor": 1.5026833463153446,
+          "speed_top_weighted_slider_factor": 0.5939154829372213,
+          "aim_difficult_strain_count": 132.6473234977634,
+          "speed_difficult_strain_count": 86.23119571970038,
+          "reading_difficult_note_count": 94.27154407642361,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "a rate setting rounded to its precision",
+        "map": "osu/2785319.osu",
+        "mods": "HT:speed_change=0.755",
+        "attributes": {
+          "star_rating": 4.750645590097685,
+          "max_combo": 909,
+          "aim_difficulty": 2.598532753760087,
+          "aim_difficult_slider_count": 182.3959425356917,
+          "speed_difficulty": 1.9591102173721648,
+          "speed_note_count": 165.58637953601468,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0.7004003182978696,
+          "slider_factor": 0.9583111075279488,
+          "aim_top_weighted_slider_factor": 1.5698493845951953,
+          "speed_top_weighted_slider_factor": 0.4686774077863033,
+          "aim_difficult_strain_count": 112.80428915070232,
+          "speed_difficult_strain_count": 79.0054975324427,
+          "reading_difficult_note_count": 27.600982939566087,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "a rate setting clamped to its range",
+        "map": "osu/2785319.osu",
+        "mods": "DT:speed_change=1.0",
+        "attributes": {
+          "star_rating": 6.05668348904161,
+          "max_combo": 909,
+          "aim_difficulty": 3.3074676373619347,
+          "aim_difficult_slider_count": 192.90202782499466,
+          "speed_difficulty": 2.5131726290712053,
+          "speed_note_count": 183.9654933728911,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0.8335178052256341,
+          "slider_factor": 0.9631608839042131,
+          "aim_top_weighted_slider_factor": 1.5233231284983364,
+          "speed_top_weighted_slider_factor": 0.5386968732941267,
+          "aim_difficult_strain_count": 125.03152461312837,
+          "speed_difficult_strain_count": 81.90060371346671,
+          "reading_difficult_note_count": 35.13165987410614,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "a wind up initial rate rounded to its precision",
+        "map": "osu/2785319.osu",
+        "mods": "WU:initial_rate=1.245",
+        "attributes": {
+          "star_rating": 7.246650065832231,
+          "max_combo": 909,
+          "aim_difficulty": 3.9668115978438094,
+          "aim_difficult_slider_count": 200.66134411260512,
+          "speed_difficulty": 2.9967812925240587,
+          "speed_note_count": 207.54776184579094,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0.884013068003787,
+          "slider_factor": 0.9645153940508786,
+          "aim_top_weighted_slider_factor": 1.501563680259978,
+          "speed_top_weighted_slider_factor": 0.5959019721278082,
+          "aim_difficult_strain_count": 133.0642898347639,
+          "speed_difficult_strain_count": 86.3540246303819,
+          "reading_difficult_note_count": 106.2139380895195,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "a wind up initial rate pushed by its final rate",
+        "map": "osu/2785319.osu",
+        "mods": "WU:initial_rate=1.6:final_rate=1.55",
+        "attributes": {
+          "star_rating": 9.016994302487776,
+          "max_combo": 909,
+          "aim_difficulty": 4.805545571042885,
+          "aim_difficult_slider_count": 209.0154273302372,
+          "speed_difficulty": 3.789035743600061,
+          "speed_note_count": 210.63695222894492,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 2.205838967506781,
+          "slider_factor": 0.9678741947674119,
+          "aim_top_weighted_slider_factor": 1.4738118186415254,
+          "speed_top_weighted_slider_factor": 0.644551125915247,
+          "aim_difficult_strain_count": 145.87543527735457,
+          "speed_difficult_strain_count": 86.48475928975029,
+          "reading_difficult_note_count": 193.71464736713244,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "an adaptive speed initial rate rounded to its precision",
+        "map": "osu/2785319.osu",
+        "mods": "AS:initial_rate=1.245",
+        "attributes": {
+          "star_rating": 7.246650065832231,
+          "max_combo": 909,
+          "aim_difficulty": 3.9668115978438094,
+          "aim_difficult_slider_count": 200.66134411260512,
+          "speed_difficulty": 2.9967812925240587,
+          "speed_note_count": 207.54776184579094,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0.884013068003787,
+          "slider_factor": 0.9645153940508786,
+          "aim_top_weighted_slider_factor": 1.501563680259978,
+          "speed_top_weighted_slider_factor": 0.5959019721278082,
+          "aim_difficult_strain_count": 133.0642898347639,
+          "speed_difficult_strain_count": 86.3540246303819,
+          "reading_difficult_note_count": 106.2139380895195,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "a magnetised strength rounded to its precision",
+        "map": "osu/2785319.osu",
+        "mods": "MG:attraction_strength=0.63",
+        "attributes": {
+          "star_rating": 4.430346133905182,
+          "max_combo": 909,
+          "aim_difficulty": 1.692218469410934,
+          "aim_difficult_slider_count": 192.5269999738169,
+          "speed_difficulty": 2.4917265153109014,
+          "speed_note_count": 183.0639785973236,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0.4868465582259027,
+          "slider_factor": 0.9630386892765715,
+          "aim_top_weighted_slider_factor": 1.5242023708564167,
+          "speed_top_weighted_slider_factor": 0.536191641231213,
+          "aim_difficult_strain_count": 124.6954444681846,
+          "speed_difficult_strain_count": 81.74921671931915,
+          "reading_difficult_note_count": 34.922515958563594,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "a deflate start scale rounded to its precision",
+        "map": "osu/2785319.osu",
+        "mods": "FL,DF:start_scale=3.33",
+        "attributes": {
+          "star_rating": 6.8109351162612075,
+          "max_combo": 909,
+          "aim_difficulty": 3.27863857424994,
+          "aim_difficult_slider_count": 192.5269999738169,
+          "speed_difficulty": 2.4917265153109014,
+          "speed_note_count": 183.0639785973236,
+          "flashlight_difficulty": 2.058263320069059,
+          "reading_difficulty": 0.8229208521405954,
+          "slider_factor": 0.963038689276571,
+          "aim_top_weighted_slider_factor": 1.524202370856421,
+          "speed_top_weighted_slider_factor": 0.536191641231213,
+          "aim_difficult_strain_count": 124.69544446818438,
+          "speed_difficult_strain_count": 81.74921671931915,
+          "reading_difficult_note_count": 34.92251595856365,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "a random angle sharpness rounded to its precision",
+        "map": "osu/2785319.osu",
+        "mods": "RD:seed=42:angle_sharpness=7.35",
+        "attributes": {
+          "star_rating": 6.063498362229712,
+          "max_combo": 909,
+          "aim_difficulty": 3.313533772741253,
+          "aim_difficult_slider_count": 149.1916316172455,
+          "speed_difficulty": 2.4917265153109014,
+          "speed_note_count": 183.0639785973236,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 1.0264999661763061,
+          "slider_factor": 0.9544298124878989,
+          "aim_top_weighted_slider_factor": 1.5955631969106598,
+          "speed_top_weighted_slider_factor": 0.536191641231213,
+          "aim_difficult_strain_count": 104.8026306427094,
+          "speed_difficult_strain_count": 81.74921671931915,
+          "reading_difficult_note_count": 26.379005287419808,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "a difficulty adjust value clamped to its extended limits",
+        "map": "osu/2785319.osu",
+        "mods": "DA:approach_rate=12",
+        "attributes": {
+          "star_rating": 6.754667235807503,
+          "max_combo": 909,
+          "aim_difficulty": 3.2745522826580795,
+          "aim_difficult_slider_count": 192.87527724652332,
+          "speed_difficulty": 2.4917265153109014,
+          "speed_note_count": 183.0639785973236,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 2.9257341926945815,
+          "slider_factor": 0.963121266179257,
+          "aim_top_weighted_slider_factor": 1.5239086112533984,
+          "speed_top_weighted_slider_factor": 0.536191641231213,
+          "aim_difficult_strain_count": 125.5600394160588,
+          "speed_difficult_strain_count": 81.74921671931915,
+          "reading_difficult_note_count": 144.17716759905187,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "a difficulty adjust value clamped to its extended limits",
+        "map": "osu/2785319.osu",
+        "mods": "DA:approach_rate=-12:circle_size=4.3",
+        "attributes": {
+          "star_rating": 8.754146242731258,
+          "max_combo": 909,
+          "aim_difficulty": 3.22403454340574,
+          "aim_difficult_slider_count": 192.770045708543,
+          "speed_difficulty": 2.4917265153109014,
+          "speed_note_count": 183.0639785973236,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 4.817249298443824,
+          "slider_factor": 0.9650457282959498,
+          "aim_top_weighted_slider_factor": 1.5250233341294592,
+          "speed_top_weighted_slider_factor": 0.536191641231213,
+          "aim_difficult_strain_count": 125.52595155384208,
+          "speed_difficult_strain_count": 81.74921671931915,
+          "reading_difficult_note_count": 123.38295654350259,
+          "nested_score_per_object": 34.991680532445926,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 15729840,
+          "hit_circle_count": 307,
+          "slider_count": 293,
+          "spinner_count": 1
+        }
+      },
+      {
+        "name": "a time ramp over a map that starts before zero",
+        "map": "osu/negative-start-time.osu",
+        "mods": "WU",
+        "attributes": {
+          "star_rating": 6.351261974353889,
+          "max_combo": 51,
+          "aim_difficulty": 3.744987404466061,
+          "aim_difficult_slider_count": 4.377100118361996,
+          "speed_difficulty": 1.5351892474809392,
+          "speed_note_count": 38.88586154673861,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 1.4671682002604918,
+          "slider_factor": 0.9867627447241647,
+          "aim_top_weighted_slider_factor": 0.13471736188046743,
+          "speed_top_weighted_slider_factor": 0.17415091483509848,
+          "aim_difficult_strain_count": 38.69122598976096,
+          "speed_difficult_strain_count": 25.501273838262023,
+          "reading_difficult_note_count": 19.55862803424953,
+          "nested_score_per_object": 6.521739130434782,
+          "legacy_score_base_multiplier": 4,
+          "maximum_legacy_combo_score": 52800,
+          "hit_circle_count": 41,
+          "slider_count": 5,
+          "spinner_count": 0
+        }
+      },
+      {
+        "name": "a time ramp over a map that starts before zero",
+        "map": "osu/negative-start-time.osu",
+        "mods": "WD",
+        "attributes": {
+          "star_rating": 5.470641238188636,
+          "max_combo": 51,
+          "aim_difficulty": 3.227604305573405,
+          "aim_difficult_slider_count": 4.556214560387211,
+          "speed_difficulty": 1.2491545425706578,
+          "speed_note_count": 39.202449187305504,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 1.32074536580646,
+          "slider_factor": 0.9871444572046688,
+          "aim_top_weighted_slider_factor": 0.15058624765257353,
+          "speed_top_weighted_slider_factor": 0.1847725213150005,
+          "aim_difficult_strain_count": 35.243533581582085,
+          "speed_difficult_strain_count": 25.134010876563345,
+          "reading_difficult_note_count": 17.87494912742699,
+          "nested_score_per_object": 6.521739130434782,
+          "legacy_score_base_multiplier": 4,
+          "maximum_legacy_combo_score": 52800,
+          "hit_circle_count": 41,
+          "slider_count": 5,
+          "spinner_count": 0
+        }
+      },
+      {
+        "name": "a time ramp over a map that starts before zero",
+        "map": "osu/negative-start-time.osu",
+        "mods": "WU:initial_rate=0.9:final_rate=1.9",
+        "attributes": {
+          "star_rating": 6.559244418511613,
+          "max_combo": 51,
+          "aim_difficulty": 3.863234221469282,
+          "aim_difficult_slider_count": 4.34016635332403,
+          "speed_difficulty": 1.6064076553412692,
+          "speed_note_count": 38.723662170273464,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 1.5292882808615167,
+          "slider_factor": 0.9866685613655232,
+          "aim_top_weighted_slider_factor": 0.1319281385138774,
+          "speed_top_weighted_slider_factor": 0.17249789386774547,
+          "aim_difficult_strain_count": 39.31558512697264,
+          "speed_difficult_strain_count": 25.519094090378793,
+          "reading_difficult_note_count": 19.27693618401295,
+          "nested_score_per_object": 6.521739130434782,
+          "legacy_score_base_multiplier": 4,
+          "maximum_legacy_combo_score": 52800,
+          "hit_circle_count": 41,
+          "slider_count": 5,
+          "spinner_count": 0
+        }
+      },
+      {
+        "name": "an osu!mania map converted to another ruleset",
+        "map": "mania/1638954.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 16.07334788309838,
+          "max_combo": 594,
+          "aim_difficulty": 8.89982010307788,
+          "aim_difficult_slider_count": 0,
+          "speed_difficulty": 6.029394870019402,
+          "speed_note_count": 304.2141103965215,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 4.055573004462922,
+          "slider_factor": 1,
+          "aim_top_weighted_slider_factor": 0,
+          "speed_top_weighted_slider_factor": 0,
+          "aim_difficult_strain_count": 114.51018383831487,
+          "speed_difficult_strain_count": 148.6947191698077,
+          "reading_difficult_note_count": 231.35549653445753,
+          "nested_score_per_object": 78.78787878787878,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 10531680,
+          "hit_circle_count": 473,
+          "slider_count": 0,
+          "spinner_count": 121
+        }
+      },
+      {
+        "name": "an osu!mania map converted to another ruleset",
+        "map": "mania/keys_4_holds.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 2.913166790426949,
+          "max_combo": 520,
+          "aim_difficulty": 1.5713619623233508,
+          "aim_difficult_slider_count": 0,
+          "speed_difficulty": 1.2526507182539313,
+          "speed_note_count": 3.3958862149602496,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0,
+          "slider_factor": 1,
+          "aim_top_weighted_slider_factor": 0,
+          "speed_top_weighted_slider_factor": 0,
+          "aim_difficult_strain_count": 6.230603025714207,
+          "speed_difficult_strain_count": 3.1222585459078664,
+          "reading_difficult_note_count": 0,
+          "nested_score_per_object": 1612.3076923076924,
+          "legacy_score_base_multiplier": 4,
+          "maximum_legacy_combo_score": 6452208,
+          "hit_circle_count": 5,
+          "slider_count": 0,
+          "spinner_count": 515
+        }
+      },
+      {
+        "name": "an osu!mania map converted to another ruleset",
+        "map": "mania/diffcalc-test.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 11.615517319937563,
+          "max_combo": 137,
+          "aim_difficulty": 6.177537465969384,
+          "aim_difficult_slider_count": 0,
+          "speed_difficulty": 5.108756724505264,
+          "speed_note_count": 31.880191976961594,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 1.4983653360098959,
+          "slider_factor": 1,
+          "aim_top_weighted_slider_factor": 0,
+          "speed_top_weighted_slider_factor": 0,
+          "aim_difficult_strain_count": 39.24528895046996,
+          "speed_difficult_strain_count": 24.395523168055263,
+          "reading_difficult_note_count": 30.574390505634703,
+          "nested_score_per_object": 125.54744525547446,
+          "legacy_score_base_multiplier": 4,
+          "maximum_legacy_combo_score": 440640,
+          "hit_circle_count": 123,
+          "slider_count": 0,
+          "spinner_count": 14
+        }
+      },
+      {
+        "name": "objects placed outside the playfield",
+        "map": "osu/positions-outside-playfield.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 8.864917454321098,
+          "max_combo": 60,
+          "aim_difficulty": 5.250403694460475,
+          "aim_difficult_slider_count": 0,
+          "speed_difficulty": 1.4508982867993359,
+          "speed_note_count": 55.236242609935125,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 2.322803159882066,
+          "slider_factor": 1,
+          "aim_top_weighted_slider_factor": 0,
+          "speed_top_weighted_slider_factor": 0,
+          "aim_difficult_strain_count": 50.953987471448706,
+          "speed_difficult_strain_count": 42.984047705951824,
+          "reading_difficult_note_count": 20.801280258151003,
+          "nested_score_per_object": 0,
+          "legacy_score_base_multiplier": 4,
+          "maximum_legacy_combo_score": 82128,
+          "hit_circle_count": 60,
+          "slider_count": 0,
+          "spinner_count": 0
+        }
+      },
+      {
+        "name": "an osu!taiko map converted to another ruleset",
+        "map": "taiko/1028484.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 3.0710055817983513,
+          "max_combo": 303,
+          "aim_difficulty": 0.49847027628548873,
+          "aim_difficult_slider_count": 3.2100828812052837,
+          "speed_difficulty": 1.8555779105167634,
+          "speed_note_count": 100.06817239556767,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0,
+          "slider_factor": 0.8109393599274984,
+          "aim_top_weighted_slider_factor": 4.5217762297716816e-05,
+          "speed_top_weighted_slider_factor": 0.07753011622106609,
+          "aim_difficult_strain_count": 19.26759464353402,
+          "speed_difficult_strain_count": 54.44738376093555,
+          "reading_difficult_note_count": 0,
+          "nested_score_per_object": 5.288135593220339,
+          "legacy_score_base_multiplier": 4,
+          "maximum_legacy_combo_score": 2113488,
+          "hit_circle_count": 289,
+          "slider_count": 4,
+          "spinner_count": 2
+        }
+      },
+      {
+        "name": "control points left redundant once sorted",
+        "map": "osu/control-points-redundant-after-sorting.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 13.17430895119558,
+          "max_combo": 435,
+          "aim_difficulty": 7.942725805450529,
+          "aim_difficult_slider_count": 3.6229678811315758,
+          "speed_difficulty": 2.3718232952906395,
+          "speed_note_count": 5.007730240836391,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 1.195366617246411,
+          "slider_factor": 0.7503137210940677,
+          "aim_top_weighted_slider_factor": 0.5617650694319578,
+          "speed_top_weighted_slider_factor": 0.5375977449713147,
+          "aim_difficult_strain_count": 16.780362378079385,
+          "speed_difficult_strain_count": 6.430976243334325,
+          "reading_difficult_note_count": 7.051052305578502,
+          "nested_score_per_object": 168.4375,
+          "legacy_score_base_multiplier": 3,
+          "maximum_legacy_combo_score": 254052,
+          "hit_circle_count": 14,
+          "slider_count": 10,
+          "spinner_count": 8
+        }
+      },
+      {
+        "name": "a zero-length slider with repeats",
+        "map": "osu/zero-length-slider-repeats.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 5.284179932984705,
+          "max_combo": 121,
+          "aim_difficulty": 3.1448256497984333,
+          "aim_difficult_slider_count": 3.2425947600229654,
+          "speed_difficulty": 1.3456288712511537,
+          "speed_note_count": 2.3559421790134176,
+          "flashlight_difficulty": 0,
+          "reading_difficulty": 0.602243150172677,
+          "slider_factor": 0.49978034545257116,
+          "aim_top_weighted_slider_factor": 0.5151264501577757,
+          "speed_top_weighted_slider_factor": 0.5880731638869943,
+          "aim_difficult_strain_count": 9.369258339365796,
+          "speed_difficult_strain_count": 3.5146107596911804,
+          "reading_difficult_note_count": 2.7393392525991374,
+          "nested_score_per_object": 125.38461538461539,
+          "legacy_score_base_multiplier": 5,
+          "maximum_legacy_combo_score": 56880,
+          "hit_circle_count": 9,
+          "slider_count": 7,
+          "spinner_count": 10
+        }
+      }
+    ],
+    "taiko": [
+      {
+        "name": "the difficulty of each test map",
+        "map": "taiko/diffcalc-test.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 3.319084940658167,
+          "max_combo": 200,
+          "mechanical_difficulty": 3.2902686659780898,
+          "rhythm_difficulty": 0.028816271027626596,
+          "reading_difficulty": 3.6524510383682645e-09,
+          "colour_difficulty": 0.711226393181619,
+          "stamina_difficulty": 2.5790422727964706,
+          "mono_stamina_factor": 5.0442201096101396e-05,
+          "consistency_factor": 0.5670264868917223,
+          "stamina_top_strains": 53.84465596592382
+        }
+      },
+      {
+        "name": "the difficulty of each test map",
+        "map": "taiko/diffcalc-test-strong.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 3.319084940658167,
+          "max_combo": 200,
+          "mechanical_difficulty": 3.2902686659780898,
+          "rhythm_difficulty": 0.028816271027626596,
+          "reading_difficulty": 3.6524510383682645e-09,
+          "colour_difficulty": 0.711226393181619,
+          "stamina_difficulty": 2.5790422727964706,
+          "mono_stamina_factor": 5.0442201096101396e-05,
+          "consistency_factor": 0.5670264868917223,
+          "stamina_top_strains": 53.84465596592382
+        }
+      },
+      {
+        "name": "the difficulty of each test map at a changed clock rate",
+        "map": "taiko/diffcalc-test.osu",
+        "mods": "DT",
+        "attributes": {
+          "star_rating": 4.455142137225538,
+          "max_combo": 200,
+          "mechanical_difficulty": 4.411341216353515,
+          "rhythm_difficulty": 0.04378682744127979,
+          "reading_difficulty": 1.4093430743067654e-05,
+          "colour_difficulty": 0.8476265558773907,
+          "stamina_difficulty": 3.5637146604761245,
+          "mono_stamina_factor": 2.8856511532511586e-05,
+          "consistency_factor": 0.5621663391093243,
+          "stamina_top_strains": 57.57070100448967
+        }
+      },
+      {
+        "name": "the difficulty of each test map at a changed clock rate",
+        "map": "taiko/diffcalc-test-strong.osu",
+        "mods": "DT",
+        "attributes": {
+          "star_rating": 4.455142137225538,
+          "max_combo": 200,
+          "mechanical_difficulty": 4.411341216353515,
+          "rhythm_difficulty": 0.04378682744127979,
+          "reading_difficulty": 1.4093430743067654e-05,
+          "colour_difficulty": 0.8476265558773907,
+          "stamina_difficulty": 3.5637146604761245,
+          "mono_stamina_factor": 2.8856511532511586e-05,
+          "consistency_factor": 0.5621663391093243,
+          "stamina_top_strains": 57.57070100448967
+        }
+      },
+      {
+        "name": "a basic taiko map",
+        "map": "taiko/1028484.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 2.9144215641617333,
+          "max_combo": 289,
+          "mechanical_difficulty": 2.757718537279857,
+          "rhythm_difficulty": 0.15668593055086977,
+          "reading_difficulty": 1.70963310068196e-05,
+          "colour_difficulty": 0.6655024155624444,
+          "stamina_difficulty": 2.0922161217174127,
+          "mono_stamina_factor": 2.585220903145618e-07,
+          "consistency_factor": 0.6314855249538754,
+          "stamina_top_strains": 59.377534920268296
+        }
+      },
+      {
+        "name": "a basic taiko map",
+        "map": "taiko/1028484.osu",
+        "mods": "HR",
+        "attributes": {
+          "star_rating": 2.9957310404617963,
+          "max_combo": 289,
+          "mechanical_difficulty": 2.3526849330602797,
+          "rhythm_difficulty": 0.134624894028623,
+          "reading_difficulty": 0.5084212133728931,
+          "colour_difficulty": 0.5677582700493313,
+          "stamina_difficulty": 1.7849266630109486,
+          "mono_stamina_factor": 2.585220903145618e-07,
+          "consistency_factor": 0.6322607099238484,
+          "stamina_top_strains": 59.377534920268296
+        }
+      },
+      {
+        "name": "a basic taiko map",
+        "map": "taiko/1028484.osu",
+        "mods": "DT",
+        "attributes": {
+          "star_rating": 4.051329399964723,
+          "max_combo": 289,
+          "mechanical_difficulty": 3.2898979490906894,
+          "rhythm_difficulty": 0.570672991636439,
+          "reading_difficulty": 0.19075845923759416,
+          "colour_difficulty": 0.7218921897845048,
+          "stamina_difficulty": 2.568005759306185,
+          "mono_stamina_factor": 2.465693827167051e-07,
+          "consistency_factor": 0.6202990548778025,
+          "stamina_top_strains": 63.34988960849165
+        }
+      },
+      {
+        "name": "an osu! map converted to taiko",
+        "map": "osu/2785319.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 4.752572620626138,
+          "max_combo": 908,
+          "mechanical_difficulty": 3.068521344030717,
+          "rhythm_difficulty": 0.6028550725402863,
+          "reading_difficulty": 1.0811962040551348,
+          "colour_difficulty": 0.8456679526084883,
+          "stamina_difficulty": 2.2228533914222286,
+          "mono_stamina_factor": 0.0014311041774359668,
+          "consistency_factor": 0.6875624057993176,
+          "stamina_top_strains": 189.58797576615262
+        }
+      },
+      {
+        "name": "an osu! map converted to taiko",
+        "map": "osu/2785319.osu",
+        "mods": "HR",
+        "attributes": {
+          "star_rating": 5.275959467694453,
+          "max_combo": 908,
+          "mechanical_difficulty": 3.1896721231569485,
+          "rhythm_difficulty": 0.640061492397074,
+          "reading_difficulty": 1.4462258521404312,
+          "colour_difficulty": 0.8790564547089896,
+          "stamina_difficulty": 2.3106156684479586,
+          "mono_stamina_factor": 0.0014311041774359668,
+          "consistency_factor": 0.679047690894666,
+          "stamina_top_strains": 189.58797576615262
+        }
+      },
+      {
+        "name": "an osu! map converted to taiko",
+        "map": "osu/2785319.osu",
+        "mods": "DT",
+        "attributes": {
+          "star_rating": 7.116103934899722,
+          "max_combo": 908,
+          "mechanical_difficulty": 4.350893046373321,
+          "rhythm_difficulty": 0.9584853559461861,
+          "reading_difficulty": 1.8067255325802154,
+          "colour_difficulty": 1.0979910141819806,
+          "stamina_difficulty": 3.252902032191341,
+          "mono_stamina_factor": 0.0014418086037955797,
+          "consistency_factor": 0.6748291725050156,
+          "stamina_top_strains": 233.31840028238065
+        }
+      },
+      {
+        "name": "the difficulty of each test map",
+        "map": "taiko/diffcalc-test.osu",
+        "mods": "",
+        "attributes": {
+          "star_rating": 3.319084940658167,
+          "max_combo": 200,
+          "mechanical_difficulty": 3.2902686659780898,
+          "rhythm_difficulty": 0.028816271027626596,
+          "reading_difficulty": 3.6524510383682645e-09,
+          "colour_difficulty": 0.711226393181619,
+          "stamina_difficulty": 2.5790422727964706,
+          "mono_stamina_factor": 5.0442201096101396e-05,
+          "consistency_factor": 0.5670264868917223,
+          "stamina_top_strains": 53.84465596592382
+        }
+      },
+      {
+        "name": "a basic taiko map",
+        "map": "taiko/1028484.osu",
+        "mods": "HD",
+        "attributes": {
+          "star_rating": 2.9144215641617333,
+          "max_combo": 289,
+          "mechanical_difficulty": 2.757718537279857,
+          "rhythm_difficulty": 0.15668593055086977,
+          "reading_difficulty": 1.70963310068196e-05,
+          "colour_difficulty": 0.6655024155624444,
+          "stamina_difficulty": 2.0922161217174127,
+          "mono_stamina_factor": 2.585220903145618e-07,
+          "consistency_factor": 0.6314855249538754,
+          "stamina_top_strains": 59.377534920268296
+        }
+      },
+      {
+        "name": "an osu! map converted to taiko",
+        "map": "osu/2785319.osu",
+        "mods": "HD",
+        "attributes": {
+          "star_rating": 4.752572620626138,
+          "max_combo": 908,
+          "mechanical_difficulty": 3.068521344030717,
+          "rhythm_difficulty": 0.6028550725402863,
+          "reading_difficulty": 1.0811962040551348,
+          "colour_difficulty": 0.8456679526084883,
+          "stamina_difficulty": 2.2228533914222286,
+          "mono_stamina_factor": 0.0014311041774359668,
+          "consistency_factor": 0.6875624057993176,
+          "stamina_top_strains": 189.58797576615262
+        }
+      },
+      {
+        "name": "osu!taiko scores on v9.osu",
+        "map": "taiko/v9.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 3.79925435050266,
+          "max_combo": 712,
+          "mechanical_difficulty": 3.2059019627184178,
+          "rhythm_difficulty": 0.5933511646205076,
+          "reading_difficulty": 1.2231637343112098e-06,
+          "colour_difficulty": 0.9357110896509476,
+          "stamina_difficulty": 2.2701908730674702,
+          "mono_stamina_factor": 2.1931721471283273e-08,
+          "consistency_factor": 0.6632814809405383,
+          "stamina_top_strains": 127.11941264956744
+        }
+      },
+      {
+        "name": "osu!taiko scores on v9.osu",
+        "map": "taiko/v9.osu",
+        "mods": "HD,FL",
+        "attributes": {
+          "star_rating": 3.79925435050266,
+          "max_combo": 712,
+          "mechanical_difficulty": 3.2059019627184178,
+          "rhythm_difficulty": 0.5933511646205076,
+          "reading_difficulty": 1.2231637343112098e-06,
+          "colour_difficulty": 0.9357110896509476,
+          "stamina_difficulty": 2.2701908730674702,
+          "mono_stamina_factor": 2.1931721471283273e-08,
+          "consistency_factor": 0.6632814809405383,
+          "stamina_top_strains": 127.11941264956744
+        }
+      },
+      {
+        "name": "a taiko control line listed out of time order",
+        "map": "taiko/out-of-order-lines.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 1.8184036608326626,
+          "max_combo": 45,
+          "mechanical_difficulty": 1.8180981945520314,
+          "rhythm_difficulty": 8.948182013206992e-08,
+          "reading_difficulty": 0.00030537679881116944,
+          "colour_difficulty": 0.4351057009285488,
+          "stamina_difficulty": 1.3829924936234825,
+          "mono_stamina_factor": 6.708018309377262e-11,
+          "consistency_factor": 0.8708155244712347,
+          "stamina_top_strains": 30.681018402284796
+        }
+      },
+      {
+        "name": "a taiko control line listed out of time order",
+        "map": "taiko/out-of-order-lines.osu",
+        "mods": "DT",
+        "attributes": {
+          "star_rating": 2.3146399034833163,
+          "max_combo": 45,
+          "mechanical_difficulty": 1.970575376518747,
+          "rhythm_difficulty": 1.0111108927068832e-07,
+          "reading_difficulty": 0.3440644258534799,
+          "colour_difficulty": 0.4257357123540461,
+          "stamina_difficulty": 1.5448396641647009,
+          "mono_stamina_factor": 7.462539307167523e-11,
+          "consistency_factor": 0.8093630501190894,
+          "stamina_top_strains": 34.24939138419794
+        }
+      },
+      {
+        "name": "a difficulty adjust value clamped to its extended limits",
+        "map": "taiko/1028484.osu",
+        "mods": "DA:scroll_speed=5",
+        "attributes": {
+          "star_rating": 3.4729437925074667,
+          "max_combo": 289,
+          "mechanical_difficulty": 2.1149513155611066,
+          "rhythm_difficulty": 0.12016567697853095,
+          "reading_difficulty": 1.2378267999678294,
+          "colour_difficulty": 0.510387550533425,
+          "stamina_difficulty": 1.6045637650276814,
+          "mono_stamina_factor": 2.585220903145618e-07,
+          "consistency_factor": 0.6352368607677508,
+          "stamina_top_strains": 59.377534920268296
+        }
+      },
+      {
+        "name": "a difficulty adjust value kept as a float",
+        "map": "taiko/1028484.osu",
+        "mods": "DA:scroll_speed=1.15:overall_difficulty=8.3",
+        "attributes": {
+          "star_rating": 2.9144988576094626,
+          "max_combo": 289,
+          "mechanical_difficulty": 2.7554634298659204,
+          "rhythm_difficulty": 0.1580992643677644,
+          "reading_difficulty": 0.0009361633757777942,
+          "colour_difficulty": 0.6649582050452942,
+          "stamina_difficulty": 2.0905052248206264,
+          "mono_stamina_factor": 2.585220903145618e-07,
+          "consistency_factor": 0.6314748630832285,
+          "stamina_top_strains": 59.377534920268296
+        }
+      },
+      {
+        "name": "a time ramp over a map that starts before zero",
+        "map": "osu/negative-start-time.osu",
+        "mods": "WU",
+        "attributes": {
+          "star_rating": 1.8535966525409464,
+          "max_combo": 51,
+          "mechanical_difficulty": 1.8534482048572027,
+          "rhythm_difficulty": 0,
+          "reading_difficulty": 0.00014844768374376233,
+          "colour_difficulty": 0.23886440099241898,
+          "stamina_difficulty": 1.6145838038647837,
+          "mono_stamina_factor": 1.4107153285764277e-09,
+          "consistency_factor": 0.8363405018747484,
+          "stamina_top_strains": 41.102072553640994
+        }
+      },
+      {
+        "name": "a time ramp over a map that starts before zero",
+        "map": "osu/negative-start-time.osu",
+        "mods": "WD",
+        "attributes": {
+          "star_rating": 1.602909062968807,
+          "max_combo": 51,
+          "mechanical_difficulty": 1.6029085756945471,
+          "rhythm_difficulty": 0,
+          "reading_difficulty": 4.872742596177251e-07,
+          "colour_difficulty": 0.23243067104015286,
+          "stamina_difficulty": 1.3704779046543942,
+          "mono_stamina_factor": 8.22812332350556e-10,
+          "consistency_factor": 0.8610092644540908,
+          "stamina_top_strains": 39.323105286479276
+        }
+      },
+      {
+        "name": "a time ramp over a map that starts before zero",
+        "map": "osu/negative-start-time.osu",
+        "mods": "WU:initial_rate=0.9:final_rate=1.9",
+        "attributes": {
+          "star_rating": 1.885663374199969,
+          "max_combo": 51,
+          "mechanical_difficulty": 1.885052961970277,
+          "rhythm_difficulty": 0,
+          "reading_difficulty": 0.0006104122296922055,
+          "colour_difficulty": 0.23472533163144518,
+          "stamina_difficulty": 1.6503276303388317,
+          "mono_stamina_factor": 1.2396037804652686e-09,
+          "consistency_factor": 0.8293868546313147,
+          "stamina_top_strains": 41.76340317550272
+        }
+      },
+      {
+        "name": "simplified rhythm over notes that share a time",
+        "map": "taiko/simplified-rhythm-equal-times-1.osu",
+        "mods": "SR",
+        "attributes": {
+          "star_rating": 4.632471076575106,
+          "max_combo": 74,
+          "mechanical_difficulty": 4.102797777353706,
+          "rhythm_difficulty": 0.5296732833681709,
+          "reading_difficulty": 1.5853230184139583e-08,
+          "colour_difficulty": 0.9140373379501443,
+          "stamina_difficulty": 3.1887604394035614,
+          "mono_stamina_factor": 4.184651490243648e-10,
+          "consistency_factor": 0.4562937583113943,
+          "stamina_top_strains": 28.022520068697112
+        }
+      },
+      {
+        "name": "simplified rhythm over notes that share a time",
+        "map": "taiko/simplified-rhythm-equal-times-1.osu",
+        "mods": "SR:one_third_conversion=True:one_sixth_conversion=True:one_eighth_conversion=True",
+        "attributes": {
+          "star_rating": 4.0701731048740095,
+          "max_combo": 63,
+          "mechanical_difficulty": 3.7142469665879068,
+          "rhythm_difficulty": 0.35592612372017884,
+          "reading_difficulty": 1.4565923930383926e-08,
+          "colour_difficulty": 0.768525309461488,
+          "stamina_difficulty": 2.945721657126419,
+          "mono_stamina_factor": 1.7702443438559897e-10,
+          "consistency_factor": 0.4009300684865549,
+          "stamina_top_strains": 21.50368532781485
+        }
+      },
+      {
+        "name": "simplified rhythm over notes that share a time",
+        "map": "taiko/simplified-rhythm-equal-times-2.osu",
+        "mods": "SR",
+        "attributes": {
+          "star_rating": 5.233402355461906,
+          "max_combo": 74,
+          "mechanical_difficulty": 4.125187392726767,
+          "rhythm_difficulty": 1.1082095939574421,
+          "reading_difficulty": 5.368777697287741e-06,
+          "colour_difficulty": 0.7809951077995259,
+          "stamina_difficulty": 3.3441922849272414,
+          "mono_stamina_factor": 6.283322146156517e-08,
+          "consistency_factor": 0.5297925644443225,
+          "stamina_top_strains": 36.89220716565232
+        }
+      },
+      {
+        "name": "simplified rhythm over notes that share a time",
+        "map": "taiko/simplified-rhythm-equal-times-2.osu",
+        "mods": "SR:one_third_conversion=True:one_sixth_conversion=True:one_eighth_conversion=True",
+        "attributes": {
+          "star_rating": 4.634040978909704,
+          "max_combo": 66,
+          "mechanical_difficulty": 4.087334526282923,
+          "rhythm_difficulty": 0.5467012205434684,
+          "reading_difficulty": 5.232083312143761e-06,
+          "colour_difficulty": 0.7975629494202146,
+          "stamina_difficulty": 3.2897715768627083,
+          "mono_stamina_factor": 8.924779170175302e-08,
+          "consistency_factor": 0.47444893989394193,
+          "stamina_top_strains": 32.02255492047591
+        }
+      },
+      {
+        "name": "an osu!mania map converted to another ruleset",
+        "map": "mania/1638954.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 4.21183969473732,
+          "max_combo": 263,
+          "mechanical_difficulty": 3.8534742180615895,
+          "rhythm_difficulty": 0.35836546061896135,
+          "reading_difficulty": 1.6056768360525603e-08,
+          "colour_difficulty": 0.5942643182535887,
+          "stamina_difficulty": 3.259209899808001,
+          "mono_stamina_factor": 0.210718532003114,
+          "consistency_factor": 0.5500507777858107,
+          "stamina_top_strains": 51.8574360703765
+        }
+      },
+      {
+        "name": "an osu!mania map converted to another ruleset",
+        "map": "mania/keys_4_holds.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 0.34729544806241364,
+          "max_combo": 2,
+          "mechanical_difficulty": 0.3472953268244563,
+          "rhythm_difficulty": 6.276479682359087e-08,
+          "reading_difficulty": 5.8473160534448655e-08,
+          "colour_difficulty": 0.21509923881284562,
+          "stamina_difficulty": 0.13219608801161067,
+          "mono_stamina_factor": 4.059227678759491e-12,
+          "consistency_factor": 0.08526244987432395,
+          "stamina_top_strains": 3.114318661392085
+        }
+      },
+      {
+        "name": "an osu!mania map converted to another ruleset",
+        "map": "mania/diffcalc-test.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 3.1265103625264823,
+          "max_combo": 82,
+          "mechanical_difficulty": 3.071898634495402,
+          "rhythm_difficulty": 0.054611725306992286,
+          "reading_difficulty": 2.724087921081946e-09,
+          "colour_difficulty": 0.2887097939792717,
+          "stamina_difficulty": 2.7831888405161305,
+          "mono_stamina_factor": 0.09439800287498047,
+          "consistency_factor": 0.43508244575521443,
+          "stamina_top_strains": 21.88384802153063
+        }
+      },
+      {
+        "name": "an osu!catch map converted to osu!taiko",
+        "map": "fruits/2118524.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 4.764346556551586,
+          "max_combo": 726,
+          "mechanical_difficulty": 4.210414495665211,
+          "rhythm_difficulty": 0.5539282899493755,
+          "reading_difficulty": 3.770936998690138e-06,
+          "colour_difficulty": 0.6571586092145167,
+          "stamina_difficulty": 3.5532558864506947,
+          "mono_stamina_factor": 0.14594235596557045,
+          "consistency_factor": 0.6588989225761417,
+          "stamina_top_strains": 111.68941300736073
+        }
+      },
+      {
+        "name": "control points left redundant once sorted",
+        "map": "osu/control-points-redundant-after-sorting.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 2.942822852414698,
+          "max_combo": 20,
+          "mechanical_difficulty": 2.447405379481795,
+          "rhythm_difficulty": 0.010061901793491703,
+          "reading_difficulty": 0.4853555711394114,
+          "colour_difficulty": 0.38739000418539443,
+          "stamina_difficulty": 2.0600153752964006,
+          "mono_stamina_factor": 1.3758527565677616e-10,
+          "consistency_factor": 0.3719161326659072,
+          "stamina_top_strains": 12.60653311867885
+        }
+      },
+      {
+        "name": "a zero-length slider with repeats",
+        "map": "osu/zero-length-slider-repeats.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 0.9910944285670455,
+          "max_combo": 11,
+          "mechanical_difficulty": 0.6989080111383656,
+          "rhythm_difficulty": 0.00702167556968592,
+          "reading_difficulty": 0.28516474185899404,
+          "colour_difficulty": 0.3194272623712684,
+          "stamina_difficulty": 0.3794807487670972,
+          "mono_stamina_factor": 5.283361786727793e-11,
+          "consistency_factor": 0.6058206130778955,
+          "stamina_top_strains": 18.355176749499993
+        }
+      },
+      {
+        "name": "timing lines the official decoder accepts",
+        "map": "taiko/timing-lines-official-rules.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 2.7990703717896506,
+          "max_combo": 74,
+          "mechanical_difficulty": 2.5768015841505516,
+          "rhythm_difficulty": 0.09829935389299209,
+          "reading_difficulty": 0.12396943374610665,
+          "colour_difficulty": 0.25309738146646293,
+          "stamina_difficulty": 2.323704202684089,
+          "mono_stamina_factor": 1.4374476284410683e-10,
+          "consistency_factor": 0.8806302550152602,
+          "stamina_top_strains": 54.393992576672325
+        }
+      }
+    ],
+    "catch": [
+      {
+        "name": "the difficulty of each test map",
+        "map": "fruits/diffcalc-test.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 4.039861734717169,
+          "max_combo": 127
+        }
+      },
+      {
+        "name": "the difficulty of each test map at a changed clock rate",
+        "map": "fruits/diffcalc-test.osu",
+        "mods": "DT",
+        "attributes": {
+          "star_rating": 5.152717389780087,
+          "max_combo": 127
+        }
+      },
+      {
+        "name": "osu!catch keeps a juice stream's ticks where osu! drops them",
+        "map": "osu/nan-slider.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 1.831445790658667,
+          "max_combo": 13
+        }
+      },
+      {
+        "name": "osu!catch keeps a juice stream's ticks where osu! drops them",
+        "map": "osu/nan-slider.osu",
+        "mods": "DT",
+        "attributes": {
+          "star_rating": 1.89801005149296,
+          "max_combo": 13
+        }
+      },
+      {
+        "name": "a basic osu!catch map",
+        "map": "fruits/2118524.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 3.2340182503279706,
+          "max_combo": 730
+        }
+      },
+      {
+        "name": "a basic osu!catch map",
+        "map": "fruits/2118524.osu",
+        "mods": "HR",
+        "attributes": {
+          "star_rating": 4.308291009137178,
+          "max_combo": 730
+        }
+      },
+      {
+        "name": "a basic osu!catch map",
+        "map": "fruits/2118524.osu",
+        "mods": "EZ",
+        "attributes": {
+          "star_rating": 4.059198145823293,
+          "max_combo": 730
+        }
+      },
+      {
+        "name": "a basic osu!catch map",
+        "map": "fruits/2118524.osu",
+        "mods": "DT",
+        "attributes": {
+          "star_rating": 4.6192881825873275,
+          "max_combo": 730
+        }
+      },
+      {
+        "name": "an osu! map converted to osu!catch",
+        "map": "osu/2785319.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 4.526991300645072,
+          "max_combo": 908
+        }
+      },
+      {
+        "name": "an osu! map converted to osu!catch",
+        "map": "osu/2785319.osu",
+        "mods": "HR",
+        "attributes": {
+          "star_rating": 5.0738627744810545,
+          "max_combo": 908
+        }
+      },
+      {
+        "name": "an osu! map converted to osu!catch",
+        "map": "osu/2785319.osu",
+        "mods": "EZ",
+        "attributes": {
+          "star_rating": 3.590187752268528,
+          "max_combo": 908
+        }
+      },
+      {
+        "name": "an osu! map converted to osu!catch",
+        "map": "osu/2785319.osu",
+        "mods": "DT",
+        "attributes": {
+          "star_rating": 6.151552522578919,
+          "max_combo": 908
+        }
+      },
+      {
+        "name": "the difficulty of each test map",
+        "map": "fruits/diffcalc-test.osu",
+        "mods": "",
+        "attributes": {
+          "star_rating": 4.039861734717169,
+          "max_combo": 127
+        }
+      },
+      {
+        "name": "a basic osu!catch map",
+        "map": "fruits/2118524.osu",
+        "mods": "HD",
+        "attributes": {
+          "star_rating": 3.2340182503279706,
+          "max_combo": 730
+        }
+      },
+      {
+        "name": "a basic osu!catch map",
+        "map": "fruits/2118524.osu",
+        "mods": "HD,HR",
+        "attributes": {
+          "star_rating": 4.308291009137178,
+          "max_combo": 730
+        }
+      },
+      {
+        "name": "an osu! map converted to osu!catch",
+        "map": "osu/2785319.osu",
+        "mods": "HD",
+        "attributes": {
+          "star_rating": 4.526991300645072,
+          "max_combo": 908
+        }
+      },
+      {
+        "name": "an osu! map converted to osu!catch",
+        "map": "osu/2785319.osu",
+        "mods": "HD,HR",
+        "attributes": {
+          "star_rating": 5.0738627744810545,
+          "max_combo": 908
+        }
+      },
+      {
+        "name": "osu!catch scores on v12.osu",
+        "map": "fruits/v12.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 1.7589753184642218,
+          "max_combo": 681
+        }
+      },
+      {
+        "name": "osu!catch scores on v12.osu",
+        "map": "fruits/v12.osu",
+        "mods": "HD,HR",
+        "attributes": {
+          "star_rating": 2.8093733654073096,
+          "max_combo": 681
+        }
+      },
+      {
+        "name": "a difficulty adjust value clamped to its extended limits",
+        "map": "fruits/2118524.osu",
+        "mods": "DA:approach_rate=-3",
+        "attributes": {
+          "star_rating": 3.2340182503279706,
+          "max_combo": 730
+        }
+      },
+      {
+        "name": "a difficulty adjust value kept as a float",
+        "map": "fruits/2118524.osu",
+        "mods": "DA:approach_rate=8.3:circle_size=4.3",
+        "attributes": {
+          "star_rating": 3.46614494388404,
+          "max_combo": 730
+        }
+      },
+      {
+        "name": "a time ramp over a map that starts before zero",
+        "map": "osu/negative-start-time.osu",
+        "mods": "WU",
+        "attributes": {
+          "star_rating": 4.822110193386055,
+          "max_combo": 51
+        }
+      },
+      {
+        "name": "a time ramp over a map that starts before zero",
+        "map": "osu/negative-start-time.osu",
+        "mods": "WD",
+        "attributes": {
+          "star_rating": 4.202294722942075,
+          "max_combo": 51
+        }
+      },
+      {
+        "name": "a time ramp over a map that starts before zero",
+        "map": "osu/negative-start-time.osu",
+        "mods": "WU:initial_rate=0.9:final_rate=1.9",
+        "attributes": {
+          "star_rating": 4.905545864011975,
+          "max_combo": 51
+        }
+      },
+      {
+        "name": "an osu!mania map converted to another ruleset",
+        "map": "mania/1638954.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 11.526460359168974,
+          "max_combo": 473
+        }
+      },
+      {
+        "name": "an osu!mania map converted to another ruleset",
+        "map": "mania/keys_4_holds.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 1.6866348070313757,
+          "max_combo": 5
+        }
+      },
+      {
+        "name": "an osu!mania map converted to another ruleset",
+        "map": "mania/diffcalc-test.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 6.080777974120856,
+          "max_combo": 123
+        }
+      },
+      {
+        "name": "objects placed outside the playfield",
+        "map": "osu/positions-outside-playfield.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 4.40076477428265,
+          "max_combo": 60
+        }
+      },
+      {
+        "name": "an osu!taiko map converted to another ruleset",
+        "map": "taiko/1028484.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 0.7518357923113625,
+          "max_combo": 301
+        }
+      },
+      {
+        "name": "an osu!taiko map converted to another ruleset",
+        "map": "taiko/v9.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 0.9813602744335218,
+          "max_combo": 717
+        }
+      },
+      {
+        "name": "control points left redundant once sorted",
+        "map": "osu/control-points-redundant-after-sorting.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 21.824134694773885,
+          "max_combo": 427
+        }
+      },
+      {
+        "name": "a zero-length slider with repeats",
+        "map": "osu/zero-length-slider-repeats.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 4.696044288987276,
+          "max_combo": 111
+        }
+      },
+      {
+        "name": "hard rock offsets left to the last mod that sets them",
+        "map": "fruits/2118524.osu",
+        "mods": "HR,DA:hard_rock_offsets=False",
+        "attributes": {
+          "star_rating": 3.542121348053362,
+          "max_combo": 730
+        }
+      },
+      {
+        "name": "hard rock offsets left to the last mod that sets them",
+        "map": "fruits/2118524.osu",
+        "mods": "DA:hard_rock_offsets=False,HR",
+        "attributes": {
+          "star_rating": 4.308291009137178,
+          "max_combo": 730
+        }
+      }
+    ],
+    "mania": [
+      {
+        "name": "the difficulty of each test map",
+        "map": "mania/diffcalc-test.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 2.3493769750220914,
+          "max_combo": 242
+        }
+      },
+      {
+        "name": "the difficulty of each test map at a changed clock rate",
+        "map": "mania/diffcalc-test.osu",
+        "mods": "DT",
+        "attributes": {
+          "star_rating": 2.797245912537965,
+          "max_combo": 242
+        }
+      },
+      {
+        "name": "a basic osu!mania map",
+        "map": "mania/1638954.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 3.358304846842773,
+          "max_combo": 956
+        }
+      },
+      {
+        "name": "a basic osu!mania map",
+        "map": "mania/1638954.osu",
+        "mods": "DT",
+        "attributes": {
+          "star_rating": 4.6072892053157295,
+          "max_combo": 956
+        }
+      },
+      {
+        "name": "an osu! map converted to osu!mania",
+        "map": "osu/2785319.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 3.2033142085672255,
+          "max_combo": 1381
+        }
+      },
+      {
+        "name": "an osu! map converted to osu!mania",
+        "map": "osu/2785319.osu",
+        "mods": "DT",
+        "attributes": {
+          "star_rating": 4.2934063021960185,
+          "max_combo": 1381
+        }
+      },
+      {
+        "name": "an osu! map converted to osu!mania with 4K",
+        "map": "osu/2785319.osu",
+        "mods": "4K",
+        "attributes": {
+          "star_rating": 2.653795415351293,
+          "max_combo": 1072
+        }
+      },
+      {
+        "name": "the difficulty of each test map",
+        "map": "mania/diffcalc-test.osu",
+        "mods": "",
+        "attributes": {
+          "star_rating": 2.3493769750220914,
+          "max_combo": 242
+        }
+      },
+      {
+        "name": "an osu! map converted to osu!mania",
+        "map": "osu/2785319.osu",
+        "mods": "",
+        "attributes": {
+          "star_rating": 3.2033142085672255,
+          "max_combo": 1381
+        }
+      },
+      {
+        "name": "a basic osu!mania map",
+        "map": "mania/1638954.osu",
+        "mods": "EZ",
+        "attributes": {
+          "star_rating": 3.358304846842773,
+          "max_combo": 956
+        }
+      },
+      {
+        "name": "an osu! map converted to osu!mania",
+        "map": "osu/2785319.osu",
+        "mods": "EZ",
+        "attributes": {
+          "star_rating": 3.2033142085672255,
+          "max_combo": 1381
+        }
+      },
+      {
+        "name": "osu!mania scores on keys_4_holds.osu",
+        "map": "mania/keys_4_holds.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 3.0521470909635484,
+          "max_combo": 4247
+        }
+      },
+      {
+        "name": "osu!mania scores on keys_4_holds.osu",
+        "map": "mania/keys_4_holds.osu",
+        "mods": "NF,DT",
+        "attributes": {
+          "star_rating": 4.083007683533984,
+          "max_combo": 4247
+        }
+      },
+      {
+        "name": "a time ramp over a map that starts before zero",
+        "map": "osu/negative-start-time.osu",
+        "mods": "WU",
+        "attributes": {
+          "star_rating": 2.8326945163578015,
+          "max_combo": 141
+        }
+      },
+      {
+        "name": "a time ramp over a map that starts before zero",
+        "map": "osu/negative-start-time.osu",
+        "mods": "WD",
+        "attributes": {
+          "star_rating": 2.577627103094092,
+          "max_combo": 141
+        }
+      },
+      {
+        "name": "a time ramp over a map that starts before zero",
+        "map": "osu/negative-start-time.osu",
+        "mods": "WU:initial_rate=0.9:final_rate=1.9",
+        "attributes": {
+          "star_rating": 2.886111507097542,
+          "max_combo": 141
+        }
+      },
+      {
+        "name": "control points left redundant once sorted",
+        "map": "osu/control-points-redundant-after-sorting.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 1.715960130510264,
+          "max_combo": 66
+        }
+      },
+      {
+        "name": "a zero-length slider with repeats",
+        "map": "osu/zero-length-slider-repeats.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 1.4429295284549082,
+          "max_combo": 48
+        }
+      },
+      {
+        "name": "timing lines the official decoder accepts",
+        "map": "taiko/timing-lines-official-rules.osu",
+        "mods": "NM",
+        "attributes": {
+          "star_rating": 3.935063867313232,
+          "max_combo": 197
+        }
+      }
+    ]
+  },
+  "performance": {
+    "osu": [
+      {
+        "name": "a basic osu! map",
+        "map": "osu/2785319.osu",
+        "mods": "NM",
+        "score": {
+          "great": 601,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 316.5901855625614,
+          "aim": 148.75278891878943,
+          "speed": 61.34653468094172,
+          "accuracy": 98.99847982709288,
+          "flashlight": 0,
+          "reading": 2.2291238201795176,
+          "effective_miss_count": 0,
+          "speed_deviation": 11.70045116819282,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "a basic osu! map",
+        "map": "osu/2785319.osu",
+        "mods": "HD",
+        "score": {
+          "great": 601,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 349.9881115302272,
+          "aim": 148.75278891878943,
+          "speed": 61.34653468094172,
+          "accuracy": 98.99847982709288,
+          "flashlight": 0,
+          "reading": 41.59660781351789,
+          "effective_miss_count": 0,
+          "speed_deviation": 11.70045116819282,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "a basic osu! map",
+        "map": "osu/2785319.osu",
+        "mods": "EZ,HD",
+        "score": {
+          "great": 601,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 330.5430804957736,
+          "aim": 88.9845069859366,
+          "speed": 40.67344998245687,
+          "accuracy": 16.05545397996135,
+          "flashlight": 0,
+          "reading": 179.54117243675987,
+          "effective_miss_count": 0,
+          "speed_deviation": 23.04067406810845,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "a basic osu! map",
+        "map": "osu/2785319.osu",
+        "mods": "HR",
+        "score": {
+          "great": 601,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 468.21934604774174,
+          "aim": 231.45791599856506,
+          "speed": 61.86844909389746,
+          "accuracy": 161.55575439788055,
+          "flashlight": 0,
+          "reading": 3.0588804345706087,
+          "effective_miss_count": 0,
+          "speed_deviation": 8.609766678538842,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "a basic osu! map",
+        "map": "osu/2785319.osu",
+        "mods": "DT",
+        "score": {
+          "great": 601,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 861.1999380363726,
+          "aim": 436.40604835642193,
+          "speed": 198.35289926936036,
+          "accuracy": 183.66566616694254,
+          "flashlight": 0,
+          "reading": 33.10777055891541,
+          "effective_miss_count": 0,
+          "speed_deviation": 7.66444640194172,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "a basic osu! map",
+        "map": "osu/2785319.osu",
+        "mods": "FL",
+        "score": {
+          "great": 601,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 444.5824653333625,
+          "aim": 148.75278891878943,
+          "speed": 61.34653468094172,
+          "accuracy": 98.99847982709288,
+          "flashlight": 137.54700871774983,
+          "reading": 2.2291238201795176,
+          "effective_miss_count": 0,
+          "speed_deviation": 11.70045116819282,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "a basic osu! map",
+        "map": "osu/2785319.osu",
+        "mods": "HD,FL",
+        "score": {
+          "great": 601,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 512.2069389717595,
+          "aim": 148.75278891878943,
+          "speed": 61.34653468094172,
+          "accuracy": 98.99847982709288,
+          "flashlight": 172.5399803247157,
+          "reading": 41.59660781351789,
+          "effective_miss_count": 0,
+          "speed_deviation": 11.70045116819282,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "osu!standard scores with misses on 2785319.osu",
+        "map": "osu/2785319.osu",
+        "mods": "NM",
+        "score": {
+          "great": 600,
+          "ok": 1,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": 0.9995
+        },
+        "attributes": {
+          "total": 313.5931111664516,
+          "aim": 148.67841252433004,
+          "speed": 61.044586857635174,
+          "accuracy": 96.39197991665763,
+          "flashlight": 0,
+          "reading": 2.2257818060134733,
+          "effective_miss_count": 0,
+          "speed_deviation": 12.330239528599414,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "osu!standard scores with misses on 2785319.osu",
+        "map": "osu/2785319.osu",
+        "mods": "HD,HR,DT,FL",
+        "score": {
+          "great": 598,
+          "ok": 2,
+          "meh": 0,
+          "miss": 1,
+          "combo": 561,
+          "legacy_total_score": 5409000,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 1556.6503306219697,
+          "aim": 593.450454755154,
+          "speed": 174.72923708817956,
+          "accuracy": 231.85194448310463,
+          "flashlight": 367.5800885557813,
+          "reading": 224.60891250014552,
+          "effective_miss_count": 1,
+          "speed_deviation": 6.172601589845095,
+          "combo_based_estimated_miss_count": 1,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "osu!standard scores with misses on 2785319.osu",
+        "map": "osu/2785319.osu",
+        "mods": "CL",
+        "score": {
+          "great": 598,
+          "ok": 2,
+          "meh": 0,
+          "miss": 1,
+          "combo": 561,
+          "legacy_total_score": 5409000,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 240.17950868231355,
+          "aim": 118.65978693331824,
+          "speed": 48.25834074745435,
+          "accuracy": 67.42209392326264,
+          "flashlight": 0,
+          "reading": 1.596150907083617,
+          "effective_miss_count": 3,
+          "speed_deviation": 12.84569412425561,
+          "combo_based_estimated_miss_count": 1.5609625668449199,
+          "score_based_estimated_miss_count": 3,
+          "aim_estimated_slider_breaks": 1.0325757091930874,
+          "speed_estimated_slider_breaks": 0.902726298511645
+        }
+      },
+      {
+        "name": "a rate setting rounded to its precision",
+        "map": "osu/2785319.osu",
+        "mods": "DT:speed_change=1.234",
+        "score": {
+          "great": 908,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 529.2678239640378,
+          "aim": 271.0132438514412,
+          "speed": 105.09914202712113,
+          "accuracy": 140.0212893342941,
+          "flashlight": 0,
+          "reading": 2.9710484939153745,
+          "effective_miss_count": 0,
+          "speed_deviation": 9.19879934914028,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "a rate setting rounded to its precision",
+        "map": "osu/2785319.osu",
+        "mods": "HT:speed_change=0.755",
+        "score": {
+          "great": 908,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 166.24439916029525,
+          "aim": 77.82819544696035,
+          "speed": 29.054972064056756,
+          "accuracy": 55.125857774187146,
+          "flashlight": 0,
+          "reading": 1.3743552179878977,
+          "effective_miss_count": 0,
+          "speed_deviation": 15.23327091737273,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "a rate setting clamped to its range",
+        "map": "osu/2785319.osu",
+        "mods": "DT:speed_change=1.0",
+        "score": {
+          "great": 908,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 332.4938661884376,
+          "aim": 160.48675103712714,
+          "speed": 63.0699971360346,
+          "accuracy": 100.83255845135102,
+          "flashlight": 0,
+          "reading": 2.3163524209078887,
+          "effective_miss_count": 0,
+          "speed_deviation": 11.339973273220185,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "a wind up initial rate rounded to its precision",
+        "map": "osu/2785319.osu",
+        "mods": "WU:initial_rate=1.245",
+        "score": {
+          "great": 908,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 539.3689325838207,
+          "aim": 276.8707631410685,
+          "speed": 107.52318460455257,
+          "accuracy": 141.73377981971854,
+          "flashlight": 0,
+          "reading": 2.7633509626511743,
+          "effective_miss_count": 0,
+          "speed_deviation": 9.12105318970059,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "a wind up initial rate pushed by its final rate",
+        "map": "osu/2785319.osu",
+        "mods": "WU:initial_rate=1.6:final_rate=1.55",
+        "score": {
+          "great": 908,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 953.0246162920624,
+          "aim": 492.24404951616555,
+          "speed": 217.55677476459422,
+          "accuracy": 189.6578430419137,
+          "flashlight": 0,
+          "reading": 42.93202809857495,
+          "effective_miss_count": 0,
+          "speed_deviation": 7.332785477556686,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "an adaptive speed initial rate rounded to its precision",
+        "map": "osu/2785319.osu",
+        "mods": "AS:initial_rate=1.245",
+        "score": {
+          "great": 908,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 539.3689325838207,
+          "aim": 276.8707631410685,
+          "speed": 107.52318460455257,
+          "accuracy": 141.73377981971854,
+          "flashlight": 0,
+          "reading": 2.7633509626511743,
+          "effective_miss_count": 0,
+          "speed_deviation": 9.12105318970059,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "a magnetised strength rounded to its precision",
+        "map": "osu/2785319.osu",
+        "mods": "MG:attraction_strength=0.63",
+        "score": {
+          "great": 908,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 187.35940215408,
+          "aim": 21.494218881742874,
+          "speed": 61.439244822145554,
+          "accuracy": 98.99847982709288,
+          "flashlight": 0,
+          "reading": 0.461568649993444,
+          "effective_miss_count": 0,
+          "speed_deviation": 11.459182817064228,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "a deflate start scale rounded to its precision",
+        "map": "osu/2785319.osu",
+        "mods": "FL,DF:start_scale=3.33",
+        "score": {
+          "great": 908,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 420.8390995309225,
+          "aim": 156.32664499447543,
+          "speed": 61.439244822145554,
+          "accuracy": 98.99847982709288,
+          "flashlight": 105.91119736854264,
+          "reading": 2.2291238201795176,
+          "effective_miss_count": 0,
+          "speed_deviation": 11.459182817064228,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "a random angle sharpness rounded to its precision",
+        "map": "osu/2785319.osu",
+        "mods": "RD:seed=42:angle_sharpness=7.35",
+        "score": {
+          "great": 908,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 331.45566834011584,
+          "aim": 161.371404575263,
+          "speed": 61.439244822145554,
+          "accuracy": 98.99847982709288,
+          "flashlight": 0,
+          "reading": 4.326501010818786,
+          "effective_miss_count": 0,
+          "speed_deviation": 11.459182817064228,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "a difficulty adjust value clamped to its extended limits",
+        "map": "osu/2785319.osu",
+        "mods": "DA:approach_rate=12",
+        "score": {
+          "great": 908,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 413.2305398334949,
+          "aim": 155.74286570742862,
+          "speed": 61.439244822145554,
+          "accuracy": 98.99847982709288,
+          "flashlight": 0,
+          "reading": 100.1762091503198,
+          "effective_miss_count": 0,
+          "speed_deviation": 11.459182817064228,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      },
+      {
+        "name": "a difficulty adjust value clamped to its extended limits",
+        "map": "osu/2785319.osu",
+        "mods": "DA:approach_rate=-12:circle_size=4.3",
+        "score": {
+          "great": 908,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 909,
+          "legacy_total_score": 0,
+          "accuracy": -1.0
+        },
+        "attributes": {
+          "total": 768.1468251347021,
+          "aim": 148.64538624040523,
+          "speed": 61.439244822145554,
+          "accuracy": 98.99847982709288,
+          "flashlight": 0,
+          "reading": 447.15424476895186,
+          "effective_miss_count": 0,
+          "speed_deviation": 11.459182817064228,
+          "combo_based_estimated_miss_count": 0,
+          "score_based_estimated_miss_count": null,
+          "aim_estimated_slider_breaks": 0,
+          "speed_estimated_slider_breaks": 0
+        }
+      }
+    ],
+    "taiko": [
+      {
+        "name": "a basic taiko map",
+        "map": "taiko/1028484.osu",
+        "mods": "NM",
+        "score": {
+          "great": 289,
+          "ok": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 130.26636361095524,
+          "difficulty": 33.48488833057447,
+          "accuracy": 96.78147528038076,
+          "estimated_unstable_rate": 146.3238357972284
+        }
+      },
+      {
+        "name": "a basic taiko map",
+        "map": "taiko/1028484.osu",
+        "mods": "HR",
+        "score": {
+          "great": 289,
+          "ok": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 166.70246243922367,
+          "difficulty": 36.50275483295865,
+          "accuracy": 130.199707606265,
+          "estimated_unstable_rate": 120.87621218031913
+        }
+      },
+      {
+        "name": "a basic taiko map",
+        "map": "taiko/1028484.osu",
+        "mods": "DT",
+        "score": {
+          "great": 289,
+          "ok": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 265.5965861527287,
+          "difficulty": 92.42487686635559,
+          "accuracy": 173.17170928637316,
+          "estimated_unstable_rate": 97.54922386481894
+        }
+      },
+      {
+        "name": "an osu! map converted to taiko",
+        "map": "osu/2785319.osu",
+        "mods": "NM",
+        "score": {
+          "great": 908,
+          "ok": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 372.4458760719575,
+          "difficulty": 153.2164827606566,
+          "accuracy": 219.22939331130095,
+          "estimated_unstable_rate": 81.74165086164196
+        }
+      },
+      {
+        "name": "an osu! map converted to taiko",
+        "map": "osu/2785319.osu",
+        "mods": "HR",
+        "score": {
+          "great": 908,
+          "ok": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 452.2496503558973,
+          "difficulty": 194.56688580907107,
+          "accuracy": 257.68276454682626,
+          "estimated_unstable_rate": 70.84276408008971
+        }
+      },
+      {
+        "name": "an osu! map converted to taiko",
+        "map": "osu/2785319.osu",
+        "mods": "DT",
+        "score": {
+          "great": 908,
+          "ok": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 769.13039895928,
+          "difficulty": 385.1562322213426,
+          "accuracy": 383.9741667379375,
+          "estimated_unstable_rate": 54.49443390776131
+        }
+      },
+      {
+        "name": "a basic taiko map",
+        "map": "taiko/1028484.osu",
+        "mods": "HD",
+        "score": {
+          "great": 289,
+          "ok": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 138.19467202359527,
+          "difficulty": 34.15458609718596,
+          "accuracy": 104.04008592640932,
+          "estimated_unstable_rate": 146.3238357972284
+        }
+      },
+      {
+        "name": "an osu! map converted to taiko",
+        "map": "osu/2785319.osu",
+        "mods": "HD",
+        "score": {
+          "great": 908,
+          "ok": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 373.2119584857609,
+          "difficulty": 153.9825651744599,
+          "accuracy": 219.22939331130095,
+          "estimated_unstable_rate": 81.74165086164196
+        }
+      },
+      {
+        "name": "osu!taiko scores on v9.osu",
+        "map": "taiko/v9.osu",
+        "mods": "NM",
+        "score": {
+          "great": 705,
+          "ok": 10,
+          "miss": 1,
+          "combo": 400
+        },
+        "attributes": {
+          "total": 160.18804104568687,
+          "difficulty": 75.06349237847733,
+          "accuracy": 85.12454866720955,
+          "estimated_unstable_rate": 159.26353298023395
+        }
+      },
+      {
+        "name": "osu!taiko scores on v9.osu",
+        "map": "taiko/v9.osu",
+        "mods": "HD,FL",
+        "score": {
+          "great": 705,
+          "ok": 10,
+          "miss": 1,
+          "combo": 400
+        },
+        "attributes": {
+          "total": 178.20722347721272,
+          "difficulty": 86.69833365996243,
+          "accuracy": 91.50888981725028,
+          "estimated_unstable_rate": 159.26353298023395
+        }
+      },
+      {
+        "name": "a difficulty adjust value clamped to its extended limits",
+        "map": "taiko/1028484.osu",
+        "mods": "DA:scroll_speed=5",
+        "score": {
+          "great": 289,
+          "ok": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 154.54629310744798,
+          "difficulty": 57.52002192568554,
+          "accuracy": 97.02627118176244,
+          "estimated_unstable_rate": 146.3238357972284
+        }
+      },
+      {
+        "name": "a difficulty adjust value kept as a float",
+        "map": "taiko/1028484.osu",
+        "mods": "DA:scroll_speed=1.15:overall_difficulty=8.3",
+        "score": {
+          "great": 289,
+          "ok": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 192.20042601517952,
+          "difficulty": 33.5299697553693,
+          "accuracy": 158.6704562598102,
+          "estimated_unstable_rate": 103.91112976904625
+        }
+      }
+    ],
+    "catch": [
+      {
+        "name": "a basic osu!catch map",
+        "map": "fruits/2118524.osu",
+        "mods": "NM",
+        "score": {
+          "fruits": 728,
+          "droplets": 2,
+          "tiny_droplets": 263,
+          "tiny_misses": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 112.72215339177879
+        }
+      },
+      {
+        "name": "a basic osu!catch map",
+        "map": "fruits/2118524.osu",
+        "mods": "DT",
+        "score": {
+          "fruits": 728,
+          "droplets": 2,
+          "tiny_droplets": 263,
+          "tiny_misses": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 245.48176596381523
+        }
+      },
+      {
+        "name": "an osu! map converted to osu!catch",
+        "map": "osu/2785319.osu",
+        "mods": "NM",
+        "score": {
+          "fruits": 908,
+          "droplets": 0,
+          "tiny_droplets": 159,
+          "tiny_misses": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 232.34402311853054
+        }
+      },
+      {
+        "name": "an osu! map converted to osu!catch",
+        "map": "osu/2785319.osu",
+        "mods": "DT",
+        "score": {
+          "fruits": 908,
+          "droplets": 0,
+          "tiny_droplets": 159,
+          "tiny_misses": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 502.8408227990554
+        }
+      },
+      {
+        "name": "a basic osu!catch map",
+        "map": "fruits/2118524.osu",
+        "mods": "HD",
+        "score": {
+          "fruits": 728,
+          "droplets": 2,
+          "tiny_droplets": 263,
+          "tiny_misses": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 135.26658407013454
+        }
+      },
+      {
+        "name": "a basic osu!catch map",
+        "map": "fruits/2118524.osu",
+        "mods": "HD,HR",
+        "score": {
+          "fruits": 728,
+          "droplets": 2,
+          "tiny_droplets": 263,
+          "tiny_misses": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 231.1954012763412
+        }
+      },
+      {
+        "name": "an osu! map converted to osu!catch",
+        "map": "osu/2785319.osu",
+        "mods": "HD",
+        "score": {
+          "fruits": 908,
+          "droplets": 0,
+          "tiny_droplets": 159,
+          "tiny_misses": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 256.159282164472
+        }
+      },
+      {
+        "name": "an osu! map converted to osu!catch",
+        "map": "osu/2785319.osu",
+        "mods": "HD,HR",
+        "score": {
+          "fruits": 908,
+          "droplets": 0,
+          "tiny_droplets": 159,
+          "tiny_misses": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 327.3523805137957
+        }
+      },
+      {
+        "name": "osu!catch scores on v12.osu",
+        "map": "fruits/v12.osu",
+        "mods": "NM",
+        "score": {
+          "fruits": 281,
+          "droplets": 10,
+          "tiny_droplets": 20,
+          "tiny_misses": 2,
+          "miss": 1,
+          "combo": 300
+        },
+        "attributes": {
+          "total": 23.454358461534294
+        }
+      },
+      {
+        "name": "osu!catch scores on v12.osu",
+        "map": "fruits/v12.osu",
+        "mods": "HD,HR",
+        "score": {
+          "fruits": 281,
+          "droplets": 10,
+          "tiny_droplets": 20,
+          "tiny_misses": 2,
+          "miss": 1,
+          "combo": 300
+        },
+        "attributes": {
+          "total": 72.85739389948904
+        }
+      },
+      {
+        "name": "a difficulty adjust value clamped to its extended limits",
+        "map": "fruits/2118524.osu",
+        "mods": "DA:approach_rate=-3",
+        "score": {
+          "fruits": 728,
+          "droplets": 2,
+          "tiny_droplets": 263,
+          "tiny_misses": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 135.26658407013454
+        }
+      },
+      {
+        "name": "a difficulty adjust value kept as a float",
+        "map": "fruits/2118524.osu",
+        "mods": "DA:approach_rate=8.3:circle_size=4.3",
+        "score": {
+          "fruits": 728,
+          "droplets": 2,
+          "tiny_droplets": 263,
+          "tiny_misses": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 129.50554790489414
+        }
+      },
+      {
+        "name": "hard rock offsets left to the last mod that sets them",
+        "map": "fruits/2118524.osu",
+        "mods": "HR,DA:hard_rock_offsets=False",
+        "score": {
+          "fruits": 728,
+          "droplets": 2,
+          "tiny_droplets": 263,
+          "tiny_misses": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 148.7769270097657
+        }
+      },
+      {
+        "name": "hard rock offsets left to the last mod that sets them",
+        "map": "fruits/2118524.osu",
+        "mods": "DA:hard_rock_offsets=False,HR",
+        "score": {
+          "fruits": 728,
+          "droplets": 2,
+          "tiny_droplets": 263,
+          "tiny_misses": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 220.18609645365825
+        }
+      }
+    ],
+    "mania": [
+      {
+        "name": "a basic osu!mania map",
+        "map": "mania/1638954.osu",
+        "mods": "NM",
+        "score": {
+          "perfect": 715,
+          "great": 0,
+          "good": 0,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 108.92297471705167,
+          "difficulty": 108.92297471705167
+        }
+      },
+      {
+        "name": "a basic osu!mania map",
+        "map": "mania/1638954.osu",
+        "mods": "DT",
+        "score": {
+          "perfect": 715,
+          "great": 0,
+          "good": 0,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 224.52717042937203,
+          "difficulty": 224.52717042937203
+        }
+      },
+      {
+        "name": "an osu! map converted to osu!mania",
+        "map": "osu/2785319.osu",
+        "mods": "NM",
+        "score": {
+          "perfect": 1312,
+          "great": 0,
+          "good": 0,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 101.39189449271568,
+          "difficulty": 101.39189449271568
+        }
+      },
+      {
+        "name": "an osu! map converted to osu!mania",
+        "map": "osu/2785319.osu",
+        "mods": "DT",
+        "score": {
+          "perfect": 1312,
+          "great": 0,
+          "good": 0,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 198.46891237015896,
+          "difficulty": 198.46891237015896
+        }
+      },
+      {
+        "name": "a basic osu!mania map",
+        "map": "mania/1638954.osu",
+        "mods": "EZ",
+        "score": {
+          "perfect": 715,
+          "great": 0,
+          "good": 0,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 54.46148735852584,
+          "difficulty": 108.92297471705167
+        }
+      },
+      {
+        "name": "an osu! map converted to osu!mania",
+        "map": "osu/2785319.osu",
+        "mods": "EZ",
+        "score": {
+          "perfect": 1312,
+          "great": 0,
+          "good": 0,
+          "ok": 0,
+          "meh": 0,
+          "miss": 0,
+          "combo": 0
+        },
+        "attributes": {
+          "total": 50.69594724635784,
+          "difficulty": 101.39189449271568
+        }
+      },
+      {
+        "name": "osu!mania scores on keys_4_holds.osu",
+        "map": "mania/keys_4_holds.osu",
+        "mods": "NM",
+        "score": {
+          "perfect": 499,
+          "great": 10,
+          "good": 5,
+          "ok": 3,
+          "meh": 2,
+          "miss": 1,
+          "combo": 2000
+        },
+        "attributes": {
+          "total": 80.25845658278872,
+          "difficulty": 80.25845658278872
+        }
+      },
+      {
+        "name": "osu!mania scores on keys_4_holds.osu",
+        "map": "mania/keys_4_holds.osu",
+        "mods": "NF,DT",
+        "score": {
+          "perfect": 499,
+          "great": 10,
+          "good": 5,
+          "ok": 3,
+          "meh": 2,
+          "miss": 1,
+          "combo": 2000
+        },
+        "attributes": {
+          "total": 117.47998741063074,
+          "difficulty": 156.63998321417432
+        }
+      }
+    ]
+  }
+}

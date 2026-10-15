@@ -1,7 +1,8 @@
 function(pppp_add_test name label)
   add_executable(test_${name} test_${name}.cpp)
   target_compile_features(test_${name} PRIVATE cxx_std_98)
-  target_compile_definitions(test_${name} PRIVATE PPPP_TEST_RESOURCES="${CMAKE_CURRENT_SOURCE_DIR}/resources")
+  target_compile_definitions(test_${name} PRIVATE PPPP_TEST_RESOURCES="${CMAKE_CURRENT_SOURCE_DIR}/resources"
+    PPPP_TEST_PARITY="${CMAKE_CURRENT_SOURCE_DIR}/parity/parity.json")
   target_link_libraries(test_${name} PRIVATE pppp_test_main pppp_internal pppp_warnings pppp_numerics ${ARGN})
   if(WIN32)
     add_custom_command(TARGET test_${name} POST_BUILD
@@ -32,16 +33,16 @@ if(PPPP_WITH_FOSU)
   set_tests_properties(backend_scalar PROPERTIES LABELS library TIMEOUT 300
     ENVIRONMENT "FOSU_BACKEND=scalar")
 
-  pppp_add_test(parity_decode library pppp_fosu)
-  pppp_add_test(parity_difficulty library pppp_fosu)
-  pppp_add_test(parity_performance library pppp_fosu)
+  pppp_add_test(parity_decode library pppp_fosu pppp_cjson)
+  pppp_add_test(parity_difficulty library pppp_fosu pppp_cjson)
+  pppp_add_test(parity_performance library pppp_fosu pppp_cjson)
 endif()
 
 if(PPPP_WITH_FOSU AND PPPP_BUILD_CAPI)
   # --success names every test case as it runs, so a case that hangs and is killed by the timeout
   # above can be told apart from the ones before it in the CI log.
   set(PPPP_TEST_ARGS --success)
-  pppp_add_test(capi library pppp_fosu pppp_c)
+  pppp_add_test(capi library pppp_fosu pppp_c pppp_cjson)
   unset(PPPP_TEST_ARGS)
 endif()
 

@@ -388,9 +388,10 @@ if(PPPP_INSTALL)
   endif()
 endif()
 
-# doctest
+# doctest, cJSON
 if(PPPP_BUILD_TESTS)
   include(cmake/Doctest.cmake)
+  include(cmake/CJSON.cmake)
 endif()
 
 # fosu

@@ -10,7 +10,8 @@ target_link_libraries(pppp_c PRIVATE
   pppp_fosu
   $<BUILD_INTERFACE:pppp_warnings>
   $<BUILD_INTERFACE:pppp_numerics>
-  $<BUILD_INTERFACE:pppp_performance>)
+  $<BUILD_INTERFACE:pppp_performance>
+  $<BUILD_INTERFACE:pppp_bindings>)
 target_sources(pppp_c PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
   FILES include/pppp/capi.h)

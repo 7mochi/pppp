@@ -40,6 +40,7 @@ include(GNUInstallDirs)
 include(cmake/Warnings.cmake)
 include(cmake/Numerics.cmake)
 include(cmake/Performance.cmake)
+include(cmake/Bindings.cmake)
 include(cmake/Targets.cmake)
 include(cmake/Checks.cmake)
 

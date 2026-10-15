@@ -18,7 +18,37 @@ namespace internal = ::fosu::internal;
 namespace timing = ::pppp::beatmaps::timing;
 namespace utils = ::pppp::utils;
 
+#define PPPP_NODE_CATCH                                                                                      \
+    catch (const std::bad_alloc&) {                                                                          \
+        napi_throw_error(env, NULL, "out of memory");                                                        \
+        return NULL;                                                                                         \
+    }                                                                                                        \
+    catch (...) {                                                                                            \
+        napi_throw_error(env, NULL, "internal error");                                                       \
+        return NULL;                                                                                         \
+    }
+
 namespace {
+    template <typename T>
+    class ScopedDelete {
+    public:
+        explicit ScopedDelete(T* pointer)
+            : value(pointer) {}
+        ~ScopedDelete() { delete value; }
+
+        T* release() {
+            T* released = value;
+            value = 0;
+            return released;
+        }
+
+    private:
+        ScopedDelete(const ScopedDelete&);
+        ScopedDelete& operator=(const ScopedDelete&);
+
+        T* value;
+    };
+
     napi_value number(napi_env env, double value) {
         napi_value result = NULL;
         napi_create_double(env, value, &result);
@@ -235,7 +265,7 @@ namespace {
     }
 
     napi_value beatmap_field(napi_env env, napi_callback_info info, const char* cache,
-                             napi_value (*build)(napi_env, const beatmaps::Beatmap&)) {
+                             napi_value (*build)(napi_env, const beatmaps::Beatmap&)) try {
         napi_value receiver = NULL;
         if (napi_get_cb_info(env, info, NULL, NULL, &receiver, NULL) != napi_ok) {
             return NULL;
@@ -265,6 +295,7 @@ namespace {
         }
         return array;
     }
+    PPPP_NODE_CATCH
 
     napi_value get_hit_objects(napi_env env, napi_callback_info info) {
         return beatmap_field(env, info, "_hitObjects", build_hit_objects);
@@ -284,7 +315,7 @@ namespace {
 
     void release_beatmap(napi_env env, void* data, void* hint) { delete static_cast<pppp::Beatmap*>(data); }
 
-    napi_value from_bytes(napi_env env, napi_callback_info info) {
+    napi_value from_bytes(napi_env env, napi_callback_info info) try {
         size_t argc = 1;
         napi_value argv[1];
         bool is_typed_array = false;
@@ -307,9 +338,9 @@ namespace {
             napi_throw_range_error(env, NULL, "cannot allocate the beatmap");
             return NULL;
         }
+        ScopedDelete<pppp::Beatmap> owned(map);
         const pppp::Status status = map->load_buffer(bytes, length);
         if (!status.ok()) {
-            delete map;
             if (status.code() == pppp::StatusCode::ALLOCATION) {
                 napi_throw_range_error(env, NULL, "cannot allocate the beatmap");
                 return NULL;
@@ -320,13 +351,12 @@ namespace {
 
         napi_value object = NULL;
         if (napi_create_object(env, &object) != napi_ok) {
-            delete map;
             return NULL;
         }
         if (napi_wrap(env, object, map, release_beatmap, NULL, NULL) != napi_ok) {
-            delete map;
             return NULL;
         }
+        map = owned.release();
         napi_set_named_property(env, object, "formatVersion", integer(env, map->format_version));
         napi_set_named_property(env, object, "mode", integer(env, map->mode));
         napi_set_named_property(env, object, "stackLeniency", number(env, map->stack_leniency));
@@ -343,6 +373,7 @@ namespace {
 
         return object;
     }
+    PPPP_NODE_CATCH
 
     napi_value osu_attributes(napi_env env, const pppp::osu::difficulty::OsuDifficultyAttributes& value) {
         napi_value object = NULL;
@@ -464,7 +495,8 @@ namespace {
         if (kind == napi_number) {
             double bits = 0.0;
             napi_get_value_double(env, value, &bits);
-            if (bits < 0.0 || bits > 4294967295.0 ||
+            // Negated comparisons reject NaN before the cast below, which would otherwise be UB.
+            if (!(bits >= 0.0) || !(bits <= 4294967295.0) ||
                 bits != static_cast<double>(static_cast<pppp_uint64>(bits))) {
                 napi_throw_error(env, "ERR_PPPP_MODS", "invalid mod specification");
                 return -1;
@@ -1041,13 +1073,15 @@ namespace {
 
     void throw_last_error(napi_env env) {
         const napi_extended_error_info* error_info = NULL;
-        napi_get_last_error_info(env, &error_info);
+        const napi_status fetched = napi_get_last_error_info(env, &error_info);
         bool is_pending = false;
-        const char* err_message = error_info->error_message;
         napi_is_exception_pending(env, &is_pending);
         // If an exception is already pending, don't rethrow it
         if (!is_pending) {
-            const char* error_message = err_message != NULL ? err_message : "empty error message";
+            const char* error_message =
+                fetched == napi_ok && error_info != NULL && error_info->error_message != NULL
+                    ? error_info->error_message
+                    : "empty error message";
             napi_throw_error(env, NULL, error_message);
         }
     }
@@ -1067,7 +1101,16 @@ namespace {
         return error;
     }
 
-    void execute(napi_env, void* data) { run(*static_cast<Job*>(data)); }
+    void execute(napi_env, void* data) {
+        Job* job = static_cast<Job*>(data);
+        try {
+            run(*job);
+        } catch (const std::bad_alloc&) {
+            job->status = pppp::StatusCode::ALLOCATION;
+        } catch (...) {
+            job->status = pppp::StatusCode::INTERNAL;
+        }
+    }
 
     void complete(napi_env env, napi_status status, void* data) {
         Job* job = static_cast<Job*>(data);
@@ -1075,12 +1118,21 @@ namespace {
             release(env, job);
             return;
         }
+        napi_value value = NULL;
+        if (job->status.ok()) {
+            try {
+                value = result(env, *job);
+            } catch (const std::bad_alloc&) {
+                job->status = pppp::StatusCode::ALLOCATION;
+            } catch (...) {
+                job->status = pppp::StatusCode::INTERNAL;
+            }
+        }
         if (!job->status.ok()) {
             napi_reject_deferred(env, job->deferred, status_error(env, job->status));
             release(env, job);
             return;
         }
-        napi_value value = result(env, *job);
         if (value) {
             napi_resolve_deferred(env, job->deferred, value);
         } else {
@@ -1107,7 +1159,7 @@ namespace {
         return promise;
     }
 
-    napi_value calculate(napi_env env, napi_callback_info info) {
+    napi_value calculate(napi_env env, napi_callback_info info) try {
         size_t argc = 9;
         napi_value argv[9];
         void* data = NULL;
@@ -1148,26 +1200,29 @@ namespace {
         }
         return queue(env, job, argv[0]);
     }
+    PPPP_NODE_CATCH
 
     const Call calls[] = {{Job::DIFFICULTY, false},  {Job::DIFFICULTY, true}, {Job::TIMED, false},
                           {Job::TIMED, true},        {Job::STRAINS, false},   {Job::STRAINS, true},
                           {Job::PERFORMANCE, false}, {Job::PERFORMANCE, true}};
 
-    napi_value read_version(napi_env env, napi_callback_info info) {
-        char version[16];
+    napi_value read_version(napi_env env, napi_callback_info info) try {
+        char version[32];
         std::snprintf(version, sizeof(version), "%d.%d.%d", PPPP_VERSION_MAJOR, PPPP_VERSION_MINOR,
                       PPPP_VERSION_PATCH);
         napi_value value = NULL;
         napi_create_string_utf8(env, version, NAPI_AUTO_LENGTH, &value);
         return value;
     }
+    PPPP_NODE_CATCH
 
-    napi_value read_backend(napi_env env, napi_callback_info info) {
+    napi_value read_backend(napi_env env, napi_callback_info info) try {
         napi_value value = NULL;
         napi_create_string_utf8(env, internal::engine_name(internal::selected_engine()->kind),
                                 NAPI_AUTO_LENGTH, &value);
         return value;
     }
+    PPPP_NODE_CATCH
 
     napi_property_descriptor properties[] = {
         {"version", NULL, NULL, read_version, NULL, NULL, napi_default_jsproperty, NULL},

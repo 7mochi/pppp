@@ -21,7 +21,8 @@ target_link_libraries(_core PRIVATE
   pppp_fosu
   $<BUILD_INTERFACE:pppp_warnings>
   $<BUILD_INTERFACE:pppp_numerics>
-  $<BUILD_INTERFACE:pppp_performance>)
+  $<BUILD_INTERFACE:pppp_performance>
+  $<BUILD_INTERFACE:pppp_bindings>)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   target_link_options(_core PRIVATE

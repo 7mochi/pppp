@@ -3,7 +3,15 @@
 
 namespace pppp {
     struct StatusCode {
-        enum Value { OK = 0, INVALID_ARGUMENT, ALLOCATION, PARSE, NO_SLIDER_PATH_BACKEND, SLIDER_PATH };
+        enum Value {
+            OK = 0,
+            INVALID_ARGUMENT,
+            ALLOCATION,
+            PARSE,
+            NO_SLIDER_PATH_BACKEND,
+            SLIDER_PATH,
+            INTERNAL
+        };
     };
 
     class Status {
@@ -33,6 +41,7 @@ namespace pppp {
         case StatusCode::PARSE: return "cannot parse the beatmap";
         case StatusCode::NO_SLIDER_PATH_BACKEND: return "no slider path backend";
         case StatusCode::SLIDER_PATH: return "a slider path could not be computed";
+        case StatusCode::INTERNAL: return "internal error";
         default: return "unknown error";
         }
     }

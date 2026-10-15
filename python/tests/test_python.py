@@ -140,6 +140,11 @@ def test_a_missing_file_is_the_os_error():
         pppp.Beatmap.from_file(RESOURCES / "osu" / "does-not-exist.osu")
 
 
+def test_beatmap_cannot_be_instantiated():
+    with pytest.raises(TypeError):
+        pppp.Beatmap()
+
+
 def test_the_errors_are_value_errors_under_one_base():
     assert issubclass(pppp.ParseError, ValueError)
     assert issubclass(pppp.ParseError, pppp.Error)
@@ -335,6 +340,17 @@ def test_attributes_of_another_type_are_a_type_error():
         pppp.Performance().calculate(
             beatmap_of("osu/2785319.osu"), "not attributes"  # type: ignore[arg-type]
         )
+
+
+def test_a_non_numeric_attribute_field_is_an_error():
+    beatmap = beatmap_of("osu/2785319.osu")
+    difficulty = pppp.Difficulty().calculate(beatmap)
+    names = type(difficulty).__match_args__
+    values = [getattr(difficulty, name) for name in names]
+    values[names.index("star_rating")] = "oops"
+    corrupted = pppp.OsuDifficultyAttributes(*values)
+    with pytest.raises(TypeError, match="must be numbers"):
+        pppp.Performance().calculate(beatmap, corrupted)
 
 
 @pytest.mark.parametrize(

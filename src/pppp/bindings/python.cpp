@@ -18,6 +18,25 @@ namespace internal = ::fosu::internal;
 namespace timing = ::pppp::beatmaps::timing;
 namespace utils = ::pppp::utils;
 
+#define PPPP_PY_CATCH_OBJECT                                                                                 \
+    catch (const std::bad_alloc&) {                                                                          \
+        return PyErr_NoMemory();                                                                             \
+    }                                                                                                        \
+    catch (...) {                                                                                            \
+        PyErr_SetString(PyExc_RuntimeError, "internal error");                                               \
+        return NULL;                                                                                         \
+    }
+
+#define PPPP_PY_CATCH_INT                                                                                    \
+    catch (const std::bad_alloc&) {                                                                          \
+        PyErr_NoMemory();                                                                                    \
+        return -1;                                                                                           \
+    }                                                                                                        \
+    catch (...) {                                                                                            \
+        PyErr_SetString(PyExc_RuntimeError, "internal error");                                               \
+        return -1;                                                                                           \
+    }
+
 namespace {
     class PyRef {
     public:
@@ -43,6 +62,28 @@ namespace {
         PyRef& operator=(const PyRef&);
 
         PyObject* object;
+    };
+
+    // Owns a native object until its caller takes it over; the destructor frees it if a later step
+    // throws, so a function-try-block's handler runs after the owner has already cleaned up.
+    template <typename T>
+    class ScopedDelete {
+    public:
+        explicit ScopedDelete(T* pointer)
+            : value(pointer) {}
+        ~ScopedDelete() { delete value; }
+
+        T* release() {
+            T* released = value;
+            value = 0;
+            return released;
+        }
+
+    private:
+        ScopedDelete(const ScopedDelete&);
+        ScopedDelete& operator=(const ScopedDelete&);
+
+        T* value;
     };
 
     class PauseGC {
@@ -758,7 +799,7 @@ namespace {
         State* state;
     };
 
-    PyObject* make_record(PyObject* module, PyObject* args) {
+    PyObject* make_record(PyObject* module, PyObject* args) try {
         const char* name;
         PyObject* declared;
         if (!PyArg_ParseTuple(args, "sO:_record", &name, &declared)) {
@@ -856,11 +897,15 @@ namespace {
             for (Py_ssize_t i = 0; i < count; i++) {
                 state->slots[kind][index_of_field(members[i].name)] = i;
             }
+            return Py_NewRef(type);
         }
-        return Py_NewRef(type);
+        // An unknown name is a caller's own throwaway type: hand the creation reference itself to the
+        // caller rather than leaking it behind a second incref.
+        return type;
     }
+    PPPP_PY_CATCH_OBJECT
 
-    PyObject* restore_record(PyObject* module, PyObject* type) {
+    PyObject* restore_record(PyObject* module, PyObject* type) try {
         State* state = static_cast<State*>(PyModule_GetState(module));
         for (int kind = 0; kind < type_count; kind++) {
             if (state->types[kind] == type) {
@@ -874,6 +919,7 @@ namespace {
         PyErr_SetString(PyExc_TypeError, "expected a pppp record type");
         return NULL;
     }
+    PPPP_PY_CATCH_OBJECT
 
     void beatmap_dealloc(PyObject* object) {
         BeatmapObject* beatmap = reinterpret_cast<BeatmapObject*>(object);
@@ -910,7 +956,7 @@ namespace {
         return 0;
     }
 
-    PyObject* beatmap_get_difficulty(PyObject* object, void*) {
+    PyObject* beatmap_get_difficulty(PyObject* object, void*) try {
         BeatmapObject* beatmap = reinterpret_cast<BeatmapObject*>(object);
         if (!beatmap->map) {
             PyErr_SetString(PyExc_AttributeError, "beatmap is not loaded");
@@ -926,8 +972,9 @@ namespace {
         }
         return Py_NewRef(beatmap->difficulty);
     }
+    PPPP_PY_CATCH_OBJECT
 
-    PyObject* beatmap_get_hit_objects(PyObject* object, void*) {
+    PyObject* beatmap_get_hit_objects(PyObject* object, void*) try {
         BeatmapObject* beatmap = reinterpret_cast<BeatmapObject*>(object);
         if (!beatmap->map) {
             PyErr_SetString(PyExc_AttributeError, "beatmap is not loaded");
@@ -943,8 +990,9 @@ namespace {
         }
         return Py_NewRef(beatmap->hit_objects);
     }
+    PPPP_PY_CATCH_OBJECT
 
-    PyObject* beatmap_get_sliders(PyObject* object, void*) {
+    PyObject* beatmap_get_sliders(PyObject* object, void*) try {
         BeatmapObject* beatmap = reinterpret_cast<BeatmapObject*>(object);
         if (!beatmap->map) {
             PyErr_SetString(PyExc_AttributeError, "beatmap is not loaded");
@@ -960,8 +1008,9 @@ namespace {
         }
         return Py_NewRef(beatmap->sliders);
     }
+    PPPP_PY_CATCH_OBJECT
 
-    PyObject* beatmap_get_timing_points(PyObject* object, void*) {
+    PyObject* beatmap_get_timing_points(PyObject* object, void*) try {
         BeatmapObject* beatmap = reinterpret_cast<BeatmapObject*>(object);
         if (!beatmap->map) {
             PyErr_SetString(PyExc_AttributeError, "beatmap is not loaded");
@@ -977,8 +1026,9 @@ namespace {
         }
         return Py_NewRef(beatmap->timing_points);
     }
+    PPPP_PY_CATCH_OBJECT
 
-    PyObject* beatmap_get_breaks(PyObject* object, void*) {
+    PyObject* beatmap_get_breaks(PyObject* object, void*) try {
         BeatmapObject* beatmap = reinterpret_cast<BeatmapObject*>(object);
         if (!beatmap->map) {
             PyErr_SetString(PyExc_AttributeError, "beatmap is not loaded");
@@ -994,18 +1044,37 @@ namespace {
         }
         return Py_NewRef(beatmap->breaks);
     }
+    PPPP_PY_CATCH_OBJECT
 
-    PyObject* beatmap_get_format_version(PyObject* object, void*) {
-        return py_integer(reinterpret_cast<BeatmapObject*>(object)->map->format_version);
+    PyObject* beatmap_get_format_version(PyObject* object, void*) try {
+        BeatmapObject* beatmap = reinterpret_cast<BeatmapObject*>(object);
+        if (!beatmap->map) {
+            PyErr_SetString(PyExc_AttributeError, "beatmap is not loaded");
+            return NULL;
+        }
+        return py_integer(beatmap->map->format_version);
     }
+    PPPP_PY_CATCH_OBJECT
 
-    PyObject* beatmap_get_mode(PyObject* object, void*) {
-        return py_integer(reinterpret_cast<BeatmapObject*>(object)->map->mode);
+    PyObject* beatmap_get_mode(PyObject* object, void*) try {
+        BeatmapObject* beatmap = reinterpret_cast<BeatmapObject*>(object);
+        if (!beatmap->map) {
+            PyErr_SetString(PyExc_AttributeError, "beatmap is not loaded");
+            return NULL;
+        }
+        return py_integer(beatmap->map->mode);
     }
+    PPPP_PY_CATCH_OBJECT
 
-    PyObject* beatmap_get_stack_leniency(PyObject* object, void*) {
-        return py_number(reinterpret_cast<BeatmapObject*>(object)->map->stack_leniency);
+    PyObject* beatmap_get_stack_leniency(PyObject* object, void*) try {
+        BeatmapObject* beatmap = reinterpret_cast<BeatmapObject*>(object);
+        if (!beatmap->map) {
+            PyErr_SetString(PyExc_AttributeError, "beatmap is not loaded");
+            return NULL;
+        }
+        return py_number(beatmap->map->stack_leniency);
     }
+    PPPP_PY_CATCH_OBJECT
 
     PyGetSetDef beatmap_getset[] = {{"format_version", beatmap_get_format_version, NULL, NULL, NULL},
                                     {"mode", beatmap_get_mode, NULL, NULL, NULL},
@@ -1017,7 +1086,7 @@ namespace {
                                     {"breaks", beatmap_get_breaks, NULL, NULL, NULL},
                                     {NULL, NULL, NULL, NULL, NULL}};
 
-    PyObject* beatmap_from_bytes(PyObject* type, PyObject* argument) {
+    PyObject* beatmap_from_bytes(PyObject* type, PyObject* argument) try {
         State* state = static_cast<State*>(PyType_GetModuleState(reinterpret_cast<PyTypeObject*>(type)));
         if (!state) {
             return NULL;
@@ -1036,12 +1105,12 @@ namespace {
         if (!map) {
             return PyErr_NoMemory();
         }
+        ScopedDelete<pppp::Beatmap> owned(map);
         pppp::Status status;
         PyThreadState* thread = PyEval_SaveThread();
         status = map->load_buffer(bytes, static_cast<size_t>(size));
         PyEval_RestoreThread(thread);
         if (!status.ok()) {
-            delete map;
             if (status.code() == pppp::StatusCode::ALLOCATION) {
                 return PyErr_NoMemory();
             }
@@ -1051,14 +1120,14 @@ namespace {
 
         PyObject* object = PyType_GenericAlloc(reinterpret_cast<PyTypeObject*>(state->beatmap_type), 0);
         if (!object) {
-            delete map;
             return NULL;
         }
         BeatmapObject* beatmap = reinterpret_cast<BeatmapObject*>(object);
-        beatmap->map = map;
+        beatmap->map = owned.release();
         beatmap->state = state;
         return object;
     }
+    PPPP_PY_CATCH_OBJECT
 
     PyMethodDef beatmap_methods[] = {
         {"from_bytes", beatmap_from_bytes, METH_CLASS | METH_O,
@@ -1125,7 +1194,12 @@ namespace {
             PyErr_SetString(PyExc_TypeError, "expected a Beatmap");
             return NULL;
         }
-        return reinterpret_cast<const BeatmapObject*>(object);
+        const BeatmapObject* beatmap = reinterpret_cast<const BeatmapObject*>(object);
+        if (!beatmap->map) {
+            PyErr_SetString(PyExc_AttributeError, "beatmap is not loaded");
+            return NULL;
+        }
+        return beatmap;
     }
 
     int read_classic(PyObject* object, pppp::Mods& mods) {
@@ -1186,7 +1260,7 @@ namespace {
         return NULL;
     }
 
-    PyObject* calculate_difficulty(PyObject* module, PyObject* args) {
+    PyObject* calculate_difficulty(PyObject* module, PyObject* args) try {
         State* state = static_cast<State*>(PyModule_GetState(module));
         pppp::Difficulty difficulty;
         const BeatmapObject* beatmap = read_difficulty(state, args, "OOOOO:calculate_difficulty", difficulty);
@@ -1206,8 +1280,9 @@ namespace {
         const Builder builder(state);
         return builder.difficulty_attributes(attributes);
     }
+    PPPP_PY_CATCH_OBJECT
 
-    PyObject* calculate_timed_difficulty(PyObject* module, PyObject* args) {
+    PyObject* calculate_timed_difficulty(PyObject* module, PyObject* args) try {
         State* state = static_cast<State*>(PyModule_GetState(module));
         pppp::Difficulty difficulty;
         const BeatmapObject* beatmap =
@@ -1228,8 +1303,9 @@ namespace {
         const Builder builder(state);
         return builder.timed_difficulty(timed);
     }
+    PPPP_PY_CATCH_OBJECT
 
-    PyObject* calculate_strains(PyObject* module, PyObject* args) {
+    PyObject* calculate_strains(PyObject* module, PyObject* args) try {
         State* state = static_cast<State*>(PyModule_GetState(module));
         pppp::Difficulty difficulty;
         const BeatmapObject* beatmap = read_difficulty(state, args, "OOOOO:calculate_strains", difficulty);
@@ -1249,6 +1325,7 @@ namespace {
         const Builder builder(state);
         return builder.strains(strains);
     }
+    PPPP_PY_CATCH_OBJECT
 
     int read_optional_long(PyObject* object, long* out, bool* present) {
         *present = object != Py_None;
@@ -1290,11 +1367,13 @@ namespace {
     struct AttributeSource {
         PyObject** fields;
         const Py_ssize_t* slots;
+        mutable bool failed;
 
         double number(int field) const {
             const double out = PyFloat_AsDouble(fields[slots[field]]);
             if (PyErr_Occurred()) {
                 PyErr_Clear();
+                failed = true;
                 return 0.0;
             }
             return out;
@@ -1304,6 +1383,7 @@ namespace {
             const long out = PyLong_AsLong(fields[slots[field]]);
             if (PyErr_Occurred()) {
                 PyErr_Clear();
+                failed = true;
                 return 0;
             }
             return static_cast<int>(out);
@@ -1316,6 +1396,7 @@ namespace {
         }
         source->fields = record_fields(object);
         source->slots = state->slots[kind];
+        source->failed = false;
         return true;
     }
 
@@ -1344,6 +1425,10 @@ namespace {
             attributes.nested_score_per_object = source.number(f_nested_score_per_object);
             attributes.legacy_score_base_multiplier = source.number(f_legacy_score_base_multiplier);
             attributes.maximum_legacy_combo_score = source.number(f_maximum_legacy_combo_score);
+            if (source.failed) {
+                PyErr_SetString(PyExc_TypeError, "difficulty attribute fields must be numbers");
+                return -1;
+            }
             out = attributes;
             return 0;
         }
@@ -1359,6 +1444,10 @@ namespace {
             attributes.mono_stamina_factor = source.number(f_mono_stamina_factor);
             attributes.consistency_factor = source.number(f_consistency_factor);
             attributes.stamina_top_strains = source.number(f_stamina_top_strains);
+            if (source.failed) {
+                PyErr_SetString(PyExc_TypeError, "difficulty attribute fields must be numbers");
+                return -1;
+            }
             out = attributes;
             return 0;
         }
@@ -1366,6 +1455,10 @@ namespace {
             pppp::CatchDifficultyAttributes attributes;
             attributes.star_rating = source.number(f_star_rating);
             attributes.max_combo = source.integer(f_max_combo);
+            if (source.failed) {
+                PyErr_SetString(PyExc_TypeError, "difficulty attribute fields must be numbers");
+                return -1;
+            }
             out = attributes;
             return 0;
         }
@@ -1373,6 +1466,10 @@ namespace {
             pppp::ManiaDifficultyAttributes attributes;
             attributes.star_rating = source.number(f_star_rating);
             attributes.max_combo = source.integer(f_max_combo);
+            if (source.failed) {
+                PyErr_SetString(PyExc_TypeError, "difficulty attribute fields must be numbers");
+                return -1;
+            }
             out = attributes;
             return 0;
         }
@@ -1380,7 +1477,7 @@ namespace {
         return -1;
     }
 
-    PyObject* calculate_performance(PyObject* module, PyObject* args) {
+    PyObject* calculate_performance(PyObject* module, PyObject* args) try {
         PyObject* beatmap_object;
         PyObject* mods_object;
         PyObject* max_combo_object;
@@ -1473,8 +1570,9 @@ namespace {
         const Builder builder(state);
         return builder.performance_attributes(attributes);
     }
+    PPPP_PY_CATCH_OBJECT
 
-    int add_version(PyObject* module) {
+    int add_version(PyObject* module) try {
         PyRef version(
             PyUnicode_FromFormat("%d.%d.%d", PPPP_VERSION_MAJOR, PPPP_VERSION_MINOR, PPPP_VERSION_PATCH));
         if (!version.get()) {
@@ -1482,16 +1580,18 @@ namespace {
         }
         return PyModule_AddObjectRef(module, "version", version.get());
     }
+    PPPP_PY_CATCH_INT
 
-    int add_backend(PyObject* module) {
+    int add_backend(PyObject* module) try {
         PyRef backend(PyUnicode_FromString(internal::engine_name(internal::selected_engine()->kind)));
         if (!backend.get()) {
             return -1;
         }
         return PyModule_AddObjectRef(module, "backend", backend.get());
     }
+    PPPP_PY_CATCH_INT
 
-    int bind_types(PyObject* module) {
+    int bind_types(PyObject* module) try {
         PyRef package(PyObject_GetAttrString(module, "__package__"));
         if (!package.get()) {
             return -1;
@@ -1513,8 +1613,9 @@ namespace {
         }
         return 0;
     }
+    PPPP_PY_CATCH_INT
 
-    PyObject* add_error(PyObject* module, const char* name, const char* attribute, PyObject* base) {
+    PyObject* add_error(PyObject* module, const char* name, const char* attribute, PyObject* base) try {
         PyRef bases(base ? PyTuple_Pack(2, base, PyExc_ValueError) : NULL);
         if (base && !bases.get()) {
             return NULL;
@@ -1526,8 +1627,9 @@ namespace {
         }
         return error;
     }
+    PPPP_PY_CATCH_OBJECT
 
-    int add_errors(PyObject* module) {
+    int add_errors(PyObject* module) try {
         State* state = static_cast<State*>(PyModule_GetState(module));
         state->error = add_error(module, "pppp.Error", "Error", NULL);
         if (!state->error) {
@@ -1540,14 +1642,16 @@ namespace {
         state->parse_error = add_error(module, "pppp.ParseError", "ParseError", state->error);
         return state->parse_error ? 0 : -1;
     }
+    PPPP_PY_CATCH_INT
 
-    int add_beatmap_type(PyObject* module) {
+    int add_beatmap_type(PyObject* module) try {
         PyType_Slot beatmap_slots[] = {
             {Py_tp_dealloc, slot(beatmap_dealloc)}, {Py_tp_getset, beatmap_getset},
             {Py_tp_methods, beatmap_methods},       {Py_tp_traverse, slot(beatmap_traverse)},
             {Py_tp_clear, slot(beatmap_clear)},     {0, NULL}};
         PyType_Spec spec = {"pppp.Beatmap", static_cast<int>(sizeof(BeatmapObject)), 0,
-                            Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC, beatmap_slots};
+                            Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_DISALLOW_INSTANTIATION,
+                            beatmap_slots};
         State* state = static_cast<State*>(PyModule_GetState(module));
         state->beatmap_type = PyType_FromModuleAndSpec(module, &spec, NULL);
         if (!state->beatmap_type) {
@@ -1555,6 +1659,7 @@ namespace {
         }
         return PyModule_AddType(module, reinterpret_cast<PyTypeObject*>(state->beatmap_type));
     }
+    PPPP_PY_CATCH_INT
 
     PyMethodDef methods[] = {
         {"_record", make_record, METH_VARARGS, NULL},

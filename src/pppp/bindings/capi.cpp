@@ -16,6 +16,14 @@
     PPPP_STRINGIFY(PPPP_VERSION_MAJOR)                                                                       \
     "." PPPP_STRINGIFY(PPPP_VERSION_MINOR) "." PPPP_STRINGIFY(PPPP_VERSION_PATCH)
 
+#define PPPP_CATCH_RETURN                                                                                    \
+    catch (const std::bad_alloc&) {                                                                          \
+        return PPPP_ALLOCATION;                                                                              \
+    }                                                                                                        \
+    catch (...) {                                                                                            \
+        return PPPP_INTERNAL;                                                                                \
+    }
+
 namespace beatmaps = ::pppp::beatmaps;
 namespace common = ::pppp::common;
 namespace internal = ::fosu::internal;
@@ -36,6 +44,8 @@ namespace {
                            static_cast<int>(pppp::StatusCode::NO_SLIDER_PATH_BACKEND));
     PPPP_STATIC_ASSERT(result_slider_path_matches,
                        PPPP_SLIDER_PATH == static_cast<int>(pppp::StatusCode::SLIDER_PATH));
+    PPPP_STATIC_ASSERT(result_internal_matches,
+                       PPPP_INTERNAL == static_cast<int>(pppp::StatusCode::INTERNAL));
     PPPP_STATIC_ASSERT(ruleset_osu_matches, PPPP_RULESET_OSU == static_cast<int>(pppp::Ruleset::OSU));
     PPPP_STATIC_ASSERT(ruleset_taiko_matches, PPPP_RULESET_TAIKO == static_cast<int>(pppp::Ruleset::TAIKO));
     PPPP_STATIC_ASSERT(ruleset_catch_matches, PPPP_RULESET_CATCH == static_cast<int>(pppp::Ruleset::CATCH));
@@ -432,6 +442,28 @@ namespace {
 
 } // namespace
 
+namespace {
+    // Frees a C object if its builder throws before ownership is handed to the caller.
+    template <typename T>
+    class ScopedFree {
+    public:
+        explicit ScopedFree(T* pointer)
+            : value(pointer) {}
+        ~ScopedFree() { delete value; }
+
+        T* release() {
+            T* released = value;
+            value = 0;
+            return released;
+        }
+
+    private:
+        ScopedFree(const ScopedFree&);
+        ScopedFree& operator=(const ScopedFree&);
+        T* value;
+    };
+} // namespace
+
 const char* pppp_version(void) { return PPPP_VERSION_STRING; }
 
 const char* pppp_backend(void) { return internal::engine_name(internal::selected_engine()->kind); }
@@ -444,38 +476,47 @@ pppp_result pppp_mods_parse(const char* specification, pppp_mods** out) {
     if (!specification || !out) {
         return PPPP_INVALID_ARGUMENT;
     }
-    pppp_mods* mods = new (std::nothrow) pppp_mods;
-    if (!mods) {
-        return PPPP_ALLOCATION;
+    try {
+        pppp_mods* raw = new (std::nothrow) pppp_mods;
+        if (!raw) {
+            return PPPP_ALLOCATION;
+        }
+        ScopedFree<pppp_mods> mods(raw);
+        const pppp::Status status = raw->mods.parse(specification);
+        if (!status.ok()) {
+            return static_cast<pppp_result>(status.code());
+        }
+        *out = mods.release();
+        return PPPP_OK;
     }
-    const pppp::Status status = mods->mods.parse(specification);
-    if (!status.ok()) {
-        delete mods;
-        return static_cast<pppp_result>(status.code());
-    }
-    *out = mods;
-    return PPPP_OK;
+    PPPP_CATCH_RETURN
 }
 
 pppp_result pppp_mods_from_legacy(pppp_uint32 bits, pppp_int32 ruleset, pppp_mods** out) {
     if (!out || ruleset < 0 || ruleset > 3) {
         return PPPP_INVALID_ARGUMENT;
     }
-    pppp_mods* mods = new (std::nothrow) pppp_mods;
-    if (!mods) {
-        return PPPP_ALLOCATION;
+    try {
+        pppp_mods* mods = new (std::nothrow) pppp_mods;
+        if (!mods) {
+            return PPPP_ALLOCATION;
+        }
+        mods->mods = pppp::Mods::from_legacy(bits, ruleset);
+        *out = mods;
+        return PPPP_OK;
     }
-    mods->mods = pppp::Mods::from_legacy(bits, ruleset);
-    *out = mods;
-    return PPPP_OK;
+    PPPP_CATCH_RETURN
 }
 
 pppp_result pppp_mods_add_classic(pppp_mods* mods) {
     if (!mods) {
         return PPPP_INVALID_ARGUMENT;
     }
-    mods->mods.add_classic();
-    return PPPP_OK;
+    try {
+        mods->mods.add_classic();
+        return PPPP_OK;
+    }
+    PPPP_CATCH_RETURN
 }
 
 void pppp_mods_free(pppp_mods* mods) { delete mods; }
@@ -484,36 +525,42 @@ pppp_result pppp_beatmap_from_file(const char* path, pppp_beatmap** out) {
     if (!path || !out) {
         return PPPP_INVALID_ARGUMENT;
     }
-    pppp_beatmap* beatmap = new (std::nothrow) pppp_beatmap;
-    if (!beatmap) {
-        return PPPP_ALLOCATION;
+    try {
+        pppp_beatmap* raw = new (std::nothrow) pppp_beatmap;
+        if (!raw) {
+            return PPPP_ALLOCATION;
+        }
+        ScopedFree<pppp_beatmap> beatmap(raw);
+        const pppp::Status status = raw->map.load_file(path);
+        if (!status.ok()) {
+            return static_cast<pppp_result>(status.code());
+        }
+        build_views(*raw);
+        *out = beatmap.release();
+        return PPPP_OK;
     }
-    const pppp::Status status = beatmap->map.load_file(path);
-    if (!status.ok()) {
-        delete beatmap;
-        return static_cast<pppp_result>(status.code());
-    }
-    build_views(*beatmap);
-    *out = beatmap;
-    return PPPP_OK;
+    PPPP_CATCH_RETURN
 }
 
 pppp_result pppp_beatmap_from_bytes(const void* data, size_t size, pppp_beatmap** out) {
     if ((!data && size) || !out) {
         return PPPP_INVALID_ARGUMENT;
     }
-    pppp_beatmap* beatmap = new (std::nothrow) pppp_beatmap;
-    if (!beatmap) {
-        return PPPP_ALLOCATION;
+    try {
+        pppp_beatmap* raw = new (std::nothrow) pppp_beatmap;
+        if (!raw) {
+            return PPPP_ALLOCATION;
+        }
+        ScopedFree<pppp_beatmap> beatmap(raw);
+        const pppp::Status status = raw->map.load_buffer(data, size);
+        if (!status.ok()) {
+            return static_cast<pppp_result>(status.code());
+        }
+        build_views(*raw);
+        *out = beatmap.release();
+        return PPPP_OK;
     }
-    const pppp::Status status = beatmap->map.load_buffer(data, size);
-    if (!status.ok()) {
-        delete beatmap;
-        return static_cast<pppp_result>(status.code());
-    }
-    build_views(*beatmap);
-    *out = beatmap;
-    return PPPP_OK;
+    PPPP_CATCH_RETURN
 }
 
 void pppp_beatmap_free(pppp_beatmap* map) { delete map; }
@@ -598,18 +645,21 @@ pppp_result pppp_calculate_difficulty(const pppp_beatmap* map, const pppp_diffic
     if (!map || !out) {
         return PPPP_INVALID_ARGUMENT;
     }
-    pppp::Difficulty difficulty;
-    if (read_difficulty_options(options, difficulty) < 0) {
-        return PPPP_INVALID_ARGUMENT;
-    }
+    try {
+        pppp::Difficulty difficulty;
+        if (read_difficulty_options(options, difficulty) < 0) {
+            return PPPP_INVALID_ARGUMENT;
+        }
 
-    pppp::DifficultyAttributes attributes;
-    const pppp::Status status = difficulty.calculate(map->map, attributes);
-    if (!status.ok()) {
-        return static_cast<pppp_result>(status.code());
+        pppp::DifficultyAttributes attributes;
+        const pppp::Status status = difficulty.calculate(map->map, attributes);
+        if (!status.ok()) {
+            return static_cast<pppp_result>(status.code());
+        }
+        fill_difficulty(attributes, *out);
+        return PPPP_OK;
     }
-    fill_difficulty(attributes, *out);
-    return PPPP_OK;
+    PPPP_CATCH_RETURN
 }
 
 pppp_result pppp_calculate_timed_difficulty(const pppp_beatmap* map, const pppp_difficulty_options* options,
@@ -617,27 +667,31 @@ pppp_result pppp_calculate_timed_difficulty(const pppp_beatmap* map, const pppp_
     if (!map || !out) {
         return PPPP_INVALID_ARGUMENT;
     }
-    pppp::Difficulty difficulty;
-    if (read_difficulty_options(options, difficulty) < 0) {
-        return PPPP_INVALID_ARGUMENT;
-    }
-    std::vector<pppp::TimedDifficultyAttributes> entries;
-    const pppp::Status status = difficulty.calculate_timed(map->map, entries);
-    if (!status.ok()) {
-        return static_cast<pppp_result>(status.code());
-    }
-    pppp_timed_difficulty* timed = new (std::nothrow) pppp_timed_difficulty;
-    if (!timed) {
-        return PPPP_ALLOCATION;
-    }
+    try {
+        pppp::Difficulty difficulty;
+        if (read_difficulty_options(options, difficulty) < 0) {
+            return PPPP_INVALID_ARGUMENT;
+        }
+        std::vector<pppp::TimedDifficultyAttributes> entries;
+        const pppp::Status status = difficulty.calculate_timed(map->map, entries);
+        if (!status.ok()) {
+            return static_cast<pppp_result>(status.code());
+        }
+        pppp_timed_difficulty* raw = new (std::nothrow) pppp_timed_difficulty;
+        if (!raw) {
+            return PPPP_ALLOCATION;
+        }
+        ScopedFree<pppp_timed_difficulty> timed(raw);
 
-    timed->entries.resize(entries.size());
-    for (size_t i = 0; i < entries.size(); i++) {
-        timed->entries[i].time = entries[i].time;
-        fill_difficulty(entries[i].attributes, timed->entries[i].attributes);
+        raw->entries.resize(entries.size());
+        for (size_t i = 0; i < entries.size(); i++) {
+            raw->entries[i].time = entries[i].time;
+            fill_difficulty(entries[i].attributes, raw->entries[i].attributes);
+        }
+        *out = timed.release();
+        return PPPP_OK;
     }
-    *out = timed;
-    return PPPP_OK;
+    PPPP_CATCH_RETURN
 }
 
 pppp_result pppp_timed_difficulty_entries(const pppp_timed_difficulty* timed,
@@ -664,22 +718,25 @@ pppp_result pppp_calculate_strains(const pppp_beatmap* map, const pppp_difficult
     if (!map || !out) {
         return PPPP_INVALID_ARGUMENT;
     }
-    pppp::Difficulty difficulty;
-    if (read_difficulty_options(options, difficulty) < 0) {
-        return PPPP_INVALID_ARGUMENT;
-    }
-    pppp_strains* strains = new (std::nothrow) pppp_strains;
-    if (!strains) {
-        return PPPP_ALLOCATION;
-    }
+    try {
+        pppp::Difficulty difficulty;
+        if (read_difficulty_options(options, difficulty) < 0) {
+            return PPPP_INVALID_ARGUMENT;
+        }
+        pppp_strains* raw = new (std::nothrow) pppp_strains;
+        if (!raw) {
+            return PPPP_ALLOCATION;
+        }
+        ScopedFree<pppp_strains> strains(raw);
 
-    const pppp::Status status = difficulty.strains(map->map, strains->strains);
-    if (!status.ok()) {
-        delete strains;
-        return static_cast<pppp_result>(status.code());
+        const pppp::Status status = difficulty.strains(map->map, raw->strains);
+        if (!status.ok()) {
+            return static_cast<pppp_result>(status.code());
+        }
+        *out = strains.release();
+        return PPPP_OK;
     }
-    *out = strains;
-    return PPPP_OK;
+    PPPP_CATCH_RETURN
 }
 
 pppp_result pppp_strains_info(const pppp_strains* strains, pppp_int32* ruleset, double* start_time,
@@ -744,45 +801,49 @@ pppp_result pppp_calculate_performance(const pppp_beatmap* map, const pppp_perfo
     if (!map || !out) {
         return PPPP_INVALID_ARGUMENT;
     }
-    pppp::ScoreInfo score;
-    if (options && options->has_score) {
-        for (int i = 0; i < common::HIT_RESULT_COUNT; i++) {
-            score.statistics[i] = options->score.statistics[i];
-            score.maximum_statistics[i] = options->score.maximum_statistics[i];
+    try {
+        pppp::ScoreInfo score;
+        if (options && options->has_score) {
+            for (int i = 0; i < common::HIT_RESULT_COUNT; i++) {
+                score.statistics[i] = options->score.statistics[i];
+                score.maximum_statistics[i] = options->score.maximum_statistics[i];
+            }
+            score.max_combo = options->score.max_combo;
+            score.accuracy = options->score.accuracy;
+            if (options->score.has_legacy_total_score) {
+                score.legacy_total_score = static_cast<pppp_int64>(options->score.legacy_total_score);
+            }
         }
-        score.max_combo = options->score.max_combo;
-        score.accuracy = options->score.accuracy;
-        if (options->score.has_legacy_total_score) {
-            score.legacy_total_score = static_cast<pppp_int64>(options->score.legacy_total_score);
-        }
-    }
 
-    pppp::Performance performance(map->map);
-    if (options && options->has_difficulty) {
-        if (!options->difficulty || options->difficulty->ruleset < 0 || options->difficulty->ruleset > 3) {
-            return PPPP_INVALID_ARGUMENT;
+        pppp::Performance performance(map->map);
+        if (options && options->has_difficulty) {
+            if (!options->difficulty || options->difficulty->ruleset < 0 ||
+                options->difficulty->ruleset > 3) {
+                return PPPP_INVALID_ARGUMENT;
+            }
+            performance.attributes(read_difficulty(*options->difficulty));
         }
-        performance.attributes(read_difficulty(*options->difficulty));
-    }
-    performance.score(score);
-    if (options && options->mods && !options->mods->mods.empty()) {
-        performance.mods(options->mods->mods);
-    }
-    if (options && options->has_combo) {
-        performance.combo(options->combo);
-    }
-    if (options && options->has_accuracy) {
-        performance.accuracy(options->accuracy);
-    }
-    if (options && options->has_misses) {
-        performance.misses(options->misses);
-    }
+        performance.score(score);
+        if (options && options->mods && !options->mods->mods.empty()) {
+            performance.mods(options->mods->mods);
+        }
+        if (options && options->has_combo) {
+            performance.combo(options->combo);
+        }
+        if (options && options->has_accuracy) {
+            performance.accuracy(options->accuracy);
+        }
+        if (options && options->has_misses) {
+            performance.misses(options->misses);
+        }
 
-    pppp::PerformanceAttributes attributes;
-    const pppp::Status status = performance.calculate(attributes);
-    if (!status.ok()) {
-        return static_cast<pppp_result>(status.code());
+        pppp::PerformanceAttributes attributes;
+        const pppp::Status status = performance.calculate(attributes);
+        if (!status.ok()) {
+            return static_cast<pppp_result>(status.code());
+        }
+        fill_performance(attributes, *out);
+        return PPPP_OK;
     }
-    fill_performance(attributes, *out);
-    return PPPP_OK;
+    PPPP_CATCH_RETURN
 }

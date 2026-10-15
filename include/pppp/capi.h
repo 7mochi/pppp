@@ -46,7 +46,8 @@ typedef enum pppp_result {
     PPPP_ALLOCATION,
     PPPP_PARSE,
     PPPP_NO_SLIDER_PATH_BACKEND,
-    PPPP_SLIDER_PATH
+    PPPP_SLIDER_PATH,
+    PPPP_INTERNAL
 } pppp_result;
 
 /// Which ruleset a tagged attribute set belongs to. The values are the beatmap's `Mode`.

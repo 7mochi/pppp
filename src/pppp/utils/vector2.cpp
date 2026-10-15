@@ -6,9 +6,9 @@ namespace pppp { namespace utils {
     namespace {
         float inverse_sqrt_fast(float x) {
             float xhalf = 0.5f * x;
-            int i;
+            unsigned int i;
             std::memcpy(&i, &x, sizeof(i));
-            i = 0x5f375a86 - (i >> 1);
+            i = 0x5f375a86u - (i >> 1);
             std::memcpy(&x, &i, sizeof(x));
             x = x * (1.5f - xhalf * x * x);
             return x;

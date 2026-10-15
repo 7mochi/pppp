@@ -3,6 +3,7 @@
 
 #include "pppp/utils/difficulty_range.h"
 #include "pppp/utils/math/csharp.h"
+#include <cmath>
 
 namespace pppp { namespace utils {
     double difficulty_range(double difficulty, double min_val, double mid, double max_val) {
@@ -22,7 +23,7 @@ namespace pppp { namespace utils {
     }
 
     int difficulty_range_int(double difficulty, const DifficultyRange& range) {
-        return static_cast<int>(difficulty_range(difficulty, range.min, range.mid, range.max));
+        return static_cast<int>(std::floor(difficulty_range(difficulty, range.min, range.mid, range.max)));
     }
 
     double inverse_difficulty_range(double difficulty_value, double diff0, double diff5, double diff10) {

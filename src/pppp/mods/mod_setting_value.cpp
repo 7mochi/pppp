@@ -52,6 +52,9 @@ namespace pppp { namespace mods {
             if (!math::var_dec_from_r8(precision, &num) || !math::var_dec_from_r8(value, &num2)) {
                 return false;
             }
+            if (num.scale > 19) {
+                return false;
+            }
             *out = math::var_r8_from_dec(round_to(num2, num));
             return true;
         }
@@ -60,6 +63,9 @@ namespace pppp { namespace mods {
             math::Decimal num;
             math::Decimal num2;
             if (!math::var_dec_from_r4(precision, &num) || !math::var_dec_from_r4(value, &num2)) {
+                return false;
+            }
+            if (num.scale > 19) {
                 return false;
             }
             *out = math::var_r4_from_dec(round_to(num2, num));

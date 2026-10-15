@@ -40,7 +40,7 @@ namespace Pppp {
                 throw new ArgumentNullException("data");
             }
             IntPtr map;
-            int status = Native.pppp_beatmap_from_bytes(data, new UIntPtr((uint)data.Length), out map);
+            int status = Native.pppp_beatmap_from_bytes(data, new UIntPtr((ulong)data.Length), out map);
             if (status == Native.Allocation) {
                 throw new OutOfMemoryException();
             }
@@ -75,7 +75,7 @@ namespace Pppp {
         public BeatmapDifficulty Difficulty {
             get {
                 BeatmapDifficulty settings;
-                Native.pppp_beatmap_get_difficulty(Handle, out settings);
+                Native.Check(Native.pppp_beatmap_get_difficulty(Handle, out settings));
                 return settings;
             }
         }
@@ -85,7 +85,7 @@ namespace Pppp {
                 if (hitObjects == null) {
                     IntPtr pointer;
                     UIntPtr count;
-                    Native.pppp_beatmap_hit_objects(Handle, out pointer, out count);
+                    Native.Check(Native.pppp_beatmap_hit_objects(Handle, out pointer, out count));
                     hitObjects = Native.CopyArray<HitObject>(pointer, count);
                 }
                 return hitObjects;
@@ -97,7 +97,7 @@ namespace Pppp {
                 if (sliders == null) {
                     IntPtr pointer;
                     UIntPtr count;
-                    Native.pppp_beatmap_sliders(Handle, out pointer, out count);
+                    Native.Check(Native.pppp_beatmap_sliders(Handle, out pointer, out count));
                     Native.Slider[] views = Native.CopyArray<Native.Slider>(pointer, count);
                     sliders = new Slider[views.Length];
                     for (int i = 0; i < views.Length; i++) {
@@ -127,7 +127,7 @@ namespace Pppp {
                 if (timingPoints == null) {
                     IntPtr pointer;
                     UIntPtr count;
-                    Native.pppp_beatmap_timing_points(Handle, out pointer, out count);
+                    Native.Check(Native.pppp_beatmap_timing_points(Handle, out pointer, out count));
                     timingPoints = Native.CopyArray<TimingPoint>(pointer, count);
                 }
                 return timingPoints;
@@ -139,7 +139,7 @@ namespace Pppp {
                 if (breaks == null) {
                     IntPtr pointer;
                     UIntPtr count;
-                    Native.pppp_beatmap_breaks(Handle, out pointer, out count);
+                    Native.Check(Native.pppp_beatmap_breaks(Handle, out pointer, out count));
                     breaks = Native.CopyArray<BreakPeriod>(pointer, count);
                 }
                 return breaks;

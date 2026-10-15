@@ -35,7 +35,7 @@ namespace pppp { namespace beatmaps {
             if (i <= 0) {
                 return linq::from(path).first();
             }
-            if (i >= static_cast<int>(path.size())) {
+            if (i >= static_cast<int>(path.size()) || i >= static_cast<int>(cumulative_lengths.size())) {
                 return linq::from(path).last();
             }
 

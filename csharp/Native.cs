@@ -281,9 +281,13 @@ namespace Pppp {
         }
 
         internal static uint[] CopyUnsigned(IntPtr pointer, UIntPtr count) {
-            uint[] values = new uint[(long)count.ToUInt64()];
-            for (int i = 0; i < values.Length; i++) {
-                values[i] = (uint)Marshal.ReadInt32(pointer, i * sizeof(int));
+            long length = (long)count.ToUInt64();
+            uint[] values = new uint[length];
+            if (pointer == IntPtr.Zero) {
+                return values;
+            }
+            for (long i = 0; i < length; i++) {
+                values[i] = (uint)Marshal.ReadInt32(pointer, (int)(i * sizeof(int)));
             }
             return values;
         }

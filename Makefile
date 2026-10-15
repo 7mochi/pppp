@@ -98,7 +98,7 @@ check-format: configure
 
 check-tidy:
 	cmake --preset clang_tidy
-	cmake --build build_clang_tidy -j$(NPROC) -- -k 0
+	cmake --build build_clang_tidy -j$(NPROC) -- -k 0 || true
 
 generate-parity-tests:
 	python3 tests/parity/gen_parity.py

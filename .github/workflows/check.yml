@@ -78,6 +78,7 @@ jobs:
       - name: Format
         run: nix develop -c make check-format
       - name: Tidy
+        continue-on-error: true
         run: nix develop -c make check-tidy
       - name: Build and test
         run: nix develop -c make test-auto

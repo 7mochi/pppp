@@ -115,6 +115,8 @@ console.log(difficulty.starRating, performance.total);
 | `PPPP_BUILD_CAPI` | OFF | the flat C ABI the C# bindings use |
 | `PPPP_INSTALL` | top-level only | the `find_package(pppp CONFIG)` package |
 | `PPPP_WARNINGS_AS_ERRORS` | OFF | `-Werror` on the library's warnings |
+| `PPPP_PGO` | OFF | profile-guided optimisation: `GENERATE` builds an instrumented library, `USE` builds with the profile (`make build-pgo` runs both, training on the parity suites) |
+| `PPPP_PGO_DIR` | `<build>/../profile-data` | where Clang writes and reads the profile (GCC keeps it beside each object) |
 
 ## Development
 
@@ -124,6 +126,7 @@ The toolchain comes from the flake:
 nix develop        # cmake, ninja, gcc, clang, python, node, .NET and pre-commit
 make test-auto     # build and run the suites
 make check-format  # the C++ formatting, checked
+make build-pgo     # a PGO Release build in build_pgo (GCC or Clang)
 ```
 
 Formatting, the Python types and the file hygiene are also enforced by

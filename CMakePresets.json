@@ -38,6 +38,15 @@
       }
     },
     {
+      "name": "pgo",
+      "displayName": "Release with PGO",
+      "inherits": "release",
+      "binaryDir": "${sourceDir}/build_pgo",
+      "cacheVariables": {
+        "PPPP_BUILD_TESTS": "ON"
+      }
+    },
+    {
       "name": "scalar",
       "displayName": "Parser, scalar only",
       "generator": "Ninja",
@@ -111,6 +120,10 @@
     {
       "name": "release",
       "configurePreset": "release"
+    },
+    {
+      "name": "pgo",
+      "configurePreset": "pgo"
     },
     {
       "name": "scalar",

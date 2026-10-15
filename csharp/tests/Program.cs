@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using Newtonsoft.Json.Linq;
 using Pppp;
 
 namespace Pppp.Tests {
@@ -36,6 +37,198 @@ namespace Pppp.Tests {
 
         private static string MapPath(string name) {
             return Path.Combine(Resources, name.Replace('/', Path.DirectorySeparatorChar));
+        }
+
+        private static string parity;
+
+        private static string Parity {
+            get {
+                if (parity == null) {
+                    DirectoryInfo directory = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+                    while (directory != null) {
+                        string candidate = Path.Combine(Path.Combine(directory.FullName, "tests"),
+                                                        Path.Combine("parity", "parity.json"));
+                        if (File.Exists(candidate)) {
+                            parity = candidate;
+                            break;
+                        }
+                        directory = directory.Parent;
+                    }
+                    if (parity == null) {
+                        throw new FileNotFoundException("tests/parity/parity.json");
+                    }
+                }
+                return parity;
+            }
+        }
+
+        private static JObject parityRoot;
+
+        private static JObject ParityRoot {
+            get {
+                if (parityRoot == null) {
+                    parityRoot = JObject.Parse(File.ReadAllText(Parity));
+                }
+                return parityRoot;
+            }
+        }
+
+        private static readonly Dictionary<string, Ruleset> ParityRulesets = new Dictionary<string, Ruleset> {
+            {"osu", Ruleset.Osu}, {"taiko", Ruleset.Taiko}, {"catch", Ruleset.Catch}, {"mania", Ruleset.Mania}
+        };
+
+        private static bool Approx(double actual, double expected, double epsilon) {
+            return Math.Abs(actual - expected) < epsilon * (1.0 + Math.Max(Math.Abs(actual), Math.Abs(expected)));
+        }
+
+        private static double ClassicAccuracy(int great, int ok, int meh, int miss) {
+            int total = great + ok + meh + miss;
+            return total <= 0 ? 1.0 : (great * 300.0 + ok * 100.0 + meh * 50.0) / (total * 300.0);
+        }
+
+        private static Performance ParityPlay(string mode, string mods, JObject score, DifficultyAttributes attributes) {
+            Performance play = new Performance { Mods = mods };
+            switch (mode) {
+            case "osu": {
+                OsuDifficultyAttributes osu = (OsuDifficultyAttributes)attributes;
+                play.MaxCombo = (int)score["combo"];
+                double accuracy = (double)score["accuracy"];
+                play.Accuracy = accuracy < 0.0
+                                    ? ClassicAccuracy((int)score["great"], (int)score["ok"], (int)score["meh"],
+                                                      (int)score["miss"])
+                                    : accuracy;
+                play.Statistics[HitResult.Great] = (int)score["great"];
+                play.Statistics[HitResult.Ok] = (int)score["ok"];
+                play.Statistics[HitResult.Meh] = (int)score["meh"];
+                play.Statistics[HitResult.Miss] = (int)score["miss"];
+                play.Statistics[HitResult.SliderTailHit] = osu.SliderCount;
+                long legacy = (long)score["legacy_total_score"];
+                if (legacy != 0) {
+                    play.LegacyTotalScore = legacy;
+                }
+                break;
+            }
+            case "taiko": {
+                int great = (int)score["great"];
+                int ok = (int)score["ok"];
+                int miss = (int)score["miss"];
+                int combo = (int)score["combo"];
+                play.MaxCombo = combo != 0 ? combo : attributes.MaxCombo;
+                play.Accuracy = (great * 300.0 + ok * 150.0) / ((great + ok + miss) * 300.0);
+                play.Statistics[HitResult.Great] = great;
+                play.Statistics[HitResult.Ok] = ok;
+                play.Statistics[HitResult.Miss] = miss;
+                break;
+            }
+            case "catch": {
+                int fruits = (int)score["fruits"];
+                int droplets = (int)score["droplets"];
+                int tiny = (int)score["tiny_droplets"];
+                int tinyMisses = (int)score["tiny_misses"];
+                int miss = (int)score["miss"];
+                int combo = (int)score["combo"];
+                play.MaxCombo = combo != 0 ? combo : attributes.MaxCombo;
+                play.Accuracy = (double)(fruits + droplets + tiny) / (fruits + droplets + tiny + tinyMisses + miss);
+                play.Statistics[HitResult.Great] = fruits;
+                play.Statistics[HitResult.LargeTickHit] = droplets;
+                play.Statistics[HitResult.SmallTickHit] = tiny;
+                play.Statistics[HitResult.SmallTickMiss] = tinyMisses;
+                play.Statistics[HitResult.Miss] = miss;
+                break;
+            }
+            default: {
+                int perfect = (int)score["perfect"];
+                int great = (int)score["great"];
+                int good = (int)score["good"];
+                int ok = (int)score["ok"];
+                int meh = (int)score["meh"];
+                int miss = (int)score["miss"];
+                int combo = (int)score["combo"];
+                play.MaxCombo = combo != 0 ? combo : attributes.MaxCombo;
+                play.Accuracy = (perfect * 305.0 + great * 300.0 + good * 200.0 + ok * 100.0 + meh * 50.0) /
+                                ((perfect + great + good + ok + meh + miss) * 305.0);
+                play.Statistics[HitResult.Perfect] = perfect;
+                play.Statistics[HitResult.Great] = great;
+                play.Statistics[HitResult.Good] = good;
+                play.Statistics[HitResult.Ok] = ok;
+                play.Statistics[HitResult.Meh] = meh;
+                play.Statistics[HitResult.Miss] = miss;
+                break;
+            }
+            }
+            return play;
+        }
+
+        private static void TheDecodeParityRowsMatchUpstream() {
+            foreach (JToken token in (JArray)ParityRoot["decode"]) {
+                JObject row = (JObject)token;
+                string map = (string)row["map"];
+                JObject expected = (JObject)row["decode"];
+                using (Beatmap beatmap = Beatmap.FromFile(MapPath(map))) {
+                    int uninherited = 0;
+                    foreach (TimingPoint point in beatmap.TimingPoints) {
+                        if (point.Uninherited) {
+                            uninherited++;
+                        }
+                    }
+                    Check(beatmap.FormatVersion == (int)expected["format"], map + " format");
+                    Check(beatmap.Mode == (int)expected["mode"], map + " mode");
+                    Check(beatmap.HitObjects.Length == (int)expected["hit_objects"], map + " hit objects");
+                    Check(uninherited == (int)expected["uninherited_points"], map + " uninherited points");
+                    Check(beatmap.Breaks.Length == (int)expected["breaks"], map + " breaks");
+                    Check(Approx(beatmap.Difficulty.ApproachRate, (double)expected["ar"], 1e-6), map + " ar");
+                    Check(Approx(beatmap.Difficulty.OverallDifficulty, (double)expected["od"], 1e-6), map + " od");
+                    Check(Approx(beatmap.Difficulty.CircleSize, (double)expected["cs"], 1e-6), map + " cs");
+                    Check(Approx(beatmap.Difficulty.DrainRate, (double)expected["hp"], 1e-6), map + " hp");
+                    Check(Approx(beatmap.Difficulty.SliderMultiplier, (double)expected["slider_multiplier"], 1e-6),
+                          map + " slider multiplier");
+                    Check(Approx(beatmap.Difficulty.SliderTickRate, (double)expected["slider_tick_rate"], 1e-6),
+                          map + " slider tick rate");
+                    Check(Approx(beatmap.StackLeniency, (double)expected["stack_leniency"], 1e-6),
+                          map + " stack leniency");
+                }
+            }
+        }
+
+        private static void TheParityDifficultyRowsMatchUpstream() {
+            JObject difficulty = (JObject)ParityRoot["difficulty"];
+            foreach (KeyValuePair<string, Ruleset> ruleset in ParityRulesets) {
+                foreach (JToken token in (JArray)difficulty[ruleset.Key]) {
+                    JObject row = (JObject)token;
+                    string map = (string)row["map"];
+                    string mods = (string)row["mods"];
+                    string what = ruleset.Key + " " + map + " " + mods;
+                    JObject expected = (JObject)row["attributes"];
+                    using (Beatmap beatmap = Beatmap.FromFile(MapPath(map))) {
+                        DifficultyAttributes attributes =
+                            new Difficulty { Mods = mods, Ruleset = ruleset.Value }.Calculate(beatmap);
+                        Check(Approx(attributes.StarRating, (double)expected["star_rating"], 1e-6),
+                              what + " star rating");
+                        Check(attributes.MaxCombo == (int)expected["max_combo"], what + " max combo");
+                    }
+                }
+            }
+        }
+
+        private static void TheParityPerformanceRowsMatchUpstream() {
+            JObject performance = (JObject)ParityRoot["performance"];
+            foreach (KeyValuePair<string, Ruleset> ruleset in ParityRulesets) {
+                foreach (JToken token in (JArray)performance[ruleset.Key]) {
+                    JObject row = (JObject)token;
+                    string map = (string)row["map"];
+                    string mods = (string)row["mods"];
+                    string what = ruleset.Key + " " + map + " " + mods;
+                    JObject score = (JObject)row["score"];
+                    JObject expected = (JObject)row["attributes"];
+                    using (Beatmap beatmap = Beatmap.FromFile(MapPath(map))) {
+                        DifficultyAttributes difficulty =
+                            new Difficulty { Mods = mods, Ruleset = ruleset.Value }.Calculate(beatmap);
+                        PerformanceAttributes result =
+                            ParityPlay(ruleset.Key, mods, score, difficulty).Calculate(beatmap, difficulty);
+                        Check(Approx(result.Total, (double)expected["total"], 1e-9), what + " total");
+                    }
+                }
+            }
         }
 
         private static void Check(bool condition, string what) {
@@ -472,6 +665,9 @@ namespace Pppp.Tests {
             ThePerformanceFromAttributesMatchesTheMap();
             TheTimedAttributesMatchUpstream();
             TheStrainGraphMatchesUpstream();
+            TheDecodeParityRowsMatchUpstream();
+            TheParityDifficultyRowsMatchUpstream();
+            TheParityPerformanceRowsMatchUpstream();
 
             Console.WriteLine(checks + " checks, " + failures + " failures");
             return failures == 0 ? 0 : 1;

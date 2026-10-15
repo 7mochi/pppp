@@ -360,6 +360,40 @@ const SCORES = {
   }),
 };
 
+test("the decode parity rows match upstream", () => {
+  for (const row of PARITY.decode) {
+    const beatmap = beatmapOf(row.map);
+    const expected = row.decode;
+    const uninherited = beatmap.timingPoints.filter((point) => point.uninherited).length;
+    expect([
+      row.map,
+      beatmap.formatVersion,
+      beatmap.mode,
+      beatmap.hitObjects.length,
+      uninherited,
+      beatmap.breaks.length,
+    ]).toEqual([
+      row.map,
+      expected.format,
+      expected.mode,
+      expected.hit_objects,
+      expected.uninherited_points,
+      expected.breaks,
+    ]);
+    for (const [actual, wanted] of [
+      [beatmap.difficulty.approachRate, expected.ar],
+      [beatmap.difficulty.overallDifficulty, expected.od],
+      [beatmap.difficulty.circleSize, expected.cs],
+      [beatmap.difficulty.drainRate, expected.hp],
+      [beatmap.difficulty.sliderMultiplier, expected.slider_multiplier],
+      [beatmap.difficulty.sliderTickRate, expected.slider_tick_rate],
+      [beatmap.stackLeniency, expected.stack_leniency],
+    ]) {
+      expect([row.map, approx(actual, wanted, 1e-6)]).toEqual([row.map, true]);
+    }
+  }
+});
+
 test.each(Object.keys(RULESETS))("the %s parity difficulty rows match upstream", (mode) => {
   for (const row of PARITY.difficulty[mode]) {
     const attributes = new pppp.Difficulty({ mods: row.mods, ruleset: RULESETS[mode] }).calculate(beatmapOf(row.map));

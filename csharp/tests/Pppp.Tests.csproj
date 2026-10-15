@@ -10,6 +10,10 @@
     <ProjectReference Include="../Pppp.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(TargetFramework)' == 'net20'">
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net20" Version="1.0.3" PrivateAssets="All" />
   </ItemGroup>

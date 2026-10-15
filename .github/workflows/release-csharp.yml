@@ -172,6 +172,7 @@ jobs:
           dotnet new console --force
           dotnet nuget add source "$GITHUB_WORKSPACE/artifacts" --name pppp
           dotnet add package pppp-dotnet
+          dotnet add package Newtonsoft.Json
           cp ../csharp/tests/Program.cs Program.cs
           dotnet run
           FOSU_BACKEND=scalar dotnet run
@@ -193,6 +194,7 @@ jobs:
           EOF
           dotnet nuget add source "$GITHUB_WORKSPACE/artifacts" --name pppp
           dotnet add package pppp-dotnet
+          dotnet add package Newtonsoft.Json
           cp ../csharp/tests/Program.cs Program.cs
           dotnet run
           FOSU_BACKEND=scalar dotnet run

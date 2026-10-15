@@ -1,6 +1,7 @@
 import copy
 import dataclasses
 import gc
+import json
 import os
 import pickle
 import platform
@@ -440,3 +441,146 @@ def test_backend_ships_beside_the_extension():
 
 def test_backend_scalar_override():
     assert _backend_with("scalar") == "scalar"
+
+
+PARITY_PATH = RESOURCES.parent / "parity" / "parity.json"
+
+RULESETS = {
+    "osu": pppp.Ruleset.OSU,
+    "taiko": pppp.Ruleset.TAIKO,
+    "catch": pppp.Ruleset.CATCH,
+    "mania": pppp.Ruleset.MANIA,
+}
+
+
+def load_parity() -> dict:
+    return json.loads(PARITY_PATH.read_text())
+
+
+def approx(actual: float, expected: float, epsilon: float) -> bool:
+    return abs(actual - expected) < epsilon * (1.0 + max(abs(actual), abs(expected)))
+
+
+def classic_accuracy(great: int, ok: int, meh: int, miss: int) -> float:
+    total = great + ok + meh + miss
+    return 1.0 if total <= 0 else (great * 300.0 + ok * 100.0 + meh * 50.0) / (total * 300.0)
+
+
+def parity_difficulty(mode: str, row: dict) -> pppp.DifficultyAttributes:
+    return pppp.Difficulty(mods=row["mods"], ruleset=RULESETS[mode]).calculate(beatmap_of(row["map"]))
+
+
+def parity_score(mode: str, score: dict, difficulty: pppp.DifficultyAttributes) -> dict:
+    if mode == "osu":
+        return {
+            "max_combo": score["combo"],
+            "accuracy": classic_accuracy(score["great"], score["ok"], score["meh"], score["miss"])
+            if score["accuracy"] < 0.0
+            else score["accuracy"],
+            "statistics": {
+                pppp.HitResult.GREAT: score["great"],
+                pppp.HitResult.OK: score["ok"],
+                pppp.HitResult.MEH: score["meh"],
+                pppp.HitResult.MISS: score["miss"],
+                pppp.HitResult.SLIDER_TAIL_HIT: difficulty.slider_count,
+            },
+            "legacy_total_score": score["legacy_total_score"] if score["legacy_total_score"] != 0 else None,
+        }
+    if mode == "taiko":
+        great, ok, miss = score["great"], score["ok"], score["miss"]
+        return {
+            "max_combo": score["combo"] if score["combo"] != 0 else difficulty.max_combo,
+            "accuracy": (great * 300.0 + ok * 150.0) / ((great + ok + miss) * 300.0),
+            "statistics": {
+                pppp.HitResult.GREAT: great,
+                pppp.HitResult.OK: ok,
+                pppp.HitResult.MISS: miss,
+            },
+        }
+    if mode == "catch":
+        fruits, droplets = score["fruits"], score["droplets"]
+        tiny, tiny_misses, miss = score["tiny_droplets"], score["tiny_misses"], score["miss"]
+        return {
+            "max_combo": score["combo"] if score["combo"] != 0 else difficulty.max_combo,
+            "accuracy": (fruits + droplets + tiny) / (fruits + droplets + tiny + tiny_misses + miss),
+            "statistics": {
+                pppp.HitResult.GREAT: fruits,
+                pppp.HitResult.LARGE_TICK_HIT: droplets,
+                pppp.HitResult.SMALL_TICK_HIT: tiny,
+                pppp.HitResult.SMALL_TICK_MISS: tiny_misses,
+                pppp.HitResult.MISS: miss,
+            },
+        }
+    perfect, great, good, ok, meh, miss = (
+        score["perfect"],
+        score["great"],
+        score["good"],
+        score["ok"],
+        score["meh"],
+        score["miss"],
+    )
+    return {
+        "max_combo": score["combo"] if score["combo"] != 0 else difficulty.max_combo,
+        "accuracy": (perfect * 305.0 + great * 300.0 + good * 200.0 + ok * 100.0 + meh * 50.0)
+        / ((perfect + great + good + ok + meh + miss) * 305.0),
+        "statistics": {
+            pppp.HitResult.PERFECT: perfect,
+            pppp.HitResult.GREAT: great,
+            pppp.HitResult.GOOD: good,
+            pppp.HitResult.OK: ok,
+            pppp.HitResult.MEH: meh,
+            pppp.HitResult.MISS: miss,
+        },
+    }
+
+
+def test_the_decode_parity_rows_match_upstream():
+    for row in load_parity()["decode"]:
+        beatmap = beatmap_of(row["map"])
+        expected = row["decode"]
+        assert (
+            beatmap.format_version,
+            beatmap.mode,
+            len(beatmap.hit_objects),
+            sum(1 for point in beatmap.timing_points if point.uninherited),
+            len(beatmap.breaks),
+        ) == (
+            expected["format"],
+            expected["mode"],
+            expected["hit_objects"],
+            expected["uninherited_points"],
+            expected["breaks"],
+        ), row["map"]
+        for actual, wanted in (
+            (beatmap.difficulty.approach_rate, expected["ar"]),
+            (beatmap.difficulty.overall_difficulty, expected["od"]),
+            (beatmap.difficulty.circle_size, expected["cs"]),
+            (beatmap.difficulty.drain_rate, expected["hp"]),
+            (beatmap.difficulty.slider_multiplier, expected["slider_multiplier"]),
+            (beatmap.difficulty.slider_tick_rate, expected["slider_tick_rate"]),
+            (beatmap.stack_leniency, expected["stack_leniency"]),
+        ):
+            assert approx(actual, wanted, 1e-6), (row["map"], actual, wanted)
+
+
+@pytest.mark.parametrize("mode", ["osu", "taiko", "catch", "mania"])
+def test_the_parity_difficulty_rows_match_upstream(mode: str):
+    for row in load_parity()["difficulty"][mode]:
+        attributes = parity_difficulty(mode, row)
+        assert approx(attributes.star_rating, row["attributes"]["star_rating"], 1e-6), (
+            row["name"],
+            row["map"],
+            row["mods"],
+        )
+        assert attributes.max_combo == row["attributes"]["max_combo"], (row["name"], row["map"], row["mods"])
+
+
+@pytest.mark.parametrize("mode", ["osu", "taiko", "catch", "mania"])
+def test_the_parity_performance_rows_match_upstream(mode: str):
+    for row in load_parity()["performance"][mode]:
+        beatmap = beatmap_of(row["map"])
+        difficulty = parity_difficulty(mode, row)
+        play = pppp.Performance(mods=row["mods"], **parity_score(mode, row["score"], difficulty)).calculate(
+            beatmap, difficulty
+        )
+        assert approx(play.total, row["attributes"]["total"], 1e-9), (row["name"], row["map"], row["mods"])

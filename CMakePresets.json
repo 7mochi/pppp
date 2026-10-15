@@ -12,7 +12,8 @@
         "PPPP_BUILD_TESTS": "ON",
         "PPPP_BUILD_PYTHON": "ON",
         "PPPP_BUILD_CAPI": "ON",
-        "PPPP_ISA": "auto"
+        "PPPP_ISA": "auto",
+        "PPPP_WARNINGS_AS_ERRORS": "ON"
       }
     },
     {
@@ -21,7 +22,7 @@
       "inherits": "dev",
       "binaryDir": "${sourceDir}/build_clang_tidy",
       "cacheVariables": {
-        "CMAKE_CXX_CLANG_TIDY": "clang-tidy;-p;${sourceDir}/build_clang_tidy"
+        "CMAKE_CXX_CLANG_TIDY": "clang-tidy;-p;${sourceDir}/build_clang_tidy;-warnings-as-errors=clang-diagnostic-*"
       }
     },
     {

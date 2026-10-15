@@ -16,7 +16,7 @@ endif
 
 cxxisclang := $(findstring clang,$(shell $(CXX) --version 2>/dev/null))
 
-.PHONY: all clean rebuild test-auto test-scalar test-avx2 test-neon generate-parity-tests configure format check-format check-tidy build-windows-2k build-windows-xp-x64 build-pgo clean-pgo-build clean-pgo
+.PHONY: all clean rebuild test-auto test-scalar test-avx2 test-neon generate-parity-tests configure format check check-format check-tidy build-windows-2k build-windows-xp-x64 build-pgo clean-pgo-build clean-pgo
 
 all: build
 
@@ -91,12 +91,14 @@ rebuild: clean build test-auto
 format: configure
 	cmake --build $(BUILD_DIR) --target format
 
+check: check-format check-tidy
+
 check-format: configure
 	cmake --build $(BUILD_DIR) --target check_format
 
 check-tidy:
 	cmake --preset clang_tidy
-	cmake --build build_clang_tidy -j$(NPROC) -- -k 0 || true
+	cmake --build build_clang_tidy -j$(NPROC) -- -k 0
 
 generate-parity-tests:
 	python3 tests/parity/gen_parity.py

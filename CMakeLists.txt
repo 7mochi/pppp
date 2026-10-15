@@ -352,7 +352,7 @@ endif()
 # fosu
 if(PPPP_WITH_FOSU)
   set(FOSU_BUILD_TESTS ${PPPP_BUILD_TESTS})
-  set(FOSU_WARNINGS_AS_ERRORS ${PPPP_WARNINGS_AS_ERRORS})
+  set(FOSU_WARNINGS_AS_ERRORS OFF)
   set(FOSU_ISA ${PPPP_ISA})
 
   add_subdirectory(third_party/fosu)

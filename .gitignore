@@ -26,6 +26,6 @@ csharp/**/obj/
 csharp/native/
 !csharp/build/
 *.nupkg
-tests/reference/**/bin/
-tests/reference/**/obj/
+reference/**/bin/
+reference/**/obj/
 Testing/

@@ -5,17 +5,13 @@ from __future__ import annotations
 import json
 import os
 import subprocess
-import tempfile
 import xml.etree.ElementTree as ElementTree
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJECT = os.path.dirname(os.path.dirname(HERE))
-REFERENCE = os.path.join(PROJECT, "tests", "reference", "upstream")
+REFERENCE = os.path.join(PROJECT, "reference")
 REFERENCE_DLL = os.path.join(REFERENCE, "bin", "Release", "net8.0", "reference.dll")
-REFERENCE_CSPROJ = os.path.join(REFERENCE, "upstream.csproj")
-
-RESOURCES = os.path.join(PROJECT, "tests", "resources")
-ROWS = os.path.join(HERE, "rows_to_cover.json")
+REFERENCE_CSPROJ = os.path.join(REFERENCE, "reference.csproj")
 
 PARITY_JSON = os.path.join(HERE, "parity.json")
 
@@ -42,40 +38,32 @@ def reference_version():
     pins = {package.get("Include"): package.get("Version")
             for package in root.iter("PackageReference")}
     if len(set(pins.values())) != 1:
-        raise SystemExit("upstream.csproj doesn't pin one version: %r" % pins)
+        raise SystemExit("reference.csproj doesn't pin one version: %r" % pins)
     return next(iter(pins.values()))
 
 
 def dotnet(arguments):
-    command = ["dotnet"] + arguments
-    if not os.environ.get("IN_NIX_SHELL"):
-        command = ["nix", "develop", "--command"] + command
+    environment = dict(os.environ, DOTNET_ROLL_FORWARD="Major")
     return subprocess.run(
-        command,
+        ["dotnet"] + arguments,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         universal_newlines=True,
         check=True,
+        env=environment,
     ).stdout
 
 
 _built = False
 
 
-def run_reference(rows_path):
+def run_reference():
     global _built
     if not _built:
         dotnet(["build", "-c", "Release", REFERENCE])
         _built = True
 
-    descriptor, expected_path = tempfile.mkstemp(suffix=".json")
-    os.close(descriptor)
-    try:
-        dotnet([REFERENCE_DLL, rows_path, RESOURCES, expected_path])
-        with open(expected_path) as expected_file:
-            return json.load(expected_file)
-    finally:
-        os.unlink(expected_path)
+    return json.loads(dotnet([REFERENCE_DLL, "--parity"]))
 
 
 def score_value(row, key):
@@ -126,7 +114,7 @@ def tables(schema, rows):
 
 
 def main():
-    data = run_reference(ROWS)
+    data = run_reference()
     with open(PARITY_JSON, "w") as out:
         json.dump(tables(data["schema"], data["rows"]), out, indent=2)
         out.write("\n")

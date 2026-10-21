@@ -488,11 +488,13 @@ namespace pppp { namespace osu { namespace difficulty {
         out = OsuPerformanceAttributes();
         OsuPerformanceCalculator c(score, attributes);
 
+        const pppp::mods::ClassicSettings& (*classic)(const pppp::mods::Mod&) = &pppp::mods::mod_classic;
+
         c.using_classic_slider_accuracy =
             linq::from(score.mods.data(), score.mods.size())
                 .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_CL &&
                      linq::bind(&pppp::mods::ClassicSettings::no_slider_head_accuracy,
-                                linq::bind(&pppp::mods::Mod::classic, linq::_1)));
+                                linq::bind(classic, linq::_1)));
         c.using_score_v2 = linq::from(score.mods.data(), score.mods.size())
                                .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_SV2);
 

@@ -1,0 +1,1999 @@
+[
+  {
+    "acronym": "10K",
+    "name": "Ten Keys",
+    "type": "Conversion",
+    "rulesets": [
+      "mania"
+    ],
+    "incompatible": [
+      "1K",
+      "2K",
+      "3K",
+      "4K",
+      "5K",
+      "6K",
+      "7K",
+      "8K",
+      "9K"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "1K",
+    "name": "One Key",
+    "type": "Conversion",
+    "rulesets": [
+      "mania"
+    ],
+    "incompatible": [
+      "10K",
+      "2K",
+      "3K",
+      "4K",
+      "5K",
+      "6K",
+      "7K",
+      "8K",
+      "9K"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      67108864
+    ]
+  },
+  {
+    "acronym": "2K",
+    "name": "Two Keys",
+    "type": "Conversion",
+    "rulesets": [
+      "mania"
+    ],
+    "incompatible": [
+      "10K",
+      "1K",
+      "3K",
+      "4K",
+      "5K",
+      "6K",
+      "7K",
+      "8K",
+      "9K"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      268435456
+    ]
+  },
+  {
+    "acronym": "3K",
+    "name": "Three Keys",
+    "type": "Conversion",
+    "rulesets": [
+      "mania"
+    ],
+    "incompatible": [
+      "10K",
+      "1K",
+      "2K",
+      "4K",
+      "5K",
+      "6K",
+      "7K",
+      "8K",
+      "9K"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      134217728
+    ]
+  },
+  {
+    "acronym": "4K",
+    "name": "Four Keys",
+    "type": "Conversion",
+    "rulesets": [
+      "mania"
+    ],
+    "incompatible": [
+      "10K",
+      "1K",
+      "2K",
+      "3K",
+      "5K",
+      "6K",
+      "7K",
+      "8K",
+      "9K"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      32768
+    ]
+  },
+  {
+    "acronym": "5K",
+    "name": "Five Keys",
+    "type": "Conversion",
+    "rulesets": [
+      "mania"
+    ],
+    "incompatible": [
+      "10K",
+      "1K",
+      "2K",
+      "3K",
+      "4K",
+      "6K",
+      "7K",
+      "8K",
+      "9K"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      65536
+    ]
+  },
+  {
+    "acronym": "6K",
+    "name": "Six Keys",
+    "type": "Conversion",
+    "rulesets": [
+      "mania"
+    ],
+    "incompatible": [
+      "10K",
+      "1K",
+      "2K",
+      "3K",
+      "4K",
+      "5K",
+      "7K",
+      "8K",
+      "9K"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      131072
+    ]
+  },
+  {
+    "acronym": "7K",
+    "name": "Seven Keys",
+    "type": "Conversion",
+    "rulesets": [
+      "mania"
+    ],
+    "incompatible": [
+      "10K",
+      "1K",
+      "2K",
+      "3K",
+      "4K",
+      "5K",
+      "6K",
+      "8K",
+      "9K"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      262144
+    ]
+  },
+  {
+    "acronym": "8K",
+    "name": "Eight Keys",
+    "type": "Conversion",
+    "rulesets": [
+      "mania"
+    ],
+    "incompatible": [
+      "10K",
+      "1K",
+      "2K",
+      "3K",
+      "4K",
+      "5K",
+      "6K",
+      "7K",
+      "9K"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      524288
+    ]
+  },
+  {
+    "acronym": "9K",
+    "name": "Nine Keys",
+    "type": "Conversion",
+    "rulesets": [
+      "mania"
+    ],
+    "incompatible": [
+      "10K",
+      "1K",
+      "2K",
+      "3K",
+      "4K",
+      "5K",
+      "6K",
+      "7K",
+      "8K"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      16777216
+    ]
+  },
+  {
+    "acronym": "AC",
+    "name": "Accuracy Challenge",
+    "type": "DifficultyIncrease",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "CN",
+      "EZ",
+      "NF",
+      "PF"
+    ],
+    "settings": [
+      {
+        "key": "accuracy_judge_mode",
+        "type": "unsupported"
+      },
+      {
+        "key": "minimum_accuracy",
+        "type": "number",
+        "min": 0.6,
+        "max": 0.999,
+        "precision": 0.001,
+        "default": 0.9
+      },
+      {
+        "key": "restart",
+        "type": "boolean"
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "AD",
+    "name": "Approach Different",
+    "type": "Fun",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "DF",
+      "FR",
+      "GR",
+      "HD",
+      "SI",
+      "TP"
+    ],
+    "settings": [
+      {
+        "key": "scale",
+        "type": "number",
+        "min": 1.5,
+        "max": 10,
+        "precision": 0.10000000149011612,
+        "default": 4
+      },
+      {
+        "key": "style",
+        "type": "unsupported"
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "AL",
+    "name": "Alternate",
+    "type": "Conversion",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "AT",
+      "CN",
+      "RX",
+      "SG"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "AP",
+    "name": "Autopilot",
+    "type": "Automation",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "AT",
+      "CN",
+      "MG",
+      "RP",
+      "RX",
+      "SO",
+      "TD"
+    ],
+    "settings": [],
+    "legacy": [
+      8192,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "AS",
+    "name": "Adaptive Speed",
+    "type": "Fun",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "mania"
+    ],
+    "incompatible": [
+      "AT",
+      "CN",
+      "DC",
+      "DT",
+      "HT",
+      "NC",
+      "WD",
+      "WU"
+    ],
+    "settings": [
+      {
+        "key": "adjust_pitch",
+        "type": "boolean"
+      },
+      {
+        "key": "initial_rate",
+        "type": "number",
+        "min": 0.5,
+        "max": 2,
+        "precision": 0.01,
+        "default": 1
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "AT",
+    "name": "Autoplay",
+    "type": "Automation",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "AL",
+      "AP",
+      "AS",
+      "CN",
+      "MF",
+      "MG",
+      "RP",
+      "RX",
+      "SG",
+      "SO",
+      "TD"
+    ],
+    "settings": [],
+    "legacy": [
+      2048,
+      2048,
+      2048,
+      2048
+    ]
+  },
+  {
+    "acronym": "BL",
+    "name": "Blinds",
+    "type": "DifficultyIncrease",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "FL"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "BM",
+    "name": "Bloom",
+    "type": "Fun",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "FL",
+      "NS",
+      "TD"
+    ],
+    "settings": [
+      {
+        "key": "max_cursor_size",
+        "type": "number",
+        "min": 5,
+        "max": 15,
+        "precision": 0.5,
+        "default": 10
+      },
+      {
+        "key": "max_size_combo_count",
+        "type": "number",
+        "min": 5,
+        "max": 100,
+        "precision": 1,
+        "default": 50
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "BR",
+    "name": "Barrel Roll",
+    "type": "Fun",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "BU"
+    ],
+    "settings": [
+      {
+        "key": "direction",
+        "type": "unsupported"
+      },
+      {
+        "key": "spin_speed",
+        "type": "number",
+        "min": 0.02,
+        "max": 12,
+        "precision": 0.01,
+        "default": 0.5
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "BU",
+    "name": "Bubbles",
+    "type": "Fun",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "BR",
+      "MG",
+      "RP"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "CL",
+    "name": "Classic",
+    "type": "Conversion",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "ST"
+    ],
+    "settings": [
+      {
+        "key": "always_play_tail_sample",
+        "type": "boolean"
+      },
+      {
+        "key": "classic_health",
+        "type": "boolean"
+      },
+      {
+        "key": "classic_note_lock",
+        "type": "boolean"
+      },
+      {
+        "key": "fade_hit_circle_early",
+        "type": "boolean"
+      },
+      {
+        "key": "no_slider_head_accuracy",
+        "type": "boolean"
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "CN",
+    "name": "Cinema",
+    "type": "Automation",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "AC",
+      "AL",
+      "AP",
+      "AS",
+      "AT",
+      "MF",
+      "MG",
+      "NF",
+      "PF",
+      "RP",
+      "RX",
+      "SD",
+      "SG",
+      "SO",
+      "TD"
+    ],
+    "settings": [],
+    "legacy": [
+      4196352,
+      4196352,
+      4196352,
+      4196352
+    ]
+  },
+  {
+    "acronym": "CO",
+    "name": "Cover",
+    "type": "DifficultyIncrease",
+    "rulesets": [
+      "mania"
+    ],
+    "incompatible": [
+      "FI",
+      "FL",
+      "HD"
+    ],
+    "settings": [
+      {
+        "key": "coverage",
+        "type": "number",
+        "min": 0.20000000298023224,
+        "max": 0.800000011920929,
+        "precision": 0.10000000149011612,
+        "default": 0.5
+      },
+      {
+        "key": "direction",
+        "type": "unsupported"
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      8
+    ]
+  },
+  {
+    "acronym": "CS",
+    "name": "Constant Speed",
+    "type": "Conversion",
+    "rulesets": [
+      "taiko",
+      "mania"
+    ],
+    "incompatible": [],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "DA",
+    "name": "Difficulty Adjust",
+    "type": "Conversion",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "EZ",
+      "HR",
+      "TP"
+    ],
+    "settings": [
+      {
+        "key": "approach_rate",
+        "type": "number",
+        "min": 0,
+        "max": 10,
+        "precision": 0,
+        "default": 0
+      },
+      {
+        "key": "circle_size",
+        "type": "number",
+        "min": 0,
+        "max": 10,
+        "precision": 0,
+        "default": 0
+      },
+      {
+        "key": "drain_rate",
+        "type": "number",
+        "min": 0,
+        "max": 10,
+        "precision": 0,
+        "default": 0
+      },
+      {
+        "key": "extended_limits",
+        "type": "boolean"
+      },
+      {
+        "key": "hard_rock_offsets",
+        "type": "boolean"
+      },
+      {
+        "key": "overall_difficulty",
+        "type": "number",
+        "min": 0,
+        "max": 10,
+        "precision": 0,
+        "default": 0
+      },
+      {
+        "key": "scroll_speed",
+        "type": "number",
+        "min": 0.25,
+        "max": 4,
+        "precision": 0,
+        "default": 0
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "DC",
+    "name": "Daycore",
+    "type": "DifficultyReduction",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "AS",
+      "DT",
+      "HT",
+      "NC",
+      "WD",
+      "WU"
+    ],
+    "settings": [
+      {
+        "key": "speed_change",
+        "type": "number",
+        "min": 0.5,
+        "max": 0.99,
+        "precision": 0.01,
+        "default": 0.75
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "DF",
+    "name": "Deflate",
+    "type": "Fun",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "AD",
+      "DP",
+      "GR",
+      "SI",
+      "TC"
+    ],
+    "settings": [
+      {
+        "key": "start_scale",
+        "type": "number",
+        "min": 1,
+        "max": 25,
+        "precision": 0.10000000149011612,
+        "default": 2
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "DP",
+    "name": "Depth",
+    "type": "Fun",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "DF",
+      "FR",
+      "GR",
+      "HD",
+      "MG",
+      "RP",
+      "SI",
+      "TC",
+      "TP",
+      "TR",
+      "WG"
+    ],
+    "settings": [
+      {
+        "key": "max_depth",
+        "type": "number",
+        "min": 50,
+        "max": 200,
+        "precision": 10,
+        "default": 100
+      },
+      {
+        "key": "show_approach_circles",
+        "type": "boolean"
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "DS",
+    "name": "Dual Stages",
+    "type": "Conversion",
+    "rulesets": [
+      "mania"
+    ],
+    "incompatible": [],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      33554432
+    ]
+  },
+  {
+    "acronym": "DT",
+    "name": "Double Time",
+    "type": "DifficultyIncrease",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "AS",
+      "DC",
+      "HT",
+      "NC",
+      "WD",
+      "WU"
+    ],
+    "settings": [
+      {
+        "key": "adjust_pitch",
+        "type": "boolean"
+      },
+      {
+        "key": "speed_change",
+        "type": "number",
+        "min": 1.01,
+        "max": 2,
+        "precision": 0.01,
+        "default": 1.5
+      }
+    ],
+    "legacy": [
+      64,
+      64,
+      64,
+      64
+    ]
+  },
+  {
+    "acronym": "EZ",
+    "name": "Easy",
+    "type": "DifficultyReduction",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "AC",
+      "DA",
+      "HR"
+    ],
+    "settings": [
+      {
+        "key": "retries",
+        "type": "number",
+        "min": 0,
+        "max": 10,
+        "precision": 1,
+        "default": 2
+      }
+    ],
+    "legacy": [
+      2,
+      2,
+      2,
+      2
+    ]
+  },
+  {
+    "acronym": "FF",
+    "name": "Floating Fruits",
+    "type": "Fun",
+    "rulesets": [
+      "catch"
+    ],
+    "incompatible": [],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "FI",
+    "name": "Fade In",
+    "type": "DifficultyIncrease",
+    "rulesets": [
+      "mania"
+    ],
+    "incompatible": [
+      "CO",
+      "FL",
+      "HD"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      1048576
+    ]
+  },
+  {
+    "acronym": "FL",
+    "name": "Flashlight",
+    "type": "DifficultyIncrease",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "BL",
+      "BM",
+      "CO",
+      "FI",
+      "HD"
+    ],
+    "settings": [
+      {
+        "key": "combo_based_size",
+        "type": "boolean"
+      },
+      {
+        "key": "follow_delay",
+        "type": "number",
+        "min": 120,
+        "max": 1200,
+        "precision": 120,
+        "default": 120
+      },
+      {
+        "key": "size_multiplier",
+        "type": "number",
+        "min": 0.5,
+        "max": 3,
+        "precision": 0.10000000149011612,
+        "default": 1
+      }
+    ],
+    "legacy": [
+      1024,
+      1024,
+      1024,
+      1024
+    ]
+  },
+  {
+    "acronym": "FR",
+    "name": "Freeze Frame",
+    "type": "Fun",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "AD",
+      "DP",
+      "HD",
+      "TR"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "GR",
+    "name": "Grow",
+    "type": "Fun",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "AD",
+      "DF",
+      "DP",
+      "SI",
+      "TC"
+    ],
+    "settings": [
+      {
+        "key": "start_scale",
+        "type": "number",
+        "min": 0,
+        "max": 0.9900000095367432,
+        "precision": 0.009999999776482582,
+        "default": 0.5
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "HD",
+    "name": "Hidden",
+    "type": "DifficultyIncrease",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "AD",
+      "CO",
+      "DP",
+      "FI",
+      "FL",
+      "FR",
+      "SI",
+      "TC"
+    ],
+    "settings": [
+      {
+        "key": "only_fade_approach_circles",
+        "type": "boolean"
+      }
+    ],
+    "legacy": [
+      8,
+      8,
+      8,
+      8
+    ]
+  },
+  {
+    "acronym": "HO",
+    "name": "Hold Off",
+    "type": "Conversion",
+    "rulesets": [
+      "mania"
+    ],
+    "incompatible": [
+      "IN",
+      "NR"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "HR",
+    "name": "Hard Rock",
+    "type": "DifficultyIncrease",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "DA",
+      "EZ",
+      "MR"
+    ],
+    "settings": [],
+    "legacy": [
+      16,
+      16,
+      16,
+      16
+    ]
+  },
+  {
+    "acronym": "HT",
+    "name": "Half Time",
+    "type": "DifficultyReduction",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "AS",
+      "DC",
+      "DT",
+      "NC",
+      "WD",
+      "WU"
+    ],
+    "settings": [
+      {
+        "key": "adjust_pitch",
+        "type": "boolean"
+      },
+      {
+        "key": "speed_change",
+        "type": "number",
+        "min": 0.5,
+        "max": 0.99,
+        "precision": 0.01,
+        "default": 0.75
+      }
+    ],
+    "legacy": [
+      256,
+      256,
+      256,
+      256
+    ]
+  },
+  {
+    "acronym": "IN",
+    "name": "Invert",
+    "type": "Conversion",
+    "rulesets": [
+      "mania"
+    ],
+    "incompatible": [
+      "HO",
+      "NR"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "MF",
+    "name": "Moving Fast",
+    "type": "Fun",
+    "rulesets": [
+      "catch"
+    ],
+    "incompatible": [
+      "AT",
+      "CN",
+      "RX"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "MG",
+    "name": "Magnetised",
+    "type": "Fun",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "AP",
+      "AT",
+      "BU",
+      "CN",
+      "DP",
+      "RP",
+      "RX",
+      "TR",
+      "WG"
+    ],
+    "settings": [
+      {
+        "key": "attraction_strength",
+        "type": "number",
+        "min": 0.05000000074505806,
+        "max": 1,
+        "precision": 0.05000000074505806,
+        "default": 0.5
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "MR",
+    "name": "Mirror",
+    "type": "Conversion",
+    "rulesets": [
+      "osu",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "HR"
+    ],
+    "settings": [
+      {
+        "key": "reflection",
+        "type": "unsupported"
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      1073741824
+    ]
+  },
+  {
+    "acronym": "MU",
+    "name": "Muted",
+    "type": "Fun",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [],
+    "settings": [
+      {
+        "key": "affects_hit_sounds",
+        "type": "boolean"
+      },
+      {
+        "key": "enable_metronome",
+        "type": "boolean"
+      },
+      {
+        "key": "inverse_muting",
+        "type": "boolean"
+      },
+      {
+        "key": "mute_combo_count",
+        "type": "number",
+        "min": 0,
+        "max": 500,
+        "precision": 1,
+        "default": 100
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "NC",
+    "name": "Nightcore",
+    "type": "DifficultyIncrease",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "AS",
+      "DC",
+      "DT",
+      "HT",
+      "WD",
+      "WU"
+    ],
+    "settings": [
+      {
+        "key": "speed_change",
+        "type": "number",
+        "min": 1.01,
+        "max": 2,
+        "precision": 0.01,
+        "default": 1.5
+      }
+    ],
+    "legacy": [
+      576,
+      576,
+      576,
+      576
+    ]
+  },
+  {
+    "acronym": "NF",
+    "name": "No Fail",
+    "type": "DifficultyReduction",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "AC",
+      "CN",
+      "PF",
+      "SD"
+    ],
+    "settings": [],
+    "legacy": [
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  {
+    "acronym": "NR",
+    "name": "No Release",
+    "type": "DifficultyReduction",
+    "rulesets": [
+      "mania"
+    ],
+    "incompatible": [
+      "HO",
+      "IN"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "NS",
+    "name": "No Scope",
+    "type": "Fun",
+    "rulesets": [
+      "osu",
+      "catch"
+    ],
+    "incompatible": [
+      "BM"
+    ],
+    "settings": [
+      {
+        "key": "hidden_combo_count",
+        "type": "number",
+        "min": 0,
+        "max": 50,
+        "precision": 1,
+        "default": 10
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "PF",
+    "name": "Perfect",
+    "type": "DifficultyIncrease",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "AC",
+      "CN",
+      "NF",
+      "SD"
+    ],
+    "settings": [
+      {
+        "key": "require_perfect_hits",
+        "type": "boolean"
+      },
+      {
+        "key": "restart",
+        "type": "boolean"
+      }
+    ],
+    "legacy": [
+      16416,
+      16416,
+      16416,
+      16416
+    ]
+  },
+  {
+    "acronym": "RD",
+    "name": "Random",
+    "type": "Conversion",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "mania"
+    ],
+    "incompatible": [
+      "SW",
+      "TP"
+    ],
+    "settings": [
+      {
+        "key": "angle_sharpness",
+        "type": "number",
+        "min": 1,
+        "max": 10,
+        "precision": 0.10000000149011612,
+        "default": 7
+      },
+      {
+        "key": "seed",
+        "type": "integer"
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      2097152
+    ]
+  },
+  {
+    "acronym": "RP",
+    "name": "Repel",
+    "type": "Fun",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "AP",
+      "AT",
+      "BU",
+      "CN",
+      "DP",
+      "MG",
+      "TR",
+      "WG"
+    ],
+    "settings": [
+      {
+        "key": "repulsion_strength",
+        "type": "number",
+        "min": 0.05000000074505806,
+        "max": 1,
+        "precision": 0.05000000074505806,
+        "default": 0.5
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "RX",
+    "name": "Relax",
+    "type": "Automation",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch"
+    ],
+    "incompatible": [
+      "AL",
+      "AP",
+      "AT",
+      "CN",
+      "MF",
+      "MG",
+      "SG"
+    ],
+    "settings": [],
+    "legacy": [
+      128,
+      128,
+      128,
+      0
+    ]
+  },
+  {
+    "acronym": "SD",
+    "name": "Sudden Death",
+    "type": "DifficultyIncrease",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "CN",
+      "NF",
+      "PF",
+      "TP"
+    ],
+    "settings": [
+      {
+        "key": "fail_on_slider_tail",
+        "type": "boolean"
+      },
+      {
+        "key": "restart",
+        "type": "boolean"
+      }
+    ],
+    "legacy": [
+      32,
+      32,
+      32,
+      32
+    ]
+  },
+  {
+    "acronym": "SG",
+    "name": "Single Tap",
+    "type": "Conversion",
+    "rulesets": [
+      "osu",
+      "taiko"
+    ],
+    "incompatible": [
+      "AL",
+      "AT",
+      "CN",
+      "RX"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "SI",
+    "name": "Spin In",
+    "type": "Fun",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "AD",
+      "DF",
+      "DP",
+      "GR",
+      "HD",
+      "TC"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "SO",
+    "name": "Spun Out",
+    "type": "Automation",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "AP",
+      "AT",
+      "CN",
+      "TP"
+    ],
+    "settings": [],
+    "legacy": [
+      4096,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "SR",
+    "name": "Simplified Rhythm",
+    "type": "DifficultyReduction",
+    "rulesets": [
+      "taiko"
+    ],
+    "incompatible": [],
+    "settings": [
+      {
+        "key": "one_eighth_conversion",
+        "type": "boolean"
+      },
+      {
+        "key": "one_sixth_conversion",
+        "type": "boolean"
+      },
+      {
+        "key": "one_third_conversion",
+        "type": "boolean"
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "ST",
+    "name": "Strict Tracking",
+    "type": "DifficultyIncrease",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "CL",
+      "TP"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "SV2",
+    "name": "Score V2",
+    "type": "System",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [],
+    "settings": [],
+    "legacy": [
+      536870912,
+      536870912,
+      536870912,
+      536870912
+    ]
+  },
+  {
+    "acronym": "SW",
+    "name": "Swap",
+    "type": "Conversion",
+    "rulesets": [
+      "taiko"
+    ],
+    "incompatible": [
+      "RD"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "SY",
+    "name": "Synesthesia",
+    "type": "Fun",
+    "rulesets": [
+      "osu",
+      "catch"
+    ],
+    "incompatible": [],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "TC",
+    "name": "Traceable",
+    "type": "DifficultyIncrease",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "DF",
+      "DP",
+      "GR",
+      "HD",
+      "SI",
+      "TP"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "TD",
+    "name": "Touch Device",
+    "type": "System",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "AP",
+      "AT",
+      "BM",
+      "CN"
+    ],
+    "settings": [],
+    "legacy": [
+      4,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "TP",
+    "name": "Target Practice",
+    "type": "Conversion",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "AD",
+      "DA",
+      "DP",
+      "RD",
+      "SD",
+      "SO",
+      "ST",
+      "TC"
+    ],
+    "settings": [
+      {
+        "key": "metronome",
+        "type": "boolean"
+      },
+      {
+        "key": "seed",
+        "type": "integer"
+      }
+    ],
+    "legacy": [
+      8388608,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "TR",
+    "name": "Transform",
+    "type": "Fun",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "DP",
+      "FR",
+      "MG",
+      "RP",
+      "WG"
+    ],
+    "settings": [],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "WD",
+    "name": "Wind Down",
+    "type": "Fun",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "AS",
+      "DC",
+      "DT",
+      "HT",
+      "NC",
+      "WU"
+    ],
+    "settings": [
+      {
+        "key": "adjust_pitch",
+        "type": "boolean"
+      },
+      {
+        "key": "final_rate",
+        "type": "number",
+        "min": 0.5,
+        "max": 1.99,
+        "precision": 0.01,
+        "default": 0.75
+      },
+      {
+        "key": "initial_rate",
+        "type": "number",
+        "min": 0.51,
+        "max": 2,
+        "precision": 0.01,
+        "default": 1
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "WG",
+    "name": "Wiggle",
+    "type": "Fun",
+    "rulesets": [
+      "osu"
+    ],
+    "incompatible": [
+      "DP",
+      "MG",
+      "RP",
+      "TR"
+    ],
+    "settings": [
+      {
+        "key": "strength",
+        "type": "number",
+        "min": 0.10000000149011612,
+        "max": 2,
+        "precision": 0.10000000149011612,
+        "default": 1.00000001490116
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "acronym": "WU",
+    "name": "Wind Up",
+    "type": "Fun",
+    "rulesets": [
+      "osu",
+      "taiko",
+      "catch",
+      "mania"
+    ],
+    "incompatible": [
+      "AS",
+      "DC",
+      "DT",
+      "HT",
+      "NC",
+      "WD"
+    ],
+    "settings": [
+      {
+        "key": "adjust_pitch",
+        "type": "boolean"
+      },
+      {
+        "key": "final_rate",
+        "type": "number",
+        "min": 0.51,
+        "max": 2,
+        "precision": 0.01,
+        "default": 1.5
+      },
+      {
+        "key": "initial_rate",
+        "type": "number",
+        "min": 0.5,
+        "max": 1.99,
+        "precision": 0.01,
+        "default": 1
+      }
+    ],
+    "legacy": [
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+]

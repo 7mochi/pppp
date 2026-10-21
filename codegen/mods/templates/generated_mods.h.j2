@@ -1,0 +1,22 @@
+{{ banner }}
+#ifndef PPPP_MODS_GENERATED_MODS_H
+#define PPPP_MODS_GENERATED_MODS_H
+
+#include "pppp/mods/mod.h"
+
+namespace pppp { namespace mods { namespace generated {
+    struct ModDefRow {
+        const char* acronym;
+        const char* name;
+        unsigned rulesets;
+        const ModId* incompatible;
+        unsigned incompatible_count;
+        unsigned legacy_bits[4];
+    };
+
+    const ModDefRow& mod_def(ModId id);
+    int apply_setting(Mod* mod, const char* key, const char* value);
+    void clamp_settings(Mod* mod);
+}}} // namespace pppp::mods::generated
+
+#endif

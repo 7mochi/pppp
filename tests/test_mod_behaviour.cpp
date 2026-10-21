@@ -4,8 +4,10 @@
 #include "common.h"
 #include "maps.h"
 #include "pppp/difficulty.h"
+#include "pppp/mods/generated_mods.h"
 #include "pppp/performance.h"
 #include <cstddef>
+#include <cstring>
 #include <doctest.h>
 #include <string>
 
@@ -322,6 +324,7 @@ namespace {
         {pppp::mods::LEGACY_MOD_PERFECT | pppp::mods::LEGACY_MOD_SUDDEN_DEATH,
          {pppp::mods::MOD_PF, pppp::mods::MOD_PF},
          1},
+        {pppp::mods::LEGACY_MOD_HIDDEN, {pppp::mods::MOD_CO, pppp::mods::MOD_CO}, 1},
     };
 
     void test_from_legacy(const LegacyCase* cases, size_t count, int ruleset) {
@@ -385,7 +388,7 @@ namespace {
     pppp::mods::Mod hand_built(const SettingCase& c) {
         pppp::mods::Mod mod;
         pppp::mods::mod_make(&mod, c.id);
-        mod.rate.speed_change = c.given;
+        pppp::mods::mod_rate(mod).speed_change = c.given;
         return mod;
     }
 } // namespace
@@ -397,18 +400,18 @@ TEST_CASE("a mod built by hand keeps the value its bindable would") {
 
         pppp::mods::Mods pushed;
         pushed.push_back(mod);
-        CHECK(pushed[0].rate.speed_change == SETTING_CASES[i].expected);
+        CHECK(pppp::mods::mod_rate(pushed[0]).speed_change == SETTING_CASES[i].expected);
 
         const pppp::mods::Mods ranged(&mod, &mod + 1);
-        CHECK(ranged[0].rate.speed_change == SETTING_CASES[i].expected);
+        CHECK(pppp::mods::mod_rate(ranged[0]).speed_change == SETTING_CASES[i].expected);
     }
 
     pppp::mods::Mod magnetised;
     pppp::mods::mod_make(&magnetised, pppp::mods::MOD_MG);
-    magnetised.magnetised.strength = 0.63f;
+    pppp::mods::mod_magnetised(magnetised).strength = 0.63f;
     pppp::mods::Mods pushed;
     pushed.push_back(magnetised);
-    CHECK(pushed[0].magnetised.strength == 0.65f);
+    CHECK(pppp::mods::mod_magnetised(pushed[0]).strength == 0.65f);
 }
 
 TEST_CASE("an empty value for an ignored setting is refused") {
@@ -426,4 +429,53 @@ TEST_CASE("a mod list of more than 64 pieces is refused") {
     }
     pppp::Mods mods;
     CHECK_FALSE(mods.parse(specification.c_str()).ok());
+}
+
+TEST_CASE("the generated mod table is self-consistent") {
+    for (int i = 0; i < pppp::mods::MOD_COUNT; i++) {
+        const pppp::mods::ModId id = static_cast<pppp::mods::ModId>(i);
+        const pppp::mods::generated::ModDefRow& row = pppp::mods::generated::mod_def(id);
+        pppp::mods::Mod m;
+
+        REQUIRE(row.acronym[0] != '\0');
+        REQUIRE(row.name[0] != '\0');
+        REQUIRE(pppp::mods::mod_acronym(id)[0] != '\0');
+        REQUIRE(std::strcmp(pppp::mods::mod_acronym(id), row.acronym) == 0);
+        REQUIRE(pppp::mods::mod_from_acronym(&m, row.acronym) == 0);
+        REQUIRE(m.id == id);
+    }
+
+    int asymmetric = 0;
+    for (int a = 0; a < pppp::mods::MOD_COUNT; a++) {
+        for (int b = 0; b < pppp::mods::MOD_COUNT; b++) {
+            if (pppp::mods::mod_incompatible(static_cast<pppp::mods::ModId>(a),
+                                             static_cast<pppp::mods::ModId>(b)) !=
+                pppp::mods::mod_incompatible(static_cast<pppp::mods::ModId>(b),
+                                             static_cast<pppp::mods::ModId>(a))) {
+                asymmetric++;
+            }
+        }
+    }
+    CHECK(asymmetric == 0);
+}
+
+TEST_CASE("a mod's settings are the arm its id selects") {
+    pppp::mods::Mod m;
+    pppp::mods::mod_make(&m, pppp::mods::MOD_MG);
+    CHECK(m.settings.index() == pppp::mods::ModSettings(pppp::mods::MagnetisedSettings()).index());
+    CHECK(pppp::mods::mod_magnetised(m).strength == 0.5f);
+
+    pppp::mods::mod_make(&m, pppp::mods::MOD_NF);
+    CHECK(m.settings.index() == pppp::mods::ModSettings(pppp::mods::NoSettings()).index());
+    CHECK(m.settings.index() != pppp::mods::ModSettings(pppp::mods::MagnetisedSettings()).index());
+}
+
+TEST_CASE("the generated parse table keeps every upstream key") {
+    pppp::Mods mods;
+    CHECK(mods.parse("CL:no_slider_head_accuracy=true:classic_health=true").ok());
+    CHECK(mods.parse("DT:speed_change=1.234:adjust_pitch=false").ok());
+    CHECK(mods.parse("DA:circle_size=5:extended_limits=true").ok());
+    CHECK(mods.parse("MR:reflection=Vertical").ok());
+    CHECK(mods.parse("NS:hidden_combo_count=10").ok());
+    CHECK_FALSE(mods.parse("DT:not_a_setting=1").ok());
 }

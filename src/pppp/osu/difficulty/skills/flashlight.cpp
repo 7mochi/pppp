@@ -56,18 +56,20 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
         if (linq::from(mods, mod_count)
                 .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_MG)) {
             float magnetised_strength =
-                linq::from(mods, mod_count)
-                    .first(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_MG)
-                    .magnetised.strength;
+                pppp::mods::mod_magnetised(
+                    linq::from(mods, mod_count)
+                        .first(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_MG))
+                    .strength;
             difficulty *= 1.0 - magnetised_strength;
         }
 
         if (linq::from(mods, mod_count)
                 .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_DF)) {
             float deflate_initial_scale =
-                linq::from(mods, mod_count)
-                    .first(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_DF)
-                    .scale.start_scale;
+                pppp::mods::mod_scale(
+                    linq::from(mods, mod_count)
+                        .first(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_DF))
+                    .start_scale;
             difficulty *= math::clamp(utils::reverse_lerp(deflate_initial_scale, 11.0, 1.0), 0.1, 1.0);
         }
 

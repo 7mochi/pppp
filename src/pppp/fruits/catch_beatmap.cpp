@@ -67,7 +67,7 @@ namespace pppp { namespace fruits {
                 out.approach_rate = std::min(out.approach_rate * pppp::mods::HARD_ROCK_ADJUST_RATIO, 10.0f);
                 break;
             case pppp::mods::MOD_DA: {
-                const pppp::mods::DifficultyAdjustSettings& st = mods[i].difficulty_adjust;
+                const pppp::mods::DifficultyAdjustSettings& st = pppp::mods::mod_difficulty_adjust(mods[i]);
                 if (st.drain_rate.has_value()) {
                     out.drain_rate = pppp::mods::clamp_to_extended_limits(st.drain_rate.value(), 0, 10,
                                                                           nonstd::optional<float>(), 11.0f);
@@ -111,7 +111,7 @@ namespace pppp { namespace fruits {
                 hard_rock_offsets = true;
             }
             if (mods[i].id == pppp::mods::MOD_DA) {
-                hard_rock_offsets = mods[i].difficulty_adjust.hard_rock_offsets;
+                hard_rock_offsets = pppp::mods::mod_difficulty_adjust(mods[i]).hard_rock_offsets;
             }
         }
 

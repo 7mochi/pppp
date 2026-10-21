@@ -218,20 +218,20 @@ namespace pppp { namespace taiko {
                 out.slider_multiplier *= HARD_ROCK_SLIDER_MULTIPLIER;
                 break;
             case pppp::mods::MOD_DA:
-                if (mods[i].difficulty_adjust.drain_rate.has_value()) {
-                    out.drain_rate =
-                        pppp::mods::clamp_to_extended_limits(mods[i].difficulty_adjust.drain_rate.value(), 0,
-                                                             10, nonstd::optional<float>(), 11.0f);
-                }
-                if (mods[i].difficulty_adjust.overall_difficulty.has_value()) {
-                    out.overall_difficulty = pppp::mods::clamp_to_extended_limits(
-                        mods[i].difficulty_adjust.overall_difficulty.value(), 0, 10,
+                if (pppp::mods::mod_difficulty_adjust(mods[i]).drain_rate.has_value()) {
+                    out.drain_rate = pppp::mods::clamp_to_extended_limits(
+                        pppp::mods::mod_difficulty_adjust(mods[i]).drain_rate.value(), 0, 10,
                         nonstd::optional<float>(), 11.0f);
                 }
-                if (mods[i].difficulty_adjust.scroll_speed.has_value()) {
+                if (pppp::mods::mod_difficulty_adjust(mods[i]).overall_difficulty.has_value()) {
+                    out.overall_difficulty = pppp::mods::clamp_to_extended_limits(
+                        pppp::mods::mod_difficulty_adjust(mods[i]).overall_difficulty.value(), 0, 10,
+                        nonstd::optional<float>(), 11.0f);
+                }
+                if (pppp::mods::mod_difficulty_adjust(mods[i]).scroll_speed.has_value()) {
                     out.slider_multiplier *= pppp::mods::clamp_to_extended_limits(
-                        mods[i].difficulty_adjust.scroll_speed.value(), 0.25f, 4, nonstd::optional<float>(),
-                        nonstd::optional<float>());
+                        pppp::mods::mod_difficulty_adjust(mods[i]).scroll_speed.value(), 0.25f, 4,
+                        nonstd::optional<float>(), nonstd::optional<float>());
                 }
                 break;
             default: break;
@@ -270,12 +270,15 @@ namespace pppp { namespace taiko {
         std::vector<pppp::mods::Mod> playable_mods(mods, mods + mod_count);
         for (size_t i = 0; i < playable_mods.size(); i++) {
             switch (playable_mods[i].id) {
-            case pppp::mods::MOD_RD: mods::apply_random(pb, playable_mods[i].random.seed.value()); break;
+            case pppp::mods::MOD_RD:
+                mods::apply_random(pb, pppp::mods::mod_random(playable_mods[i]).seed.value());
+                break;
             case pppp::mods::MOD_SW: mods::apply_swap(pb); break;
             case pppp::mods::MOD_SR:
-                apply_simplified_rhythm(pb, playable_mods[i].simplified_rhythm.one_third_conversion,
-                                        playable_mods[i].simplified_rhythm.one_sixth_conversion,
-                                        playable_mods[i].simplified_rhythm.one_eighth_conversion);
+                apply_simplified_rhythm(
+                    pb, pppp::mods::mod_simplified_rhythm(playable_mods[i]).one_third_conversion,
+                    pppp::mods::mod_simplified_rhythm(playable_mods[i]).one_sixth_conversion,
+                    pppp::mods::mod_simplified_rhythm(playable_mods[i]).one_eighth_conversion);
                 break;
             case pppp::mods::MOD_WU:
             case pppp::mods::MOD_WD: {

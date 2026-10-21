@@ -64,9 +64,10 @@ namespace pppp { namespace osu { namespace difficulty { namespace skills {
         if (linq::from(mods, mod_count)
                 .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_MG)) {
             float magnetised_strength =
-                linq::from(mods, mod_count)
-                    .first(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_MG)
-                    .magnetised.strength;
+                pppp::mods::mod_magnetised(
+                    linq::from(mods, mod_count)
+                        .first(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_MG))
+                    .strength;
             difficulty *= 1.0 - magnetised_strength;
         }
 

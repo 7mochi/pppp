@@ -1,6 +1,7 @@
 // Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+#include "pppp/mods/generated_mods.h"
 #include "pppp/mods/mod.h"
 
 namespace pppp { namespace mods {
@@ -157,59 +158,22 @@ namespace pppp { namespace mods {
     }
 
     unsigned mod_to_legacy(const Mod* mods, size_t mod_count, int ruleset) {
-        unsigned value = 0;
-
-        for (size_t i = 0; i < mod_count; i++) {
-            switch (mods[i].id) {
-            case MOD_NF: value |= LEGACY_MOD_NO_FAIL; break;
-            case MOD_EZ: value |= LEGACY_MOD_EASY; break;
-            case MOD_HD:
-            case MOD_FI: value |= LEGACY_MOD_HIDDEN; break;
-            case MOD_HR: value |= LEGACY_MOD_HARD_ROCK; break;
-            case MOD_PF: value |= LEGACY_MOD_PERFECT | LEGACY_MOD_SUDDEN_DEATH; break;
-            case MOD_SD: value |= LEGACY_MOD_SUDDEN_DEATH; break;
-            case MOD_NC: value |= LEGACY_MOD_NIGHTCORE | LEGACY_MOD_DOUBLE_TIME; break;
-            case MOD_DT: value |= LEGACY_MOD_DOUBLE_TIME; break;
-            case MOD_RX: value |= LEGACY_MOD_RELAX; break;
-            case MOD_HT: value |= LEGACY_MOD_HALF_TIME; break;
-            case MOD_FL: value |= LEGACY_MOD_FLASHLIGHT; break;
-            case MOD_CN: value |= LEGACY_MOD_CINEMA | LEGACY_MOD_AUTOPLAY; break;
-            case MOD_AT: value |= LEGACY_MOD_AUTOPLAY; break;
-            case MOD_SV2: value |= LEGACY_MOD_SCORE_V2; break;
-            default: break;
-            }
+        if (ruleset < 0 || ruleset > 3) {
+            return 0;
         }
 
+        unsigned value = 0;
         for (size_t i = 0; i < mod_count; i++) {
-            if (ruleset == 0) {
-                switch (mods[i].id) {
-                case MOD_AP: value |= LEGACY_MOD_AUTOPILOT; break;
-                case MOD_SO: value |= LEGACY_MOD_SPUN_OUT; break;
-                case MOD_TP: value |= LEGACY_MOD_TARGET; break;
-                case MOD_TD: value |= LEGACY_MOD_TOUCH_DEVICE; break;
-                default: break;
-                }
-            } else if (ruleset == 3) {
-                switch (mods[i].id) {
-                case MOD_1K: value |= LEGACY_MOD_KEY1; break;
-                case MOD_2K: value |= LEGACY_MOD_KEY2; break;
-                case MOD_3K: value |= LEGACY_MOD_KEY3; break;
-                case MOD_4K: value |= LEGACY_MOD_KEY4; break;
-                case MOD_5K: value |= LEGACY_MOD_KEY5; break;
-                case MOD_6K: value |= LEGACY_MOD_KEY6; break;
-                case MOD_7K: value |= LEGACY_MOD_KEY7; break;
-                case MOD_8K: value |= LEGACY_MOD_KEY8; break;
-                case MOD_9K: value |= LEGACY_MOD_KEY9; break;
-                case MOD_DS: value |= LEGACY_MOD_KEY_COOP; break;
-                case MOD_FI:
-                    value |= LEGACY_MOD_FADE_IN;
-                    value &= ~static_cast<unsigned>(
-                        LEGACY_MOD_HIDDEN); // this is toggled on in the base call due // to inheritance, but
-                                            // we don't want that.
-                    break;
-                case MOD_MR: value |= LEGACY_MOD_MIRROR; break;
-                case MOD_RD: value |= LEGACY_MOD_RANDOM; break;
-                default: break;
+            if (mods[i].id < 0 || mods[i].id >= MOD_COUNT) {
+                continue;
+            }
+            value |= generated::mod_def(mods[i].id).legacy_bits[ruleset];
+        }
+
+        if (ruleset == 3) {
+            for (size_t i = 0; i < mod_count; i++) {
+                if (mods[i].id == MOD_FI) {
+                    value &= ~static_cast<unsigned>(LEGACY_MOD_HIDDEN);
                 }
             }
         }

@@ -16,7 +16,7 @@ endif
 
 cxxisclang := $(findstring clang,$(shell $(CXX) --version 2>/dev/null))
 
-.PHONY: all clean rebuild test-auto test-scalar test-avx2 test-neon generate-parity-tests configure format check check-format check-tidy build-windows-2k build-windows-xp-x64 build-pgo clean-pgo-build clean-pgo
+.PHONY: all clean rebuild test-auto test-scalar test-avx2 test-neon generate-parity-tests generate-mods fetch-mods configure format check check-format check-tidy build-windows-2k build-windows-xp-x64 build-pgo clean-pgo-build clean-pgo
 
 all: build
 
@@ -99,6 +99,13 @@ check-format: configure
 check-tidy:
 	cmake --preset clang_tidy
 	cmake --build build_clang_tidy -j$(NPROC) -- -k 0 || true
+
+fetch-mods:
+	python3 codegen/mods/fetch_mods.py
+
+generate-mods:
+	python3 codegen/mods/gen_mods.py
+	clang-format -i src/pppp/mods/generated_mods.h src/pppp/mods/generated_mods.cpp
 
 generate-parity-tests:
 	python3 tests/parity/gen_parity.py

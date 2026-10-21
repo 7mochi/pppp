@@ -96,8 +96,8 @@ namespace pppp { namespace osu { namespace mods {
             return StatusCode::NO_SLIDER_PATH_BACKEND;
         }
 
-        int seed = mod.random.seed.value();
-        RandomState st(seed, mod.random.angle_sharpness);
+        int seed = pppp::mods::mod_random(mod).seed.value();
+        RandomState st(seed, pppp::mods::mod_random(mod).angle_sharpness);
 
         std::vector<object::ObjectPositionInfo> infos = object::generate_position_infos(pb);
 

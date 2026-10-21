@@ -36,7 +36,7 @@ namespace pppp {
 
         Mod rate;
         mods::mod_make(&rate, mods::MOD_AS);
-        rate.variable_rate.initial_rate = clock_rate_value;
+        mods::mod_variable_rate(rate).initial_rate = clock_rate_value;
         mods.push_back(rate);
         return mods;
     }

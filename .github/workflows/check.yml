@@ -30,6 +30,8 @@ jobs:
               - 'include/**'
               - 'third_party/**'
               - 'tests/**'
+              - 'codegen/**'
+              - 'reference/**'
               - 'CMakeLists.txt'
               - 'CMakePresets.json'
               - 'cmake/**'
@@ -53,12 +55,12 @@ jobs:
     name: All Succeeded
     if: always()
     runs-on: ubuntu-latest
-    needs: [changes, check, check-windows, check-configurations, parity-freshness, pre-commit]
+    needs: [changes, check, check-windows, check-configurations, mods-freshness, parity-freshness, pre-commit]
     steps:
       - uses: re-actors/alls-green@v1.3.0
         with:
           jobs: ${{ toJSON(needs) }}
-          allowed-skips: check,check-windows,check-configurations,parity-freshness
+          allowed-skips: check,check-windows,check-configurations,mods-freshness,parity-freshness
 
   check:
     name: Check on ${{ matrix.os }}
@@ -170,6 +172,22 @@ jobs:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
       - name: Build and test (${{ matrix.isa }})
         run: nix develop -c make test-${{ matrix.isa }}
+
+  mods-freshness:
+    name: Check the generated mod table is current
+    needs: changes
+    if: needs.changes.outputs.core == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: nixbuild/nix-quick-install-action@v35
+      - uses: nix-community/cache-nix-action@v7.0.2
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
+      - name: Refresh the data and regenerate the mod table
+        run: nix develop -c make fetch-mods generate-mods
+      - name: Fail if the committed data or table moved
+        run: git diff --exit-code -- codegen/mods/mods.json src/pppp/mods/generated_mods.h src/pppp/mods/generated_mods.cpp
 
   parity-freshness:
     name: Check the parity fixture is current

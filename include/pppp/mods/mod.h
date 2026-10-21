@@ -216,23 +216,69 @@ namespace pppp { namespace mods {
               extended_limits(false) {}
     };
 
+    struct NoSettings {};
+
+    typedef nonstd::variant<NoSettings, RateSettings, VariableRateSettings, RandomSettings, TargetSettings,
+                            MagnetisedSettings, ScaleSettings, HiddenSettings, ClassicSettings,
+                            MirrorSettings, SimplifiedRhythmSettings, DifficultyAdjustSettings>
+        ModSettings;
+
     struct Mod {
         ModId id;
-        RateSettings rate;
-        VariableRateSettings variable_rate;
+        ModSettings settings;
         TimeRamp time_ramp;
-        RandomSettings random;
-        TargetSettings target;
-        MagnetisedSettings magnetised;
-        ScaleSettings scale;
-        HiddenSettings hidden;
-        ClassicSettings classic;
-        MirrorSettings mirror;
-        SimplifiedRhythmSettings simplified_rhythm;
-        DifficultyAdjustSettings difficulty_adjust;
 
         Mod();
     };
+
+    inline RateSettings& mod_rate(Mod& mod) { return nonstd::get<RateSettings>(mod.settings); }
+    inline const RateSettings& mod_rate(const Mod& mod) { return nonstd::get<RateSettings>(mod.settings); }
+    inline VariableRateSettings& mod_variable_rate(Mod& mod) {
+        return nonstd::get<VariableRateSettings>(mod.settings);
+    }
+    inline const VariableRateSettings& mod_variable_rate(const Mod& mod) {
+        return nonstd::get<VariableRateSettings>(mod.settings);
+    }
+    inline RandomSettings& mod_random(Mod& mod) { return nonstd::get<RandomSettings>(mod.settings); }
+    inline const RandomSettings& mod_random(const Mod& mod) {
+        return nonstd::get<RandomSettings>(mod.settings);
+    }
+    inline TargetSettings& mod_target(Mod& mod) { return nonstd::get<TargetSettings>(mod.settings); }
+    inline const TargetSettings& mod_target(const Mod& mod) {
+        return nonstd::get<TargetSettings>(mod.settings);
+    }
+    inline MagnetisedSettings& mod_magnetised(Mod& mod) {
+        return nonstd::get<MagnetisedSettings>(mod.settings);
+    }
+    inline const MagnetisedSettings& mod_magnetised(const Mod& mod) {
+        return nonstd::get<MagnetisedSettings>(mod.settings);
+    }
+    inline ScaleSettings& mod_scale(Mod& mod) { return nonstd::get<ScaleSettings>(mod.settings); }
+    inline const ScaleSettings& mod_scale(const Mod& mod) { return nonstd::get<ScaleSettings>(mod.settings); }
+    inline HiddenSettings& mod_hidden(Mod& mod) { return nonstd::get<HiddenSettings>(mod.settings); }
+    inline const HiddenSettings& mod_hidden(const Mod& mod) {
+        return nonstd::get<HiddenSettings>(mod.settings);
+    }
+    inline ClassicSettings& mod_classic(Mod& mod) { return nonstd::get<ClassicSettings>(mod.settings); }
+    inline const ClassicSettings& mod_classic(const Mod& mod) {
+        return nonstd::get<ClassicSettings>(mod.settings);
+    }
+    inline MirrorSettings& mod_mirror(Mod& mod) { return nonstd::get<MirrorSettings>(mod.settings); }
+    inline const MirrorSettings& mod_mirror(const Mod& mod) {
+        return nonstd::get<MirrorSettings>(mod.settings);
+    }
+    inline SimplifiedRhythmSettings& mod_simplified_rhythm(Mod& mod) {
+        return nonstd::get<SimplifiedRhythmSettings>(mod.settings);
+    }
+    inline const SimplifiedRhythmSettings& mod_simplified_rhythm(const Mod& mod) {
+        return nonstd::get<SimplifiedRhythmSettings>(mod.settings);
+    }
+    inline DifficultyAdjustSettings& mod_difficulty_adjust(Mod& mod) {
+        return nonstd::get<DifficultyAdjustSettings>(mod.settings);
+    }
+    inline const DifficultyAdjustSettings& mod_difficulty_adjust(const Mod& mod) {
+        return nonstd::get<DifficultyAdjustSettings>(mod.settings);
+    }
 
     enum LegacyMod {
         LEGACY_MOD_NO_FAIL = 1u << 0,

@@ -1,0 +1,94 @@
+{{ banner }}
+#include "pppp/mods/generated_mods.h"
+#include "pppp/mods/mod_setting_value.h"
+#include "pppp/utils/parse.h"
+#include <cstdlib>
+#include <cstring>
+
+namespace pppp { namespace mods { namespace generated {
+    namespace {
+{% for mod in models %}
+{% if mod.incompatible %}
+        const ModId INCOMPATIBLE_{{ mod.acronym }}[] = {
+{% for identifier in mod.incompatible %}
+            MOD_{{ identifier }},
+{% endfor %}
+        };
+{% endif %}
+{% endfor %}
+
+        const ModDefRow MOD_DEFS[MOD_COUNT] = {
+{% for mod in models %}
+            {"{{ mod.acronym }}", "{{ mod.name }}", {{ mod.rulesets }}u, {% if mod.incompatible %}INCOMPATIBLE_{{ mod.acronym }}{% else %}0{% endif %}, {{ mod.incompatible | length }}, { {{ mod.legacy | join(", ") }} }},
+{% endfor %}
+        };
+    } // namespace
+
+    const ModDefRow& mod_def(ModId id) {
+        if (id < 0 || id >= MOD_COUNT) {
+            return MOD_DEFS[0];
+        }
+        return MOD_DEFS[id];
+    }
+
+    int apply_setting(Mod* mod, const char* key, const char* value) {
+        if (mod == 0) {
+            return -1;
+        }
+
+        switch (mod->id) {
+{% for mod in models %}
+        case MOD_{{ mod.acronym }}:
+{% for setting in mod.stored %}
+            if (!std::strcmp(key, "{{ setting.key }}")) {
+{% if setting.kind == "reflection" %}
+                if (!std::strcmp(value, "Horizontal") || !std::strcmp(value, "0")) {
+                    {{ setting.target }} = MOD_REFLECTION_HORIZONTAL;
+                } else if (!std::strcmp(value, "Vertical") || !std::strcmp(value, "1")) {
+                    {{ setting.target }} = MOD_REFLECTION_VERTICAL;
+                } else if (!std::strcmp(value, "Both") || !std::strcmp(value, "2")) {
+                    {{ setting.target }} = MOD_REFLECTION_BOTH;
+                } else {
+                    return -1;
+                }
+{% else %}
+                {{ setting.set }}
+{% endif %}
+                return 0;
+            }
+{% endfor %}
+{% for setting in mod.ignored %}
+            if (!std::strcmp(key, "{{ setting.key }}")) {
+                {{ setting.ignore }}
+            }
+{% endfor %}
+            break;
+
+{% endfor %}
+        default:
+            break;
+        }
+
+        return -1;
+    }
+
+    void clamp_settings(Mod* mod) {
+        if (mod == 0) {
+            return;
+        }
+
+        switch (mod->id) {
+{% for mod in models %}
+{% if mod.clamped %}
+        case MOD_{{ mod.acronym }}:
+{% for setting in mod.clamped %}
+            {{ setting.clamp }}
+{% endfor %}
+            break;
+{% endif %}
+{% endfor %}
+        default:
+            break;
+        }
+    }
+}}} // namespace pppp::mods::generated

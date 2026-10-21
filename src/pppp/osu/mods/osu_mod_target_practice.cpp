@@ -211,7 +211,7 @@ namespace pppp { namespace osu { namespace mods {
         if (pb.objects.empty()) {
             return StatusCode::OK;
         }
-        utils::DotNetRandom rng(mod.target.seed.value());
+        utils::DotNetRandom rng(pppp::mods::mod_target(mod).seed.value());
 
         std::vector<object::OsuHitObject> original =
             linq::from(pb.objects).order_by(linq::bind(&object::OsuHitObject::time, linq::_1)).to_list();

@@ -296,7 +296,9 @@ namespace pppp { namespace mania {
         for (size_t i = 0; i < playable_mods.size(); i++) {
             switch (playable_mods[i].id) {
             case pppp::mods::MOD_MR: mods::apply_mirror(pb); break;
-            case pppp::mods::MOD_RD: mods::apply_random(pb, playable_mods[i].random.seed.value()); break;
+            case pppp::mods::MOD_RD:
+                mods::apply_random(pb, pppp::mods::mod_random(playable_mods[i]).seed.value());
+                break;
             case pppp::mods::MOD_WU:
             case pppp::mods::MOD_WD:
                 pppp::mods::mod_time_ramp_apply_to_beatmap(

@@ -8,9 +8,11 @@ namespace pppp { namespace osu { namespace mods {
     namespace linq = ::pppp::utils::linq;
 
     bool has_hidden_body_fade(const pppp::mods::Mod* mods, size_t mod_count) {
+        const pppp::mods::HiddenSettings& (*hidden)(const pppp::mods::Mod&) = &pppp::mods::mod_hidden;
+
         return linq::from(mods, mod_count)
             .any(linq::bind(&pppp::mods::Mod::id, linq::_1) == pppp::mods::MOD_HD &&
                  !linq::bind(&pppp::mods::HiddenSettings::only_fade_approach_circles,
-                             linq::bind(&pppp::mods::Mod::hidden, linq::_1)));
+                             linq::bind(hidden, linq::_1)));
     }
 }}} // namespace pppp::osu::mods

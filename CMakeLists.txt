@@ -99,6 +99,7 @@ target_sources(pppp_beatmaps PUBLIC FILE_SET HEADERS
         include/pppp/beatmaps/slider_event_descriptor.h)
 
 add_library(pppp_mods
+  src/pppp/mods/generated_mods.cpp
   src/pppp/mods/mod.cpp
   src/pppp/mods/mod_legacy.cpp
   src/pppp/mods/mod_setting_value.cpp

@@ -16,6 +16,7 @@
   <PropertyGroup>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);PpppPackageAssemblies</TargetsForTfmSpecificContentInPackage>
+    <NoWarn>$(NoWarn);NU5131</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -53,6 +54,8 @@
   <ItemGroup>
     <None Include="native/win-x64/fosu_engine_avx2.dll" Pack="true" PackagePath="runtimes/win-x64/native/"
           Condition="Exists('native/win-x64/fosu_engine_avx2.dll')" />
+    <None Include="native/win-x86/fosu_engine_avx2.dll" Pack="true" PackagePath="runtimes/win-x86/native/"
+          Condition="Exists('native/win-x86/fosu_engine_avx2.dll')" />
     <None Include="native/win-arm64/fosu_engine_neon.dll" Pack="true" PackagePath="runtimes/win-arm64/native/"
           Condition="Exists('native/win-arm64/fosu_engine_neon.dll')" />
     <None Include="native/linux-x64/libfosu_engine_avx2.so" Pack="true" PackagePath="runtimes/linux-x64/native/"

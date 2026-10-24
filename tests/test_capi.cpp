@@ -38,6 +38,20 @@ namespace {
         int max_combo;
     };
 
+    pppp_difficulty_options zeroed_difficulty_options() {
+        pppp_difficulty_options options;
+        std::memset(&options, 0, sizeof(options));
+        options.version = PPPP_DIFFICULTY_OPTIONS_VERSION;
+        return options;
+    }
+
+    pppp_performance_options zeroed_performance_options() {
+        pppp_performance_options options;
+        std::memset(&options, 0, sizeof(options));
+        options.version = PPPP_PERFORMANCE_OPTIONS_VERSION;
+        return options;
+    }
+
     void check_stars(const StarsRow& row) {
         pppp_beatmap* map = 0;
 
@@ -47,8 +61,7 @@ namespace {
         REQUIRE(map);
 
         const ModsHandle mods(row.mods);
-        pppp_difficulty_options options;
-        std::memset(&options, 0, sizeof(options));
+        pppp_difficulty_options options = zeroed_difficulty_options();
         options.mods = mods.handle;
         options.ruleset = row.ruleset;
         options.has_ruleset = 1;
@@ -85,8 +98,7 @@ namespace {
             expected.mania() ? *expected.mania() : pppp::ManiaDifficultyAttributes();
 
         const ModsHandle mods("HD,DT");
-        pppp_difficulty_options options;
-        std::memset(&options, 0, sizeof(options));
+        pppp_difficulty_options options = zeroed_difficulty_options();
         options.mods = mods.handle;
         options.ruleset = ruleset;
         options.has_ruleset = 1;
@@ -116,11 +128,9 @@ namespace {
                   pppp_test::difficulty_approx(taiko.stamina_top_strains));
             break;
         case PPPP_RULESET_CATCH:
-            CHECK(attributes.fruits.star_rating == pppp_test::difficulty_approx(fruits.star_rating));
+            CHECK(attributes.star_rating == pppp_test::difficulty_approx(fruits.star_rating));
             break;
-        default:
-            CHECK(attributes.mania.star_rating == pppp_test::difficulty_approx(mania.star_rating));
-            break;
+        default: CHECK(attributes.star_rating == pppp_test::difficulty_approx(mania.star_rating)); break;
         }
     }
 
@@ -130,8 +140,7 @@ namespace {
         REQUIRE(pppp_beatmap_from_file(path.c_str(), &beatmap) == PPPP_OK);
 
         const ModsHandle mods(spec);
-        pppp_difficulty_options options;
-        std::memset(&options, 0, sizeof(options));
+        pppp_difficulty_options options = zeroed_difficulty_options();
         options.mods = mods.handle;
         options.ruleset = ruleset;
         options.has_ruleset = 1;
@@ -170,8 +179,7 @@ namespace {
         REQUIRE(pppp_beatmap_from_file(path.c_str(), &beatmap) == PPPP_OK);
 
         const ModsHandle mods(spec);
-        pppp_performance_options options;
-        std::memset(&options, 0, sizeof(options));
+        pppp_performance_options options = zeroed_performance_options();
         options.mods = mods.handle;
         options.has_score = 1;
         for (int i = 0; i < PPPP_HIT_RESULT_COUNT; i++) {
@@ -208,6 +216,14 @@ TEST_SUITE("the C ABI") {
             }
         }
         CHECK(dots == 2);
+    }
+
+    TEST_CASE("the shared fields live only in the wrapper") {
+        CHECK(offsetof(pppp_osu_difficulty_attributes, aim_difficulty) == 0);
+        CHECK(offsetof(pppp_taiko_difficulty_attributes, mechanical_difficulty) == 0);
+        CHECK(offsetof(pppp_osu_performance_attributes, aim) == 0);
+        CHECK(offsetof(pppp_taiko_performance_attributes, difficulty) == 0);
+        CHECK(offsetof(pppp_mania_performance_attributes, difficulty) == 0);
     }
 
     TEST_CASE("every ruleset reproduces the pinned star ratings") {
@@ -278,6 +294,8 @@ TEST_SUITE("the C ABI") {
         CHECK(settings.slider_multiplier == reference.difficulty.slider_multiplier);
         CHECK(settings.slider_tick_rate == reference.difficulty.slider_tick_rate);
 
+        REQUIRE(pppp_beatmap_prepare_data(map) == PPPP_OK);
+
         const pppp_hit_object* hit_objects = 0;
         size_t hit_object_count = 0;
         REQUIRE(pppp_beatmap_hit_objects(map, &hit_objects, &hit_object_count) == PPPP_OK);
@@ -320,6 +338,8 @@ TEST_SUITE("the C ABI") {
         pppp::Beatmap reference;
         pppp_test::load(reference, path);
 
+        REQUIRE(pppp_beatmap_prepare_data(map) == PPPP_OK);
+
         const pppp_slider* sliders = 0;
         size_t slider_count = 0;
         REQUIRE(pppp_beatmap_sliders(map, &sliders, &slider_count) == PPPP_OK);
@@ -361,6 +381,63 @@ TEST_SUITE("the C ABI") {
         pppp_beatmap_free(map);
     }
 
+    TEST_CASE("the beatmap data is prepared explicitly") {
+        const char* path = PPPP_TEST_RESOURCES "/osu/2785319.osu";
+        pppp_beatmap* map = 0;
+        REQUIRE(pppp_beatmap_from_file(path, &map) == PPPP_OK);
+
+        pppp_difficulty_attributes attributes;
+        CHECK(pppp_calculate_difficulty(map, 0, &attributes) == PPPP_OK);
+
+        const pppp_hit_object* hit_objects = 0;
+        size_t hit_object_count = 1;
+        CHECK(pppp_beatmap_hit_objects(map, 0, 0) == PPPP_INVALID_ARGUMENT);
+        CHECK(pppp_beatmap_hit_objects(map, &hit_objects, &hit_object_count) == PPPP_NOT_PREPARED);
+        CHECK(!hit_objects);
+        CHECK(hit_object_count == 1);
+
+        const pppp_break_period* breaks = 0;
+        size_t break_count = 1;
+        CHECK(pppp_beatmap_breaks(map, &breaks, &break_count) == PPPP_NOT_PREPARED);
+
+        const pppp_slider* sliders = 0;
+        size_t slider_count = 1;
+        CHECK(pppp_beatmap_sliders(map, &sliders, &slider_count) == PPPP_NOT_PREPARED);
+
+        const pppp_timing_point* timing_points = 0;
+        size_t timing_point_count = 1;
+        CHECK(pppp_beatmap_timing_points(map, &timing_points, &timing_point_count) == PPPP_NOT_PREPARED);
+
+        CHECK(pppp_beatmap_prepare_data(0) == PPPP_INVALID_ARGUMENT);
+        CHECK(pppp_beatmap_prepare_data(map) == PPPP_OK);
+        CHECK(pppp_beatmap_prepare_data(map) == PPPP_OK);
+
+        REQUIRE(pppp_beatmap_hit_objects(map, &hit_objects, &hit_object_count) == PPPP_OK);
+        CHECK(hit_object_count > 0);
+
+        pppp_beatmap_free(map);
+    }
+
+    TEST_CASE("preparing a map with no sliders or breaks returns empty arrays") {
+        pppp_beatmap* map = 0;
+        REQUIRE(pppp_beatmap_from_file(PPPP_TEST_RESOURCES "/mania/diffcalc-test.osu", &map) == PPPP_OK);
+        CHECK(pppp_beatmap_prepare_data(map) == PPPP_OK);
+
+        const pppp_slider* sliders = 0;
+        size_t slider_count = 1;
+        CHECK(pppp_beatmap_sliders(map, &sliders, &slider_count) == PPPP_OK);
+        CHECK(!sliders);
+        CHECK(slider_count == 0);
+
+        const pppp_break_period* breaks = 0;
+        size_t break_count = 1;
+        CHECK(pppp_beatmap_breaks(map, &breaks, &break_count) == PPPP_OK);
+        CHECK(!breaks);
+        CHECK(break_count == 0);
+
+        pppp_beatmap_free(map);
+    }
+
     TEST_CASE("the performance attributes match the library, optionals included") {
         const char* path = PPPP_TEST_RESOURCES "/osu/2785319.osu";
         pppp_beatmap* map = 0;
@@ -383,8 +460,7 @@ TEST_SUITE("the C ABI") {
         const pppp::OsuPerformanceAttributes& expected = *performance.osu();
 
         const ModsHandle mods("HD,DT");
-        pppp_performance_options options;
-        std::memset(&options, 0, sizeof(options));
+        pppp_performance_options options = zeroed_performance_options();
         options.mods = mods.handle;
         options.has_score = 1;
         for (int i = 0; i < PPPP_HIT_RESULT_COUNT; i++) {
@@ -428,8 +504,7 @@ TEST_SUITE("the C ABI") {
         score.accuracy = pppp_test::classic_accuracy(300, 20, 3, 1);
 
         const ModsHandle mods("HD,DT");
-        pppp_performance_options options;
-        std::memset(&options, 0, sizeof(options));
+        pppp_performance_options options = zeroed_performance_options();
         options.mods = mods.handle;
         options.has_score = 1;
         for (int i = 0; i < PPPP_HIT_RESULT_COUNT; i++) {
@@ -446,8 +521,7 @@ TEST_SUITE("the C ABI") {
 
         pppp_difficulty_attributes difficulty;
         {
-            pppp_difficulty_options difficulty_options;
-            std::memset(&difficulty_options, 0, sizeof(difficulty_options));
+            pppp_difficulty_options difficulty_options = zeroed_difficulty_options();
             difficulty_options.mods = mods.handle;
             REQUIRE(pppp_calculate_difficulty(map, &difficulty_options, &difficulty) == PPPP_OK);
         }
@@ -480,8 +554,7 @@ TEST_SUITE("the C ABI") {
         pppp::Beatmap reference;
         pppp_test::load(reference, path);
 
-        pppp_difficulty_options options;
-        std::memset(&options, 0, sizeof(options));
+        pppp_difficulty_options options = zeroed_difficulty_options();
         options.ruleset = PPPP_RULESET_TAIKO;
         options.has_ruleset = 1;
 
@@ -494,8 +567,7 @@ TEST_SUITE("the C ABI") {
         const pppp::PerformanceAttributes expected_performance =
             pppp_test::calculate(pppp::Performance(reference, expected));
 
-        pppp_performance_options performance_options;
-        std::memset(&performance_options, 0, sizeof(performance_options));
+        pppp_performance_options performance_options = zeroed_performance_options();
         performance_options.difficulty = &difficulty;
         performance_options.has_difficulty = 1;
 
@@ -510,6 +582,74 @@ TEST_SUITE("the C ABI") {
         pppp_beatmap_free(map);
     }
 
+    TEST_CASE("provided catch and mania attributes carry their shared fields") {
+        const char* path = PPPP_TEST_RESOURCES "/osu/2785319.osu";
+        pppp_beatmap* map = 0;
+        REQUIRE(pppp_beatmap_from_file(path, &map) == PPPP_OK);
+
+        const pppp_int32 rulesets[] = {PPPP_RULESET_CATCH, PPPP_RULESET_MANIA};
+        for (size_t i = 0; i < sizeof(rulesets) / sizeof(rulesets[0]); i++) {
+            pppp_difficulty_options difficulty_options = zeroed_difficulty_options();
+            difficulty_options.ruleset = rulesets[i];
+            difficulty_options.has_ruleset = 1;
+            pppp_difficulty_attributes difficulty;
+            REQUIRE(pppp_calculate_difficulty(map, &difficulty_options, &difficulty) == PPPP_OK);
+            CHECK(difficulty.ruleset == rulesets[i]);
+            CHECK(difficulty.star_rating > 0.0);
+            CHECK(difficulty.max_combo > 0);
+
+            pppp_performance_options options = zeroed_performance_options();
+            options.has_score = 1;
+            options.score.statistics[common::HIT_RESULT_GREAT] = 500;
+            options.score.max_combo = difficulty.max_combo;
+            options.score.accuracy = 1.0;
+            options.has_combo = 1;
+            options.combo = difficulty.max_combo;
+            options.has_accuracy = 1;
+            options.accuracy = 1.0;
+            options.difficulty = &difficulty;
+            options.has_difficulty = 1;
+            pppp_performance_attributes performance;
+            REQUIRE(pppp_calculate_performance(map, &options, &performance) == PPPP_OK);
+
+            CHECK(performance.ruleset == rulesets[i]);
+            CHECK(performance.total > 0.0);
+
+            pppp_difficulty_attributes corrupted = difficulty;
+            corrupted.star_rating = 0.0;
+            corrupted.max_combo = 0;
+
+            pppp_performance_options corrupted_options = options;
+            corrupted_options.difficulty = &corrupted;
+            pppp_performance_attributes corrupted_performance;
+            REQUIRE(pppp_calculate_performance(map, &corrupted_options, &corrupted_performance) == PPPP_OK);
+
+            CHECK(corrupted_performance.total != performance.total);
+
+            if (rulesets[i] == PPPP_RULESET_CATCH) {
+                const pppp_int32 half_combo = difficulty.max_combo / 2;
+
+                // `has_combo` makes the C API drive the score's max combo from `combo`.
+                pppp_performance_options combo_options = options;
+                combo_options.combo = half_combo;
+                pppp_performance_attributes combo_performance;
+                REQUIRE(pppp_calculate_performance(map, &combo_options, &combo_performance) == PPPP_OK);
+
+                pppp_difficulty_attributes combo_corrupted = difficulty;
+                combo_corrupted.max_combo = 0;
+                pppp_performance_options combo_corrupted_options = combo_options;
+                combo_corrupted_options.difficulty = &combo_corrupted;
+                pppp_performance_attributes combo_corrupted_performance;
+                REQUIRE(pppp_calculate_performance(map, &combo_corrupted_options,
+                                                   &combo_corrupted_performance) == PPPP_OK);
+
+                CHECK(combo_corrupted_performance.total != combo_performance.total);
+            }
+        }
+
+        pppp_beatmap_free(map);
+    }
+
     TEST_CASE("provided attributes with an out-of-range ruleset are rejected") {
         const char* path = PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu";
         pppp_beatmap* map = 0;
@@ -519,8 +659,7 @@ TEST_SUITE("the C ABI") {
         std::memset(&difficulty, 0, sizeof(difficulty));
         difficulty.ruleset = 4;
 
-        pppp_performance_options options;
-        std::memset(&options, 0, sizeof(options));
+        pppp_performance_options options = zeroed_performance_options();
         options.difficulty = &difficulty;
         options.has_difficulty = 1;
 
@@ -568,8 +707,7 @@ TEST_SUITE("the C ABI") {
         pppp_beatmap* map = 0;
         REQUIRE(pppp_beatmap_from_file(PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu", &map) == PPPP_OK);
 
-        pppp_difficulty_options options;
-        std::memset(&options, 0, sizeof(options));
+        pppp_difficulty_options options = zeroed_difficulty_options();
         options.ruleset = 4;
         options.has_ruleset = 1;
         pppp_difficulty_attributes attributes;
@@ -594,8 +732,7 @@ TEST_SUITE("the C ABI") {
         pppp_mods* legacy = 0;
         REQUIRE(pppp_mods_from_legacy(8u | 64u, 0, &legacy) == PPPP_OK);
 
-        pppp_difficulty_options options;
-        std::memset(&options, 0, sizeof(options));
+        pppp_difficulty_options options = zeroed_difficulty_options();
         options.mods = acronyms.handle;
         pppp_difficulty_attributes from_acronyms;
         REQUIRE(pppp_calculate_difficulty(map, &options, &from_acronyms) == PPPP_OK);
@@ -644,6 +781,52 @@ TEST_SUITE("the C ABI") {
     TEST_CASE("every result has a description") {
         CHECK(std::strcmp(pppp_result_message(PPPP_OK), "no error") == 0);
         CHECK(std::strcmp(pppp_result_message(PPPP_PARSE), "cannot parse the beatmap") == 0);
+        CHECK(std::strcmp(pppp_result_message(PPPP_NOT_PREPARED), "the beatmap data has not been prepared") ==
+              0);
+    }
+
+    TEST_CASE("the ABI version is the header's") {
+        CHECK(PPPP_C_ABI_VERSION == 1);
+        CHECK(pppp_abi_version() == PPPP_C_ABI_VERSION);
+    }
+
+    TEST_CASE("the option versions are checked") {
+        pppp_beatmap* map = 0;
+        REQUIRE(pppp_beatmap_from_file(PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu", &map) == PPPP_OK);
+
+        pppp_difficulty_options difficulty;
+        std::memset(&difficulty, 0, sizeof(difficulty));
+        pppp_difficulty_attributes attributes;
+        pppp_timed_difficulty* timed = 0;
+        pppp_strains* strains = 0;
+        CHECK(pppp_calculate_difficulty(map, &difficulty, &attributes) == PPPP_INVALID_ARGUMENT);
+        CHECK(pppp_calculate_timed_difficulty(map, &difficulty, &timed) == PPPP_INVALID_ARGUMENT);
+        CHECK(pppp_calculate_strains(map, &difficulty, &strains) == PPPP_INVALID_ARGUMENT);
+        difficulty.version = PPPP_DIFFICULTY_OPTIONS_VERSION + 1;
+        CHECK(pppp_calculate_difficulty(map, &difficulty, &attributes) == PPPP_INVALID_ARGUMENT);
+
+        pppp_performance_options performance;
+        std::memset(&performance, 0, sizeof(performance));
+        pppp_performance_attributes performance_attributes;
+        CHECK(pppp_calculate_performance(map, &performance, &performance_attributes) ==
+              PPPP_INVALID_ARGUMENT);
+        performance.version = PPPP_PERFORMANCE_OPTIONS_VERSION + 1;
+        CHECK(pppp_calculate_performance(map, &performance, &performance_attributes) ==
+              PPPP_INVALID_ARGUMENT);
+
+        pppp_difficulty_options initialized = PPPP_DIFFICULTY_OPTIONS_INIT;
+        CHECK(initialized.version == PPPP_DIFFICULTY_OPTIONS_VERSION);
+        CHECK(pppp_calculate_difficulty(map, &initialized, &attributes) == PPPP_OK);
+        CHECK(pppp_calculate_timed_difficulty(map, &initialized, &timed) == PPPP_OK);
+        CHECK(pppp_calculate_strains(map, &initialized, &strains) == PPPP_OK);
+
+        pppp_performance_options performance_initialized = PPPP_PERFORMANCE_OPTIONS_INIT;
+        CHECK(performance_initialized.version == PPPP_PERFORMANCE_OPTIONS_VERSION);
+        CHECK(pppp_calculate_performance(map, &performance_initialized, &performance_attributes) == PPPP_OK);
+
+        pppp_timed_difficulty_free(timed);
+        pppp_strains_free(strains);
+        pppp_beatmap_free(map);
     }
 }
 
@@ -654,8 +837,7 @@ TEST_SUITE("the C ABI") {
         REQUIRE(pppp_beatmap_from_file(path, &map) == PPPP_OK);
 
         const ModsHandle mods("HD,DT");
-        pppp_difficulty_options options;
-        std::memset(&options, 0, sizeof(options));
+        pppp_difficulty_options options = zeroed_difficulty_options();
         options.mods = mods.handle;
 
         pppp_timed_difficulty* timed = 0;
@@ -669,7 +851,7 @@ TEST_SUITE("the C ABI") {
         CHECK(entries[300].attributes.star_rating == pppp_test::difficulty_approx(8.272126401328721));
         CHECK(entries[300].attributes.max_combo == 433);
         CHECK(entries[600].attributes.ruleset == PPPP_RULESET_OSU);
-        CHECK(entries[600].attributes.osu.max_combo == 909);
+        CHECK(entries[600].attributes.max_combo == 909);
         CHECK(entries[600].attributes.star_rating == pppp_test::difficulty_approx(8.898179651893287));
 
         pppp_timed_difficulty_free(timed);
@@ -690,8 +872,7 @@ TEST_SUITE("the C ABI") {
         REQUIRE(pppp_beatmap_from_file(path, &map) == PPPP_OK);
 
         const ModsHandle mods("DT");
-        pppp_difficulty_options options;
-        std::memset(&options, 0, sizeof(options));
+        pppp_difficulty_options options = zeroed_difficulty_options();
         options.mods = mods.handle;
 
         pppp_strains* strains = 0;

@@ -134,7 +134,7 @@ namespace pppp {
         }
     }
 
-    Status Difficulty::strains(const beatmaps::Beatmap& map, Strains& out) const {
+    Status Difficulty::calculate_strains(const beatmaps::Beatmap& map, Strains& out) const {
         out = Strains();
         const Mods mods = effective_mods();
         const Ruleset::Value mode = has_ruleset ? ruleset_value : static_cast<Ruleset::Value>(map.mode);

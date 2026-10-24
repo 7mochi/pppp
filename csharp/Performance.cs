@@ -33,24 +33,26 @@ namespace Pppp {
             if (beatmap == null) {
                 throw new ArgumentNullException("beatmap");
             }
-            Native.PerformanceOptions options = new Native.PerformanceOptions();
+            pppp_performance_options options = new pppp_performance_options();
+            options.version = Native.PerformanceOptionsVersion;
             options.score = Native.ToNative(Statistics, MaxCombo, Accuracy, LegacyTotalScore);
             options.has_score = 1;
             if (Misses.HasValue) {
                 options.misses = Misses.Value;
                 options.has_misses = 1;
             }
-            Native.DifficultyAttributes provided = attributes == null ? new Native.DifficultyAttributes()
-                                                                      : attributes.ToNative();
+            pppp_difficulty_attributes provided = attributes == null ? new pppp_difficulty_attributes()
+                                                                  : attributes.ToNative();
             if (attributes != null) {
-                options.difficulty = (IntPtr)(&provided);
+                options.difficulty = &provided;
                 options.has_difficulty = 1;
             }
 
-            options.mods = Native.CreateMods(Mods, attributes != null ? (int)attributes.Ruleset : beatmap.Mode);
+            options.mods = (pppp_mods*)Native.CreateMods(Mods,
+                                                         attributes != null ? (int)attributes.Ruleset : beatmap.Mode);
             try {
-                Native.PerformanceAttributes result;
-                Native.Check(Native.pppp_calculate_performance(beatmap.Handle, ref options, out result));
+                pppp_performance_attributes result;
+                Native.Check(Native.pppp_calculate_performance((pppp_beatmap*)beatmap.Handle, &options, &result));
                 return Native.FromNative(result);
             } finally {
                 Native.pppp_mods_free(options.mods);

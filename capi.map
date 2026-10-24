@@ -1,6 +1,7 @@
 {
   global:
     pppp_version;
+    pppp_abi_version;
     pppp_backend;
     pppp_result_message;
     pppp_mods_parse;
@@ -10,6 +11,7 @@
     pppp_beatmap_from_file;
     pppp_beatmap_from_bytes;
     pppp_beatmap_free;
+    pppp_beatmap_prepare_data;
     pppp_beatmap_format_version;
     pppp_beatmap_mode;
     pppp_beatmap_stack_leniency;

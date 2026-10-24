@@ -75,7 +75,7 @@ def pp(beatmap: Beatmap, attributes: DifficultyAttributes) -> float:
 
 
 def aim_graph(beatmap: Beatmap) -> list[float]:
-    strains: Strains = Difficulty(mods="HD").strains(beatmap)
+    strains: Strains = Difficulty(mods="HD").calculate_strains(beatmap)
     if isinstance(strains, OsuStrains):
         return strains.aim
     return []

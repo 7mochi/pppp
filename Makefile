@@ -1,4 +1,5 @@
 BUILD_DIR   := build
+PYTHON      ?= python3
 NPROC := $(shell nproc 2>/dev/null || echo 4)
 
 PGO_BUILD_DIR := build_pgo
@@ -16,7 +17,7 @@ endif
 
 cxxisclang := $(findstring clang,$(shell $(CXX) --version 2>/dev/null))
 
-.PHONY: all clean rebuild test-auto test-scalar test-avx2 test-neon generate-parity-tests generate-mods fetch-mods configure format check check-format check-tidy build-windows-2k build-windows-xp-x64 build-pgo clean-pgo-build clean-pgo
+.PHONY: all clean rebuild test-auto test-scalar test-avx2 test-neon generate-parity-tests generate-mods fetch-mods generate-csharp generate-python generate-node generate-bindings configure format check check-format check-tidy build-windows-2k build-windows-xp-x64 build-pgo clean-pgo-build clean-pgo
 
 all: build
 
@@ -101,11 +102,25 @@ check-tidy:
 	cmake --build build_clang_tidy -j$(NPROC) -- -k 0 || true
 
 fetch-mods:
-	python3 codegen/mods/fetch_mods.py
+	$(PYTHON) codegen/mods/fetch_mods.py
 
 generate-mods:
-	python3 codegen/mods/gen_mods.py
+	$(PYTHON) codegen/mods/gen_mods.py
 	clang-format -i src/pppp/mods/generated_mods.h src/pppp/mods/generated_mods.cpp
 
 generate-parity-tests:
-	python3 tests/parity/gen_parity.py
+	$(PYTHON) tests/parity/gen_parity.py
+
+generate-csharp:
+	@ClangSharpPInvokeGenerator -f include/pppp/capi.h -n Pppp -m Native -o csharp/Native.g.cs \
+	  -l pppp_c -c codegen=compatible -was "*=internal" -wu "*=System.Runtime.CompilerServices" \
+	  --resource-directory "$$(clang -print-resource-dir)" || [ $$? -eq 32 ]
+
+generate-python:
+	@ctypesgen --no-embed-preamble -l pppp_c --strip-build-path "$(CURDIR)" \
+	  --header-template /dev/null -o python/pppp/_native.py include/pppp/capi.h
+
+generate-node:
+	@$(PYTHON) codegen/bindings/gen_node.py
+
+generate-bindings: generate-csharp generate-python generate-node

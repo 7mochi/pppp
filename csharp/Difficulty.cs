@@ -14,11 +14,11 @@ namespace Pppp {
         public double? ClockRate { get; set; }
 
         /// <summary>Perform the difficulty calculation for the beatmap's mode.</summary>
-        public DifficultyAttributes Calculate(Beatmap beatmap) {
-            Native.DifficultyOptions options = Options(beatmap);
+        public unsafe DifficultyAttributes Calculate(Beatmap beatmap) {
+            pppp_difficulty_options options = Options(beatmap);
             try {
-                Native.DifficultyAttributes attributes;
-                Native.Check(Native.pppp_calculate_difficulty(beatmap.Handle, ref options, out attributes));
+                pppp_difficulty_attributes attributes;
+                Native.Check(Native.pppp_calculate_difficulty((pppp_beatmap*)beatmap.Handle, &options, &attributes));
                 return Native.FromNative(attributes);
             } finally {
                 Native.pppp_mods_free(options.mods);
@@ -28,19 +28,20 @@ namespace Pppp {
         /// <summary>Calculates the difficulty of the beatmap using a specific mod combination and returns a set
         /// of <see cref="TimedDifficultyAttributes"/> representing the difficulty at every relevant time value
         /// in the beatmap.</summary>
-        public TimedDifficultyAttributes[] CalculateTimed(Beatmap beatmap) {
-            Native.DifficultyOptions options = Options(beatmap);
-            IntPtr timed = IntPtr.Zero;
+        public unsafe TimedDifficultyAttributes[] CalculateTimed(Beatmap beatmap) {
+            pppp_difficulty_options options = Options(beatmap);
+            pppp_timed_difficulty* timed = null;
             try {
-                Native.Check(Native.pppp_calculate_timed_difficulty(beatmap.Handle, ref options, out timed));
-                IntPtr pointer;
+                Native.Check(Native.pppp_calculate_timed_difficulty((pppp_beatmap*)beatmap.Handle, &options, &timed));
+                pppp_timed_difficulty_attributes* pointer;
                 UIntPtr count;
-                Native.Check(Native.pppp_timed_difficulty_entries(timed, out pointer, out count));
-                Native.TimedDifficultyAttributes[] entries =
-                    Native.CopyArray<Native.TimedDifficultyAttributes>(pointer, count);
+                Native.Check(Native.pppp_timed_difficulty_entries(timed, &pointer, &count));
+                pppp_timed_difficulty_attributes[] entries =
+                    Native.CopyArray<pppp_timed_difficulty_attributes>((IntPtr)pointer, count);
                 TimedDifficultyAttributes[] result = new TimedDifficultyAttributes[entries.Length];
                 for (int i = 0; i < entries.Length; i++) {
-                    result[i] = new TimedDifficultyAttributes(entries[i].time, Native.FromNative(entries[i].attributes));
+                    result[i] = new TimedDifficultyAttributes(entries[i].time,
+                                                              Native.FromNative(entries[i].attributes));
                 }
                 return result;
             } finally {
@@ -53,34 +54,34 @@ namespace Pppp {
         /// them as is.
         ///
         /// Suitable to plot the difficulty of a map over time.</summary>
-        public Strains CalculateStrains(Beatmap beatmap) {
-            Native.DifficultyOptions options = Options(beatmap);
-            IntPtr strains = IntPtr.Zero;
+        public unsafe Strains CalculateStrains(Beatmap beatmap) {
+            pppp_difficulty_options options = Options(beatmap);
+            pppp_strains* strains = null;
             try {
-                Native.Check(Native.pppp_calculate_strains(beatmap.Handle, ref options, out strains));
+                Native.Check(Native.pppp_calculate_strains((pppp_beatmap*)beatmap.Handle, &options, &strains));
                 int ruleset;
                 double startTime;
                 double sectionLength;
-                Native.Check(Native.pppp_strains_info(strains, out ruleset, out startTime, out sectionLength));
+                Native.Check(Native.pppp_strains_info(strains, &ruleset, &startTime, &sectionLength));
                 switch ((Pppp.Ruleset)ruleset) {
                 case Pppp.Ruleset.Taiko: {
-                    Native.TaikoStrains taiko;
-                    Native.Check(Native.pppp_strains_taiko(strains, out taiko));
+                    pppp_taiko_strains taiko;
+                    Native.Check(Native.pppp_strains_taiko(strains, &taiko));
                     return new TaikoStrains(startTime, sectionLength, taiko);
                 }
                 case Pppp.Ruleset.Catch: {
-                    Native.CatchStrains fruits;
-                    Native.Check(Native.pppp_strains_catch(strains, out fruits));
+                    pppp_catch_strains fruits;
+                    Native.Check(Native.pppp_strains_catch(strains, &fruits));
                     return new CatchStrains(startTime, sectionLength, fruits);
                 }
                 case Pppp.Ruleset.Mania: {
-                    Native.ManiaStrains mania;
-                    Native.Check(Native.pppp_strains_mania(strains, out mania));
+                    pppp_mania_strains mania;
+                    Native.Check(Native.pppp_strains_mania(strains, &mania));
                     return new ManiaStrains(startTime, sectionLength, mania);
                 }
                 default: {
-                    Native.OsuStrains osu;
-                    Native.Check(Native.pppp_strains_osu(strains, out osu));
+                    pppp_osu_strains osu;
+                    Native.Check(Native.pppp_strains_osu(strains, &osu));
                     return new OsuStrains(startTime, sectionLength, osu);
                 }
                 }
@@ -90,11 +91,12 @@ namespace Pppp {
             }
         }
 
-        private Native.DifficultyOptions Options(Beatmap beatmap) {
+        private unsafe pppp_difficulty_options Options(Beatmap beatmap) {
             if (beatmap == null) {
                 throw new ArgumentNullException("beatmap");
             }
-            Native.DifficultyOptions options = new Native.DifficultyOptions();
+            pppp_difficulty_options options = new pppp_difficulty_options();
+            options.version = Native.DifficultyOptionsVersion;
             if (Ruleset.HasValue) {
                 if ((int)Ruleset.Value < 0 || (int)Ruleset.Value > 3) {
                     throw new ArgumentOutOfRangeException("Ruleset", "ruleset must be one of 0, 1, 2, 3");
@@ -106,7 +108,8 @@ namespace Pppp {
                 options.clock_rate = ClockRate.Value;
                 options.has_clock_rate = 1;
             }
-            options.mods = Native.CreateMods(Mods, Ruleset.HasValue ? (int)Ruleset.Value : beatmap.Mode);
+            options.mods = (pppp_mods*)Native.CreateMods(Mods,
+                                                         Ruleset.HasValue ? (int)Ruleset.Value : beatmap.Mode);
             return options;
         }
     }

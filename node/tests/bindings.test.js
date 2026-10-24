@@ -1,19 +1,20 @@
-const { execFileSync } = require("child_process");
-const fs = require("fs");
-const path = require("path");
-const { pathToFileURL } = require("url");
-const pkgPrebuilds = require("pkg-prebuilds");
-const pppp = require("../index.js");
+import { execFileSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import PARITY from "../../tests/parity/parity.json" with { type: "json" };
+import * as pppp from "../index.js";
 
-const RESOURCES = path.join(__dirname, "..", "..", "tests", "resources");
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const RESOURCES = path.join(HERE, "..", "..", "tests", "resources");
 
 function beatmapOf(name) {
   return pppp.Beatmap.fromFileSync(path.join(RESOURCES, name));
 }
 
 function probeBackend(variant) {
-  return execFileSync(process.execPath, ["-e", "console.log(require('../index.js').backend)"], {
-    cwd: __dirname,
+  return execFileSync(process.execPath, ["-e", "import('../index.js').then((m) => console.log(m.backend))"], {
+    cwd: HERE,
     env: { ...process.env, FOSU_BACKEND: variant },
     encoding: "utf8",
   }).trim();
@@ -25,6 +26,7 @@ test("the version is a version", () => {
 
 test("fromFileSync reads the model", () => {
   const beatmap = beatmapOf("osu/diffcalc-test.osu");
+
   expect(beatmap).toBeInstanceOf(pppp.Beatmap);
   expect(beatmap.formatVersion).toBe(14);
   expect(beatmap.mode).toBe(0);
@@ -44,6 +46,7 @@ test("fromFileSync reads the model", () => {
 test("fromFile resolves to the same beatmap", async () => {
   const file = path.join(RESOURCES, "osu/diffcalc-test.osu");
   const beatmap = await pppp.Beatmap.fromFile(file);
+
   expect(beatmap).toBeInstanceOf(pppp.Beatmap);
   expect(new pppp.Difficulty().calculate(beatmap)).toEqual(
     new pppp.Difficulty().calculate(pppp.Beatmap.fromFileSync(file))
@@ -53,6 +56,7 @@ test("fromFile resolves to the same beatmap", async () => {
 test("fromBytes matches the file", () => {
   const file = path.join(RESOURCES, "osu/diffcalc-test.osu");
   const bytes = fs.readFileSync(file);
+
   expect(new pppp.Difficulty().calculate(pppp.Beatmap.fromBytes(new Uint8Array(bytes)))).toEqual(
     new pppp.Difficulty().calculate(pppp.Beatmap.fromFileSync(file))
   );
@@ -60,6 +64,7 @@ test("fromBytes matches the file", () => {
 
 test("a missing file is the fs error", async () => {
   const missing = path.join(RESOURCES, "osu", "does-not-exist.osu");
+
   expect(() => pppp.Beatmap.fromFileSync(missing)).toThrow(expect.objectContaining({ code: "ENOENT" }));
   await expect(pppp.Beatmap.fromFile(missing)).rejects.toMatchObject({ code: "ENOENT" });
 });
@@ -77,11 +82,38 @@ test("a beatmap is not constructed directly", () => {
 test("hit objects point at their sliders", () => {
   const beatmap = beatmapOf("osu/diffcalc-test.osu");
   const objectSliders = beatmap.hitObjects.filter((object) => object.slider >= 0);
+
   expect(objectSliders).toHaveLength(beatmap.sliders.length);
   for (const object of objectSliders) {
     expect(object.slider).toBeGreaterThanOrEqual(0);
     expect(object.slider).toBeLessThan(beatmap.sliders.length);
   }
+});
+
+test("the slider geometry is exposed", () => {
+  const slider = beatmapOf("osu/diffcalc-test.osu").sliders[0];
+
+  expect(slider.slides).toBe(1);
+  expect(slider.expectedLength).toBe(160.0);
+  expect(slider.controlPoints).toHaveLength(1);
+  expect(slider.events).toHaveLength(3);
+  expect(slider.path).toHaveLength(slider.cumulativeLengths.length);
+});
+
+test("a spinner is centred", () => {
+  const last = beatmapOf("osu/diffcalc-test.osu").hitObjects.at(-1);
+
+  expect(last.type & 8).toBeTruthy();
+  expect([last.position.x, last.position.y]).toEqual([256.0, 192.0]);
+  expect(last.startTime).toBe(102125.0);
+  expect(last.endTime).toBe(103000.0);
+});
+
+test("one configuration serves many maps", () => {
+  const difficulty = new pppp.Difficulty({ mods: "HR" });
+
+  expect(difficulty.calculate(beatmapOf("fruits/2118524.osu")).ruleset).toBe(pppp.Ruleset.Catch);
+  expect(difficulty.calculate(beatmapOf("osu/2785319.osu")).ruleset).toBe(pppp.Ruleset.Osu);
 });
 
 test.each([
@@ -91,17 +123,45 @@ test.each([
   ["mania/1638954.osu", 3.358304846842773, 956],
 ])("the difficulty of %s matches the pinned stars", (name, stars, combo) => {
   const attributes = new pppp.Difficulty().calculate(beatmapOf(name));
+
   expect(attributes.starRating).toBeCloseTo(stars, 9);
   expect(attributes.maxCombo).toBe(combo);
 });
 
 test("mods change the calculation", () => {
   const attributes = new pppp.Difficulty({ mods: "HR" }).calculate(beatmapOf("fruits/2118524.osu"));
+
   expect(attributes.starRating).toBeCloseTo(4.308291009137178, 9);
+});
+
+test("classic scores on the lazer algorithm", () => {
+  const beatmap = beatmapOf("osu/2785319.osu");
+  const difficulty = new pppp.Difficulty().calculate(beatmap);
+  const score = { maxCombo: 909, accuracy: 1.0, statistics: { great: 601, sliderTailHit: difficulty.sliderCount } };
+
+  const classic = new pppp.Performance({ ...score, mods: "CL" }).calculate(beatmap);
+  const twice = new pppp.Performance({ ...score, mods: "CL,CL" }).calculate(beatmap);
+  const lazer = new pppp.Performance(score).calculate(beatmap);
+
+  expect(classic.total).toBeCloseTo(298.5325815982227, 9);
+  expect(twice.total).toBeCloseTo(classic.total, 9);
+  expect(lazer.total).toBeCloseTo(316.5901855625614, 9);
+});
+
+test("classic works from the option instead of a mod", () => {
+  const beatmap = beatmapOf("osu/2785319.osu");
+  const difficulty = new pppp.Difficulty().calculate(beatmap);
+  const score = { maxCombo: 909, accuracy: 1.0, statistics: { great: 601, sliderTailHit: difficulty.sliderCount } };
+
+  expect(new pppp.Performance({ ...score, classic: true }).calculate(beatmap).total).toBeCloseTo(
+    298.5325815982227,
+    9,
+  );
 });
 
 test("stable mod bits match their acronyms", () => {
   const beatmap = beatmapOf("fruits/2118524.osu");
+
   expect(new pppp.Difficulty({ mods: 16 }).calculate(beatmap)).toEqual(
     new pppp.Difficulty({ mods: "HR" }).calculate(beatmap)
   );
@@ -111,6 +171,7 @@ test("the ruleset can be forced", () => {
   const attributes = new pppp.Difficulty({ ruleset: pppp.Ruleset.Taiko }).calculate(
     beatmapOf("osu/2785319.osu")
   );
+
   expect(attributes.ruleset).toBe(pppp.Ruleset.Taiko);
   expect(attributes.starRating).toBeCloseTo(4.752572620626138, 9);
   expect(attributes.mechanicalDifficulty).toBeGreaterThan(0.0);
@@ -118,6 +179,7 @@ test("the ruleset can be forced", () => {
 
 test("the attributes are the live ruleset only", () => {
   const attributes = new pppp.Difficulty().calculate(beatmapOf("taiko/1028484.osu"));
+
   expect(attributes.ruleset).toBe(pppp.Ruleset.Taiko);
   expect(attributes).not.toHaveProperty("osu");
   expect(attributes).not.toHaveProperty("aimDifficulty");
@@ -126,6 +188,7 @@ test("the attributes are the live ruleset only", () => {
 
 test("an unknown mod is an error with a code", () => {
   const beatmap = beatmapOf("osu/2785319.osu");
+
   expect(() => new pppp.Difficulty({ mods: "XX" }).calculate(beatmap)).toThrow(
     expect.objectContaining({ code: "ERR_PPPP_MODS", message: "invalid mod specification" })
   );
@@ -139,6 +202,7 @@ test("a beatmap is required", () => {
 
 test("a ruleset outside the four is an error", () => {
   const beatmap = beatmapOf("osu/2785319.osu");
+
   expect(() => new pppp.Difficulty({ ruleset: 9 }).calculate(beatmap)).toThrow(
     expect.objectContaining({ code: "ERR_OUT_OF_RANGE", message: "ruleset must be one of 0, 1, 2, 3" })
   );
@@ -147,12 +211,12 @@ test("a ruleset outside the four is an error", () => {
 test("the performance of osu matches the pinned pp", () => {
   const beatmap = beatmapOf("osu/2785319.osu");
   const difficulty = new pppp.Difficulty().calculate(beatmap);
-  // The score carries the slider tails, as the library's own test does.
   const play = new pppp.Performance({
     maxCombo: 909,
     accuracy: 1.0,
     statistics: { great: 601, sliderTailHit: difficulty.sliderCount },
   }).calculate(beatmap);
+
   expect(play.ruleset).toBe(pppp.Ruleset.Osu);
   expect(play.total).toBeCloseTo(316.5901855625614, 9);
   expect(play.aim).toBeCloseTo(148.75278891878943, 9);
@@ -166,6 +230,7 @@ test("the performance of taiko matches the pinned pp", () => {
   const play = new pppp.Performance({ maxCombo: 289, accuracy: 1.0, statistics: { great: 289 } }).calculate(
     beatmapOf("taiko/1028484.osu")
   );
+
   expect(play.ruleset).toBe(pppp.Ruleset.Taiko);
   expect(play.total).toBeCloseTo(130.26636361095524, 9);
   expect(play.difficulty).toBeCloseTo(33.48488833057447, 9);
@@ -181,6 +246,7 @@ test("the performance of catch matches the pinned pp", () => {
     accuracy: 1.0,
     statistics: { great: 728, largeTickHit: 2, smallTickHit: 263 },
   }).calculate(beatmap);
+
   expect(play.ruleset).toBe(pppp.Ruleset.Catch);
   expect(play.total).toBeCloseTo(112.72215339177879, 9);
 });
@@ -193,6 +259,7 @@ test("the performance of mania matches the pinned pp", () => {
     accuracy: 1.0,
     statistics: { perfect: 715 },
   }).calculate(beatmap);
+
   expect(play.ruleset).toBe(pppp.Ruleset.Mania);
   expect(play.total).toBeCloseTo(108.92297471705167, 9);
 });
@@ -201,6 +268,7 @@ test("the performance takes the combo and misses it is given", () => {
   const play = new pppp.Performance({ maxCombo: 909, accuracy: 1.0, misses: 0 }).calculate(
     beatmapOf("osu/2785319.osu")
   );
+
   expect(play.total).toBeGreaterThan(0.0);
 });
 
@@ -218,18 +286,8 @@ test("the performance from attributes matches the map", () => {
     accuracy: 1.0,
     statistics: { great: 601, sliderTailHit: difficulty.sliderCount },
   });
-  expect(performance.calculate(beatmap, difficulty)).toEqual(performance.calculate(beatmap));
-});
 
-test("the package loads as an ES module", () => {
-  const entry = JSON.stringify(pathToFileURL(path.join(__dirname, "..", "index.mjs")).href);
-  const main = JSON.stringify(pathToFileURL(path.join(__dirname, "..", "index.js")).href);
-  const script =
-    `import { Beatmap, Difficulty } from ${entry};` +
-    `import pppp from ${main};` +
-    `process.stdout.write(String(Beatmap === pppp.Beatmap && typeof Difficulty === "function"));`;
-  const output = execFileSync(process.execPath, ["--input-type=module", "-e", script]);
-  expect(output.toString()).toBe("true");
+  expect(performance.calculate(beatmap, difficulty)).toEqual(performance.calculate(beatmap));
 });
 
 test.each([
@@ -241,7 +299,9 @@ test.each([
   ["osu/2785319.osu", "4K", 3, 838, [61662, 2.5718820820666117, 530], [115486, 2.653795415351293, 1072]],
 ])("the timed attributes of %s %s match upstream", (name, mods, ruleset, count, middle, last) => {
   const timed = new pppp.Difficulty({ mods, ruleset }).calculateTimed(beatmapOf(name));
+
   expect(timed).toHaveLength(count);
+
   for (const [entry, [time, stars, combo]] of [[timed[Math.floor(count / 2)], middle], [timed[count - 1], last]]) {
     expect(entry.time).toBe(time);
     expect(entry.attributes.starRating).toBeCloseTo(stars, 9);
@@ -258,7 +318,8 @@ test.each([
   ["mania/diffcalc-test.osu", "NM", 3, 400, 400, "strain", 76, 70, 16.8859847732691],
   ["osu/2785319.osu", "4K", 3, 2800, 400, "strain", 282, 195, 15.725755965531633],
 ])("the strain graph of %s %s matches upstream", (name, mods, ruleset, startTime, sectionLength, series, count, index, value) => {
-  const strains = new pppp.Difficulty({ mods, ruleset }).strains(beatmapOf(name));
+  const strains = new pppp.Difficulty({ mods, ruleset }).calculateStrains(beatmapOf(name));
+
   expect(strains.ruleset).toBe(ruleset);
   expect(strains.startTime).toBe(startTime);
   expect(strains.sectionLength).toBe(sectionLength);
@@ -271,11 +332,14 @@ test("each calculation has an async variant with the same result", async () => {
   const difficulty = new pppp.Difficulty({ mods: "HD,DT" });
   const performance = new pppp.Performance({ maxCombo: 909, misses: 2 });
   const pending = difficulty.calculateAsync(beatmap);
+
   expect(typeof pending.then).toBe("function");
+
   const attributes = await pending;
+
   expect(attributes).toEqual(difficulty.calculate(beatmap));
   expect(await difficulty.calculateTimedAsync(beatmap)).toEqual(difficulty.calculateTimed(beatmap));
-  expect(await difficulty.strainsAsync(beatmap)).toEqual(difficulty.strains(beatmap));
+  expect(await difficulty.calculateStrainsAsync(beatmap)).toEqual(difficulty.calculateStrains(beatmap));
   expect(await performance.calculateAsync(beatmap, attributes)).toEqual(performance.calculate(beatmap, attributes));
 });
 
@@ -283,14 +347,17 @@ test("the async variants check their arguments before they start", () => {
   expect(() => new pppp.Difficulty({ mods: "XX" }).calculateAsync(beatmapOf("osu/2785319.osu"))).toThrow(
     expect.objectContaining({ code: "ERR_PPPP_MODS" })
   );
-  expect(() => new pppp.Difficulty().strainsAsync({})).toThrow(expect.objectContaining({ code: "ERR_INVALID_ARG_TYPE" }));
+  expect(() => new pppp.Difficulty().calculateStrainsAsync({})).toThrow(expect.objectContaining({ code: "ERR_INVALID_ARG_TYPE" }));
 });
 
 test("several async calculations on one beatmap run at once", async () => {
   const beatmap = beatmapOf("osu/2785319.osu");
   const mods = ["NM", "HD", "DT", "HR", "EZ", "HT"];
   const results = await Promise.all(mods.map((m) => new pppp.Difficulty({ mods: m }).calculateAsync(beatmap)));
-  results.forEach((result, i) => expect(result).toEqual(new pppp.Difficulty({ mods: mods[i] }).calculate(beatmap)));
+
+  results.forEach((result, i) => {
+    expect(result).toEqual(new pppp.Difficulty({ mods: mods[i] }).calculate(beatmap));
+  });
 });
 
 test("backend reports the engine", () => {
@@ -299,12 +366,13 @@ test("backend reports the engine", () => {
     return;
   }
   const runnable = ["avx2", "neon"].find((variant) => probeBackend(variant) === variant) || "scalar";
+
   expect(pppp.backend).toBe(runnable);
 });
 
-test("backend ships beside the binding", () => {
-  const binding = pkgPrebuilds.resolve(path.join(__dirname, ".."), require("../binding-options"));
-  const engines = fs.readdirSync(path.dirname(binding)).filter((name) => name.includes("fosu_engine_"));
+test("backend ships beside the library", () => {
+  const here = path.dirname(pppp.libraryPath);
+  const engines = fs.readdirSync(here).filter((name) => name.includes("fosu_engine_"));
   if (["x64", "arm64"].includes(process.arch)) {
     expect(engines.length).toBeGreaterThan(0);
   }
@@ -314,14 +382,13 @@ test("FOSU_BACKEND=scalar forces the scalar engine", () => {
   expect(probeBackend("scalar")).toBe("scalar");
 });
 
-const PARITY = require("../../tests/parity/parity.json");
-
 function approx(actual, expected, epsilon) {
   return Math.abs(actual - expected) < epsilon * (1.0 + Math.max(Math.abs(actual), Math.abs(expected)));
 }
 
 function classicAccuracy(great, ok, meh, miss) {
   const total = great + ok + meh + miss;
+
   return total <= 0 ? 1.0 : (great * 300.0 + ok * 100.0 + meh * 50.0) / (total * 300.0);
 }
 
@@ -365,6 +432,7 @@ test("the decode parity rows match upstream", () => {
     const beatmap = beatmapOf(row.map);
     const expected = row.decode;
     const uninherited = beatmap.timingPoints.filter((point) => point.uninherited).length;
+
     expect([
       row.map,
       beatmap.formatVersion,
@@ -380,6 +448,7 @@ test("the decode parity rows match upstream", () => {
       expected.uninherited_points,
       expected.breaks,
     ]);
+
     for (const [actual, wanted] of [
       [beatmap.difficulty.approachRate, expected.ar],
       [beatmap.difficulty.overallDifficulty, expected.od],
@@ -397,6 +466,7 @@ test("the decode parity rows match upstream", () => {
 test.each(Object.keys(RULESETS))("the %s parity difficulty rows match upstream", (mode) => {
   for (const row of PARITY.difficulty[mode]) {
     const attributes = new pppp.Difficulty({ mods: row.mods, ruleset: RULESETS[mode] }).calculate(beatmapOf(row.map));
+
     expect([row.name, row.map, row.mods, approx(attributes.starRating, row.attributes.star_rating, 1e-6)]).toEqual([
       row.name,
       row.map,
@@ -415,6 +485,7 @@ test.each(Object.keys(RULESETS))("the %s parity performance rows match upstream"
       beatmap,
       difficulty
     );
+
     expect([row.name, row.map, row.mods, approx(play.total, row.attributes.total, 1e-9)]).toEqual([
       row.name,
       row.map,

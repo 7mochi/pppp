@@ -39,15 +39,14 @@ jobs:
               - 'capi.map'
               - 'flake.nix'
               - 'flake.lock'
+              - 'nix/**'
             python:
               - 'python/**'
               - 'pyproject.toml'
-              - 'src/pppp/bindings/python.cpp'
             node:
               - 'package.json'
               - 'package-lock.json'
               - 'node/**'
-              - 'src/pppp/bindings/node.cpp'
             csharp:
               - 'csharp/**'
 
@@ -91,7 +90,11 @@ jobs:
           nix develop -c "$RUNNER_TEMP/venv/bin/python" -m pip install --no-build-isolation --no-deps .
           nix develop -c "$RUNNER_TEMP/venv/bin/python" -m pytest python/tests
       - name: Check the types
-        run: nix develop -c mypy
+        run: |
+          for platform in linux darwin win32; do
+            echo "== $platform"
+            nix develop -c mypy --platform "$platform"
+          done
       - name: Test the Node bindings
         if: needs.changes.outputs.core == 'true' || needs.changes.outputs.node == 'true'
         run: |
@@ -131,7 +134,7 @@ jobs:
       - name: Check the types
         run: |
           python -m pip install mypy
-          python -m mypy
+          python -m mypy --platform win32
       - name: Test the node bindings
         run: |
           npm install

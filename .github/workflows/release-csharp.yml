@@ -25,6 +25,19 @@ jobs:
           declared="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' csharp/Pppp.csproj | head -1)"
           echo "tag=$tag version=$version declared=$declared"
           [ "$version" = "$declared" ] || { echo "The tag says $version but the manifest says $declared"; exit 1; }
+      - name: Check the native library reports the released version
+        run: |
+          version="${GITHUB_REF_NAME#*-v}"
+          major="$(sed -n 's/^#define PPPP_VERSION_MAJOR \(.*\)/\1/p' include/pppp/config.h)"
+          minor="$(sed -n 's/^#define PPPP_VERSION_MINOR \(.*\)/\1/p' include/pppp/config.h)"
+          patch="$(sed -n 's/^#define PPPP_VERSION_PATCH \(.*\)/\1/p' include/pppp/config.h)"
+          native="$major.$minor.$patch"
+          echo "tag=$version native=$native"
+          [ "$version" = "$native" ] || {
+            echo "The package would be $version but the native library reports $native."
+            echo "Bump the core version too: bump-version.yml with artifact=core."
+            exit 1
+          }
 
   dotnet-native:
     name: C# native / ${{ matrix.rid }}
@@ -207,7 +220,7 @@ jobs:
       name: nuget
       url: https://www.nuget.org/packages/pppp-dotnet
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
       - uses: actions/download-artifact@v8.0.1
@@ -224,3 +237,19 @@ jobs:
           user: ${{ secrets.NUGET_USER }}
       - name: Push
         run: dotnet nuget push artifacts/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      - name: Create the draft release and upload the package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --draft --generate-notes \
+              --title "$RELEASE_TAG" \
+              --repo "$GITHUB_REPOSITORY"
+          fi
+          gh release upload "$RELEASE_TAG" artifacts/*.nupkg --clobber --repo "$GITHUB_REPOSITORY"
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh release edit "$RELEASE_TAG" --draft=false --repo "$GITHUB_REPOSITORY"

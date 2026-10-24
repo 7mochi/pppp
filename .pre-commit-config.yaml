@@ -11,7 +11,14 @@ repos:
             .*\.patch$
           )
       - id: end-of-file-fixer
-        exclude: *exclude
+        exclude: &generated |
+          (?x)^(
+            third_party/(atomic-lite|optional-bare|span-lite|string-view-lite|variant-lite)/|
+            LICENCE$|
+            .*\.osu$|
+            .*\.patch$|
+            python/pppp/(_native|ctypes_preamble|ctypes_loader)\.py$
+          )
       - id: check-yaml
       - id: check-json
       - id: check-toml
@@ -43,3 +50,8 @@ repos:
         entry: .pre-commit/run.sh nixfmt
         language: system
         types: [nix]
+      - id: biome
+        name: biome
+        entry: .pre-commit/run.sh biome check --write --no-errors-on-unmatched
+        language: system
+        files: ^node/.*\.(js|ts)$

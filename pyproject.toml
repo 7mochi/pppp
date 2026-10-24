@@ -25,7 +25,7 @@ cmake.version = ">=3.26"
 cmake.build-type = "Release"
 ninja.make-fallback = true
 wheel.packages = ["python/pppp"]
-wheel.py-api = "cp310"
+wheel.py-api = "py3"
 
 [tool.cibuildwheel]
 build = "cp310-*"
@@ -46,3 +46,7 @@ enable_error_code = [
   "possibly-undefined",
   "mutable-override",
 ]
+
+[[tool.mypy.overrides]]
+module = ["pppp._native", "pppp.ctypes_preamble", "pppp.ctypes_loader"]
+ignore_errors = true

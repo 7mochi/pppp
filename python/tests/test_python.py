@@ -1,84 +1,39 @@
-import copy
-import dataclasses
-import gc
+"""The binding's behaviour, case for case with the Node suite."""
+
+from __future__ import annotations
+
 import json
 import os
-import pickle
+import pathlib
 import platform
 import subprocess
 import sys
-import weakref
-from pathlib import Path
 
 import pytest
 
 import pppp
-from pppp._model import Vector2
 
-RESOURCES = Path(__file__).resolve().parents[2] / "tests" / "resources"
+HERE = pathlib.Path(__file__).resolve().parent
+RESOURCES = HERE.parent.parent / "tests" / "resources"
+PARITY = json.loads((HERE.parent.parent / "tests" / "parity" / "parity.json").read_text())
 
 
 def beatmap_of(name: str) -> pppp.Beatmap:
     return pppp.Beatmap.from_file(RESOURCES / name)
 
 
-def test_version_is_a_version():
-    assert isinstance(pppp.__version__, str)
+def approx(actual: float, expected: float, epsilon: float) -> bool:
+    return abs(actual - expected) < epsilon * (1.0 + max(abs(actual), abs(expected)))
+
+
+def test_the_version_is_a_version():
     assert pppp.__version__.count(".") == 2
-
-
-def test_fields_read_back():
-    point = Vector2(1.5, -2.5)
-    assert point.x == 1.5
-    assert point.y == -2.5
-    assert Vector2(x=1.5, y=-2.5) == point
-
-
-def test_records_are_immutable():
-    point = Vector2(1.0, 2.0)
-    with pytest.raises(AttributeError):
-        point.x = 3.0
-
-
-def test_missing_field_is_an_error():
-    with pytest.raises(TypeError):
-        Vector2(1.0)
-
-
-def test_extra_field_is_an_error():
-    with pytest.raises(TypeError):
-        Vector2(1.0, 2.0, 3.0)
-
-
-def test_repr():
-    assert repr(Vector2(1.0, 2.0)) == "Vector2(x=1.0, y=2.0)"
-
-
-def test_pickle_round_trip():
-    point = Vector2(1.5, -2.5)
-    assert pickle.loads(pickle.dumps(point)) == point
-
-
-def test_deepcopy():
-    point = Vector2(1.5, -2.5)
-    assert copy.deepcopy(point) == point
-
-
-def test_the_collector_sees_through_a_record():
-    class Probe:
-        pass
-
-    probe = Probe()
-    reference = weakref.ref(probe)
-    holder = [probe]
-    probe.record = Vector2(holder, holder)
-    del probe, holder
-    gc.collect()
-    assert reference() is None
 
 
 def test_from_file_reads_the_model():
     beatmap = beatmap_of("osu/diffcalc-test.osu")
+
+    assert isinstance(beatmap, pppp.Beatmap)
     assert beatmap.format_version == 14
     assert beatmap.mode == 0
     assert beatmap.stack_leniency == pytest.approx(0.3)
@@ -94,32 +49,50 @@ def test_from_file_reads_the_model():
     assert len(beatmap.breaks) == 0
 
 
-def test_from_file_takes_a_path_a_string_or_bytes():
-    path = RESOURCES / "osu" / "diffcalc-test.osu"
-    assert len(pppp.Beatmap.from_file(path).hit_objects) == 124
-    assert len(pppp.Beatmap.from_file(str(path)).hit_objects) == 124
-    assert len(pppp.Beatmap.from_file(os.fsencode(path)).hit_objects) == 124
+def test_from_file_resolves_to_the_same_beatmap():
+    file = RESOURCES / "osu/diffcalc-test.osu"
+
+    assert pppp.Difficulty().calculate(pppp.Beatmap.from_file(file)) == pppp.Difficulty().calculate(
+        pppp.Beatmap.from_file(file)
+    )
 
 
-def test_from_bytes_matches_from_file():
-    path = RESOURCES / "osu" / "diffcalc-test.osu"
-    data = path.read_bytes()
-    from_bytes = pppp.Difficulty().calculate(pppp.Beatmap.from_bytes(data))
-    from_file = pppp.Difficulty().calculate(pppp.Beatmap.from_file(path))
-    assert from_bytes == from_file
-    assert pppp.Difficulty().calculate(pppp.Beatmap.from_bytes(bytearray(data))) == from_file
-    assert pppp.Difficulty().calculate(pppp.Beatmap.from_bytes(memoryview(data))) == from_file
+def test_from_bytes_matches_the_file():
+    file = RESOURCES / "osu/diffcalc-test.osu"
+    data = file.read_bytes()
+
+    assert pppp.Difficulty().calculate(pppp.Beatmap.from_bytes(data)) == pppp.Difficulty().calculate(
+        pppp.Beatmap.from_file(file)
+    )
+
+
+def test_a_missing_file_is_the_os_error():
+    with pytest.raises(FileNotFoundError):
+        pppp.Beatmap.from_file(RESOURCES / "osu" / "does-not-exist.osu")
+
+
+def test_from_bytes_takes_bytes_only():
+    with pytest.raises(TypeError):
+        pppp.Beatmap.from_bytes("osu file format v14")  # type: ignore[arg-type]
+
+
+def test_a_beatmap_is_not_constructed_directly():
+    with pytest.raises(TypeError):
+        pppp.Beatmap()  # type: ignore[call-arg]
 
 
 def test_hit_objects_point_at_their_sliders():
     beatmap = beatmap_of("osu/diffcalc-test.osu")
-    object_sliders = [o for o in beatmap.hit_objects if o.slider >= 0]
+    object_sliders = [item for item in beatmap.hit_objects if item.slider >= 0]
+
     assert len(object_sliders) == len(beatmap.sliders)
-    assert all(0 <= o.slider < len(beatmap.sliders) for o in object_sliders)
+    for item in object_sliders:
+        assert 0 <= item.slider < len(beatmap.sliders)
 
 
-def test_slider_geometry_is_exposed():
+def test_the_slider_geometry_is_exposed():
     slider = beatmap_of("osu/diffcalc-test.osu").sliders[0]
+
     assert slider.slides == 1
     assert slider.expected_length == 160.0
     assert len(slider.control_points) == 1
@@ -129,33 +102,18 @@ def test_slider_geometry_is_exposed():
 
 def test_a_spinner_is_centred():
     last = beatmap_of("osu/diffcalc-test.osu").hit_objects[-1]
+
     assert last.type & 8
     assert (last.position.x, last.position.y) == (256.0, 192.0)
     assert last.start_time == 102125.0
     assert last.end_time == 103000.0
 
 
-def test_a_missing_file_is_the_os_error():
-    with pytest.raises(FileNotFoundError):
-        pppp.Beatmap.from_file(RESOURCES / "osu" / "does-not-exist.osu")
+def test_one_configuration_serves_many_maps():
+    difficulty = pppp.Difficulty(mods="HR")
 
-
-def test_beatmap_cannot_be_instantiated():
-    with pytest.raises(TypeError):
-        pppp.Beatmap()
-
-
-def test_the_errors_are_value_errors_under_one_base():
-    assert issubclass(pppp.ParseError, ValueError)
-    assert issubclass(pppp.ParseError, pppp.Error)
-    assert issubclass(pppp.ModsError, ValueError)
-    assert issubclass(pppp.ModsError, pppp.Error)
-    assert pppp.ParseError.__module__ == "pppp"
-
-
-def test_a_null_byte_in_the_path_is_an_error():
-    with pytest.raises(ValueError):
-        pppp.Beatmap.from_file(b"a\0b")
+    assert isinstance(difficulty.calculate(beatmap_of("fruits/2118524.osu")), pppp.CatchDifficultyAttributes)
+    assert isinstance(difficulty.calculate(beatmap_of("osu/2785319.osu")), pppp.OsuDifficultyAttributes)
 
 
 @pytest.mark.parametrize(
@@ -167,75 +125,76 @@ def test_a_null_byte_in_the_path_is_an_error():
         ("mania/1638954.osu", 3.358304846842773, 956),
     ],
 )
-def test_difficulty_matches_the_pinned_stars(name: str, stars: float, combo: int):
+def test_the_difficulty_matches_the_pinned_stars(name: str, stars: float, combo: int):
     attributes = pppp.Difficulty().calculate(beatmap_of(name))
+
     assert attributes.star_rating == pytest.approx(stars)
     assert attributes.max_combo == combo
 
 
 def test_mods_change_the_calculation():
-    beatmap = beatmap_of("fruits/2118524.osu")
-    assert pppp.Difficulty(mods="HR").calculate(beatmap).star_rating == pytest.approx(
-        4.308291009137178
+    attributes = pppp.Difficulty(mods="HR").calculate(beatmap_of("fruits/2118524.osu"))
+
+    assert attributes.star_rating == pytest.approx(4.308291009137178)
+
+
+def test_classic_scores_on_the_lazer_algorithm():
+    beatmap = beatmap_of("osu/2785319.osu")
+    difficulty = pppp.Difficulty().calculate(beatmap)
+    score = dict(
+        max_combo=909,
+        accuracy=1.0,
+        statistics={pppp.HitResult.GREAT: 601, pppp.HitResult.SLIDER_TAIL_HIT: difficulty.slider_count},
+    )
+
+    classic = pppp.Performance(mods="CL", **score).calculate(beatmap)
+    twice = pppp.Performance(mods="CL,CL", **score).calculate(beatmap)
+    lazer = pppp.Performance(**score).calculate(beatmap)
+
+    assert classic.total == pytest.approx(298.5325815982227)
+    assert twice.total == pytest.approx(classic.total)
+    assert lazer.total == pytest.approx(316.5901855625614)
+
+
+def test_classic_works_from_the_option_instead_of_a_mod():
+    beatmap = beatmap_of("osu/2785319.osu")
+    difficulty = pppp.Difficulty().calculate(beatmap)
+    score = dict(
+        max_combo=909,
+        accuracy=1.0,
+        statistics={pppp.HitResult.GREAT: 601, pppp.HitResult.SLIDER_TAIL_HIT: difficulty.slider_count},
+    )
+
+    assert pppp.Performance(classic=True, **score).calculate(beatmap).total == pytest.approx(
+        298.5325815982227
     )
 
 
 def test_stable_mod_bits_match_their_acronyms():
     beatmap = beatmap_of("fruits/2118524.osu")
-    assert pppp.Difficulty(mods=16).calculate(beatmap) == pppp.Difficulty(mods="HR").calculate(
-        beatmap
-    )
 
-
-def test_one_configuration_serves_many_maps():
-    difficulty = pppp.Difficulty(mods="HR")
-    catch = difficulty.calculate(beatmap_of("fruits/2118524.osu"))
-    osu = difficulty.calculate(beatmap_of("osu/2785319.osu"))
-    assert isinstance(catch, pppp.CatchDifficultyAttributes)
-    assert isinstance(osu, pppp.OsuDifficultyAttributes)
-
-
-def test_a_configuration_is_immutable():
-    difficulty = pppp.Difficulty(mods="HR")
-    with pytest.raises(dataclasses.FrozenInstanceError):
-        difficulty.mods = "DT"  # type: ignore[misc]
-    assert dataclasses.replace(difficulty, mods="DT").mods == "DT"
+    assert pppp.Difficulty(mods=16).calculate(beatmap) == pppp.Difficulty(mods="HR").calculate(beatmap)
 
 
 def test_the_ruleset_can_be_forced():
     attributes = pppp.Difficulty(ruleset=pppp.Ruleset.TAIKO).calculate(beatmap_of("osu/2785319.osu"))
-    assert isinstance(attributes, pppp.TaikoDifficultyAttributes)
-    assert attributes.ruleset is pppp.Ruleset.TAIKO
+
+    assert attributes.ruleset == pppp.Ruleset.TAIKO
     assert attributes.star_rating == pytest.approx(4.752572620626138)
     assert attributes.mechanical_difficulty > 0.0
 
 
 def test_the_attributes_are_the_live_ruleset_only():
     attributes = pppp.Difficulty().calculate(beatmap_of("taiko/1028484.osu"))
-    assert type(attributes) is pppp.TaikoDifficultyAttributes
+
+    assert attributes.ruleset == pppp.Ruleset.TAIKO
     assert not hasattr(attributes, "osu")
+    assert not hasattr(attributes, "aim_difficulty")
 
 
-def test_the_attributes_take_a_match_statement():
-    match pppp.Difficulty().calculate(beatmap_of("osu/2785319.osu")):
-        case pppp.OsuDifficultyAttributes(star_rating=stars, max_combo=combo):
-            assert stars == pytest.approx(6.004027372552197)
-            assert combo == 909
-        case _:
-            pytest.fail("expected osu!standard attributes")
-
-
-def test_an_unknown_mod_is_a_mods_error():
-    beatmap = beatmap_of("osu/2785319.osu")
-    with pytest.raises(pppp.ModsError, match="invalid mod specification") as error:
-        pppp.Difficulty(mods="XX").calculate(beatmap)
-    assert isinstance(error.value, ValueError)
-
-
-def test_mods_of_another_type_are_a_type_error():
-    beatmap = beatmap_of("osu/2785319.osu")
-    with pytest.raises(TypeError):
-        pppp.Difficulty(mods=1.5).calculate(beatmap)  # type: ignore[arg-type]
+def test_an_unknown_mod_is_an_error_with_a_code():
+    with pytest.raises(pppp.ModsError, match="invalid mod specification"):
+        pppp.Difficulty(mods="XX").calculate(beatmap_of("osu/2785319.osu"))
 
 
 def test_a_beatmap_is_required():
@@ -243,20 +202,21 @@ def test_a_beatmap_is_required():
         pppp.Difficulty().calculate("not a beatmap")  # type: ignore[arg-type]
 
 
-def test_performance_of_osu_matches_the_pinned_pp():
+def test_a_ruleset_outside_the_four_is_an_error():
+    with pytest.raises(pppp.Error):
+        pppp.Difficulty(ruleset=9).calculate(beatmap_of("osu/2785319.osu"))  # type: ignore[arg-type]
+
+
+def test_the_performance_of_osu_matches_the_pinned_pp():
     beatmap = beatmap_of("osu/2785319.osu")
     difficulty = pppp.Difficulty().calculate(beatmap)
-    assert isinstance(difficulty, pppp.OsuDifficultyAttributes)
-    # The score carries the slider tails, as the library's own test does.
     play = pppp.Performance(
         max_combo=909,
         accuracy=1.0,
-        statistics={
-            pppp.HitResult.GREAT: 601,
-            pppp.HitResult.SLIDER_TAIL_HIT: difficulty.slider_count,
-        },
+        statistics={pppp.HitResult.GREAT: 601, pppp.HitResult.SLIDER_TAIL_HIT: difficulty.slider_count},
     ).calculate(beatmap)
-    assert isinstance(play, pppp.OsuPerformanceAttributes)
+
+    assert play.ruleset == pppp.Ruleset.OSU
     assert play.total == pytest.approx(316.5901855625614)
     assert play.aim == pytest.approx(148.75278891878943)
     assert play.speed == pytest.approx(61.34653468094172)
@@ -265,20 +225,19 @@ def test_performance_of_osu_matches_the_pinned_pp():
     assert play.score_based_estimated_miss_count is None
 
 
-def test_performance_of_taiko_matches_the_pinned_pp():
-    beatmap = beatmap_of("taiko/1028484.osu")
+def test_the_performance_of_taiko_matches_the_pinned_pp():
     play = pppp.Performance(
         max_combo=289, accuracy=1.0, statistics={pppp.HitResult.GREAT: 289}
-    ).calculate(beatmap)
-    assert isinstance(play, pppp.TaikoPerformanceAttributes)
-    assert play.ruleset is pppp.Ruleset.TAIKO
+    ).calculate(beatmap_of("taiko/1028484.osu"))
+
+    assert play.ruleset == pppp.Ruleset.TAIKO
     assert play.total == pytest.approx(130.26636361095524)
     assert play.difficulty == pytest.approx(33.48488833057447)
     assert play.accuracy == pytest.approx(96.78147528038076)
     assert play.estimated_unstable_rate == pytest.approx(146.3238357972284)
 
 
-def test_performance_of_catch_matches_the_pinned_pp():
+def test_the_performance_of_catch_matches_the_pinned_pp():
     beatmap = beatmap_of("fruits/2118524.osu")
     difficulty = pppp.Difficulty().calculate(beatmap)
     play = pppp.Performance(
@@ -290,24 +249,30 @@ def test_performance_of_catch_matches_the_pinned_pp():
             pppp.HitResult.SMALL_TICK_HIT: 263,
         },
     ).calculate(beatmap)
-    assert play.ruleset is pppp.Ruleset.CATCH
+
+    assert play.ruleset == pppp.Ruleset.CATCH
     assert play.total == pytest.approx(112.72215339177879)
 
 
-def test_performance_of_mania_matches_the_pinned_pp():
+def test_the_performance_of_mania_matches_the_pinned_pp():
     beatmap = beatmap_of("mania/1638954.osu")
     difficulty = pppp.Difficulty().calculate(beatmap)
     play = pppp.Performance(
-        max_combo=difficulty.max_combo, accuracy=1.0, statistics={pppp.HitResult.PERFECT: 715}
+        max_combo=difficulty.max_combo,
+        accuracy=1.0,
+        statistics={pppp.HitResult.PERFECT: 715},
     ).calculate(beatmap)
-    assert play.ruleset is pppp.Ruleset.MANIA
+
+    assert play.ruleset == pppp.Ruleset.MANIA
     assert play.total == pytest.approx(108.92297471705167)
+    assert play.difficulty == pytest.approx(108.92297471705167)
 
 
-def test_performance_takes_the_combo_and_misses_it_is_given():
+def test_the_performance_takes_the_combo_and_misses_it_is_given():
     play = pppp.Performance(max_combo=909, accuracy=1.0, misses=0).calculate(
         beatmap_of("osu/2785319.osu")
     )
+
     assert play.total > 0.0
 
 
@@ -318,113 +283,65 @@ def test_a_statistics_key_outside_the_hit_results_is_an_error():
         )
 
 
-def test_performance_from_attributes_matches_the_map():
+def test_the_performance_from_attributes_matches_the_map():
     beatmap = beatmap_of("osu/2785319.osu")
     difficulty = pppp.Difficulty().calculate(beatmap)
-    assert isinstance(difficulty, pppp.OsuDifficultyAttributes)
     performance = pppp.Performance(
         max_combo=909,
         accuracy=1.0,
-        statistics={
-            pppp.HitResult.GREAT: 601,
-            pppp.HitResult.SLIDER_TAIL_HIT: difficulty.slider_count,
-        },
+        statistics={pppp.HitResult.GREAT: 601, pppp.HitResult.SLIDER_TAIL_HIT: difficulty.slider_count},
     )
-    from_map = performance.calculate(beatmap)
-    from_attributes = performance.calculate(beatmap, difficulty)
-    assert from_attributes == from_map
 
-
-def test_attributes_of_another_type_are_a_type_error():
-    with pytest.raises(TypeError, match="expected difficulty attributes"):
-        pppp.Performance().calculate(
-            beatmap_of("osu/2785319.osu"), "not attributes"  # type: ignore[arg-type]
-        )
-
-
-def test_a_non_numeric_attribute_field_is_an_error():
-    beatmap = beatmap_of("osu/2785319.osu")
-    difficulty = pppp.Difficulty().calculate(beatmap)
-    names = type(difficulty).__match_args__
-    values = [getattr(difficulty, name) for name in names]
-    values[names.index("star_rating")] = "oops"
-    corrupted = pppp.OsuDifficultyAttributes(*values)
-    with pytest.raises(TypeError, match="must be numbers"):
-        pppp.Performance().calculate(beatmap, corrupted)
+    assert performance.calculate(beatmap, difficulty) == performance.calculate(beatmap)
 
 
 @pytest.mark.parametrize(
     ("name", "mods", "ruleset", "count", "middle", "last"),
     [
-        ("osu/diffcalc-test.osu", "NM", pppp.Ruleset.OSU, 124, (18000, 5.727266936277771, 63),
-         (103000, 6.524323005451468, 239)),
-        ("osu/2785319.osu", "HD,DT", pppp.Ruleset.OSU, 601, (61309.235290751734, 8.272126401328721, 433),
-         (115486.23529075173, 8.898179651893287, 909)),
-        ("taiko/diffcalc-test.osu", "DT", pppp.Ruleset.TAIKO, 238, (21624, 4.397186455763557, 118),
-         (53000, 4.455142137225538, 200)),
-        ("fruits/diffcalc-test.osu", "DT", pppp.Ruleset.CATCH, 93, (14500, 4.27412411307246, 47),
-         (45250, 5.152717389780087, 127)),
-        ("mania/diffcalc-test.osu", "NM", pppp.Ruleset.MANIA, 137, (16250, 1.8228476946125378, 69),
-         (30500, 2.3493769750220914, 242)),
-        ("osu/2785319.osu", "4K", pppp.Ruleset.MANIA, 838, (61662, 2.5718820820666117, 530),
-         (115486, 2.653795415351293, 1072)),
+        ("osu/diffcalc-test.osu", "NM", 0, 124, (18000, 5.727266936277771, 63), (103000, 6.524323005451468, 239)),
+        ("osu/2785319.osu", "HD,DT", 0, 601, (61309.235290751734, 8.272126401328721, 433), (115486.23529075173, 8.898179651893287, 909)),
+        ("taiko/diffcalc-test.osu", "DT", 1, 238, (21624, 4.397186455763557, 118), (53000, 4.455142137225538, 200)),
+        ("fruits/diffcalc-test.osu", "DT", 2, 93, (14500, 4.27412411307246, 47), (45250, 5.152717389780087, 127)),
+        ("mania/diffcalc-test.osu", "NM", 3, 137, (16250, 1.8228476946125378, 69), (30500, 2.3493769750220914, 242)),
+        ("osu/2785319.osu", "4K", 3, 838, (61662, 2.5718820820666117, 530), (115486, 2.653795415351293, 1072)),
     ],
 )
 def test_the_timed_attributes_match_upstream(name, mods, ruleset, count, middle, last):
     timed = pppp.Difficulty(mods=mods, ruleset=ruleset).calculate_timed(beatmap_of(name))
+
     assert len(timed) == count
-    for entry, (time, stars, combo) in ((timed[count // 2], middle), (timed[-1], last)):
-        assert isinstance(entry, pppp.TimedDifficultyAttributes)
+
+    for entry, (time, stars, combo) in (
+        (timed[count // 2], middle),
+        (timed[count - 1], last),
+    ):
         assert entry.time == time
-        assert entry.attributes.star_rating == pytest.approx(stars, rel=1e-6)
+        assert entry.attributes.star_rating == pytest.approx(stars)
         assert entry.attributes.max_combo == combo
-        assert entry.attributes.ruleset is ruleset
-
-
-def test_the_osu_strain_graph_matches_upstream():
-    strains = pppp.Difficulty(mods="HD,FL").strains(beatmap_of("osu/diffcalc-test.osu"))
-    assert isinstance(strains, pppp.OsuStrains)
-    assert strains.ruleset is pppp.Ruleset.OSU
-    assert strains.start_time == 800
-    assert strains.section_length == 400
-    assert len(strains.aim) == len(strains.flashlight) == 254
-    assert strains.aim[46] == pytest.approx(522.4551066294925, rel=1e-6)
-    assert strains.speed[19] == pytest.approx(62.17504943719141, rel=1e-6)
-    assert strains.flashlight[18] == pytest.approx(41.02690817661656, rel=1e-6)
+        assert entry.attributes.ruleset == ruleset
 
 
 @pytest.mark.parametrize(
-    ("name", "mods", "ruleset", "kind", "start_time", "section_length", "series", "count", "index", "value"),
+    ("name", "mods", "ruleset", "start_time", "section_length", "series", "count", "index", "value"),
     [
-        ("taiko/diffcalc-test.osu", "DT", pppp.Ruleset.TAIKO, pppp.TaikoStrains, 0, 600, "stamina", 89, 32,
-         8.807433788330115),
-        ("fruits/diffcalc-test.osu", "DT", pppp.Ruleset.CATCH, pppp.CatchStrains, 0, 1125, "movement", 41, 11,
-         0.35301054964344125),
-        ("mania/diffcalc-test.osu", "NM", pppp.Ruleset.MANIA, pppp.ManiaStrains, 400, 400, "strain", 76, 70,
-         16.8859847732691),
-        ("osu/2785319.osu", "4K", pppp.Ruleset.MANIA, pppp.ManiaStrains, 2800, 400, "strain", 282, 195,
-         15.725755965531633),
+        ("osu/diffcalc-test.osu", "HD,FL", 0, 800, 400, "flashlight", 254, 18, 41.02690817661656),
+        ("osu/2785319.osu", "DT", 0, 2400, 600, "aim_no_sliders", 189, 66, 517.1805782727978),
+        ("taiko/diffcalc-test.osu", "DT", 1, 0, 600, "single_colour_stamina", 89, 6, 4.473586847131765),
+        ("fruits/diffcalc-test.osu", "DT", 2, 0, 1125, "movement", 41, 11, 0.35301054964344125),
+        ("mania/diffcalc-test.osu", "NM", 3, 400, 400, "strain", 76, 70, 16.8859847732691),
+        ("osu/2785319.osu", "4K", 3, 2800, 400, "strain", 282, 195, 15.725755965531633),
     ],
 )
 def test_the_strain_graph_matches_upstream(
-    name, mods, ruleset, kind, start_time, section_length, series, count, index, value
+    name, mods, ruleset, start_time, section_length, series, count, index, value
 ):
-    strains = pppp.Difficulty(mods=mods, ruleset=ruleset).strains(beatmap_of(name))
-    assert isinstance(strains, kind)
+    strains = pppp.Difficulty(mods=mods, ruleset=ruleset).calculate_strains(beatmap_of(name))
+
+    assert strains.ruleset == ruleset
     assert strains.start_time == start_time
     assert strains.section_length == section_length
-    values = getattr(strains, series)
-    assert len(values) == count
-    assert values[index] == pytest.approx(value, rel=1e-6)
-
-
-def test_strain_graphs_match_by_pattern():
-    match pppp.Difficulty(mods="DT").strains(beatmap_of("osu/2785319.osu")):
-        case pppp.OsuStrains(start_time=start, flashlight=flashlight):
-            assert start == 2400
-            assert flashlight == []
-        case _:
-            pytest.fail("expected osu! strains")
+    assert len(getattr(strains, series)) == count
+    assert getattr(strains, series)[index] == pytest.approx(value)
 
 
 def _backend_with(variant: str) -> str:
@@ -442,15 +359,18 @@ def test_backend_reports_the_engine():
     if os.environ.get("FOSU_BACKEND") == "scalar":
         assert pppp.backend == "scalar"
         return
-    runnable = next((variant for variant in ("avx2", "neon") if _backend_with(variant) == variant), "scalar")
+
+    runnable = next(
+        (variant for variant in ("avx2", "neon") if _backend_with(variant) == variant), "scalar"
+    )
+
     assert pppp.backend == runnable
 
 
-def test_backend_ships_beside_the_extension():
-    import pppp._core as core
-
-    here = Path(core.__file__).resolve().parent
+def test_backend_ships_beside_the_library():
+    here = pppp.library.library_path().parent
     engines = list(here.glob("*fosu_engine_*"))
+
     if platform.machine().lower() in {"x86_64", "amd64", "arm64", "aarch64"}:
         assert engines, f"no engine beside {here}"
 
@@ -459,114 +379,18 @@ def test_backend_scalar_override():
     assert _backend_with("scalar") == "scalar"
 
 
-PARITY_PATH = RESOURCES.parent / "parity" / "parity.json"
-
-RULESETS = {
-    "osu": pppp.Ruleset.OSU,
-    "taiko": pppp.Ruleset.TAIKO,
-    "catch": pppp.Ruleset.CATCH,
-    "mania": pppp.Ruleset.MANIA,
-}
-
-
-def load_parity() -> dict:
-    return json.loads(PARITY_PATH.read_text())
-
-
-def approx(actual: float, expected: float, epsilon: float) -> bool:
-    return abs(actual - expected) < epsilon * (1.0 + max(abs(actual), abs(expected)))
-
-
-def classic_accuracy(great: int, ok: int, meh: int, miss: int) -> float:
-    total = great + ok + meh + miss
-    return 1.0 if total <= 0 else (great * 300.0 + ok * 100.0 + meh * 50.0) / (total * 300.0)
-
-
-def parity_difficulty(mode: str, row: dict) -> pppp.DifficultyAttributes:
-    return pppp.Difficulty(mods=row["mods"], ruleset=RULESETS[mode]).calculate(beatmap_of(row["map"]))
-
-
-def parity_score(mode: str, score: dict, difficulty: pppp.DifficultyAttributes) -> dict:
-    if mode == "osu":
-        return {
-            "max_combo": score["combo"],
-            "accuracy": classic_accuracy(score["great"], score["ok"], score["meh"], score["miss"])
-            if score["accuracy"] < 0.0
-            else score["accuracy"],
-            "statistics": {
-                pppp.HitResult.GREAT: score["great"],
-                pppp.HitResult.OK: score["ok"],
-                pppp.HitResult.MEH: score["meh"],
-                pppp.HitResult.MISS: score["miss"],
-                pppp.HitResult.SLIDER_TAIL_HIT: difficulty.slider_count,
-            },
-            "legacy_total_score": score["legacy_total_score"] if score["legacy_total_score"] != 0 else None,
-        }
-    if mode == "taiko":
-        great, ok, miss = score["great"], score["ok"], score["miss"]
-        return {
-            "max_combo": score["combo"] if score["combo"] != 0 else difficulty.max_combo,
-            "accuracy": (great * 300.0 + ok * 150.0) / ((great + ok + miss) * 300.0),
-            "statistics": {
-                pppp.HitResult.GREAT: great,
-                pppp.HitResult.OK: ok,
-                pppp.HitResult.MISS: miss,
-            },
-        }
-    if mode == "catch":
-        fruits, droplets = score["fruits"], score["droplets"]
-        tiny, tiny_misses, miss = score["tiny_droplets"], score["tiny_misses"], score["miss"]
-        return {
-            "max_combo": score["combo"] if score["combo"] != 0 else difficulty.max_combo,
-            "accuracy": (fruits + droplets + tiny) / (fruits + droplets + tiny + tiny_misses + miss),
-            "statistics": {
-                pppp.HitResult.GREAT: fruits,
-                pppp.HitResult.LARGE_TICK_HIT: droplets,
-                pppp.HitResult.SMALL_TICK_HIT: tiny,
-                pppp.HitResult.SMALL_TICK_MISS: tiny_misses,
-                pppp.HitResult.MISS: miss,
-            },
-        }
-    perfect, great, good, ok, meh, miss = (
-        score["perfect"],
-        score["great"],
-        score["good"],
-        score["ok"],
-        score["meh"],
-        score["miss"],
-    )
-    return {
-        "max_combo": score["combo"] if score["combo"] != 0 else difficulty.max_combo,
-        "accuracy": (perfect * 305.0 + great * 300.0 + good * 200.0 + ok * 100.0 + meh * 50.0)
-        / ((perfect + great + good + ok + meh + miss) * 305.0),
-        "statistics": {
-            pppp.HitResult.PERFECT: perfect,
-            pppp.HitResult.GREAT: great,
-            pppp.HitResult.GOOD: good,
-            pppp.HitResult.OK: ok,
-            pppp.HitResult.MEH: meh,
-            pppp.HitResult.MISS: miss,
-        },
-    }
-
-
 def test_the_decode_parity_rows_match_upstream():
-    for row in load_parity()["decode"]:
+    for row in PARITY["decode"]:
         beatmap = beatmap_of(row["map"])
         expected = row["decode"]
-        assert (
-            beatmap.format_version,
-            beatmap.mode,
-            len(beatmap.hit_objects),
-            sum(1 for point in beatmap.timing_points if point.uninherited),
-            len(beatmap.breaks),
-        ) == (
-            expected["format"],
-            expected["mode"],
-            expected["hit_objects"],
-            expected["uninherited_points"],
-            expected["breaks"],
-        ), row["map"]
+        uninherited = len([point for point in beatmap.timing_points if point.uninherited])
+
+        assert beatmap.format_version == expected["format"]
+        assert beatmap.mode == expected["mode"]
+        assert len(beatmap.hit_objects) == expected["hit_objects"]
+        assert uninherited == expected["uninherited_points"]
+        assert len(beatmap.breaks) == expected["breaks"]
+
         for actual, wanted in (
             (beatmap.difficulty.approach_rate, expected["ar"]),
             (beatmap.difficulty.overall_difficulty, expected["od"]),
@@ -576,27 +400,114 @@ def test_the_decode_parity_rows_match_upstream():
             (beatmap.difficulty.slider_tick_rate, expected["slider_tick_rate"]),
             (beatmap.stack_leniency, expected["stack_leniency"]),
         ):
-            assert approx(actual, wanted, 1e-6), (row["map"], actual, wanted)
+            assert approx(actual, wanted, 1e-6)
+
+
+def _classic_accuracy(great: int, ok: int, meh: int, miss: int) -> float:
+    total = great + ok + meh + miss
+
+    return 1.0 if total <= 0 else (great * 300.0 + ok * 100.0 + meh * 50.0) / (total * 300.0)
+
+
+def _osu_score(score: dict, difficulty: pppp.DifficultyAttributes) -> dict:
+    accuracy = score["accuracy"]
+    if accuracy < 0.0:
+        accuracy = _classic_accuracy(score["great"], score["ok"], score["meh"], score["miss"])
+
+    return dict(
+        max_combo=score["combo"],
+        accuracy=accuracy,
+        statistics={
+            pppp.HitResult.GREAT: score["great"],
+            pppp.HitResult.OK: score["ok"],
+            pppp.HitResult.MEH: score["meh"],
+            pppp.HitResult.MISS: score["miss"],
+            pppp.HitResult.SLIDER_TAIL_HIT: difficulty.slider_count,
+        },
+        legacy_total_score=score["legacy_total_score"] or None,
+    )
+
+
+def _taiko_score(score: dict, difficulty: pppp.DifficultyAttributes) -> dict:
+    return dict(
+        max_combo=score["combo"] or difficulty.max_combo,
+        accuracy=(score["great"] * 300.0 + score["ok"] * 150.0)
+        / ((score["great"] + score["ok"] + score["miss"]) * 300.0),
+        statistics={
+            pppp.HitResult.GREAT: score["great"],
+            pppp.HitResult.OK: score["ok"],
+            pppp.HitResult.MISS: score["miss"],
+        },
+    )
+
+
+def _catch_score(score: dict, difficulty: pppp.DifficultyAttributes) -> dict:
+    hits = score["fruits"] + score["droplets"] + score["tiny_droplets"]
+
+    return dict(
+        max_combo=score["combo"] or difficulty.max_combo,
+        accuracy=hits / (hits + score["tiny_misses"] + score["miss"]),
+        statistics={
+            pppp.HitResult.GREAT: score["fruits"],
+            pppp.HitResult.LARGE_TICK_HIT: score["droplets"],
+            pppp.HitResult.SMALL_TICK_HIT: score["tiny_droplets"],
+            pppp.HitResult.SMALL_TICK_MISS: score["tiny_misses"],
+            pppp.HitResult.MISS: score["miss"],
+        },
+    )
+
+
+def _mania_score(score: dict, difficulty: pppp.DifficultyAttributes) -> dict:
+    total = score["perfect"] + score["great"] + score["good"] + score["ok"] + score["meh"] + score["miss"]
+    weighted = (
+        score["perfect"] * 305.0
+        + score["great"] * 300.0
+        + score["good"] * 200.0
+        + score["ok"] * 100.0
+        + score["meh"] * 50.0
+    )
+
+    return dict(
+        max_combo=score["combo"] or difficulty.max_combo,
+        accuracy=weighted / (total * 305.0),
+        statistics={
+            pppp.HitResult.PERFECT: score["perfect"],
+            pppp.HitResult.GREAT: score["great"],
+            pppp.HitResult.GOOD: score["good"],
+            pppp.HitResult.OK: score["ok"],
+            pppp.HitResult.MEH: score["meh"],
+            pppp.HitResult.MISS: score["miss"],
+        },
+    )
 
 
 @pytest.mark.parametrize("mode", ["osu", "taiko", "catch", "mania"])
 def test_the_parity_difficulty_rows_match_upstream(mode: str):
-    for row in load_parity()["difficulty"][mode]:
-        attributes = parity_difficulty(mode, row)
-        assert approx(attributes.star_rating, row["attributes"]["star_rating"], 1e-6), (
-            row["name"],
-            row["map"],
-            row["mods"],
-        )
-        assert attributes.max_combo == row["attributes"]["max_combo"], (row["name"], row["map"], row["mods"])
+    for row in PARITY["difficulty"][mode]:
+        attributes = pppp.Difficulty(
+            mods=row["mods"], ruleset=getattr(pppp.Ruleset, mode.upper())
+        ).calculate(beatmap_of(row["map"]))
+
+        assert approx(attributes.star_rating, row["attributes"]["star_rating"], 1e-6)
+        assert attributes.max_combo == row["attributes"]["max_combo"]
 
 
-@pytest.mark.parametrize("mode", ["osu", "taiko", "catch", "mania"])
-def test_the_parity_performance_rows_match_upstream(mode: str):
-    for row in load_parity()["performance"][mode]:
-        beatmap = beatmap_of(row["map"])
-        difficulty = parity_difficulty(mode, row)
-        play = pppp.Performance(mods=row["mods"], **parity_score(mode, row["score"], difficulty)).calculate(
-            beatmap, difficulty
-        )
-        assert approx(play.total, row["attributes"]["total"], 1e-9), (row["name"], row["map"], row["mods"])
+def test_the_parity_performance_rows_match_upstream():
+    scorers = {
+        "osu": _osu_score,
+        "taiko": _taiko_score,
+        "catch": _catch_score,
+        "mania": _mania_score,
+    }
+
+    for mode, scorer in scorers.items():
+        for row in PARITY["performance"][mode]:
+            beatmap = beatmap_of(row["map"])
+            difficulty = pppp.Difficulty(
+                mods=row["mods"], ruleset=getattr(pppp.Ruleset, mode.upper())
+            ).calculate(beatmap)
+            play = pppp.Performance(mods=row["mods"], **scorer(row["score"], difficulty)).calculate(
+                beatmap, difficulty
+            )
+
+            assert approx(play.total, row["attributes"]["total"], 1e-9)

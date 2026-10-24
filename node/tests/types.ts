@@ -1,11 +1,21 @@
 import {
   Beatmap,
+  type BeatmapDifficulty,
+  type BreakPeriod,
   Difficulty,
   type DifficultyAttributes,
+  type DifficultyOptions,
+  type HitObject,
   Performance,
+  type PerformanceAttributes,
+  type PerformanceOptions,
   Ruleset,
+  type Slider,
+  type Statistics,
   type Strains,
   type TimedDifficultyAttributes,
+  type TimingPoint,
+  type Vector2,
 } from "../module";
 
 async function main(): Promise<void> {
@@ -13,17 +23,38 @@ async function main(): Promise<void> {
   const sync: Beatmap = Beatmap.fromFileSync("map.osu");
   const fromBytes: Beatmap = Beatmap.fromBytes(new Uint8Array(0));
 
-  const difficulty: DifficultyAttributes = new Difficulty({ mods: "HD,DT" }).calculate(beatmap);
+  const settings: BeatmapDifficulty = beatmap.difficulty;
+  console.log(settings.drainRate, settings.sliderTickRate);
+
+  const object: HitObject = beatmap.hitObjects[0];
+  const position: Vector2 = object.position;
+  console.log(position.x, position.y, object.startTime, object.newCombo);
+
+  const slider: Slider = beatmap.sliders[0];
+  console.log(slider.expectedLength, slider.path.length, slider.cumulativeLengths.length);
+  console.log(slider.events[0].spanIndex, slider.events[0].position.x);
+
+  const point: TimingPoint = beatmap.timingPoints[0];
+  const pause: BreakPeriod = beatmap.breaks[0];
+  console.log(point.beatLength, point.uninherited, pause.endTime);
+
+  const options: DifficultyOptions = { mods: "HD,DT", ruleset: Ruleset.Osu, clockRate: 1.5 };
+  const difficulty: DifficultyAttributes = new Difficulty(options).calculate(beatmap);
   if (difficulty.ruleset === Ruleset.Osu) {
-    console.log(difficulty.aimDifficulty, difficulty.sliderCount);
+    console.log(difficulty.aimDifficulty, difficulty.sliderCount, difficulty.starRating);
   }
 
-  const play = new Performance({
-    mods: 72,
-    maxCombo: 909,
-    statistics: { great: 601, miss: 2 },
-  }).calculate(sync, difficulty);
-  console.log(play.total, fromBytes.hitObjects.length, beatmap.stackLeniency);
+  const statistics: Statistics = { great: 601, miss: 2 };
+  const playOptions: PerformanceOptions = { mods: 72, maxCombo: 909, statistics };
+  const play: PerformanceAttributes = new Performance(playOptions).calculate(sync, difficulty);
+  console.log(play.total);
+
+  console.log(beatmap.formatVersion, beatmap.mode, beatmap.stackLeniency);
+  console.log(beatmap.timingPoints.length, beatmap.hitObjects.length + beatmap.breaks.length, fromBytes.hitObjects.length);
+  for (const sl of beatmap.sliders) {
+    console.log(sl.undecimatedPath.length);
+  }
+  beatmap.close();
 
   const timed: TimedDifficultyAttributes[] = new Difficulty({ mods: 64 }).calculateTimed(beatmap);
   console.log(timed[0].time, timed[0].attributes.starRating);
@@ -33,9 +64,12 @@ async function main(): Promise<void> {
   const timedLater: TimedDifficultyAttributes[] = await new Difficulty().calculateTimedAsync(beatmap);
   console.log(pp, timedLater.length);
 
-  const strains: Strains = await new Difficulty().strainsAsync(beatmap);
-  if (strains.ruleset === Ruleset.Taiko) {
-    console.log(strains.sectionLength, strains.singleColourStamina.length);
+  const strains: Strains = new Difficulty().calculateStrains(beatmap);
+  const strainsLater: Strains = await new Difficulty().calculateStrainsAsync(beatmap);
+  for (const graph of [strains, strainsLater]) {
+    if (graph.ruleset === Ruleset.Taiko) {
+      console.log(graph.sectionLength, graph.singleColourStamina.length);
+    }
   }
 }
 

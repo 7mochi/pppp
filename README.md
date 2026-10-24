@@ -2,18 +2,29 @@
 
 Calculate osu! difficulty and performance attributes for all four gamemodes in ISO C++98.
 
-- All four gamemodes, with every mod the game lets each carry.
-- Ported from [osu!lazer](https://github.com/ppy/osu) and verified against its `2026.730.0` release, with the
-parser ported from [fosu](https://github.com/cmyui/fast-osu-beatmap-parser)
+- All four gamemodes, with the mods each one supports.
+- Ported from [osu!lazer](https://github.com/ppy/osu) and verified against its `2026.730.0` release; the
+parser is from [fosu](https://github.com/cmyui/fast-osu-beatmap-parser)
 `de01f188f2be7831f619ca09882cf2f55b0c9720`.
-- Python bindings written against CPython's stable ABI, so one `cp310-abi3` wheel serves every CPython from 3.10.
-- Node bindings written against Node-API, so one build runs on every Node.js that carries it.
-- C# bindings written against the library's flat C ABI, so one assembly serves .NET Framework 2.0 and
-modern .NET.
+- Python bindings use the C ABI through generated `ctypes` code. One wheel per platform supports
+CPython 3.10 and newer.
+- Node bindings use the same C ABI through [Koffi](https://koffi.dev), so there's no addon to compile.
+- C# bindings use the same C ABI. One assembly works on .NET Framework 2.0 and modern .NET.
 
 ## Install
 
-The library is built and installed with CMake:
+Each binding is published to its own registry:
+
+```sh
+dotnet add package pppp-dotnet   # C#, .NET Framework 2.0 and modern .NET
+pip install pppp-py              # Python 3.10 and newer
+npm install @7mochi/pppp         # Node.js
+```
+
+Each release is published on the [releases page](https://github.com/7mochi/pppp/releases), one per
+binding, with its package attached.
+
+The library itself is built and installed with CMake:
 
 ```sh
 cmake -S . -B build
@@ -40,12 +51,9 @@ pppp::Beatmap beatmap;
 pppp::Status status = beatmap.load_file("map.osu");    // or beatmap.load_buffer(data, size)
 if (!status.ok()) { puts(status.message()); return 1; }
 
-// The parser engine the loader chose, read-only: pppp::EngineKind::SCALAR, AVX2 or NEON.
-// e.g. `pppp::backend() == pppp::EngineKind::AVX2` on an x86-64 host.
-
 pppp::Mods mods;
 if (!mods.parse("HDDT").ok()) return 1;                 // "DT:speed_change=1.4" for settings
-// pppp::Mods::from_legacy(pppp::mods::LEGACY_MOD_HIDDEN) for osu!stable's bitmask
+// pppp::Mods::from_legacy(pppp::mods::LEGACY_MOD_HIDDEN, beatmap.mode) for osu!stable's bitmask
 // mods.push_back(pppp::mods::MOD_HD) for a single mod
 
 pppp::DifficultyAttributes diff_attrs;
@@ -62,6 +70,9 @@ pppp::PerformanceAttributes pp_attrs;
 if (!pppp::Performance(beatmap, diff_attrs).score(score).calculate(pp_attrs).ok()) return 1;
 
 printf("%.2f* %.2fpp\n", diff_attrs.star_rating(), pp_attrs.total());
+
+// The parser engine the loader picked, read-only: pppp::EngineKind::SCALAR, AVX2 or NEON.
+// pppp::backend() == pppp::EngineKind::AVX2 on an x86-64 host, for instance.
 ```
 
 ## Python
@@ -108,15 +119,16 @@ console.log(difficulty.starRating, performance.total);
 
 | CMake option | Default | What it does |
 | --- | --- | --- |
-| `PPPP_WITH_FOSU` | ON | the parser adapter and the vendored parser |
-| `PPPP_BUILD_TESTS` | top-level only | the suites (fetches doctest) |
-| `PPPP_BUILD_PYTHON` | OFF | the Python extension module |
-| `PPPP_BUILD_NODE` | OFF | the Node extension module |
-| `PPPP_BUILD_CAPI` | OFF | the flat C ABI the C# bindings use |
+| `PPPP_WITH_FOSU` | ON | the `.osu` parser and its adapter |
+| `PPPP_ISA` | auto | parser engine: `auto`, `scalar`, `avx2` or `neon` |
+| `PPPP_BUILD_TESTS` | top-level only | the test suites (fetches doctest) |
+| `PPPP_BUILD_PYTHON` | OFF | the native library the Python package loads |
+| `PPPP_BUILD_CAPI` | OFF | the C ABI shared library the Python, Node and C# bindings use |
+| `PPPP_WIN2K` | OFF | the shim that keeps binaries loadable on Windows 2000 |
 | `PPPP_INSTALL` | top-level only | the `find_package(pppp CONFIG)` package |
 | `PPPP_WARNINGS_AS_ERRORS` | OFF | `-Werror` on the library's warnings |
-| `PPPP_PGO` | OFF | profile-guided optimisation: `GENERATE` builds an instrumented library, `USE` builds with the profile (`make build-pgo` runs both, training on the parity suites) |
-| `PPPP_PGO_DIR` | `<build>/../profile-data` | where Clang writes and reads the profile (GCC keeps it beside each object) |
+| `PPPP_PGO` | OFF | profile-guided optimization: `GENERATE` instruments, `USE` consumes the profile (`make build-pgo` runs both, training on the parity suites) |
+| `PPPP_PGO_DIR` | `<build>/../profile-data` | where the profile is written and read (GCC keeps it beside each object) |
 
 ## Development
 
@@ -139,6 +151,19 @@ pre-commit run --all-files
 
 `clang-format` and `nixfmt` come from the dev shell; outside it the hooks fall
 back to `nix develop`.
+
+The Node binding is formatted and linted with [Biome](https://biomejs.dev), which
+also sorts the imports. It comes from the dev shell, and as a dev dependency for
+anyone running npm outside Nix:
+
+```sh
+npm run lint        # check and fix node/
+npm run lint:check  # check only
+```
+
+Inside `nix develop`, run `biome` directly rather than `npm run lint`: npm puts
+`node_modules/.bin` first on `PATH`, and the prebuilt Biome binary there doesn't
+start on NixOS.
 
 ## AI Disclaimer
 

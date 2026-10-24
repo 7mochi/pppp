@@ -1,160 +1,33 @@
 {
-  description = "pp++: the library and its bindings";
+  description = "osu! difficulty and performance calculations in C++98, with Python, Node and C# bindings";
 
-  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+  inputs = {
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+  };
 
   outputs =
-    { nixpkgs, ... }:
-    let
+    inputs@{ flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      # ClangSharp publishes no macOS x64 build, so x86_64-darwin cannot be evaluated here.
       systems = [
         "x86_64-linux"
+        "aarch64-linux"
         "aarch64-darwin"
       ];
-      forAllSystems = nixpkgs.lib.genAttrs systems;
-      pkgs = nixpkgs.legacyPackages.x86_64-linux;
 
-      useWin32ThreadModel =
-        cross:
-        pkgs.overrideCC cross.stdenv (
-          cross.stdenv.cc.override (old: {
-            cc = old.cc.override {
-              threadsCross = {
-                model = "win32";
-                package = null;
-              };
-            };
-          })
-        );
+      imports = [
+        ./nix/shells.nix
+        ./nix/packages
+      ];
 
-      legacyWindowsFor =
+      perSystem =
+        { system, ... }:
         {
-          cross,
-          preset,
-          pname,
-        }:
-        (useWin32ThreadModel cross).mkDerivation {
-          inherit pname;
-          version = "0.0.0";
-
-          src = ./.;
-
-          nativeBuildInputs = [
-            pkgs.cmake
-            pkgs.ninja
-          ];
-
-          dontUseCmakeConfigure = true;
-
-          # A PE file must not go through patchelf or the ELF strip after the build.
-          dontFixup = true;
-          dontStrip = true;
-
-          configurePhase = ''
-            runHook preConfigure
-            cmake --preset ${preset}
-            runHook postConfigure
-          '';
-
-          buildPhase = ''
-            runHook preBuild
-            cmake --build --preset ${preset}
-            runHook postBuild
-          '';
-
-          installPhase = ''
-            runHook preInstall
-            mkdir -p $out
-            cp build/${preset}/pppp_c.dll $out/
-            runHook postInstall
-          '';
-        };
-    in
-    {
-      packages.x86_64-linux = {
-        pppp-c-win32 = legacyWindowsFor {
-          cross = pkgs.pkgsCross.mingw32;
-          preset = "win2k";
-          pname = "pppp-c-win32";
-        };
-
-        pppp-c-win64 = legacyWindowsFor {
-          cross = pkgs.pkgsCross.mingwW64;
-          preset = "winxp-x64";
-          pname = "pppp-c-win64";
-        };
-      };
-
-      devShells = forAllSystems (
-        system:
-        let
-          pkgs = nixpkgs.legacyPackages.${system};
-        in
-        {
-          default = pkgs.mkShell {
-            packages =
-              (with pkgs; [
-                cmake
-                ninja
-                gcc
-                clang-tools
-                gnumake
-                nodejs
-                git
-                pre-commit
-                nixfmt
-                dotnet-sdk_8
-                (python3.withPackages (
-                  ps: with ps; [
-                    pytest
-                    mypy
-                    build
-                    scikit-build-core
-                    typing-extensions
-                    pip
-                    jinja2
-                  ]
-                ))
-              ])
-              ++ (pkgs.lib.optionals pkgs.stdenv.hostPlatform.isDarwin [
-                pkgs.bash
-                pkgs.coreutils
-              ]);
-
-            shellHook = ''
-              echo "pp++"
-              echo "  make configure                           # configure CMake"
-              echo "  make test-auto                           # build and run the suites"
-              echo "  make format                              # C++ formatting"
-              echo "  make check-format                        # C++ formatting, checked"
-              echo "  make check-tidy                          # C++ analysis, report only"
-              echo "  pip install . && pytest python/tests     # python bindings"
-              echo "  npm install && npm test                  # node bindings"
-              echo "  cd csharp/tests && dotnet run -f net8.0  # c# bindings"
-              echo "  nix develop .#legacyWindows              # legacy windows targets"
-              if [ -t 1 ] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-                pre-commit install >/dev/null 2>&1 || true
-              fi
-            '';
+          _module.args.pkgs = import inputs.nixpkgs {
+            inherit system;
+            overlays = [ (import ./nix/overlays.nix) ];
           };
-        }
-        // nixpkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          legacyWindows = pkgs.mkShell {
-            packages = [
-              pkgs.cmake
-              pkgs.ninja
-              pkgs.gnumake
-              (useWin32ThreadModel pkgs.pkgsCross.mingw32).cc
-              (useWin32ThreadModel pkgs.pkgsCross.mingwW64).cc
-            ];
-
-            shellHook = ''
-              echo "pp++ / legacy Windows"
-              echo "  cross-compiles pp++ from Linux with MinGW-w64"
-              echo "  make build-windows-2k      # x86, Windows 2000 and later"
-              echo "  make build-windows-xp-x64  # x64, Windows XP x64 and later"
-            '';
-          };
-        }
-      );
+        };
     };
 }

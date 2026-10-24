@@ -8,41 +8,52 @@
   },
   "main": "./node/index.js",
   "types": "./node/module.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./node/module.d.ts",
-      "import": "./node/index.mjs",
+      "import": "./node/index.js",
       "require": "./node/index.js"
     }
   },
-  "binary": {
-    "napi_versions": [8]
+  "engines": {
+    "node": ">=20.19"
   },
   "scripts": {
-    "install": "cd node && pkg-prebuilds-verify ./binding-options.js || cmake-js compile -d .. --out build",
-    "test": "jest",
-    "types": "tsc --noEmit --strict --target es2020 node/module.d.ts node/tests/types.ts"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "types": "tsc --noEmit --strict --target es2020 node/module.d.ts node/tests/types.ts",
+    "lint": "biome check --write node",
+    "lint:check": "biome check node"
   },
   "files": [
     "/node/index.js",
-    "/node/index.mjs",
     "/node/module.d.ts",
-    "/node/binding-options.js",
-    "/node/prebuilds",
-    "/src",
-    "/include",
-    "/cmake",
-    "/third_party",
-    "/CMakeLists.txt",
+    "/node/native.g.js",
+    "/node/attributes.js",
+    "/node/async.js",
+    "/node/beatmap.js",
+    "/node/constants.js",
+    "/node/difficulty.js",
+    "/node/errors.js",
+    "/node/library.js",
+    "/node/mods.js",
+    "/node/names.js",
+    "/node/performance.js",
+    "/node/ruleset.js",
+    "/node/strains.js",
+    "/node/native",
     "/LICENCE",
     "/README.md"
   ],
   "dependencies": {
-    "cmake-js": "^8.0.0",
-    "pkg-prebuilds": "^1.0.0"
+    "koffi": "^3.3.7"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.14",
     "jest": "^30.5.2",
     "typescript": "^7.0.2"
-  }
+  },
+  "type": "module"
 }

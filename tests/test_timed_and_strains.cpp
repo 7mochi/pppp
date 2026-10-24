@@ -54,7 +54,7 @@ TEST_CASE("the facade reports a calculation that could not run") {
     pppp::Strains strains;
     CHECK(difficulty.calculate(beatmap, attributes).code() == pppp::StatusCode::NO_SLIDER_PATH_BACKEND);
     CHECK(difficulty.calculate_timed(beatmap, timed).code() == pppp::StatusCode::NO_SLIDER_PATH_BACKEND);
-    CHECK(difficulty.strains(beatmap, strains).code() == pppp::StatusCode::NO_SLIDER_PATH_BACKEND);
+    CHECK(difficulty.calculate_strains(beatmap, strains).code() == pppp::StatusCode::NO_SLIDER_PATH_BACKEND);
 
     pppp::ScoreInfo score;
     score.mods = mirror;
@@ -66,7 +66,7 @@ TEST_CASE("the facade reports a calculation that could not run") {
     const pppp::Difficulty unknown = pppp::Difficulty().ruleset(static_cast<pppp::Ruleset::Value>(4));
     CHECK(unknown.calculate(beatmap, attributes).code() == pppp::StatusCode::INVALID_ARGUMENT);
     CHECK(unknown.calculate_timed(beatmap, timed).code() == pppp::StatusCode::INVALID_ARGUMENT);
-    CHECK(unknown.strains(beatmap, strains).code() == pppp::StatusCode::INVALID_ARGUMENT);
+    CHECK(unknown.calculate_strains(beatmap, strains).code() == pppp::StatusCode::INVALID_ARGUMENT);
 }
 
 namespace {

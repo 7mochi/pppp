@@ -9,23 +9,20 @@ if(DEFINED SKBUILD)
   set(PPPP_BUILD_TESTS OFF)
 endif()
 
-if(DEFINED CMAKE_JS_VERSION)
-  set(PPPP_BUILD_NODE ON)
-  set(PPPP_INSTALL OFF)
-  set(PPPP_BUILD_TESTS OFF)
-endif()
-
 option(PPPP_WITH_FOSU "Build the .osu parser" ON)
 option(PPPP_BUILD_TESTS "Build the test suites" ${PROJECT_IS_TOP_LEVEL})
 option(PPPP_INSTALL "Generate install rules" ${PROJECT_IS_TOP_LEVEL})
-option(PPPP_BUILD_PYTHON "Build the Python extension module" OFF)
-option(PPPP_BUILD_NODE "Build the Node bindings" OFF)
-option(PPPP_BUILD_CAPI "Build the C bindings" OFF)
+option(PPPP_BUILD_PYTHON "Build and install the native library the python package loads" OFF)
+option(PPPP_BUILD_CAPI "Build the flat C ABI shared library (pppp_c)" OFF)
 option(PPPP_WIN2K "Link the shim that keeps the produced binaries loadable on Windows 2000" OFF)
+
+if(PPPP_BUILD_PYTHON)
+  set(PPPP_BUILD_CAPI ON)
+endif()
 set(PPPP_ISA auto CACHE STRING "Native targets: auto, scalar, avx2, neon")
 set_property(CACHE PPPP_ISA PROPERTY STRINGS auto scalar avx2 neon)
 
-if(PPPP_BUILD_PYTHON OR PPPP_BUILD_NODE OR PPPP_BUILD_CAPI)
+if(PPPP_BUILD_PYTHON OR PPPP_BUILD_CAPI)
   # The library is static and the extension is a shared object.
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
@@ -379,16 +376,12 @@ add_library(pppp_internal INTERFACE)
 target_include_directories(pppp_internal INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(pppp_internal INTERFACE pppp)
 
-if(PPPP_BUILD_PYTHON)
-  include(cmake/Python.cmake)
-endif()
-
-if(PPPP_BUILD_NODE)
-  include(cmake/Node.cmake)
-endif()
-
 if(PPPP_BUILD_CAPI AND PPPP_WITH_FOSU)
   include(cmake/CAPI.cmake)
+endif()
+
+if(PPPP_BUILD_PYTHON)
+  include(cmake/Python.cmake)
 endif()
 
 if(PPPP_BUILD_TESTS)

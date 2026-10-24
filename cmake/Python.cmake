@@ -1,39 +1,6 @@
-if(CMAKE_VERSION VERSION_LESS 3.26)
-  message(FATAL_ERROR
-    "The Python extension needs CMake 3.26 for Development.SABIModule and "
-    "Python_add_library(USE_SABI); found ${CMAKE_VERSION}")
-endif()
+find_package(Python REQUIRED COMPONENTS Interpreter)
 
-find_package(Python REQUIRED COMPONENTS Interpreter Development.SABIModule)
-
-if(WIN32)
-  set_target_properties(Python::SABIModule PROPERTIES
-    IMPORTED_IMPLIB "${Python_SABI_LIBRARY_RELEASE}"
-    IMPORTED_IMPLIB_DEBUG "${Python_SABI_LIBRARY_RELEASE}")
-endif()
-
-Python_add_library(_core MODULE USE_SABI 3.10 WITH_SOABI
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/pppp/bindings/python.cpp)
-set_target_properties(_core PROPERTIES
-  CXX_VISIBILITY_PRESET hidden)
-target_include_directories(_core PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(_core PRIVATE
-  pppp_fosu
-  $<BUILD_INTERFACE:pppp_warnings>
-  $<BUILD_INTERFACE:pppp_numerics>
-  $<BUILD_INTERFACE:pppp_performance>
-  $<BUILD_INTERFACE:pppp_bindings>)
-
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  target_link_options(_core PRIVATE
-    "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/python/core.map")
-  set_property(TARGET _core APPEND PROPERTY LINK_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/python/core.map")
-elseif(APPLE)
-  target_link_options(_core PRIVATE "-Wl,-exported_symbol,_PyInit__core")
-endif()
-
-install(TARGETS _core LIBRARY DESTINATION pppp RUNTIME DESTINATION pppp)
+install(TARGETS pppp_c LIBRARY DESTINATION pppp RUNTIME DESTINATION pppp)
 
 if(TARGET fosu_engine_avx2)
   install(TARGETS fosu_engine_avx2 LIBRARY DESTINATION pppp RUNTIME DESTINATION pppp)

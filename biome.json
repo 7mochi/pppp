@@ -1,0 +1,21 @@
+{
+  "files": {
+    "includes": ["node/**/*.js", "node/**/*.ts"]
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    }
+  },
+  "formatter": {
+    "enabled": false
+  }
+}

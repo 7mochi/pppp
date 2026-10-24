@@ -12,10 +12,6 @@ concurrency:
 permissions:
   contents: read
 
-env:
-  BINDING_NAME: pppp_node
-  NAPI_VERSION: 8
-
 jobs:
   verify-tag:
     name: Verify the tag against the manifest
@@ -30,8 +26,10 @@ jobs:
           echo "tag=$tag version=$version declared=$declared"
           [ "$version" = "$declared" ] || { echo "The tag says $version but the manifest says $declared"; exit 1; }
 
-  node-build:
-    name: Node prebuild / ${{ matrix.os }} / ${{ matrix.arch }}
+  # The bindings reach `pppp_c` through Koffi, so there is no addon to compile: the only native
+  # artifact is the C library, built once per platform and staged beside `index.js`.
+  library-build:
+    name: pppp_c / ${{ matrix.os }} / ${{ matrix.arch }}
     needs: verify-tag
     runs-on: ${{ matrix.os }}
     strategy:
@@ -40,10 +38,8 @@ jobs:
         include:
           - os: windows-2022
             arch: x64
-            pgort: Hostx64\x64
           - os: windows-11-arm
             arch: arm64
-            pgort: arm64
           - os: macos-latest
             arch: arm64
           - os: macos-26-intel
@@ -57,80 +53,68 @@ jobs:
       - uses: actions/setup-node@v7.0.0
         with:
           node-version: 24.x
+      - name: Configure the library
+        run: cmake --preset release -DPPPP_PGO=GENERATE -DPPPP_PGO_DIR="${{ github.workspace }}/profdata"
+      - name: Build the instrumented library
+        run: cmake --build --preset release
       - name: Install the dependencies
         run: npm install --ignore-scripts
-      - name: Build the instrumented binding
-        working-directory: node
-        shell: bash
-        run: |
-          npx cmake-js configure -d .. --out build --CDPPPP_PGO=GENERATE --CDPPPP_PGO_DIR="${{ github.workspace }}/profdata"
-          npx cmake-js build -d .. --out build
-      - name: Copy the PGO runtime beside the binding
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          compiler="$(sed -n 's/^CMAKE_CXX_COMPILER:FILEPATH=//p' node/build/CMakeCache.txt)"
-          find "${compiler%%/bin/*}/bin" -name pgort140.dll
-          cp "${compiler%%/bin/*}/bin/${{ matrix.pgort }}/pgort140.dll" node/build/Release/
       - name: Generate the PGO data
         run: npm test
-      - name: Check the PGO data
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          find node/build -name '*.pgd' -o -name '*.pgc'
-          ls node/build/Release/pppp_node!*.pgc || { echo "PGO run did not succeed (no pppp_node!*.pgc files) and there is no data to merge"; exit 1; }
+        env:
+          PPPP_LIBRARY: ${{ github.workspace }}/build/release/pppp_c.${{ runner.os == 'Windows' && 'dll' || runner.os == 'macOS' && 'dylib' || 'so' }}
       - name: Merge the PGO data
         if: runner.os == 'macOS'
         run: xcrun llvm-profdata merge -output="${{ github.workspace }}/profdata/default.profdata" "${{ github.workspace }}"/profdata/*.profraw
-      - name: Build the PGO-optimized binding
-        working-directory: node
-        shell: bash
+      - name: Build the PGO-optimized library
         run: |
-          npx cmake-js configure -d .. --out build --CDPPPP_PGO=USE --CDPPPP_PGO_DIR="${{ github.workspace }}/profdata"
-          npx cmake-js build -d .. --out build
-          rm -f build/Release/pgort140.dll
+          cmake --preset release -DPPPP_PGO=USE -DPPPP_PGO_DIR="${{ github.workspace }}/profdata"
+          cmake --build --preset release
+      - name: Stage the library beside the bindings
+        run: node node/scripts/stage-library.mjs "build/release/pppp_c.${{ runner.os == 'Windows' && 'dll' || runner.os == 'macOS' && 'dylib' || 'so' }}"
       - run: npm test
         env:
           FOSU_BACKEND: scalar
-      - run: npx pkg-prebuilds-copy --baseDir build/Release --source ${{ env.BINDING_NAME }}.node --name=${{ env.BINDING_NAME }} --strip --napi_version=${{ env.NAPI_VERSION }} --arch=${{ matrix.arch }}
-        working-directory: node
-      - run: node scripts/stage-engine.mjs ${{ matrix.arch }}
-        working-directory: node
       - uses: actions/upload-artifact@v7.0.1
         with:
-          name: prebuilds-${{ matrix.os }}-${{ matrix.arch }}
-          path: node/prebuilds
+          name: library-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            node/pppp_c.so
+            node/pppp_c.dll
+            node/pppp_c.dylib
+            node/libfosu_engine_*.so
+            node/fosu_engine_*.dll
+            node/libfosu_engine_*.dylib
           if-no-files-found: error
           retention-days: 1
 
-  node-bundle:
-    name: Bundle the prebuilds
-    needs: node-build
+  library-bundle:
+    name: Bundle the libraries
+    needs: library-build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v8.0.1
         with:
           path: tmp
       - run: |
-          mkdir -p node/prebuilds
-          mv tmp/*/* node/prebuilds/
+          mkdir -p node/native
+          mv tmp/*/* node/native/ 2>/dev/null || true
       - uses: actions/upload-artifact@v7.0.1
         with:
-          name: all-prebuilds
-          path: node/prebuilds
+          name: all-libraries
+          path: node/native
           if-no-files-found: error
           retention-days: 1
 
   publish-npm:
     name: Publish to npm
-    needs: node-bundle
+    needs: library-bundle
     runs-on: ubuntu-latest
     environment:
       name: npm
       url: https://www.npmjs.com/package/@7mochi/pppp
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
       - uses: actions/checkout@v7.0.1
@@ -141,8 +125,8 @@ jobs:
           package-manager-cache: false
       - uses: actions/download-artifact@v8.0.1
         with:
-          name: all-prebuilds
-          path: node/prebuilds
+          name: all-libraries
+          path: node/native
       - run: npm ci
       - name: Publish
         run: |
@@ -152,3 +136,21 @@ jobs:
           else
             npm publish
           fi
+      - name: Pack the published tarball
+        run: mkdir -p dist && npm pack --pack-destination dist
+      - name: Create the draft release and upload the tarball
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --draft --generate-notes \
+              --title "$RELEASE_TAG" \
+              --repo "$GITHUB_REPOSITORY"
+          fi
+          gh release upload "$RELEASE_TAG" dist/*.tgz --clobber --repo "$GITHUB_REPOSITORY"
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh release edit "$RELEASE_TAG" --draft=false --repo "$GITHUB_REPOSITORY"

@@ -31,7 +31,7 @@ namespace pppp_test {
 
     inline pppp::Strains strains(const pppp::Difficulty& difficulty, const pppp::beatmaps::Beatmap& beatmap) {
         pppp::Strains out;
-        REQUIRE(difficulty.strains(beatmap, out).ok());
+        REQUIRE(difficulty.calculate_strains(beatmap, out).ok());
         return out;
     }
 

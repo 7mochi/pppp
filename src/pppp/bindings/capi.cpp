@@ -112,8 +112,6 @@ namespace {
 
     void fill_osu_difficulty(const pppp::osu::difficulty::OsuDifficultyAttributes& value,
                              pppp_osu_difficulty_attributes& out) {
-        out.star_rating = value.star_rating;
-        out.max_combo = value.max_combo;
         out.aim_difficulty = value.aim_difficulty;
         out.speed_difficulty = value.speed_difficulty;
         out.reading_difficulty = value.reading_difficulty;
@@ -137,8 +135,6 @@ namespace {
 
     void fill_taiko_difficulty(const pppp::taiko::difficulty::TaikoDifficultyAttributes& value,
                                pppp_taiko_difficulty_attributes& out) {
-        out.star_rating = value.star_rating;
-        out.max_combo = value.max_combo;
         out.mechanical_difficulty = value.mechanical_difficulty;
         out.rhythm_difficulty = value.rhythm_difficulty;
         out.reading_difficulty = value.reading_difficulty;
@@ -149,21 +145,8 @@ namespace {
         out.stamina_top_strains = value.stamina_top_strains;
     }
 
-    void fill_catch_difficulty(const pppp::fruits::difficulty::CatchDifficultyAttributes& value,
-                               pppp_catch_difficulty_attributes& out) {
-        out.star_rating = value.star_rating;
-        out.max_combo = value.max_combo;
-    }
-
-    void fill_mania_difficulty(const pppp::mania::difficulty::ManiaDifficultyAttributes& value,
-                               pppp_mania_difficulty_attributes& out) {
-        out.star_rating = value.star_rating;
-        out.max_combo = value.max_combo;
-    }
-
     void fill_osu_performance(const pppp::osu::difficulty::OsuPerformanceAttributes& value,
                               pppp_osu_performance_attributes& out) {
-        out.total = value.total;
         out.aim = value.aim;
         out.speed = value.speed;
         out.accuracy = value.accuracy;
@@ -182,7 +165,6 @@ namespace {
 
     void fill_taiko_performance(const pppp::taiko::difficulty::TaikoPerformanceAttributes& value,
                                 pppp_taiko_performance_attributes& out) {
-        out.total = value.total;
         out.difficulty = value.difficulty;
         out.accuracy = value.accuracy;
         out.has_estimated_unstable_rate = value.estimated_unstable_rate.has_value();
@@ -190,21 +172,13 @@ namespace {
             out.has_estimated_unstable_rate ? value.estimated_unstable_rate.value() : 0.0;
     }
 
-    void fill_catch_performance(const pppp::fruits::difficulty::CatchPerformanceAttributes& value,
-                                pppp_catch_performance_attributes& out) {
-        out.total = value.total;
-    }
-
     void fill_mania_performance(const pppp::mania::difficulty::ManiaPerformanceAttributes& value,
                                 pppp_mania_performance_attributes& out) {
-        out.total = value.total;
         out.difficulty = value.difficulty;
     }
 
     void read_osu_difficulty(const pppp_osu_difficulty_attributes& in,
                              pppp::osu::difficulty::OsuDifficultyAttributes& out) {
-        out.star_rating = in.star_rating;
-        out.max_combo = in.max_combo;
         out.aim_difficulty = in.aim_difficulty;
         out.speed_difficulty = in.speed_difficulty;
         out.reading_difficulty = in.reading_difficulty;
@@ -228,8 +202,6 @@ namespace {
 
     void read_taiko_difficulty(const pppp_taiko_difficulty_attributes& in,
                                pppp::taiko::difficulty::TaikoDifficultyAttributes& out) {
-        out.star_rating = in.star_rating;
-        out.max_combo = in.max_combo;
         out.mechanical_difficulty = in.mechanical_difficulty;
         out.rhythm_difficulty = in.rhythm_difficulty;
         out.reading_difficulty = in.reading_difficulty;
@@ -240,37 +212,31 @@ namespace {
         out.stamina_top_strains = in.stamina_top_strains;
     }
 
-    void read_catch_difficulty(const pppp_catch_difficulty_attributes& in,
-                               pppp::fruits::difficulty::CatchDifficultyAttributes& out) {
-        out.star_rating = in.star_rating;
-        out.max_combo = in.max_combo;
-    }
-
-    void read_mania_difficulty(const pppp_mania_difficulty_attributes& in,
-                               pppp::mania::difficulty::ManiaDifficultyAttributes& out) {
-        out.star_rating = in.star_rating;
-        out.max_combo = in.max_combo;
-    }
-
     pppp::DifficultyAttributes read_difficulty(const pppp_difficulty_attributes& in) {
         switch (in.ruleset) {
         case PPPP_RULESET_TAIKO: {
             pppp::TaikoDifficultyAttributes out;
+            out.star_rating = in.star_rating;
+            out.max_combo = in.max_combo;
             read_taiko_difficulty(in.taiko, out);
             return out;
         }
         case PPPP_RULESET_CATCH: {
             pppp::CatchDifficultyAttributes out;
-            read_catch_difficulty(in.fruits, out);
+            out.star_rating = in.star_rating;
+            out.max_combo = in.max_combo;
             return out;
         }
         case PPPP_RULESET_MANIA: {
             pppp::ManiaDifficultyAttributes out;
-            read_mania_difficulty(in.mania, out);
+            out.star_rating = in.star_rating;
+            out.max_combo = in.max_combo;
             return out;
         }
         default: {
             pppp::OsuDifficultyAttributes out;
+            out.star_rating = in.star_rating;
+            out.max_combo = in.max_combo;
             read_osu_difficulty(in.osu, out);
             return out;
         }
@@ -286,10 +252,6 @@ namespace {
             fill_osu_difficulty(*in.osu(), out.osu);
         } else if (in.taiko()) {
             fill_taiko_difficulty(*in.taiko(), out.taiko);
-        } else if (in.fruits()) {
-            fill_catch_difficulty(*in.fruits(), out.fruits);
-        } else if (in.mania()) {
-            fill_mania_difficulty(*in.mania(), out.mania);
         }
     }
 
@@ -301,8 +263,6 @@ namespace {
             fill_osu_performance(*in.osu(), out.osu);
         } else if (in.taiko()) {
             fill_taiko_performance(*in.taiko(), out.taiko);
-        } else if (in.fruits()) {
-            fill_catch_performance(*in.fruits(), out.fruits);
         } else if (in.mania()) {
             fill_mania_performance(*in.mania(), out.mania);
         }
@@ -339,6 +299,7 @@ struct SliderView {
 // NOLINTNEXTLINE(readability-identifier-naming)
 struct pppp_beatmap {
     pppp::Beatmap map;
+    bool prepared;
 
     std::vector<SliderView> slider_views;
     std::vector<pppp_slider> sliders;
@@ -408,6 +369,12 @@ namespace {
     }
 
     void build_views(pppp_beatmap& beatmap) {
+        beatmap.slider_views.clear();
+        beatmap.sliders.clear();
+        beatmap.hit_objects.clear();
+        beatmap.timing_points.clear();
+        beatmap.breaks.clear();
+
         build_hit_objects(beatmap.map, beatmap.hit_objects);
         build_timing_points(beatmap.map, beatmap.timing_points);
         build_breaks(beatmap.map, beatmap.breaks);
@@ -466,9 +433,14 @@ namespace {
 
 const char* pppp_version(void) { return PPPP_VERSION_STRING; }
 
+pppp_int32 pppp_abi_version(void) { return PPPP_C_ABI_VERSION; }
+
 const char* pppp_backend(void) { return internal::engine_name(internal::selected_engine()->kind); }
 
 const char* pppp_result_message(pppp_result result) {
+    if (result == PPPP_NOT_PREPARED) {
+        return "the beatmap data has not been prepared";
+    }
     return pppp::Status(static_cast<pppp::StatusCode::Value>(result)).message();
 }
 
@@ -531,11 +503,11 @@ pppp_result pppp_beatmap_from_file(const char* path, pppp_beatmap** out) {
             return PPPP_ALLOCATION;
         }
         ScopedFree<pppp_beatmap> beatmap(raw);
+        raw->prepared = false;
         const pppp::Status status = raw->map.load_file(path);
         if (!status.ok()) {
             return static_cast<pppp_result>(status.code());
         }
-        build_views(*raw);
         *out = beatmap.release();
         return PPPP_OK;
     }
@@ -552,11 +524,11 @@ pppp_result pppp_beatmap_from_bytes(const void* data, size_t size, pppp_beatmap*
             return PPPP_ALLOCATION;
         }
         ScopedFree<pppp_beatmap> beatmap(raw);
+        raw->prepared = false;
         const pppp::Status status = raw->map.load_buffer(data, size);
         if (!status.ok()) {
             return static_cast<pppp_result>(status.code());
         }
-        build_views(*raw);
         *out = beatmap.release();
         return PPPP_OK;
     }
@@ -564,6 +536,21 @@ pppp_result pppp_beatmap_from_bytes(const void* data, size_t size, pppp_beatmap*
 }
 
 void pppp_beatmap_free(pppp_beatmap* map) { delete map; }
+
+pppp_result pppp_beatmap_prepare_data(pppp_beatmap* map) {
+    if (!map) {
+        return PPPP_INVALID_ARGUMENT;
+    }
+    if (map->prepared) {
+        return PPPP_OK;
+    }
+    try {
+        build_views(*map);
+        map->prepared = true;
+        return PPPP_OK;
+    }
+    PPPP_CATCH_RETURN
+}
 
 pppp_int32 pppp_beatmap_format_version(const pppp_beatmap* map) { return map ? map->map.format_version : 0; }
 
@@ -589,6 +576,9 @@ pppp_result pppp_beatmap_hit_objects(const pppp_beatmap* map, const pppp_hit_obj
     if (!map || !out || !count) {
         return PPPP_INVALID_ARGUMENT;
     }
+    if (!map->prepared) {
+        return PPPP_NOT_PREPARED;
+    }
     *out = map->hit_objects.empty() ? 0 : &map->hit_objects[0];
     *count = map->hit_objects.size();
     return PPPP_OK;
@@ -597,6 +587,9 @@ pppp_result pppp_beatmap_hit_objects(const pppp_beatmap* map, const pppp_hit_obj
 pppp_result pppp_beatmap_sliders(const pppp_beatmap* map, const pppp_slider** out, size_t* count) {
     if (!map || !out || !count) {
         return PPPP_INVALID_ARGUMENT;
+    }
+    if (!map->prepared) {
+        return PPPP_NOT_PREPARED;
     }
     *out = map->sliders.empty() ? 0 : &map->sliders[0];
     *count = map->sliders.size();
@@ -608,6 +601,9 @@ pppp_result pppp_beatmap_timing_points(const pppp_beatmap* map, const pppp_timin
     if (!map || !out || !count) {
         return PPPP_INVALID_ARGUMENT;
     }
+    if (!map->prepared) {
+        return PPPP_NOT_PREPARED;
+    }
     *out = map->timing_points.empty() ? 0 : &map->timing_points[0];
     *count = map->timing_points.size();
     return PPPP_OK;
@@ -617,6 +613,9 @@ pppp_result pppp_beatmap_breaks(const pppp_beatmap* map, const pppp_break_period
     if (!map || !out || !count) {
         return PPPP_INVALID_ARGUMENT;
     }
+    if (!map->prepared) {
+        return PPPP_NOT_PREPARED;
+    }
     *out = map->breaks.empty() ? 0 : &map->breaks[0];
     *count = map->breaks.size();
     return PPPP_OK;
@@ -624,6 +623,9 @@ pppp_result pppp_beatmap_breaks(const pppp_beatmap* map, const pppp_break_period
 
 namespace {
     int read_difficulty_options(const pppp_difficulty_options* options, pppp::Difficulty& difficulty) {
+        if (options && options->version != PPPP_DIFFICULTY_OPTIONS_VERSION) {
+            return -1;
+        }
         if (options && options->mods) {
             difficulty.mods(options->mods->mods);
         }
@@ -729,7 +731,7 @@ pppp_result pppp_calculate_strains(const pppp_beatmap* map, const pppp_difficult
         }
         ScopedFree<pppp_strains> strains(raw);
 
-        const pppp::Status status = difficulty.strains(map->map, raw->strains);
+        const pppp::Status status = difficulty.calculate_strains(map->map, raw->strains);
         if (!status.ok()) {
             return static_cast<pppp_result>(status.code());
         }
@@ -802,6 +804,9 @@ pppp_result pppp_calculate_performance(const pppp_beatmap* map, const pppp_perfo
         return PPPP_INVALID_ARGUMENT;
     }
     try {
+        if (options && options->version != PPPP_PERFORMANCE_OPTIONS_VERSION) {
+            return PPPP_INVALID_ARGUMENT;
+        }
         pppp::ScoreInfo score;
         if (options && options->has_score) {
             for (int i = 0; i < common::HIT_RESULT_COUNT; i++) {

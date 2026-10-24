@@ -124,7 +124,7 @@ namespace pppp {
         /// strains, return them as is.
         ///
         /// Suitable to plot the difficulty of a map over time.
-        Status strains(const pppp::beatmaps::Beatmap& map, Strains& out) const;
+        Status calculate_strains(const pppp::beatmaps::Beatmap& map, Strains& out) const;
 
     private:
         Mods effective_mods() const;

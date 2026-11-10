@@ -40,11 +40,12 @@ stdenv.mkDerivation {
       .${runtimeId};
   };
 
+  # autoPatchelfHook is ELF-only.
   nativeBuildInputs = [
     unzip
-    autoPatchelfHook
     makeWrapper
   ]
+  ++ lib.optionals stdenv.hostPlatform.isLinux [ autoPatchelfHook ]
   ++ lib.optionals stdenv.hostPlatform.isDarwin [ stdenv.cc.bintools ];
 
   # what the bundled libClangSharp links against
@@ -57,10 +58,12 @@ stdenv.mkDerivation {
   dontBuild = true;
   dontConfigure = true;
 
-  # the darwin build expects zstd from homebrew
+  # the package expects homebrew and a versioned dylib name
   postFixup = lib.optionalString stdenv.hostPlatform.isDarwin ''
+    ln -s libClangSharp.dylib $out/lib/libClangSharp.${version}.dylib
     install_name_tool -change /opt/homebrew/opt/zstd/lib/libzstd.1.dylib \
-      ${zstd}/lib/libzstd.1.dylib $out/lib/libClangSharp.dylib
+      ${zstd.out}/lib/libzstd.1.dylib $out/lib/libClangSharp.dylib
+    install_name_tool -add_rpath @loader_path $out/lib/libClangSharp.dylib
   '';
 
   unpackPhase = ''

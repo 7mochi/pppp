@@ -6,6 +6,6 @@ tag = true
 message = "chore: bump version (python)"
 
 [[tool.bumpversion.files]]
-filename = "pyproject.toml"
+filename = "{repo_root}/pyproject.toml"
 search = 'version = "{current_version}"'
 replace = 'version = "{new_version}"'

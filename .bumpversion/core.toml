@@ -5,21 +5,21 @@ tag = false
 message = "chore: bump version (core)"
 
 [[tool.bumpversion.files]]
-filename = "CMakeLists.txt"
+filename = "{repo_root}/CMakeLists.txt"
 search = "project(pppp VERSION {current_version}"
 replace = "project(pppp VERSION {new_version}"
 
 [[tool.bumpversion.files]]
-filename = "include/pppp/config.h"
+filename = "{repo_root}/include/pppp/config.h"
 search = "#define PPPP_VERSION_MAJOR {current_major}"
 replace = "#define PPPP_VERSION_MAJOR {new_major}"
 
 [[tool.bumpversion.files]]
-filename = "include/pppp/config.h"
+filename = "{repo_root}/include/pppp/config.h"
 search = "#define PPPP_VERSION_MINOR {current_minor}"
 replace = "#define PPPP_VERSION_MINOR {new_minor}"
 
 [[tool.bumpversion.files]]
-filename = "include/pppp/config.h"
+filename = "{repo_root}/include/pppp/config.h"
 search = "#define PPPP_VERSION_PATCH {current_patch}"
 replace = "#define PPPP_VERSION_PATCH {new_patch}"

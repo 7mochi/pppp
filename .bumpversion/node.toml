@@ -7,6 +7,6 @@ message = "chore: bump version (node)"
 pre_commit_hooks = ["npm install --package-lock-only --ignore-scripts", "git add package-lock.json"]
 
 [[tool.bumpversion.files]]
-filename = "package.json"
+filename = "{repo_root}/package.json"
 search = '"version": "{current_version}"'
 replace = '"version": "{new_version}"'

@@ -6,6 +6,6 @@ tag = true
 message = "chore: bump version (csharp)"
 
 [[tool.bumpversion.files]]
-filename = "csharp/Pppp.csproj"
+filename = "{repo_root}/csharp/Pppp.csproj"
 search = "<Version>{current_version}</Version>"
 replace = "<Version>{new_version}</Version>"

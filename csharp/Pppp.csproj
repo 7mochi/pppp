@@ -5,6 +5,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <PackageId>pppp-dotnet</PackageId>
+    <Authors>7mochi</Authors>
     <Description>Performance points and difficulty calculation for osu!, ported from osu!lazer.</Description>
     <PackageLicenseFile>LICENCE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>

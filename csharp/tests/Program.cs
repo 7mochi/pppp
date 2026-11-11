@@ -500,7 +500,8 @@ namespace Pppp.Tests {
                 roots.AddRange(loaderPath.Split(Path.PathSeparator));
             }
             foreach (string root in roots) {
-                if (Directory.Exists(root) && Directory.GetFiles(root, "*fosu_engine_*").Length > 0) {
+                if (Directory.Exists(root) &&
+                    Directory.GetFiles(root, "*fosu_engine_*", SearchOption.AllDirectories).Length > 0) {
                     return true;
                 }
             }

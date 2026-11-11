@@ -37,11 +37,11 @@ jobs:
           - os: windows-2022
             rid: win-x64
             args: -A x64
-            pgort: Hostx64\x64
+            pgort: Hostx64/x64
           - os: windows-2022
             rid: win-x86
             args: -A Win32
-            pgort: Hostx86\x86
+            pgort: Hostx86/x86
           - os: windows-11-arm
             rid: win-arm64
             args: -A ARM64
@@ -75,9 +75,16 @@ jobs:
       - name: Copy the PGO runtime beside the training executable
         if: runner.os == 'Windows'
         run: |
-          compiler="$(sed -n 's/^CMAKE_CXX_COMPILER:FILEPATH=//p' build/CMakeCache.txt)"
-          find "${compiler%%/bin/*}/bin" -name pgort140.dll
-          cp "${compiler%%/bin/*}/bin/${{ matrix.pgort }}/pgort140.dll" build/tests/Release/
+          vswhere="/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe"
+          vsroot="$("$vswhere" -latest -property installationPath | tr -d '\r')"
+          echo "visual studio: $vsroot"
+          tools="$(ls -d "$vsroot"/VC/Tools/MSVC/*/ | sort | tail -1)"
+          echo "msvc tools: $tools"
+          pgort="$(find "$tools/bin" -name pgort140.dll -path "*/${{ matrix.pgort }}/pgort140.dll" | head -1)"
+          echo "pgort: $pgort"
+          [ -n "$pgort" ] || { echo "no pgort140.dll for ${{ matrix.pgort }}"; find "$tools/bin" -name pgort140.dll; exit 1; }
+          mkdir -p build/tests/Release
+          cp "$pgort" build/tests/Release/
       - name: Generate the PGO data
         if: runner.os == 'Windows'
         run: ctest --test-dir build -C Release -R "^capi$" --output-on-failure

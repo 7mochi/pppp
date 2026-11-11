@@ -2,7 +2,6 @@
   perSystem =
     {
       pkgs,
-      config,
       releasePkgs,
       ...
     }:
@@ -15,27 +14,11 @@
             pkgs.gcc
             pkgs.clang-tools
             pkgs.gnumake
-            pkgs.nodejs
             pkgs.git
             pkgs.pre-commit
             pkgs.nixfmt
             pkgs.dotnet-sdk
-            pkgs.biome
-            config.packages.clangsharp-generator
-            pkgs.libclang.lib
-            (pkgs.python3.withPackages (
-              ps: with ps; [
-                pytest
-                mypy
-                build
-                scikit-build-core
-                typing-extensions
-                pip
-                jinja2
-                clang
-                ctypesgen
-              ]
-            ))
+            (pkgs.python3.withPackages (ps: with ps; [ jinja2 ]))
           ]
           ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isDarwin [
             pkgs.bash
@@ -49,9 +32,6 @@
             echo "  make format                              # C++ formatting"
             echo "  make check-format                        # C++ formatting, checked"
             echo "  make check-tidy                          # C++ analysis, report only"
-            echo "  pip install . && pytest python/tests     # python bindings"
-            echo "  npm install && npm test                  # node bindings"
-            echo "  cd csharp/tests && dotnet run -f net8.0  # c# bindings"
             ${pkgs.lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
               echo "  nix develop .#legacyWindows              # legacy windows targets"
             ''}if [ -t 1 ] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -74,7 +54,7 @@
           shellHook = ''
             echo "pp++ / release"
             echo "  builds against glibc $(getconf GNU_LIBC_VERSION | cut -d' ' -f2)"
-            echo "  make build-pgo     # a PGO Release build in build_pgo"
+            echo "  cmake --preset release && cmake --build --preset release   # a Release build in build/release"
           '';
         };
 

@@ -44,14 +44,6 @@ if(PPPP_WITH_FOSU)
   pppp_place_engine(parity_performance)
 endif()
 
-if(PPPP_WITH_FOSU AND PPPP_BUILD_CAPI)
-  # --success names every test case as it runs, so a case that hangs and is killed by the timeout
-  # above can be told apart from the ones before it in the CI log.
-  set(PPPP_TEST_ARGS --success)
-  pppp_add_test(capi library pppp_fosu pppp_c pppp_cjson)
-  unset(PPPP_TEST_ARGS)
-endif()
-
 if(PPPP_WITH_FOSU AND PPPP_INSTALL)
   add_test(NAME install_consumer COMMAND ${CMAKE_COMMAND}
     -DPPPP_BINARY=${CMAKE_BINARY_DIR}

@@ -1,7 +1,5 @@
 build/
 build_*/
-profile-data/
-build-py/
 compile_commands.json
 CMakeUserPresets.json
 
@@ -10,22 +8,9 @@ CMakeUserPresets.json
 
 __pycache__/
 *.pyc
-.pytest_cache/
-.mypy_cache/
-
-dist/
-*.egg-info/
-
-node_modules/
-prebuilds/
 
 .commandcode/
 
-csharp/**/bin/
-csharp/**/obj/
-csharp/native/
-!csharp/build/
-*.nupkg
 reference/**/bin/
 reference/**/obj/
 Testing/

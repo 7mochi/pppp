@@ -16,22 +16,12 @@ repos:
             third_party/(atomic-lite|optional-bare|span-lite|string-view-lite|variant-lite)/|
             LICENCE$|
             .*\.osu$|
-            .*\.patch$|
-            python/pppp/(_native|ctypes_preamble|ctypes_loader)\.py$
+            .*\.patch$
           )
       - id: check-yaml
       - id: check-json
       - id: check-toml
       - id: check-merge-conflict
-
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v2.4.0
-    hooks:
-      - id: mypy
-        args: [--config-file=pyproject.toml]
-        pass_filenames: false
-        files: ^(python/|pyproject\.toml$|\.pre-commit-config\.yaml$)
-        additional_dependencies: [typing-extensions]
 
   - repo: local
     hooks:
@@ -50,8 +40,3 @@ repos:
         entry: .pre-commit/run.sh nixfmt
         language: system
         types: [nix]
-      - id: biome
-        name: biome
-        entry: .pre-commit/run.sh biome check --write --no-errors-on-unmatched
-        language: system
-        files: ^node/.*\.(js|ts)$

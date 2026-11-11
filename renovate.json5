@@ -18,20 +18,8 @@
       pinDigests: true,
     },
     {
-      matchManagers: ["npm"],
-      groupName: "npm",
-    },
-    {
-      matchManagers: ["pep621", "pip_requirements"],
-      groupName: "python",
-    },
-    {
       matchManagers: ["nix"],
       groupName: "nix",
-    },
-    {
-      matchManagers: ["nuget"],
-      groupName: "nuget",
     },
   ],
 }

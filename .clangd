@@ -14,12 +14,3 @@ If:
 
 Diagnostics:
   Suppress: "*"
-
----
-If:
-  PathMatch: src/pppp/bindings/.*
-
-Diagnostics:
-  Includes:
-    IgnoreHeader:
-      - 'python3\.[0-9]+/.*'

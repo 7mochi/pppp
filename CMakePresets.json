@@ -10,8 +10,6 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "PPPP_BUILD_TESTS": "ON",
-        "PPPP_BUILD_PYTHON": "ON",
-        "PPPP_BUILD_CAPI": "ON",
         "PPPP_ISA": "auto",
         "PPPP_WARNINGS_AS_ERRORS": "ON"
       }
@@ -32,19 +30,7 @@
       "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "PPPP_BUILD_CAPI": "ON",
-        "PPPP_BUILD_TESTS": "OFF",
-        "PPPP_BUILD_PYTHON": "OFF",
-        "PPPP_BUILD_NODE": "OFF"
-      }
-    },
-    {
-      "name": "pgo",
-      "displayName": "Release with PGO",
-      "inherits": "release",
-      "binaryDir": "${sourceDir}/build_pgo",
-      "cacheVariables": {
-        "PPPP_BUILD_TESTS": "ON"
+        "PPPP_BUILD_TESTS": "OFF"
       }
     },
     {
@@ -93,7 +79,6 @@
         "CMAKE_C_FLAGS": "-D_WIN32_WINNT=0x0500 -DWINVER=0x0500",
         "CMAKE_CXX_FLAGS": "-D_WIN32_WINNT=0x0500 -DWINVER=0x0500",
         "CMAKE_SHARED_LINKER_FLAGS": "-static-libstdc++ -static-libgcc",
-        "PPPP_WIN2K": "ON",
         "PPPP_INSTALL": "OFF"
       }
     },
@@ -121,10 +106,6 @@
     {
       "name": "release",
       "configurePreset": "release"
-    },
-    {
-      "name": "pgo",
-      "configurePreset": "pgo"
     },
     {
       "name": "scalar",

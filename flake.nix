@@ -1,5 +1,5 @@
 {
-  description = "osu! difficulty and performance calculations in C++98, with Python, Node and C# bindings";
+  description = "osu! difficulty and performance calculations in C++98";
 
   inputs = {
     flake-parts.url = "github:hercules-ci/flake-parts";
@@ -10,7 +10,6 @@
   outputs =
     inputs@{ flake-parts, nixpkgs-release, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      # ClangSharp publishes no macOS x64 build, so x86_64-darwin cannot be evaluated here.
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -19,7 +18,6 @@
 
       imports = [
         ./nix/shells.nix
-        ./nix/packages
       ];
 
       perSystem =
@@ -27,11 +25,9 @@
         {
           _module.args.pkgs = import inputs.nixpkgs {
             inherit system;
-            overlays = [ (import ./nix/overlays.nix) ];
           };
           _module.args.releasePkgs = import nixpkgs-release {
             inherit system;
-            overlays = [ (import ./nix/overlays.nix) ];
           };
         };
     };

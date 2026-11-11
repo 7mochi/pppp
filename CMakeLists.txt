@@ -3,29 +3,12 @@ set(CMAKE_VERIFY_INTERFACE_HEADER_SETS ON)
 project(pppp VERSION 1.0.0 LANGUAGES CXX
         DESCRIPTION "PerformancePoints++")
 
-if(DEFINED SKBUILD)
-  set(PPPP_BUILD_PYTHON ON)
-  set(PPPP_INSTALL OFF)
-  set(PPPP_BUILD_TESTS OFF)
-endif()
-
 option(PPPP_WITH_FOSU "Build the .osu parser" ON)
 option(PPPP_BUILD_TESTS "Build the test suites" ${PROJECT_IS_TOP_LEVEL})
 option(PPPP_INSTALL "Generate install rules" ${PROJECT_IS_TOP_LEVEL})
-option(PPPP_BUILD_PYTHON "Build and install the native library the python package loads" OFF)
-option(PPPP_BUILD_CAPI "Build the flat C ABI shared library (pppp_c)" OFF)
-option(PPPP_WIN2K "Link the shim that keeps the produced binaries loadable on Windows 2000" OFF)
 
-if(PPPP_BUILD_PYTHON)
-  set(PPPP_BUILD_CAPI ON)
-endif()
 set(PPPP_ISA auto CACHE STRING "Native targets: auto, scalar, avx2, neon")
 set_property(CACHE PPPP_ISA PROPERTY STRINGS auto scalar avx2 neon)
-
-if(PPPP_BUILD_PYTHON OR PPPP_BUILD_CAPI)
-  # The library is static and the extension is a shared object.
-  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-endif()
 
 if(PROJECT_IS_TOP_LEVEL)
   set(CMAKE_CXX_STANDARD 98)
@@ -38,16 +21,11 @@ include(GNUInstallDirs)
 include(cmake/Warnings.cmake)
 include(cmake/Numerics.cmake)
 include(cmake/Performance.cmake)
-include(cmake/Bindings.cmake)
 include(cmake/Targets.cmake)
 include(cmake/Checks.cmake)
 
-if(PROJECT_IS_TOP_LEVEL)
-  include(cmake/PGO.cmake)
-endif()
-
-# cJSON (tests) and the C bindings both need the C language
-if(PPPP_BUILD_TESTS OR PPPP_BUILD_CAPI)
+# cJSON (tests) needs the C language
+if(PPPP_BUILD_TESTS)
   enable_language(C)
 endif()
 
@@ -375,14 +353,6 @@ endif()
 add_library(pppp_internal INTERFACE)
 target_include_directories(pppp_internal INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(pppp_internal INTERFACE pppp)
-
-if(PPPP_BUILD_CAPI AND PPPP_WITH_FOSU)
-  include(cmake/CAPI.cmake)
-endif()
-
-if(PPPP_BUILD_PYTHON)
-  include(cmake/Python.cmake)
-endif()
 
 if(PPPP_BUILD_TESTS)
   add_subdirectory(tests)

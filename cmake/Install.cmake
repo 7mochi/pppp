@@ -32,9 +32,6 @@ if(PPPP_WITH_FOSU)
   elseif(TARGET fosu_engine_neon)
     list(APPEND PPPP_INSTALL_TARGETS fosu_engine_neon)
   endif()
-  if(PPPP_BUILD_CAPI)
-    list(APPEND PPPP_INSTALL_TARGETS pppp_c)
-  endif()
 endif()
 
 install(TARGETS ${PPPP_INSTALL_TARGETS} EXPORT ppppTargets

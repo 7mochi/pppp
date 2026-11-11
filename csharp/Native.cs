@@ -12,6 +12,14 @@ namespace Pppp {
         internal const uint DifficultyOptionsVersion = 1;
         internal const uint PerformanceOptionsVersion = 1;
 
+        // Runs before the first call into pppp_c, so an incompatible library is reported as such
+        // instead of failing somewhere inside a calculation.
+        static Native() {
+            if (pppp_abi_version() != AbiVersion) {
+                throw new InvalidOperationException("pppp_c has an incompatible C ABI");
+            }
+        }
+
         internal static byte[] Utf8(string value) {
             byte[] bytes = Encoding.UTF8.GetBytes(value);
             byte[] terminated = new byte[bytes.Length + 1];

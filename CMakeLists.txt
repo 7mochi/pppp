@@ -336,6 +336,12 @@ if(PPPP_WITH_FOSU)
   get_property(PPPP_FOSU_TARGETS DIRECTORY third_party/fosu PROPERTY BUILDSYSTEM_TARGETS)
   set_property(TARGET ${PPPP_FOSU_TARGETS} PROPERTY CXX_CLANG_TIDY "")
 
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set_property(TARGET ${PPPP_FOSU_TARGETS} APPEND PROPERTY COMPILE_OPTIONS -Wno-maybe-uninitialized)
+  elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set_property(TARGET ${PPPP_FOSU_TARGETS} APPEND PROPERTY COMPILE_OPTIONS -Wno-unnamed-type-template-args)
+  endif()
+
   set_target_properties(fosu PROPERTIES EXPORT_NAME fosu_parser)
 
   add_library(pppp_fosu src/pppp/fosu/beatmap.cpp src/pppp/fosu/backend.cpp)

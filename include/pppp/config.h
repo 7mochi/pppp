@@ -12,7 +12,7 @@
 #define variant_CONFIG_NO_EXCEPTIONS 1
 #include "nonstd/variant.hpp" // IWYU pragma: keep
 
-#define PPPP_VERSION_MAJOR 0
+#define PPPP_VERSION_MAJOR 1
 #define PPPP_VERSION_MINOR 0
 #define PPPP_VERSION_PATCH 0
 

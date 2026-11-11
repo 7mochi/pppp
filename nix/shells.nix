@@ -1,6 +1,11 @@
 {
   perSystem =
-    { pkgs, config, ... }:
+    {
+      pkgs,
+      config,
+      releasePkgs,
+      ...
+    }:
     {
       devShells = {
         default = pkgs.mkShell {
@@ -56,6 +61,23 @@
         };
       }
       // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+        # nixos-24.05's libc: loads on any newer glibc
+        release = releasePkgs.mkShell {
+          packages = [
+            releasePkgs.cmake
+            releasePkgs.ninja
+            releasePkgs.gcc
+            releasePkgs.gnumake
+            releasePkgs.git
+          ];
+
+          shellHook = ''
+            echo "pp++ / release"
+            echo "  builds against glibc $(getconf GNU_LIBC_VERSION | cut -d' ' -f2)"
+            echo "  make build-pgo     # a PGO Release build in build_pgo"
+          '';
+        };
+
         legacyWindows = pkgs.mkShell {
           packages = [
             pkgs.cmake

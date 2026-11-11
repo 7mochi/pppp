@@ -60,7 +60,7 @@ jobs:
         if: runner.os == 'Linux'
       - name: Configure and build with PGO
         if: runner.os == 'Linux'
-        run: nix develop -c make build-pgo
+        run: nix develop .#release -c make build-pgo
       - name: Configure and build with PGO
         if: runner.os == 'macOS'
         run: make build-pgo
@@ -72,7 +72,7 @@ jobs:
       - name: Test the native
         run: |
           case "$RUNNER_OS" in
-            Linux) nix develop -c ctest --test-dir build_pgo --output-on-failure ;;
+            Linux) nix develop .#release -c ctest --test-dir build_pgo --output-on-failure ;;
             macOS) ctest --test-dir build_pgo --output-on-failure ;;
             Windows) ctest --test-dir build -C Release --output-on-failure ;;
           esac

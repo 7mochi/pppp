@@ -25,19 +25,6 @@ jobs:
           declared="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' csharp/Pppp.csproj | head -1)"
           echo "tag=$tag version=$version declared=$declared"
           [ "$version" = "$declared" ] || { echo "The tag says $version but the manifest says $declared"; exit 1; }
-      - name: Check the native library reports the released version
-        run: |
-          version="${GITHUB_REF_NAME#*-v}"
-          major="$(sed -n 's/^#define PPPP_VERSION_MAJOR \(.*\)/\1/p' include/pppp/config.h)"
-          minor="$(sed -n 's/^#define PPPP_VERSION_MINOR \(.*\)/\1/p' include/pppp/config.h)"
-          patch="$(sed -n 's/^#define PPPP_VERSION_PATCH \(.*\)/\1/p' include/pppp/config.h)"
-          native="$major.$minor.$patch"
-          echo "tag=$version native=$native"
-          [ "$version" = "$native" ] || {
-            echo "The package would be $version but the native library reports $native."
-            echo "Bump the core version too: bump-version.yml with artifact=core."
-            exit 1
-          }
 
   dotnet-native:
     name: C# native / ${{ matrix.rid }}

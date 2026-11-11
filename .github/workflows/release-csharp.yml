@@ -147,7 +147,15 @@ jobs:
         run: |
           mkdir -p consumer && cd consumer
           dotnet new console --force
-          dotnet nuget add source "$GITHUB_WORKSPACE/artifacts" --name pppp
+          cat > NuGet.config <<EOF
+          <configuration>
+            <packageSources>
+              <clear />
+              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+              <add key="pppp" value="$GITHUB_WORKSPACE/artifacts" />
+            </packageSources>
+          </configuration>
+          EOF
           dotnet add package pppp-dotnet
           dotnet add package Newtonsoft.Json
           cp ../csharp/tests/Program.cs Program.cs
@@ -169,7 +177,15 @@ jobs:
             </ItemGroup>
           </Project>
           EOF
-          dotnet nuget add source "$GITHUB_WORKSPACE/artifacts" --name pppp
+          cat > NuGet.config <<EOF
+          <configuration>
+            <packageSources>
+              <clear />
+              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+              <add key="pppp" value="$GITHUB_WORKSPACE/artifacts" />
+            </packageSources>
+          </configuration>
+          EOF
           dotnet add package pppp-dotnet
           dotnet add package Newtonsoft.Json
           cp ../csharp/tests/Program.cs Program.cs

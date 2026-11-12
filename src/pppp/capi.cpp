@@ -30,6 +30,11 @@ struct PpppTaikoDifficultyCalculator : PpppDifficultyCalculator {};
 struct PpppCatchDifficultyCalculator : PpppDifficultyCalculator {};
 struct PpppManiaDifficultyCalculator : PpppDifficultyCalculator {};
 
+struct PpppTimedResult {
+    std::vector<pppp::TimedDifficultyAttributes> entries;
+    int ruleset;
+};
+
 namespace {
 #if defined(_MSC_VER)
     __declspec(thread) char g_last_message[256];
@@ -289,6 +294,120 @@ namespace {
     void fill_mania(PpppManiaDifficultyAttributes* out, const pppp::ManiaDifficultyAttributes& attributes) {
         out->star_rating = attributes.star_rating;
         out->max_combo = attributes.max_combo;
+    }
+
+    bool fill_timed(PpppTimedOsuDifficultyAttributes* out, const pppp::TimedDifficultyAttributes& entry) {
+        const pppp::OsuDifficultyAttributes* attributes = entry.attributes.osu();
+        if (!attributes) {
+            return false;
+        }
+
+        out->time = entry.time;
+        fill_osu(&out->attributes, *attributes);
+
+        return true;
+    }
+
+    bool fill_timed(PpppTimedTaikoDifficultyAttributes* out, const pppp::TimedDifficultyAttributes& entry) {
+        const pppp::TaikoDifficultyAttributes* attributes = entry.attributes.taiko();
+        if (!attributes) {
+            return false;
+        }
+
+        out->time = entry.time;
+        fill_taiko(&out->attributes, *attributes);
+
+        return true;
+    }
+
+    bool fill_timed(PpppTimedCatchDifficultyAttributes* out, const pppp::TimedDifficultyAttributes& entry) {
+        const pppp::CatchDifficultyAttributes* attributes = entry.attributes.fruits();
+        if (!attributes) {
+            return false;
+        }
+
+        out->time = entry.time;
+        fill_catch(&out->attributes, *attributes);
+
+        return true;
+    }
+
+    bool fill_timed(PpppTimedManiaDifficultyAttributes* out, const pppp::TimedDifficultyAttributes& entry) {
+        const pppp::ManiaDifficultyAttributes* attributes = entry.attributes.mania();
+        if (!attributes) {
+            return false;
+        }
+
+        out->time = entry.time;
+        fill_mania(&out->attributes, *attributes);
+
+        return true;
+    }
+
+    PpppErrorCode calculate_timed_into(const PpppDifficultyCalculator* calculator, PpppMods* mods,
+                                       PpppTimedResult** out) {
+        pppp::Difficulty difficulty = calculator->difficulty;
+
+        if (mods) {
+            difficulty.mods(mods->mods);
+        }
+
+        std::vector<pppp::TimedDifficultyAttributes> entries;
+        const pppp::Status status = difficulty.calculate_timed(calculator->beatmap->map, entries);
+        if (!status.ok()) {
+            return status_error(status);
+        }
+
+        PpppTimedResult* result = new (std::nothrow) PpppTimedResult;
+        if (!result) {
+            set_error("out of memory");
+            return Pppp_Allocation;
+        }
+
+        result->entries.swap(entries);
+        result->ruleset = calculator->ruleset_id;
+        *out = result;
+
+        return Pppp_Success;
+    }
+
+    template <class NativeTimed>
+    PpppErrorCode get_timed(PpppTimedResult* result, int expected_ruleset, NativeTimed* buffer,
+                            PpppInt32* size) {
+        if (!result || !size) {
+            set_error("a result and a size are required");
+
+            return Pppp_InvalidArgument;
+        }
+
+        if (result->ruleset != expected_ruleset) {
+            set_error("the result is for another ruleset");
+
+            return Pppp_UnexpectedRuleset;
+        }
+
+        const PpppInt32 count = static_cast<PpppInt32>(result->entries.size());
+
+        if (!buffer) {
+            *size = count;
+
+            return Pppp_BufferSizeQuery;
+        }
+
+        PpppInt32 copy = count;
+        if (copy > *size) {
+            copy = *size;
+        }
+
+        for (PpppInt32 i = 0; i < copy; i++) {
+            if (!fill_timed(&buffer[i], result->entries[static_cast<size_t>(i)])) {
+                set_error("the result entries do not match the result ruleset");
+
+                return Pppp_Internal;
+            }
+        }
+
+        return Pppp_Success;
     }
 } // namespace
 
@@ -714,6 +833,21 @@ PpppErrorCode Pppp_OsuDifficultyCalculator_Calculate(PpppOsuDifficultyCalculator
     return Pppp_Success;
 }
 
+PpppErrorCode Pppp_OsuDifficultyCalculator_CalculateTimed(PpppOsuDifficultyCalculator* calculator,
+                                                          PpppMods* mods, PpppTimedResult** out) {
+    clear_error();
+
+    if (!calculator || !out) {
+        set_error("a calculator and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    *out = 0;
+
+    return calculate_timed_into(calculator, mods, out);
+}
+
 PpppErrorCode Pppp_OsuDifficultyCalculator_SetClockRate(PpppOsuDifficultyCalculator* calculator,
                                                         double clock_rate) {
     clear_error();
@@ -778,6 +912,21 @@ PpppErrorCode Pppp_TaikoDifficultyCalculator_Calculate(PpppTaikoDifficultyCalcul
     fill_taiko(out, *value);
 
     return Pppp_Success;
+}
+
+PpppErrorCode Pppp_TaikoDifficultyCalculator_CalculateTimed(PpppTaikoDifficultyCalculator* calculator,
+                                                            PpppMods* mods, PpppTimedResult** out) {
+    clear_error();
+
+    if (!calculator || !out) {
+        set_error("a calculator and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    *out = 0;
+
+    return calculate_timed_into(calculator, mods, out);
 }
 
 PpppErrorCode Pppp_TaikoDifficultyCalculator_SetClockRate(PpppTaikoDifficultyCalculator* calculator,
@@ -846,6 +995,21 @@ PpppErrorCode Pppp_CatchDifficultyCalculator_Calculate(PpppCatchDifficultyCalcul
     return Pppp_Success;
 }
 
+PpppErrorCode Pppp_CatchDifficultyCalculator_CalculateTimed(PpppCatchDifficultyCalculator* calculator,
+                                                            PpppMods* mods, PpppTimedResult** out) {
+    clear_error();
+
+    if (!calculator || !out) {
+        set_error("a calculator and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    *out = 0;
+
+    return calculate_timed_into(calculator, mods, out);
+}
+
 PpppErrorCode Pppp_CatchDifficultyCalculator_SetClockRate(PpppCatchDifficultyCalculator* calculator,
                                                           double clock_rate) {
     clear_error();
@@ -912,6 +1076,21 @@ PpppErrorCode Pppp_ManiaDifficultyCalculator_Calculate(PpppManiaDifficultyCalcul
     return Pppp_Success;
 }
 
+PpppErrorCode Pppp_ManiaDifficultyCalculator_CalculateTimed(PpppManiaDifficultyCalculator* calculator,
+                                                            PpppMods* mods, PpppTimedResult** out) {
+    clear_error();
+
+    if (!calculator || !out) {
+        set_error("a calculator and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    *out = 0;
+
+    return calculate_timed_into(calculator, mods, out);
+}
+
 PpppErrorCode Pppp_ManiaDifficultyCalculator_SetClockRate(PpppManiaDifficultyCalculator* calculator,
                                                           double clock_rate) {
     clear_error();
@@ -944,3 +1123,47 @@ PpppErrorCode Pppp_ManiaDifficultyCalculator_ClearClockRate(PpppManiaDifficultyC
 void Pppp_ManiaDifficultyCalculator_Destroy(PpppManiaDifficultyCalculator* calculator) {
     destroy_calculator(calculator);
 }
+
+PpppErrorCode Pppp_TimedResult_GetCount(PpppTimedResult* result, PpppInt32* out) {
+    clear_error();
+
+    if (!result || !out) {
+        set_error("a result and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    *out = static_cast<PpppInt32>(result->entries.size());
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_TimedResult_GetOsu(PpppTimedResult* result, PpppTimedOsuDifficultyAttributes* buffer,
+                                      PpppInt32* size) {
+    clear_error();
+
+    return get_timed(result, 0, buffer, size);
+}
+
+PpppErrorCode Pppp_TimedResult_GetTaiko(PpppTimedResult* result, PpppTimedTaikoDifficultyAttributes* buffer,
+                                        PpppInt32* size) {
+    clear_error();
+
+    return get_timed(result, 1, buffer, size);
+}
+
+PpppErrorCode Pppp_TimedResult_GetCatch(PpppTimedResult* result, PpppTimedCatchDifficultyAttributes* buffer,
+                                        PpppInt32* size) {
+    clear_error();
+
+    return get_timed(result, 2, buffer, size);
+}
+
+PpppErrorCode Pppp_TimedResult_GetMania(PpppTimedResult* result, PpppTimedManiaDifficultyAttributes* buffer,
+                                        PpppInt32* size) {
+    clear_error();
+
+    return get_timed(result, 3, buffer, size);
+}
+
+void Pppp_TimedResult_Destroy(PpppTimedResult* result) { delete result; }

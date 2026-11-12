@@ -293,3 +293,186 @@ TEST_CASE("the C ABI calculator keeps the beatmap alive") {
     Pppp_OsuDifficultyCalculator_Destroy(0);
     Pppp_Ruleset_Destroy(ruleset.handle);
 }
+
+TEST_CASE("the C ABI timed result matches the C++ calculator") {
+    pppp::Beatmap source;
+    pppp_test::load(source, PPPP_TEST_RESOURCES "/osu/2785319.osu");
+    const std::vector<pppp::TimedDifficultyAttributes> expected =
+        pppp_test::calculate_timed(pppp::Difficulty().mods(pppp_test::parse_mods("HD,DT")), source);
+
+    PpppNativeBeatmap map;
+    REQUIRE(Pppp_Beatmap_CreateFromFile(PPPP_TEST_RESOURCES "/osu/2785319.osu", &map) == Pppp_Success);
+    PpppNativeRuleset ruleset;
+    REQUIRE(Pppp_Ruleset_CreateFromId(0, &ruleset) == Pppp_Success);
+    PpppNativeMods mods;
+    REQUIRE(Pppp_Mods_Create(&mods) == Pppp_Success);
+    REQUIRE(Pppp_Mods_Parse(mods.handle, "HD,DT") == Pppp_Success);
+    PpppNativeOsuDifficultyCalculator calc;
+    REQUIRE(Pppp_OsuDifficultyCalculator_Create(ruleset.handle, map.handle, &calc) == Pppp_Success);
+
+    PpppTimedResult* result = 0;
+    REQUIRE(Pppp_OsuDifficultyCalculator_CalculateTimed(calc.handle, mods.handle, &result) == Pppp_Success);
+
+    PpppInt32 count = 0;
+    CHECK(Pppp_TimedResult_GetCount(result, &count) == Pppp_Success);
+    CHECK(static_cast<size_t>(count) == expected.size());
+
+    PpppInt32 size = 0;
+    CHECK(Pppp_TimedResult_GetOsu(result, 0, &size) == Pppp_BufferSizeQuery);
+    CHECK(size == count);
+    std::vector<PpppTimedOsuDifficultyAttributes> buffer(size);
+    CHECK(Pppp_TimedResult_GetOsu(result, &buffer[0], &size) == Pppp_Success);
+    CHECK(buffer[0].time == expected[0].time);
+    CHECK(buffer[0].attributes.star_rating ==
+          pppp_test::difficulty_approx(expected[0].attributes.star_rating()));
+    CHECK(buffer.back().attributes.max_combo == expected.back().attributes.max_combo());
+
+    CHECK(Pppp_TimedResult_GetTaiko(result, 0, &size) == Pppp_UnexpectedRuleset);
+    Pppp_TimedResult_Destroy(result);
+    Pppp_TimedResult_Destroy(0);
+    Pppp_OsuDifficultyCalculator_Destroy(calc.handle);
+    Pppp_Mods_Destroy(mods.handle);
+    Pppp_Ruleset_Destroy(ruleset.handle);
+    Pppp_Beatmap_Destroy(map.handle);
+}
+
+TEST_CASE("the C ABI timed result is empty for a beatmap without hit objects") {
+    const char* text = "osu file format v14\n[General]\nMode:0\n";
+
+    PpppNativeBeatmap map;
+    REQUIRE(Pppp_Beatmap_CreateFromText(text, &map) == Pppp_Success);
+    PpppNativeRuleset ruleset;
+    REQUIRE(Pppp_Ruleset_CreateFromId(0, &ruleset) == Pppp_Success);
+    PpppNativeOsuDifficultyCalculator calc;
+    REQUIRE(Pppp_OsuDifficultyCalculator_Create(ruleset.handle, map.handle, &calc) == Pppp_Success);
+
+    PpppTimedResult* result = 0;
+    REQUIRE(Pppp_OsuDifficultyCalculator_CalculateTimed(calc.handle, 0, &result) == Pppp_Success);
+
+    PpppInt32 count = -1;
+    CHECK(Pppp_TimedResult_GetCount(result, &count) == Pppp_Success);
+    CHECK(count == 0);
+
+    PpppInt32 size = -1;
+    CHECK(Pppp_TimedResult_GetOsu(result, 0, &size) == Pppp_BufferSizeQuery);
+    CHECK(size == 0);
+
+    Pppp_TimedResult_Destroy(result);
+    Pppp_OsuDifficultyCalculator_Destroy(calc.handle);
+    Pppp_Ruleset_Destroy(ruleset.handle);
+    Pppp_Beatmap_Destroy(map.handle);
+}
+
+TEST_CASE("the C ABI timed result exposes the other rulesets") {
+    {
+        pppp::Beatmap source;
+        pppp_test::load(source, PPPP_TEST_RESOURCES "/taiko/diffcalc-test.osu");
+        const std::vector<pppp::TimedDifficultyAttributes> expected =
+            pppp_test::calculate_timed(pppp::Difficulty().mods(pppp_test::parse_mods("DT")), source);
+
+        PpppNativeBeatmap map;
+        REQUIRE(Pppp_Beatmap_CreateFromFile(PPPP_TEST_RESOURCES "/taiko/diffcalc-test.osu", &map) ==
+                Pppp_Success);
+        PpppNativeRuleset ruleset;
+        REQUIRE(Pppp_Ruleset_CreateFromId(1, &ruleset) == Pppp_Success);
+        PpppNativeMods mods;
+        REQUIRE(Pppp_Mods_Create(&mods) == Pppp_Success);
+        REQUIRE(Pppp_Mods_Parse(mods.handle, "DT") == Pppp_Success);
+        PpppNativeTaikoDifficultyCalculator calc;
+        REQUIRE(Pppp_TaikoDifficultyCalculator_Create(ruleset.handle, map.handle, &calc) == Pppp_Success);
+
+        PpppTimedResult* result = 0;
+        REQUIRE(Pppp_TaikoDifficultyCalculator_CalculateTimed(calc.handle, mods.handle, &result) ==
+                Pppp_Success);
+
+        PpppInt32 size = 0;
+        CHECK(Pppp_TimedResult_GetTaiko(result, 0, &size) == Pppp_BufferSizeQuery);
+        REQUIRE(static_cast<size_t>(size) == expected.size());
+        std::vector<PpppTimedTaikoDifficultyAttributes> buffer(size);
+        CHECK(Pppp_TimedResult_GetTaiko(result, &buffer[0], &size) == Pppp_Success);
+        CHECK(buffer.back().time == expected.back().time);
+        CHECK(buffer.back().attributes.star_rating ==
+              pppp_test::difficulty_approx(expected.back().attributes.star_rating()));
+        CHECK(buffer.back().attributes.max_combo == expected.back().attributes.max_combo());
+        CHECK(Pppp_TimedResult_GetOsu(result, 0, &size) == Pppp_UnexpectedRuleset);
+
+        Pppp_TimedResult_Destroy(result);
+        Pppp_TaikoDifficultyCalculator_Destroy(calc.handle);
+        Pppp_Mods_Destroy(mods.handle);
+        Pppp_Ruleset_Destroy(ruleset.handle);
+        Pppp_Beatmap_Destroy(map.handle);
+    }
+
+    {
+        pppp::Beatmap source;
+        pppp_test::load(source, PPPP_TEST_RESOURCES "/fruits/diffcalc-test.osu");
+        const std::vector<pppp::TimedDifficultyAttributes> expected =
+            pppp_test::calculate_timed(pppp::Difficulty().mods(pppp_test::parse_mods("DT")), source);
+
+        PpppNativeBeatmap map;
+        REQUIRE(Pppp_Beatmap_CreateFromFile(PPPP_TEST_RESOURCES "/fruits/diffcalc-test.osu", &map) ==
+                Pppp_Success);
+        PpppNativeRuleset ruleset;
+        REQUIRE(Pppp_Ruleset_CreateFromId(2, &ruleset) == Pppp_Success);
+        PpppNativeMods mods;
+        REQUIRE(Pppp_Mods_Create(&mods) == Pppp_Success);
+        REQUIRE(Pppp_Mods_Parse(mods.handle, "DT") == Pppp_Success);
+        PpppNativeCatchDifficultyCalculator calc;
+        REQUIRE(Pppp_CatchDifficultyCalculator_Create(ruleset.handle, map.handle, &calc) == Pppp_Success);
+
+        PpppTimedResult* result = 0;
+        REQUIRE(Pppp_CatchDifficultyCalculator_CalculateTimed(calc.handle, mods.handle, &result) ==
+                Pppp_Success);
+
+        PpppInt32 size = 0;
+        CHECK(Pppp_TimedResult_GetCatch(result, 0, &size) == Pppp_BufferSizeQuery);
+        REQUIRE(static_cast<size_t>(size) == expected.size());
+        std::vector<PpppTimedCatchDifficultyAttributes> buffer(size);
+        CHECK(Pppp_TimedResult_GetCatch(result, &buffer[0], &size) == Pppp_Success);
+        CHECK(buffer.back().time == expected.back().time);
+        CHECK(buffer.back().attributes.star_rating ==
+              pppp_test::difficulty_approx(expected.back().attributes.star_rating()));
+        CHECK(buffer.back().attributes.max_combo == expected.back().attributes.max_combo());
+        CHECK(Pppp_TimedResult_GetTaiko(result, 0, &size) == Pppp_UnexpectedRuleset);
+
+        Pppp_TimedResult_Destroy(result);
+        Pppp_CatchDifficultyCalculator_Destroy(calc.handle);
+        Pppp_Mods_Destroy(mods.handle);
+        Pppp_Ruleset_Destroy(ruleset.handle);
+        Pppp_Beatmap_Destroy(map.handle);
+    }
+
+    {
+        pppp::Beatmap source;
+        pppp_test::load(source, PPPP_TEST_RESOURCES "/mania/diffcalc-test.osu");
+        const std::vector<pppp::TimedDifficultyAttributes> expected =
+            pppp_test::calculate_timed(pppp::Difficulty(), source);
+
+        PpppNativeBeatmap map;
+        REQUIRE(Pppp_Beatmap_CreateFromFile(PPPP_TEST_RESOURCES "/mania/diffcalc-test.osu", &map) ==
+                Pppp_Success);
+        PpppNativeRuleset ruleset;
+        REQUIRE(Pppp_Ruleset_CreateFromId(3, &ruleset) == Pppp_Success);
+        PpppNativeManiaDifficultyCalculator calc;
+        REQUIRE(Pppp_ManiaDifficultyCalculator_Create(ruleset.handle, map.handle, &calc) == Pppp_Success);
+
+        PpppTimedResult* result = 0;
+        REQUIRE(Pppp_ManiaDifficultyCalculator_CalculateTimed(calc.handle, 0, &result) == Pppp_Success);
+
+        PpppInt32 size = 0;
+        CHECK(Pppp_TimedResult_GetMania(result, 0, &size) == Pppp_BufferSizeQuery);
+        REQUIRE(static_cast<size_t>(size) == expected.size());
+        std::vector<PpppTimedManiaDifficultyAttributes> buffer(size);
+        CHECK(Pppp_TimedResult_GetMania(result, &buffer[0], &size) == Pppp_Success);
+        CHECK(buffer.back().time == expected.back().time);
+        CHECK(buffer.back().attributes.star_rating ==
+              pppp_test::difficulty_approx(expected.back().attributes.star_rating()));
+        CHECK(buffer.back().attributes.max_combo == expected.back().attributes.max_combo());
+        CHECK(Pppp_TimedResult_GetCatch(result, 0, &size) == Pppp_UnexpectedRuleset);
+
+        Pppp_TimedResult_Destroy(result);
+        Pppp_ManiaDifficultyCalculator_Destroy(calc.handle);
+        Pppp_Ruleset_Destroy(ruleset.handle);
+        Pppp_Beatmap_Destroy(map.handle);
+    }
+}

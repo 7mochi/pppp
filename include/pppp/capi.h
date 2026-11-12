@@ -65,6 +65,10 @@ typedef struct PpppCatchDifficultyCalculator PpppCatchDifficultyCalculator;
 typedef struct PpppManiaDifficultyCalculator PpppManiaDifficultyCalculator;
 typedef struct PpppTimedResult PpppTimedResult;
 typedef struct PpppStrains PpppStrains;
+typedef struct PpppOsuPerformanceCalculator PpppOsuPerformanceCalculator;
+typedef struct PpppTaikoPerformanceCalculator PpppTaikoPerformanceCalculator;
+typedef struct PpppCatchPerformanceCalculator PpppCatchPerformanceCalculator;
+typedef struct PpppManiaPerformanceCalculator PpppManiaPerformanceCalculator;
 
 typedef struct PpppNativeBeatmap {
     PpppBeatmap* handle;
@@ -88,6 +92,39 @@ typedef struct PpppNativeRuleset {
 typedef struct PpppNativeMods {
     PpppMods* handle;
 } PpppNativeMods;
+
+/* A value is present when has_value is nonzero. */
+
+typedef struct PpppOptionalInt64 {
+    PpppBool has_value;
+    PpppInt64 value;
+} PpppOptionalInt64;
+
+typedef struct PpppOptionalDouble {
+    PpppBool has_value;
+    double value;
+} PpppOptionalDouble;
+
+/* Hit counts are separate fields. maximum_statistics is not exposed. */
+typedef struct PpppNativeScoreInfo {
+    PpppRuleset* ruleset;
+    PpppBeatmap* beatmap;
+    PpppMods* mods; /* NULL means no mods */
+    PpppInt32 max_combo;
+    double accuracy;
+    PpppOptionalInt64 legacy_total_score;
+    PpppInt32 count_miss;
+    PpppInt32 count_meh;
+    PpppInt32 count_ok;
+    PpppInt32 count_good;
+    PpppInt32 count_great;
+    PpppInt32 count_perfect;
+    PpppInt32 count_small_tick_miss;
+    PpppInt32 count_small_tick_hit;
+    PpppInt32 count_large_tick_miss;
+    PpppInt32 count_large_tick_hit;
+    PpppInt32 count_slider_tail_hit;
+} PpppNativeScoreInfo;
 
 typedef struct PpppOsuDifficultyAttributes {
     double star_rating;
@@ -136,6 +173,37 @@ typedef struct PpppManiaDifficultyAttributes {
     PpppInt32 max_combo;
 } PpppManiaDifficultyAttributes;
 
+typedef struct PpppOsuPerformanceAttributes {
+    double total;
+    double aim;
+    double speed;
+    double accuracy;
+    double flashlight;
+    double reading;
+    double effective_miss_count;
+    double combo_based_estimated_miss_count;
+    PpppOptionalDouble score_based_estimated_miss_count;
+    double aim_estimated_slider_breaks;
+    double speed_estimated_slider_breaks;
+    PpppOptionalDouble speed_deviation;
+} PpppOsuPerformanceAttributes;
+
+typedef struct PpppTaikoPerformanceAttributes {
+    double total;
+    double difficulty;
+    double accuracy;
+    PpppOptionalDouble estimated_unstable_rate;
+} PpppTaikoPerformanceAttributes;
+
+typedef struct PpppCatchPerformanceAttributes {
+    double total;
+} PpppCatchPerformanceAttributes;
+
+typedef struct PpppManiaPerformanceAttributes {
+    double total;
+    double difficulty;
+} PpppManiaPerformanceAttributes;
+
 typedef struct PpppTimedOsuDifficultyAttributes {
     double time;
     PpppOsuDifficultyAttributes attributes;
@@ -171,6 +239,22 @@ typedef struct PpppNativeCatchDifficultyCalculator {
 typedef struct PpppNativeManiaDifficultyCalculator {
     PpppManiaDifficultyCalculator* handle;
 } PpppNativeManiaDifficultyCalculator;
+
+typedef struct PpppNativeOsuPerformanceCalculator {
+    PpppOsuPerformanceCalculator* handle;
+} PpppNativeOsuPerformanceCalculator;
+
+typedef struct PpppNativeTaikoPerformanceCalculator {
+    PpppTaikoPerformanceCalculator* handle;
+} PpppNativeTaikoPerformanceCalculator;
+
+typedef struct PpppNativeCatchPerformanceCalculator {
+    PpppCatchPerformanceCalculator* handle;
+} PpppNativeCatchPerformanceCalculator;
+
+typedef struct PpppNativeManiaPerformanceCalculator {
+    PpppManiaPerformanceCalculator* handle;
+} PpppNativeManiaPerformanceCalculator;
 
 #ifdef __cplusplus
 extern "C" {
@@ -282,6 +366,30 @@ Pppp_ManiaDifficultyCalculator_SetClockRate(PpppManiaDifficultyCalculator* calcu
 PPPP_C_API PpppErrorCode
 Pppp_ManiaDifficultyCalculator_ClearClockRate(PpppManiaDifficultyCalculator* calculator);
 PPPP_C_API void Pppp_ManiaDifficultyCalculator_Destroy(PpppManiaDifficultyCalculator* calculator);
+
+PPPP_C_API PpppErrorCode Pppp_OsuPerformanceCalculator_Create(PpppNativeOsuPerformanceCalculator* out);
+PPPP_C_API PpppErrorCode Pppp_OsuPerformanceCalculator_Calculate(
+    PpppOsuPerformanceCalculator* calculator, const PpppNativeScoreInfo* score,
+    const PpppOsuDifficultyAttributes* difficulty, PpppOsuPerformanceAttributes* out);
+PPPP_C_API void Pppp_OsuPerformanceCalculator_Destroy(PpppOsuPerformanceCalculator* calculator);
+
+PPPP_C_API PpppErrorCode Pppp_TaikoPerformanceCalculator_Create(PpppNativeTaikoPerformanceCalculator* out);
+PPPP_C_API PpppErrorCode Pppp_TaikoPerformanceCalculator_Calculate(
+    PpppTaikoPerformanceCalculator* calculator, const PpppNativeScoreInfo* score,
+    const PpppTaikoDifficultyAttributes* difficulty, PpppTaikoPerformanceAttributes* out);
+PPPP_C_API void Pppp_TaikoPerformanceCalculator_Destroy(PpppTaikoPerformanceCalculator* calculator);
+
+PPPP_C_API PpppErrorCode Pppp_CatchPerformanceCalculator_Create(PpppNativeCatchPerformanceCalculator* out);
+PPPP_C_API PpppErrorCode Pppp_CatchPerformanceCalculator_Calculate(
+    PpppCatchPerformanceCalculator* calculator, const PpppNativeScoreInfo* score,
+    const PpppCatchDifficultyAttributes* difficulty, PpppCatchPerformanceAttributes* out);
+PPPP_C_API void Pppp_CatchPerformanceCalculator_Destroy(PpppCatchPerformanceCalculator* calculator);
+
+PPPP_C_API PpppErrorCode Pppp_ManiaPerformanceCalculator_Create(PpppNativeManiaPerformanceCalculator* out);
+PPPP_C_API PpppErrorCode Pppp_ManiaPerformanceCalculator_Calculate(
+    PpppManiaPerformanceCalculator* calculator, const PpppNativeScoreInfo* score,
+    const PpppManiaDifficultyAttributes* difficulty, PpppManiaPerformanceAttributes* out);
+PPPP_C_API void Pppp_ManiaPerformanceCalculator_Destroy(PpppManiaPerformanceCalculator* calculator);
 
 PPPP_C_API PpppErrorCode Pppp_TimedResult_GetCount(PpppTimedResult* result, PpppInt32* out);
 PPPP_C_API PpppErrorCode Pppp_TimedResult_GetOsu(PpppTimedResult* result,

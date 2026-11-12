@@ -3,6 +3,7 @@
 #include "pppp/beatmap.h"
 #include "pppp/difficulty.h"
 #include "pppp/mods/mods.h"
+#include "pppp/performance.h"
 #include <cstring>
 #include <new>
 
@@ -29,6 +30,15 @@ struct PpppOsuDifficultyCalculator : PpppDifficultyCalculator {};
 struct PpppTaikoDifficultyCalculator : PpppDifficultyCalculator {};
 struct PpppCatchDifficultyCalculator : PpppDifficultyCalculator {};
 struct PpppManiaDifficultyCalculator : PpppDifficultyCalculator {};
+
+struct PpppPerformanceCalculator {
+    int ruleset_id;
+};
+
+struct PpppOsuPerformanceCalculator : PpppPerformanceCalculator {};
+struct PpppTaikoPerformanceCalculator : PpppPerformanceCalculator {};
+struct PpppCatchPerformanceCalculator : PpppPerformanceCalculator {};
+struct PpppManiaPerformanceCalculator : PpppPerformanceCalculator {};
 
 struct PpppTimedResult {
     std::vector<pppp::TimedDifficultyAttributes> entries;
@@ -299,6 +309,221 @@ namespace {
     void fill_mania(PpppManiaDifficultyAttributes* out, const pppp::ManiaDifficultyAttributes& attributes) {
         out->star_rating = attributes.star_rating;
         out->max_combo = attributes.max_combo;
+    }
+
+    void from_native(const PpppOsuDifficultyAttributes& in, pppp::DifficultyAttributes& out) {
+        pppp::OsuDifficultyAttributes attributes;
+        attributes.star_rating = in.star_rating;
+        attributes.max_combo = in.max_combo;
+        attributes.aim_difficulty = in.aim_difficulty;
+        attributes.speed_difficulty = in.speed_difficulty;
+        attributes.reading_difficulty = in.reading_difficulty;
+        attributes.flashlight_difficulty = in.flashlight_difficulty;
+        attributes.slider_factor = in.slider_factor;
+        attributes.aim_difficult_strain_count = in.aim_difficult_strain_count;
+        attributes.speed_difficult_strain_count = in.speed_difficult_strain_count;
+        attributes.reading_difficult_note_count = in.reading_difficult_note_count;
+        attributes.aim_difficult_slider_count = in.aim_difficult_slider_count;
+        attributes.aim_top_weighted_slider_factor = in.aim_top_weighted_slider_factor;
+        attributes.speed_top_weighted_slider_factor = in.speed_top_weighted_slider_factor;
+        attributes.speed_note_count = in.speed_note_count;
+        attributes.hit_circle_count = in.hit_circle_count;
+        attributes.slider_count = in.slider_count;
+        attributes.large_tick_count = in.large_tick_count;
+        attributes.spinner_count = in.spinner_count;
+        attributes.nested_score_per_object = in.nested_score_per_object;
+        attributes.legacy_score_base_multiplier = in.legacy_score_base_multiplier;
+        attributes.maximum_legacy_combo_score = in.maximum_legacy_combo_score;
+        out = pppp::DifficultyAttributes(attributes);
+    }
+
+    void from_native(const PpppTaikoDifficultyAttributes& in, pppp::DifficultyAttributes& out) {
+        pppp::TaikoDifficultyAttributes attributes;
+        attributes.star_rating = in.star_rating;
+        attributes.max_combo = in.max_combo;
+        attributes.mechanical_difficulty = in.mechanical_difficulty;
+        attributes.rhythm_difficulty = in.rhythm_difficulty;
+        attributes.reading_difficulty = in.reading_difficulty;
+        attributes.colour_difficulty = in.colour_difficulty;
+        attributes.stamina_difficulty = in.stamina_difficulty;
+        attributes.mono_stamina_factor = in.mono_stamina_factor;
+        attributes.consistency_factor = in.consistency_factor;
+        attributes.stamina_top_strains = in.stamina_top_strains;
+        out = pppp::DifficultyAttributes(attributes);
+    }
+
+    void from_native(const PpppCatchDifficultyAttributes& in, pppp::DifficultyAttributes& out) {
+        pppp::CatchDifficultyAttributes attributes;
+        attributes.star_rating = in.star_rating;
+        attributes.max_combo = in.max_combo;
+        out = pppp::DifficultyAttributes(attributes);
+    }
+
+    void from_native(const PpppManiaDifficultyAttributes& in, pppp::DifficultyAttributes& out) {
+        pppp::ManiaDifficultyAttributes attributes;
+        attributes.star_rating = in.star_rating;
+        attributes.max_combo = in.max_combo;
+        out = pppp::DifficultyAttributes(attributes);
+    }
+
+    void fill_optional(PpppOptionalDouble* out, const nonstd::optional<double>& value) {
+        out->has_value = value.has_value() ? 1 : 0;
+        out->value = value.has_value() ? value.value() : 0.0;
+    }
+
+    void fill_performance(PpppOsuPerformanceAttributes* out,
+                          const pppp::OsuPerformanceAttributes& attributes) {
+        out->total = attributes.total;
+        out->aim = attributes.aim;
+        out->speed = attributes.speed;
+        out->accuracy = attributes.accuracy;
+        out->flashlight = attributes.flashlight;
+        out->reading = attributes.reading;
+        out->effective_miss_count = attributes.effective_miss_count;
+        out->combo_based_estimated_miss_count = attributes.combo_based_estimated_miss_count;
+        fill_optional(&out->score_based_estimated_miss_count, attributes.score_based_estimated_miss_count);
+        out->aim_estimated_slider_breaks = attributes.aim_estimated_slider_breaks;
+        out->speed_estimated_slider_breaks = attributes.speed_estimated_slider_breaks;
+        fill_optional(&out->speed_deviation, attributes.speed_deviation);
+    }
+
+    void fill_performance(PpppTaikoPerformanceAttributes* out,
+                          const pppp::TaikoPerformanceAttributes& attributes) {
+        out->total = attributes.total;
+        out->difficulty = attributes.difficulty;
+        out->accuracy = attributes.accuracy;
+        fill_optional(&out->estimated_unstable_rate, attributes.estimated_unstable_rate);
+    }
+
+    void fill_performance(PpppCatchPerformanceAttributes* out,
+                          const pppp::CatchPerformanceAttributes& attributes) {
+        out->total = attributes.total;
+    }
+
+    void fill_performance(PpppManiaPerformanceAttributes* out,
+                          const pppp::ManiaPerformanceAttributes& attributes) {
+        out->total = attributes.total;
+        out->difficulty = attributes.difficulty;
+    }
+
+    void fill_score_info(pppp::ScoreInfo& out, const PpppNativeScoreInfo& score) {
+        out.statistics[pppp::HIT_RESULT_MISS] = score.count_miss;
+        out.statistics[pppp::HIT_RESULT_MEH] = score.count_meh;
+        out.statistics[pppp::HIT_RESULT_OK] = score.count_ok;
+        out.statistics[pppp::HIT_RESULT_GOOD] = score.count_good;
+        out.statistics[pppp::HIT_RESULT_GREAT] = score.count_great;
+        out.statistics[pppp::HIT_RESULT_PERFECT] = score.count_perfect;
+        out.statistics[pppp::HIT_RESULT_SMALL_TICK_MISS] = score.count_small_tick_miss;
+        out.statistics[pppp::HIT_RESULT_SMALL_TICK_HIT] = score.count_small_tick_hit;
+        out.statistics[pppp::HIT_RESULT_LARGE_TICK_MISS] = score.count_large_tick_miss;
+        out.statistics[pppp::HIT_RESULT_LARGE_TICK_HIT] = score.count_large_tick_hit;
+        out.statistics[pppp::HIT_RESULT_SLIDER_TAIL_HIT] = score.count_slider_tail_hit;
+        out.max_combo = score.max_combo;
+        out.accuracy = score.accuracy;
+
+        if (score.legacy_total_score.has_value) {
+            out.legacy_total_score = static_cast<pppp_int64>(score.legacy_total_score.value);
+        }
+
+        if (score.mods) {
+            out.mods = score.mods->mods;
+        }
+    }
+
+    PpppErrorCode validate_performance(const PpppPerformanceCalculator* calculator,
+                                       const PpppNativeScoreInfo* score) {
+        if (!calculator || !score) {
+            set_error("a calculator and a score are required");
+
+            return Pppp_InvalidArgument;
+        }
+
+        if (!score->ruleset || !score->beatmap) {
+            set_error("the score requires a ruleset and a beatmap");
+
+            return Pppp_InvalidArgument;
+        }
+
+        if (score->ruleset->id != calculator->ruleset_id) {
+            set_error("the score is for another ruleset");
+
+            return Pppp_UnexpectedRuleset;
+        }
+
+        return Pppp_Success;
+    }
+
+    template <class NativeDifficulty>
+    PpppErrorCode prepare_difficulty(const PpppPerformanceCalculator* calculator,
+                                     const PpppNativeScoreInfo* score, const NativeDifficulty* difficulty,
+                                     pppp::DifficultyAttributes& out) {
+        if (difficulty) {
+            from_native(*difficulty, out);
+        } else {
+            pppp::Difficulty calculation;
+            calculation.ruleset(static_cast<pppp::Ruleset::Value>(calculator->ruleset_id));
+
+            if (score->mods) {
+                calculation.mods(score->mods->mods);
+            }
+
+            const pppp::Status status = calculation.calculate(score->beatmap->map, out);
+            if (!status.ok()) {
+                return status_error(status);
+            }
+        }
+
+        if (out.ruleset() != static_cast<pppp::Ruleset::Value>(calculator->ruleset_id)) {
+            set_error("the difficulty attributes are for another ruleset");
+
+            return Pppp_UnexpectedRuleset;
+        }
+
+        return Pppp_Success;
+    }
+
+    template <class NativeDifficulty>
+    PpppErrorCode calculate_performance(const PpppPerformanceCalculator* calculator,
+                                        const PpppNativeScoreInfo* score, const NativeDifficulty* difficulty,
+                                        pppp::PerformanceAttributes& out) {
+        const PpppErrorCode checked = validate_performance(calculator, score);
+        if (checked != Pppp_Success) {
+            return checked;
+        }
+
+        pppp::DifficultyAttributes attributes;
+        const PpppErrorCode prepared = prepare_difficulty(calculator, score, difficulty, attributes);
+        if (prepared != Pppp_Success) {
+            return prepared;
+        }
+
+        pppp::ScoreInfo info;
+        fill_score_info(info, *score);
+        pppp::Performance performance(score->beatmap->map, attributes);
+        performance.score(info);
+
+        return status_error(performance.calculate(out));
+    }
+
+    template <class Calculator, class Native>
+    PpppErrorCode create_performance_calculator(int expected_ruleset, Native* out) {
+        clear_error();
+
+        if (!out) {
+            set_error("an output is required");
+            return Pppp_InvalidArgument;
+        }
+
+        Calculator* calculator = new (std::nothrow) Calculator;
+        if (!calculator) {
+            set_error("out of memory");
+            return Pppp_Allocation;
+        }
+
+        calculator->ruleset_id = expected_ruleset;
+        out->handle = calculator;
+
+        return Pppp_Success;
     }
 
     bool fill_timed(PpppTimedOsuDifficultyAttributes* out, const pppp::TimedDifficultyAttributes& entry) {
@@ -1254,6 +1479,156 @@ PpppErrorCode Pppp_ManiaDifficultyCalculator_ClearClockRate(PpppManiaDifficultyC
 
 void Pppp_ManiaDifficultyCalculator_Destroy(PpppManiaDifficultyCalculator* calculator) {
     destroy_calculator(calculator);
+}
+
+PpppErrorCode Pppp_OsuPerformanceCalculator_Create(PpppNativeOsuPerformanceCalculator* out) {
+    return create_performance_calculator<PpppOsuPerformanceCalculator>(0, out);
+}
+
+PpppErrorCode Pppp_OsuPerformanceCalculator_Calculate(PpppOsuPerformanceCalculator* calculator,
+                                                      const PpppNativeScoreInfo* score,
+                                                      const PpppOsuDifficultyAttributes* difficulty,
+                                                      PpppOsuPerformanceAttributes* out) {
+    clear_error();
+
+    if (!out) {
+        set_error("an output is required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    pppp::PerformanceAttributes result;
+    const PpppErrorCode code = calculate_performance(calculator, score, difficulty, result);
+    if (code != Pppp_Success) {
+        return code;
+    }
+
+    const pppp::OsuPerformanceAttributes* value = result.osu();
+    if (!value) {
+        set_error("the calculator did not produce osu! performance");
+
+        return Pppp_Internal;
+    }
+
+    fill_performance(out, *value);
+
+    return Pppp_Success;
+}
+
+void Pppp_OsuPerformanceCalculator_Destroy(PpppOsuPerformanceCalculator* calculator) { delete calculator; }
+
+PpppErrorCode Pppp_TaikoPerformanceCalculator_Create(PpppNativeTaikoPerformanceCalculator* out) {
+    return create_performance_calculator<PpppTaikoPerformanceCalculator>(1, out);
+}
+
+PpppErrorCode Pppp_TaikoPerformanceCalculator_Calculate(PpppTaikoPerformanceCalculator* calculator,
+                                                        const PpppNativeScoreInfo* score,
+                                                        const PpppTaikoDifficultyAttributes* difficulty,
+                                                        PpppTaikoPerformanceAttributes* out) {
+    clear_error();
+
+    if (!out) {
+        set_error("an output is required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    pppp::PerformanceAttributes result;
+    const PpppErrorCode code = calculate_performance(calculator, score, difficulty, result);
+    if (code != Pppp_Success) {
+        return code;
+    }
+
+    const pppp::TaikoPerformanceAttributes* value = result.taiko();
+    if (!value) {
+        set_error("the calculator did not produce taiko performance");
+
+        return Pppp_Internal;
+    }
+
+    fill_performance(out, *value);
+
+    return Pppp_Success;
+}
+
+void Pppp_TaikoPerformanceCalculator_Destroy(PpppTaikoPerformanceCalculator* calculator) {
+    delete calculator;
+}
+
+PpppErrorCode Pppp_CatchPerformanceCalculator_Create(PpppNativeCatchPerformanceCalculator* out) {
+    return create_performance_calculator<PpppCatchPerformanceCalculator>(2, out);
+}
+
+PpppErrorCode Pppp_CatchPerformanceCalculator_Calculate(PpppCatchPerformanceCalculator* calculator,
+                                                        const PpppNativeScoreInfo* score,
+                                                        const PpppCatchDifficultyAttributes* difficulty,
+                                                        PpppCatchPerformanceAttributes* out) {
+    clear_error();
+
+    if (!out) {
+        set_error("an output is required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    pppp::PerformanceAttributes result;
+    const PpppErrorCode code = calculate_performance(calculator, score, difficulty, result);
+    if (code != Pppp_Success) {
+        return code;
+    }
+
+    const pppp::CatchPerformanceAttributes* value = result.fruits();
+    if (!value) {
+        set_error("the calculator did not produce osu!catch performance");
+
+        return Pppp_Internal;
+    }
+
+    fill_performance(out, *value);
+
+    return Pppp_Success;
+}
+
+void Pppp_CatchPerformanceCalculator_Destroy(PpppCatchPerformanceCalculator* calculator) {
+    delete calculator;
+}
+
+PpppErrorCode Pppp_ManiaPerformanceCalculator_Create(PpppNativeManiaPerformanceCalculator* out) {
+    return create_performance_calculator<PpppManiaPerformanceCalculator>(3, out);
+}
+
+PpppErrorCode Pppp_ManiaPerformanceCalculator_Calculate(PpppManiaPerformanceCalculator* calculator,
+                                                        const PpppNativeScoreInfo* score,
+                                                        const PpppManiaDifficultyAttributes* difficulty,
+                                                        PpppManiaPerformanceAttributes* out) {
+    clear_error();
+
+    if (!out) {
+        set_error("an output is required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    pppp::PerformanceAttributes result;
+    const PpppErrorCode code = calculate_performance(calculator, score, difficulty, result);
+    if (code != Pppp_Success) {
+        return code;
+    }
+
+    const pppp::ManiaPerformanceAttributes* value = result.mania();
+    if (!value) {
+        set_error("the calculator did not produce osu!mania performance");
+
+        return Pppp_Internal;
+    }
+
+    fill_performance(out, *value);
+
+    return Pppp_Success;
+}
+
+void Pppp_ManiaPerformanceCalculator_Destroy(PpppManiaPerformanceCalculator* calculator) {
+    delete calculator;
 }
 
 PpppErrorCode Pppp_TimedResult_GetCount(PpppTimedResult* result, PpppInt32* out) {

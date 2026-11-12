@@ -1,44 +1,37 @@
 # PerformancePoints++
 
-Calculate osu! difficulty and performance attributes for all four gamemodes in ISO C++98.
+Calculate osu! difficulty and performance for all four gamemodes in standard C++98.
 
 - All four gamemodes, with the mods each one supports.
-- Ported from [osu!lazer](https://github.com/ppy/osu) and verified against its `2026.730.0` release; the
-parser is from [fosu](https://github.com/cmyui/fast-osu-beatmap-parser)
-`de01f188f2be7831f619ca09882cf2f55b0c9720`.
-- Python bindings use the C ABI through generated `ctypes` code. One wheel per platform supports
-CPython 3.10 and newer.
-- Node bindings use the same C ABI through [Koffi](https://koffi.dev), so there's no addon to compile.
-- C# bindings use the same C ABI. One assembly works on .NET Framework 2.0 and modern .NET.
+- Matches osu!lazer `2026.730.0`.
+- Reads beatmaps with [fosu](https://github.com/cmyui/fast-osu-beatmap-parser)
+  `de01f188f2be7831f619ca09882cf2f55b0c9720`.
 
-## Install
+## Build and install
 
-Each binding is published to its own registry:
+xmake builds and installs the library:
 
 ```sh
-dotnet add package pppp-dotnet   # C#, .NET Framework 2.0 and modern .NET
-pip install pppp-py              # Python 3.10 and newer
-npm install @7mochi/pppp         # Node.js
+xmake f -y -m release
+xmake
+xmake install -o <prefix>
 ```
 
-Each release is published on the [releases page](https://github.com/7mochi/pppp/releases), one per
-binding, with its package attached.
-
-The library itself is built and installed with CMake:
+It installs two pkg-config packages. `pppp` is the calculator. `pppp_fosu`
+is the calculator plus the beatmap parser. To build a program, use the flags
+from the package you need:
 
 ```sh
-cmake -S . -B build
-cmake --build build
-cmake --install build
+PKG_CONFIG_PATH=<prefix>/lib/pkgconfig pkg-config --cflags --libs pppp_fosu
+c++ -std=c++98 $(pkg-config --cflags pppp_fosu) app.cpp $(pkg-config --libs pppp_fosu) -o app
 ```
 
-A consumer finds the package with `find_package` and links the target it needs:
+You don't need a separate package for each internal part. The two packages
+already include everything needed to build.
 
-```cmake
-find_package(pppp CONFIG REQUIRED)
-target_link_libraries(your_target PRIVATE pppp::fosu)
-pppp_place_engine(your_target)   # puts the SIMD engine next to your_target
-```
+The parser has an optional faster version. To use it, copy
+`libfosu_engine_avx2.so` (or the NEON one) from `<prefix>/lib` next to your
+program. If you leave it out, the parser uses the slower version.
 
 ## Usage
 
@@ -71,99 +64,42 @@ if (!pppp::Performance(beatmap, diff_attrs).score(score).calculate(pp_attrs).ok(
 
 printf("%.2f* %.2fpp\n", diff_attrs.star_rating(), pp_attrs.total());
 
-// The parser engine the loader picked, read-only: pppp::EngineKind::SCALAR, AVX2 or NEON.
-// pppp::backend() == pppp::EngineKind::AVX2 on an x86-64 host, for instance.
-```
-
-## Python
-
-```python
-import pppp
-
-beatmap = pppp.Beatmap.from_file("map.osu")
-
-difficulty = pppp.Difficulty(mods="HD,DT").calculate(beatmap)
-performance = pppp.Performance(mods="HD,DT", max_combo=789, accuracy=0.992, misses=2).calculate(beatmap, difficulty)
-
-print(difficulty.star_rating, performance.total)
-```
-
-## C#
-
-```csharp
-using Pppp;
-
-using (Beatmap beatmap = Beatmap.FromFile("map.osu")) {
-    DifficultyAttributes difficulty = new Difficulty { Mods = "HD,DT" }.Calculate(beatmap);
-    PerformanceAttributes performance =
-        new Performance { Mods = "HD,DT", MaxCombo = 789, Accuracy = 0.992, Misses = 2 }.Calculate(beatmap, difficulty);
-
-    Console.WriteLine(difficulty.StarRating + " " + performance.Total);
-}
-```
-
-## Node
-
-```js
-import { Beatmap, Difficulty, Performance } from "@7mochi/pppp";
-
-const beatmap = await Beatmap.fromFile("map.osu");
-
-const difficulty = new Difficulty({ mods: "HD,DT" }).calculate(beatmap);
-const performance = new Performance({ mods: "HD,DT", maxCombo: 789, accuracy: 0.992, misses: 2 }).calculate(beatmap, difficulty);
-
-console.log(difficulty.starRating, performance.total);
+// The parser version that was loaded: pppp::EngineKind::SCALAR, AVX2 or NEON.
+// pppp::backend() is pppp::EngineKind::AVX2 on an x86-64 host, for example.
 ```
 
 ## Options
 
-| CMake option | Default | What it does |
+| xmake option | Default | What it does |
 | --- | --- | --- |
-| `PPPP_WITH_FOSU` | ON | the `.osu` parser and its adapter |
-| `PPPP_ISA` | auto | parser engine: `auto`, `scalar`, `avx2` or `neon` |
-| `PPPP_BUILD_TESTS` | top-level only | the test suites (fetches doctest) |
-| `PPPP_BUILD_PYTHON` | OFF | the native library the Python package loads |
-| `PPPP_BUILD_CAPI` | OFF | the C ABI shared library the Python, Node and C# bindings use |
-| `PPPP_WIN2K` | OFF | the shim that keeps binaries loadable on Windows 2000 |
-| `PPPP_INSTALL` | top-level only | the `find_package(pppp CONFIG)` package |
-| `PPPP_WARNINGS_AS_ERRORS` | OFF | `-Werror` on the library's warnings |
-| `PPPP_PGO` | OFF | profile-guided optimization: `GENERATE` instruments, `USE` consumes the profile (`make build-pgo` runs both, training on the parity suites) |
-| `PPPP_PGO_DIR` | `<build>/../profile-data` | where the profile is written and read (GCC keeps it beside each object) |
+| `--pppp_with_fosu=n` | ON | builds the `.osu` parser and the code that connects it |
+| `--pppp_isa=auto\|scalar\|avx2\|neon` | auto | selects the parser speed |
+| `--pppp_build_tests=n` | ON | builds the tests (downloads doctest and cJSON) |
+| `--pppp_warnings_as_errors=y` | OFF | treats compiler warnings as errors |
+| `--doctest_dir=<dir>` | empty | uses a local doctest.h |
+| `--cjson_dir=<dir>` | empty | uses local cJSON files |
 
-## Development
+## Working on the project
 
-The toolchain comes from the flake:
+The tools come from the Nix development shell:
 
 ```sh
-nix develop        # cmake, ninja, gcc, clang, python, node, .NET and pre-commit
-make test-auto     # build and run the suites
-make check-format  # the C++ formatting, checked
-make build-pgo     # a PGO Release build in build_pgo (GCC or Clang)
+nix develop        # compilers, xmake, pkg-config, Python, .NET and pre-commit
+make test-auto     # build, run the tests, and test the installed package
+make check         # formatting, headers, and code checks
+make release       # optimized build without tests
 ```
 
-Formatting, the Python types and the file hygiene are also enforced by
-[pre-commit](https://pre-commit.com). The dev shell installs the hooks when you
-enter it; to run them by hand:
+Formatting and file checks also run through
+[pre-commit](https://pre-commit.com). The shell installs the hooks. To run them
+by hand:
 
 ```sh
 pre-commit run --all-files
 ```
 
-`clang-format` and `nixfmt` come from the dev shell; outside it the hooks fall
-back to `nix develop`.
-
-The Node binding is formatted and linted with [Biome](https://biomejs.dev), which
-also sorts the imports. It comes from the dev shell, and as a dev dependency for
-anyone running npm outside Nix:
-
-```sh
-npm run lint        # check and fix node/
-npm run lint:check  # check only
-```
-
-Inside `nix develop`, run `biome` directly rather than `npm run lint`: npm puts
-`node_modules/.bin` first on `PATH`, and the prebuilt Biome binary there doesn't
-start on NixOS.
+`clang-format` and `nixfmt` come from the shell. Outside it, the hooks fall back
+to `nix develop`.
 
 ## AI Disclaimer
 

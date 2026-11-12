@@ -1,4 +1,6 @@
-#include <cstring>
+#include "common.h"
+#include "maps.h"
+#include "parity.h"
 #include <doctest.h>
 #include <fstream>
 #include <iterator>
@@ -140,4 +142,154 @@ TEST_CASE("the C ABI loads the same beatmap from bytes and text") {
     REQUIRE(Pppp_Beatmap_CreateFromText(bytes.c_str(), &from_text) == Pppp_Success);
     CHECK(from_text.beatmap_id == 2785319);
     Pppp_Beatmap_Destroy(from_text.handle);
+}
+
+TEST_CASE("the C ABI difficulty matches parity for all rulesets") {
+    for (int ruleset_id = 0; ruleset_id < 4; ruleset_id++) {
+        const char* name = ruleset_id == 0   ? "osu"
+                           : ruleset_id == 1 ? "taiko"
+                           : ruleset_id == 2 ? "catch"
+                                             : "mania";
+        const parity::Table rows("difficulty", name);
+        for (int i = 0; i < rows.size(); i++) {
+            const parity::Row row = rows[i];
+            const parity::Row expected = row.object("attributes");
+
+            PpppNativeBeatmap map;
+            REQUIRE(Pppp_Beatmap_CreateFromFile(
+                        (std::string(PPPP_TEST_RESOURCES) + "/" + row.text("map")).c_str(), &map) ==
+                    Pppp_Success);
+            PpppNativeRuleset ruleset;
+            REQUIRE(Pppp_Ruleset_CreateFromId(ruleset_id, &ruleset) == Pppp_Success);
+            PpppNativeMods mods;
+            REQUIRE(Pppp_Mods_Create(&mods) == Pppp_Success);
+            REQUIRE(Pppp_Mods_Parse(mods.handle, row.text("mods")) == Pppp_Success);
+
+            if (ruleset_id == 0) {
+                PpppNativeOsuDifficultyCalculator calc;
+                REQUIRE(Pppp_OsuDifficultyCalculator_Create(ruleset.handle, map.handle, &calc) ==
+                        Pppp_Success);
+                PpppOsuDifficultyAttributes attrs;
+                REQUIRE(Pppp_OsuDifficultyCalculator_Calculate(calc.handle, mods.handle, &attrs) ==
+                        Pppp_Success);
+                CHECK(attrs.star_rating == pppp_test::difficulty_approx(expected.number("star_rating")));
+                CHECK(attrs.max_combo == expected.integer("max_combo"));
+                CHECK(attrs.aim_difficulty ==
+                      pppp_test::difficulty_approx(expected.number("aim_difficulty")));
+                CHECK(attrs.speed_difficulty ==
+                      pppp_test::difficulty_approx(expected.number("speed_difficulty")));
+                Pppp_OsuDifficultyCalculator_Destroy(calc.handle);
+            } else if (ruleset_id == 1) {
+                PpppNativeTaikoDifficultyCalculator calc;
+                REQUIRE(Pppp_TaikoDifficultyCalculator_Create(ruleset.handle, map.handle, &calc) ==
+                        Pppp_Success);
+                PpppTaikoDifficultyAttributes attrs;
+                REQUIRE(Pppp_TaikoDifficultyCalculator_Calculate(calc.handle, mods.handle, &attrs) ==
+                        Pppp_Success);
+                CHECK(attrs.star_rating == pppp_test::difficulty_approx(expected.number("star_rating")));
+                CHECK(attrs.max_combo == expected.integer("max_combo"));
+                CHECK(attrs.mechanical_difficulty ==
+                      pppp_test::difficulty_approx(expected.number("mechanical_difficulty")));
+                CHECK(attrs.rhythm_difficulty ==
+                      pppp_test::difficulty_approx(expected.number("rhythm_difficulty")));
+                CHECK(attrs.reading_difficulty ==
+                      pppp_test::difficulty_approx(expected.number("reading_difficulty")));
+                CHECK(attrs.colour_difficulty ==
+                      pppp_test::difficulty_approx(expected.number("colour_difficulty")));
+                CHECK(attrs.stamina_difficulty ==
+                      pppp_test::difficulty_approx(expected.number("stamina_difficulty")));
+                CHECK(attrs.mono_stamina_factor ==
+                      pppp_test::difficulty_approx(expected.number("mono_stamina_factor")));
+                CHECK(attrs.consistency_factor ==
+                      pppp_test::difficulty_approx(expected.number("consistency_factor")));
+                CHECK(attrs.stamina_top_strains ==
+                      pppp_test::difficulty_approx(expected.number("stamina_top_strains")));
+                Pppp_TaikoDifficultyCalculator_Destroy(calc.handle);
+            } else if (ruleset_id == 2) {
+                PpppNativeCatchDifficultyCalculator calc;
+                REQUIRE(Pppp_CatchDifficultyCalculator_Create(ruleset.handle, map.handle, &calc) ==
+                        Pppp_Success);
+                PpppCatchDifficultyAttributes attrs;
+                REQUIRE(Pppp_CatchDifficultyCalculator_Calculate(calc.handle, mods.handle, &attrs) ==
+                        Pppp_Success);
+                CHECK(attrs.star_rating == pppp_test::difficulty_approx(expected.number("star_rating")));
+                CHECK(attrs.max_combo == expected.integer("max_combo"));
+                Pppp_CatchDifficultyCalculator_Destroy(calc.handle);
+            } else {
+                PpppNativeManiaDifficultyCalculator calc;
+                REQUIRE(Pppp_ManiaDifficultyCalculator_Create(ruleset.handle, map.handle, &calc) ==
+                        Pppp_Success);
+                PpppManiaDifficultyAttributes attrs;
+                REQUIRE(Pppp_ManiaDifficultyCalculator_Calculate(calc.handle, mods.handle, &attrs) ==
+                        Pppp_Success);
+                CHECK(attrs.star_rating == pppp_test::difficulty_approx(expected.number("star_rating")));
+                CHECK(attrs.max_combo == expected.integer("max_combo"));
+                Pppp_ManiaDifficultyCalculator_Destroy(calc.handle);
+            }
+
+            Pppp_Mods_Destroy(mods.handle);
+            Pppp_Ruleset_Destroy(ruleset.handle);
+            Pppp_Beatmap_Destroy(map.handle);
+        }
+    }
+}
+
+TEST_CASE("the C ABI calculator applies and clears the clock rate") {
+    pppp::Beatmap source;
+    pppp_test::load(source, PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu");
+    const pppp::Mods dt = pppp_test::parse_mods("DT");
+    const pppp::DifficultyAttributes with_rate =
+        pppp_test::calculate(pppp::Difficulty().mods(dt).clock_rate(1.5), source);
+    const pppp::DifficultyAttributes without_rate = pppp_test::calculate(pppp::Difficulty().mods(dt), source);
+
+    PpppNativeBeatmap map;
+    REQUIRE(Pppp_Beatmap_CreateFromFile(PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu", &map) == Pppp_Success);
+    PpppNativeRuleset ruleset;
+    REQUIRE(Pppp_Ruleset_CreateFromId(0, &ruleset) == Pppp_Success);
+    PpppNativeMods mods;
+    REQUIRE(Pppp_Mods_Create(&mods) == Pppp_Success);
+    REQUIRE(Pppp_Mods_Parse(mods.handle, "DT") == Pppp_Success);
+    PpppNativeOsuDifficultyCalculator calc;
+    REQUIRE(Pppp_OsuDifficultyCalculator_Create(ruleset.handle, map.handle, &calc) == Pppp_Success);
+
+    PpppOsuDifficultyAttributes attrs;
+    REQUIRE(Pppp_OsuDifficultyCalculator_SetClockRate(calc.handle, 1.5) == Pppp_Success);
+    REQUIRE(Pppp_OsuDifficultyCalculator_Calculate(calc.handle, mods.handle, &attrs) == Pppp_Success);
+    CHECK(attrs.star_rating == pppp_test::difficulty_approx(with_rate.star_rating()));
+
+    REQUIRE(Pppp_OsuDifficultyCalculator_ClearClockRate(calc.handle) == Pppp_Success);
+    REQUIRE(Pppp_OsuDifficultyCalculator_Calculate(calc.handle, mods.handle, &attrs) == Pppp_Success);
+    CHECK(attrs.star_rating == pppp_test::difficulty_approx(without_rate.star_rating()));
+
+    Pppp_OsuDifficultyCalculator_Destroy(calc.handle);
+    Pppp_Mods_Destroy(mods.handle);
+    Pppp_Ruleset_Destroy(ruleset.handle);
+    Pppp_Beatmap_Destroy(map.handle);
+}
+
+TEST_CASE("the C ABI calculator rejects another ruleset") {
+    PpppNativeBeatmap map;
+    REQUIRE(Pppp_Beatmap_CreateFromFile(PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu", &map) == Pppp_Success);
+    PpppNativeRuleset taiko;
+    REQUIRE(Pppp_Ruleset_CreateFromId(1, &taiko) == Pppp_Success);
+    PpppNativeOsuDifficultyCalculator calc;
+    CHECK(Pppp_OsuDifficultyCalculator_Create(taiko.handle, map.handle, &calc) == Pppp_UnexpectedRuleset);
+    Pppp_Ruleset_Destroy(taiko.handle);
+    Pppp_Beatmap_Destroy(map.handle);
+}
+
+TEST_CASE("the C ABI calculator keeps the beatmap alive") {
+    PpppNativeBeatmap map;
+    REQUIRE(Pppp_Beatmap_CreateFromFile(PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu", &map) == Pppp_Success);
+    PpppNativeRuleset ruleset;
+    REQUIRE(Pppp_Ruleset_CreateFromId(0, &ruleset) == Pppp_Success);
+    PpppNativeOsuDifficultyCalculator calc;
+    REQUIRE(Pppp_OsuDifficultyCalculator_Create(ruleset.handle, map.handle, &calc) == Pppp_Success);
+
+    Pppp_Beatmap_Destroy(map.handle);
+    PpppOsuDifficultyAttributes attrs;
+    CHECK(Pppp_OsuDifficultyCalculator_Calculate(calc.handle, 0, &attrs) == Pppp_Success);
+    Pppp_OsuDifficultyCalculator_Destroy(calc.handle);
+    Pppp_OsuDifficultyCalculator_Destroy(0);
+    Pppp_Ruleset_Destroy(ruleset.handle);
 }

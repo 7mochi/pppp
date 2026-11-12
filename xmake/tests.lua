@@ -107,7 +107,7 @@ for _, name in ipairs(fosu_tests) do
     target_end()
 end
 
-pppp_test("capi", "pppp_c")
+pppp_test("capi", {"pppp_c", "pppp_cjson"}, false, pppp_cjson_flags)
 
 target("test_capi_c")
     set_kind("binary")

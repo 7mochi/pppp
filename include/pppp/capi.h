@@ -59,6 +59,10 @@ typedef enum PpppErrorCode {
 typedef struct PpppBeatmap PpppBeatmap;
 typedef struct PpppRuleset PpppRuleset;
 typedef struct PpppMods PpppMods;
+typedef struct PpppOsuDifficultyCalculator PpppOsuDifficultyCalculator;
+typedef struct PpppTaikoDifficultyCalculator PpppTaikoDifficultyCalculator;
+typedef struct PpppCatchDifficultyCalculator PpppCatchDifficultyCalculator;
+typedef struct PpppManiaDifficultyCalculator PpppManiaDifficultyCalculator;
 
 typedef struct PpppNativeBeatmap {
     PpppBeatmap* handle;
@@ -82,6 +86,69 @@ typedef struct PpppNativeRuleset {
 typedef struct PpppNativeMods {
     PpppMods* handle;
 } PpppNativeMods;
+
+typedef struct PpppOsuDifficultyAttributes {
+    double star_rating;
+    PpppInt32 max_combo;
+    double aim_difficulty;
+    double speed_difficulty;
+    double reading_difficulty;
+    double flashlight_difficulty;
+    double slider_factor;
+    double aim_difficult_strain_count;
+    double speed_difficult_strain_count;
+    double reading_difficult_note_count;
+    double aim_difficult_slider_count;
+    double aim_top_weighted_slider_factor;
+    double speed_top_weighted_slider_factor;
+    double speed_note_count;
+    PpppInt32 hit_circle_count;
+    PpppInt32 slider_count;
+    PpppInt32 large_tick_count;
+    PpppInt32 spinner_count;
+    double nested_score_per_object;
+    double legacy_score_base_multiplier;
+    double maximum_legacy_combo_score;
+} PpppOsuDifficultyAttributes;
+
+typedef struct PpppTaikoDifficultyAttributes {
+    double star_rating;
+    PpppInt32 max_combo;
+    double mechanical_difficulty;
+    double rhythm_difficulty;
+    double reading_difficulty;
+    double colour_difficulty;
+    double stamina_difficulty;
+    double mono_stamina_factor;
+    double consistency_factor;
+    double stamina_top_strains;
+} PpppTaikoDifficultyAttributes;
+
+typedef struct PpppCatchDifficultyAttributes {
+    double star_rating;
+    PpppInt32 max_combo;
+} PpppCatchDifficultyAttributes;
+
+typedef struct PpppManiaDifficultyAttributes {
+    double star_rating;
+    PpppInt32 max_combo;
+} PpppManiaDifficultyAttributes;
+
+typedef struct PpppNativeOsuDifficultyCalculator {
+    PpppOsuDifficultyCalculator* handle;
+} PpppNativeOsuDifficultyCalculator;
+
+typedef struct PpppNativeTaikoDifficultyCalculator {
+    PpppTaikoDifficultyCalculator* handle;
+} PpppNativeTaikoDifficultyCalculator;
+
+typedef struct PpppNativeCatchDifficultyCalculator {
+    PpppCatchDifficultyCalculator* handle;
+} PpppNativeCatchDifficultyCalculator;
+
+typedef struct PpppNativeManiaDifficultyCalculator {
+    PpppManiaDifficultyCalculator* handle;
+} PpppNativeManiaDifficultyCalculator;
 
 #ifdef __cplusplus
 extern "C" {
@@ -131,6 +198,52 @@ PPPP_C_API PpppErrorCode Pppp_Mods_GetClockRate(PpppMods* mods, double* out);
 /* The ruleset id is 0..3. An unknown id returns Pppp_RulesetUnavailable. */
 PPPP_C_API PpppErrorCode Pppp_Mods_GetLegacyBits(PpppMods* mods, PpppInt32 ruleset, PpppUint32* out);
 PPPP_C_API void Pppp_Mods_Destroy(PpppMods* mods);
+
+/* The ruleset handle must match the calculator. Otherwise Create returns
+   Pppp_UnexpectedRuleset. The calculator keeps the beatmap alive. */
+
+PPPP_C_API PpppErrorCode Pppp_OsuDifficultyCalculator_Create(PpppRuleset* ruleset, PpppBeatmap* beatmap,
+                                                             PpppNativeOsuDifficultyCalculator* out);
+PPPP_C_API PpppErrorCode Pppp_OsuDifficultyCalculator_Calculate(PpppOsuDifficultyCalculator* calculator,
+                                                                PpppMods* mods,
+                                                                PpppOsuDifficultyAttributes* out);
+PPPP_C_API PpppErrorCode Pppp_OsuDifficultyCalculator_SetClockRate(PpppOsuDifficultyCalculator* calculator,
+                                                                   double clock_rate);
+PPPP_C_API PpppErrorCode Pppp_OsuDifficultyCalculator_ClearClockRate(PpppOsuDifficultyCalculator* calculator);
+PPPP_C_API void Pppp_OsuDifficultyCalculator_Destroy(PpppOsuDifficultyCalculator* calculator);
+
+PPPP_C_API PpppErrorCode Pppp_TaikoDifficultyCalculator_Create(PpppRuleset* ruleset, PpppBeatmap* beatmap,
+                                                               PpppNativeTaikoDifficultyCalculator* out);
+PPPP_C_API PpppErrorCode Pppp_TaikoDifficultyCalculator_Calculate(PpppTaikoDifficultyCalculator* calculator,
+                                                                  PpppMods* mods,
+                                                                  PpppTaikoDifficultyAttributes* out);
+PPPP_C_API PpppErrorCode
+Pppp_TaikoDifficultyCalculator_SetClockRate(PpppTaikoDifficultyCalculator* calculator, double clock_rate);
+PPPP_C_API PpppErrorCode
+Pppp_TaikoDifficultyCalculator_ClearClockRate(PpppTaikoDifficultyCalculator* calculator);
+PPPP_C_API void Pppp_TaikoDifficultyCalculator_Destroy(PpppTaikoDifficultyCalculator* calculator);
+
+PPPP_C_API PpppErrorCode Pppp_CatchDifficultyCalculator_Create(PpppRuleset* ruleset, PpppBeatmap* beatmap,
+                                                               PpppNativeCatchDifficultyCalculator* out);
+PPPP_C_API PpppErrorCode Pppp_CatchDifficultyCalculator_Calculate(PpppCatchDifficultyCalculator* calculator,
+                                                                  PpppMods* mods,
+                                                                  PpppCatchDifficultyAttributes* out);
+PPPP_C_API PpppErrorCode
+Pppp_CatchDifficultyCalculator_SetClockRate(PpppCatchDifficultyCalculator* calculator, double clock_rate);
+PPPP_C_API PpppErrorCode
+Pppp_CatchDifficultyCalculator_ClearClockRate(PpppCatchDifficultyCalculator* calculator);
+PPPP_C_API void Pppp_CatchDifficultyCalculator_Destroy(PpppCatchDifficultyCalculator* calculator);
+
+PPPP_C_API PpppErrorCode Pppp_ManiaDifficultyCalculator_Create(PpppRuleset* ruleset, PpppBeatmap* beatmap,
+                                                               PpppNativeManiaDifficultyCalculator* out);
+PPPP_C_API PpppErrorCode Pppp_ManiaDifficultyCalculator_Calculate(PpppManiaDifficultyCalculator* calculator,
+                                                                  PpppMods* mods,
+                                                                  PpppManiaDifficultyAttributes* out);
+PPPP_C_API PpppErrorCode
+Pppp_ManiaDifficultyCalculator_SetClockRate(PpppManiaDifficultyCalculator* calculator, double clock_rate);
+PPPP_C_API PpppErrorCode
+Pppp_ManiaDifficultyCalculator_ClearClockRate(PpppManiaDifficultyCalculator* calculator);
+PPPP_C_API void Pppp_ManiaDifficultyCalculator_Destroy(PpppManiaDifficultyCalculator* calculator);
 
 #ifdef __cplusplus
 }

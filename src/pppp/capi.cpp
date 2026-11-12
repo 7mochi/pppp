@@ -1,6 +1,7 @@
 #include "pppp/capi.h"
 #include "pppp/backend.h"
 #include "pppp/beatmap.h"
+#include "pppp/difficulty.h"
 #include "pppp/mods/mods.h"
 #include <cstring>
 #include <new>
@@ -17,6 +18,17 @@ struct PpppRuleset {
 struct PpppMods {
     pppp::mods::Mods mods;
 };
+
+struct PpppDifficultyCalculator {
+    PpppBeatmap* beatmap;
+    pppp::Difficulty difficulty;
+    int ruleset_id;
+};
+
+struct PpppOsuDifficultyCalculator : PpppDifficultyCalculator {};
+struct PpppTaikoDifficultyCalculator : PpppDifficultyCalculator {};
+struct PpppCatchDifficultyCalculator : PpppDifficultyCalculator {};
+struct PpppManiaDifficultyCalculator : PpppDifficultyCalculator {};
 
 namespace {
 #if defined(_MSC_VER)
@@ -137,10 +149,10 @@ namespace {
 
     const char* ruleset_short_name(int id) {
         switch (id) {
-        case 0: return "osu";
-        case 1: return "taiko";
-        case 2: return "fruits";
-        case 3: return "mania";
+        case pppp::Ruleset::OSU: return "osu";
+        case pppp::Ruleset::TAIKO: return "taiko";
+        case pppp::Ruleset::CATCH: return "fruits";
+        case pppp::Ruleset::MANIA: return "mania";
         }
 
         return 0;
@@ -148,22 +160,135 @@ namespace {
 
     int ruleset_id_from_short_name(const char* name) {
         if (std::strcmp(name, "osu") == 0) {
-            return 0;
+            return pppp::Ruleset::OSU;
         }
 
         if (std::strcmp(name, "taiko") == 0) {
-            return 1;
+            return pppp::Ruleset::TAIKO;
         }
 
         if (std::strcmp(name, "fruits") == 0) {
-            return 2;
+            return pppp::Ruleset::CATCH;
         }
 
         if (std::strcmp(name, "mania") == 0) {
-            return 3;
+            return pppp::Ruleset::MANIA;
         }
 
         return -1;
+    }
+
+    void set_calculator_clock_rate(PpppDifficultyCalculator* calculator, double clock_rate) {
+        calculator->difficulty = pppp::Difficulty()
+                                     .ruleset(static_cast<pppp::Ruleset::Value>(calculator->ruleset_id))
+                                     .clock_rate(clock_rate);
+    }
+
+    void clear_calculator_clock_rate(PpppDifficultyCalculator* calculator) {
+        calculator->difficulty =
+            pppp::Difficulty().ruleset(static_cast<pppp::Ruleset::Value>(calculator->ruleset_id));
+    }
+
+    PpppErrorCode calculate_into(const PpppDifficultyCalculator* calculator, PpppMods* mods,
+                                 pppp::DifficultyAttributes& out) {
+        pppp::Difficulty difficulty = calculator->difficulty;
+
+        if (mods) {
+            difficulty.mods(mods->mods);
+        }
+
+        return status_error(difficulty.calculate(calculator->beatmap->map, out));
+    }
+
+    template <class Calculator, class Native>
+    PpppErrorCode create_calculator(int expected_ruleset, PpppRuleset* ruleset, PpppBeatmap* beatmap,
+                                    Native* out) {
+        clear_error();
+
+        if (!ruleset || !beatmap || !out) {
+            set_error("a ruleset, a beatmap and an output are required");
+
+            return Pppp_InvalidArgument;
+        }
+
+        if (ruleset->id != expected_ruleset) {
+            set_error("the ruleset doesn't match the calculator");
+
+            return Pppp_UnexpectedRuleset;
+        }
+
+        Calculator* calculator = new (std::nothrow) Calculator;
+        if (!calculator) {
+            set_error("out of memory");
+
+            return Pppp_Allocation;
+        }
+
+        calculator->beatmap = beatmap;
+        calculator->ruleset_id = expected_ruleset;
+        calculator->difficulty =
+            pppp::Difficulty().ruleset(static_cast<pppp::Ruleset::Value>(expected_ruleset));
+        retain(beatmap);
+        out->handle = calculator;
+
+        return Pppp_Success;
+    }
+
+    template <class Calculator>
+    void destroy_calculator(Calculator* calculator) {
+        if (!calculator) {
+            return;
+        }
+
+        release(calculator->beatmap);
+        delete calculator;
+    }
+
+    void fill_osu(PpppOsuDifficultyAttributes* out, const pppp::OsuDifficultyAttributes& attributes) {
+        out->star_rating = attributes.star_rating;
+        out->max_combo = attributes.max_combo;
+        out->aim_difficulty = attributes.aim_difficulty;
+        out->speed_difficulty = attributes.speed_difficulty;
+        out->reading_difficulty = attributes.reading_difficulty;
+        out->flashlight_difficulty = attributes.flashlight_difficulty;
+        out->slider_factor = attributes.slider_factor;
+        out->aim_difficult_strain_count = attributes.aim_difficult_strain_count;
+        out->speed_difficult_strain_count = attributes.speed_difficult_strain_count;
+        out->reading_difficult_note_count = attributes.reading_difficult_note_count;
+        out->aim_difficult_slider_count = attributes.aim_difficult_slider_count;
+        out->aim_top_weighted_slider_factor = attributes.aim_top_weighted_slider_factor;
+        out->speed_top_weighted_slider_factor = attributes.speed_top_weighted_slider_factor;
+        out->speed_note_count = attributes.speed_note_count;
+        out->hit_circle_count = attributes.hit_circle_count;
+        out->slider_count = attributes.slider_count;
+        out->large_tick_count = attributes.large_tick_count;
+        out->spinner_count = attributes.spinner_count;
+        out->nested_score_per_object = attributes.nested_score_per_object;
+        out->legacy_score_base_multiplier = attributes.legacy_score_base_multiplier;
+        out->maximum_legacy_combo_score = attributes.maximum_legacy_combo_score;
+    }
+
+    void fill_taiko(PpppTaikoDifficultyAttributes* out, const pppp::TaikoDifficultyAttributes& attributes) {
+        out->star_rating = attributes.star_rating;
+        out->max_combo = attributes.max_combo;
+        out->mechanical_difficulty = attributes.mechanical_difficulty;
+        out->rhythm_difficulty = attributes.rhythm_difficulty;
+        out->reading_difficulty = attributes.reading_difficulty;
+        out->colour_difficulty = attributes.colour_difficulty;
+        out->stamina_difficulty = attributes.stamina_difficulty;
+        out->mono_stamina_factor = attributes.mono_stamina_factor;
+        out->consistency_factor = attributes.consistency_factor;
+        out->stamina_top_strains = attributes.stamina_top_strains;
+    }
+
+    void fill_catch(PpppCatchDifficultyAttributes* out, const pppp::CatchDifficultyAttributes& attributes) {
+        out->star_rating = attributes.star_rating;
+        out->max_combo = attributes.max_combo;
+    }
+
+    void fill_mania(PpppManiaDifficultyAttributes* out, const pppp::ManiaDifficultyAttributes& attributes) {
+        out->star_rating = attributes.star_rating;
+        out->max_combo = attributes.max_combo;
     }
 } // namespace
 
@@ -555,3 +680,267 @@ PpppErrorCode Pppp_Mods_GetLegacyBits(PpppMods* mods, PpppInt32 ruleset, PpppUin
 }
 
 void Pppp_Mods_Destroy(PpppMods* mods) { delete mods; }
+
+PpppErrorCode Pppp_OsuDifficultyCalculator_Create(PpppRuleset* ruleset, PpppBeatmap* beatmap,
+                                                  PpppNativeOsuDifficultyCalculator* out) {
+    return create_calculator<PpppOsuDifficultyCalculator>(0, ruleset, beatmap, out);
+}
+
+PpppErrorCode Pppp_OsuDifficultyCalculator_Calculate(PpppOsuDifficultyCalculator* calculator, PpppMods* mods,
+                                                     PpppOsuDifficultyAttributes* out) {
+    clear_error();
+
+    if (!calculator || !out) {
+        set_error("a calculator and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    pppp::DifficultyAttributes attributes;
+    const PpppErrorCode code = calculate_into(calculator, mods, attributes);
+    if (code != Pppp_Success) {
+        return code;
+    }
+
+    const pppp::OsuDifficultyAttributes* value = attributes.osu();
+    if (!value) {
+        set_error("the calculator did not produce osu! attributes");
+
+        return Pppp_Internal;
+    }
+
+    fill_osu(out, *value);
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_OsuDifficultyCalculator_SetClockRate(PpppOsuDifficultyCalculator* calculator,
+                                                        double clock_rate) {
+    clear_error();
+
+    if (!calculator) {
+        set_error("a calculator is required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    set_calculator_clock_rate(calculator, clock_rate);
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_OsuDifficultyCalculator_ClearClockRate(PpppOsuDifficultyCalculator* calculator) {
+    clear_error();
+
+    if (!calculator) {
+        set_error("a calculator is required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    clear_calculator_clock_rate(calculator);
+
+    return Pppp_Success;
+}
+
+void Pppp_OsuDifficultyCalculator_Destroy(PpppOsuDifficultyCalculator* calculator) {
+    destroy_calculator(calculator);
+}
+
+PpppErrorCode Pppp_TaikoDifficultyCalculator_Create(PpppRuleset* ruleset, PpppBeatmap* beatmap,
+                                                    PpppNativeTaikoDifficultyCalculator* out) {
+    return create_calculator<PpppTaikoDifficultyCalculator>(1, ruleset, beatmap, out);
+}
+
+PpppErrorCode Pppp_TaikoDifficultyCalculator_Calculate(PpppTaikoDifficultyCalculator* calculator,
+                                                       PpppMods* mods, PpppTaikoDifficultyAttributes* out) {
+    clear_error();
+
+    if (!calculator || !out) {
+        set_error("a calculator and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    pppp::DifficultyAttributes attributes;
+    const PpppErrorCode code = calculate_into(calculator, mods, attributes);
+    if (code != Pppp_Success) {
+        return code;
+    }
+
+    const pppp::TaikoDifficultyAttributes* value = attributes.taiko();
+    if (!value) {
+        set_error("the calculator did not produce taiko attributes");
+
+        return Pppp_Internal;
+    }
+
+    fill_taiko(out, *value);
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_TaikoDifficultyCalculator_SetClockRate(PpppTaikoDifficultyCalculator* calculator,
+                                                          double clock_rate) {
+    clear_error();
+
+    if (!calculator) {
+        set_error("a calculator is required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    set_calculator_clock_rate(calculator, clock_rate);
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_TaikoDifficultyCalculator_ClearClockRate(PpppTaikoDifficultyCalculator* calculator) {
+    clear_error();
+
+    if (!calculator) {
+        set_error("a calculator is required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    clear_calculator_clock_rate(calculator);
+
+    return Pppp_Success;
+}
+
+void Pppp_TaikoDifficultyCalculator_Destroy(PpppTaikoDifficultyCalculator* calculator) {
+    destroy_calculator(calculator);
+}
+
+PpppErrorCode Pppp_CatchDifficultyCalculator_Create(PpppRuleset* ruleset, PpppBeatmap* beatmap,
+                                                    PpppNativeCatchDifficultyCalculator* out) {
+    return create_calculator<PpppCatchDifficultyCalculator>(2, ruleset, beatmap, out);
+}
+
+PpppErrorCode Pppp_CatchDifficultyCalculator_Calculate(PpppCatchDifficultyCalculator* calculator,
+                                                       PpppMods* mods, PpppCatchDifficultyAttributes* out) {
+    clear_error();
+
+    if (!calculator || !out) {
+        set_error("a calculator and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    pppp::DifficultyAttributes attributes;
+    const PpppErrorCode code = calculate_into(calculator, mods, attributes);
+    if (code != Pppp_Success) {
+        return code;
+    }
+
+    const pppp::CatchDifficultyAttributes* value = attributes.fruits();
+    if (!value) {
+        set_error("the calculator did not produce osu!catch attributes");
+
+        return Pppp_Internal;
+    }
+
+    fill_catch(out, *value);
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_CatchDifficultyCalculator_SetClockRate(PpppCatchDifficultyCalculator* calculator,
+                                                          double clock_rate) {
+    clear_error();
+
+    if (!calculator) {
+        set_error("a calculator is required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    set_calculator_clock_rate(calculator, clock_rate);
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_CatchDifficultyCalculator_ClearClockRate(PpppCatchDifficultyCalculator* calculator) {
+    clear_error();
+
+    if (!calculator) {
+        set_error("a calculator is required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    clear_calculator_clock_rate(calculator);
+
+    return Pppp_Success;
+}
+
+void Pppp_CatchDifficultyCalculator_Destroy(PpppCatchDifficultyCalculator* calculator) {
+    destroy_calculator(calculator);
+}
+
+PpppErrorCode Pppp_ManiaDifficultyCalculator_Create(PpppRuleset* ruleset, PpppBeatmap* beatmap,
+                                                    PpppNativeManiaDifficultyCalculator* out) {
+    return create_calculator<PpppManiaDifficultyCalculator>(3, ruleset, beatmap, out);
+}
+
+PpppErrorCode Pppp_ManiaDifficultyCalculator_Calculate(PpppManiaDifficultyCalculator* calculator,
+                                                       PpppMods* mods, PpppManiaDifficultyAttributes* out) {
+    clear_error();
+
+    if (!calculator || !out) {
+        set_error("a calculator and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    pppp::DifficultyAttributes attributes;
+    const PpppErrorCode code = calculate_into(calculator, mods, attributes);
+    if (code != Pppp_Success) {
+        return code;
+    }
+
+    const pppp::ManiaDifficultyAttributes* value = attributes.mania();
+    if (!value) {
+        set_error("the calculator did not produce osu!mania attributes");
+
+        return Pppp_Internal;
+    }
+
+    fill_mania(out, *value);
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_ManiaDifficultyCalculator_SetClockRate(PpppManiaDifficultyCalculator* calculator,
+                                                          double clock_rate) {
+    clear_error();
+
+    if (!calculator) {
+        set_error("a calculator is required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    set_calculator_clock_rate(calculator, clock_rate);
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_ManiaDifficultyCalculator_ClearClockRate(PpppManiaDifficultyCalculator* calculator) {
+    clear_error();
+
+    if (!calculator) {
+        set_error("a calculator is required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    clear_calculator_clock_rate(calculator);
+
+    return Pppp_Success;
+}
+
+void Pppp_ManiaDifficultyCalculator_Destroy(PpppManiaDifficultyCalculator* calculator) {
+    destroy_calculator(calculator);
+}

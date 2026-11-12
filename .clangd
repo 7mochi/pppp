@@ -14,3 +14,21 @@ If:
 
 Diagnostics:
   Suppress: "*"
+
+# consumer.cpp is only built by the install test. clangd doesn't know its include paths.
+# These match the paths and parser define that the install test uses.
+---
+If:
+  PathMatch: tests/install/consumer\.cpp
+
+CompileFlags:
+  Add:
+    - -std=c++98
+    - -Iinclude
+    - -Ithird_party/fosu/src
+    - -Ithird_party/variant-lite/include
+    - -Ithird_party/optional-bare/include
+    - -Ithird_party/span-lite/include
+    - -Ithird_party/string-view-lite/include
+    - -Ithird_party/atomic-lite/include
+    - -DPPPP_INSTALL_TEST_WITH_FOSU

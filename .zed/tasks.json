@@ -1,0 +1,9 @@
+[
+  {
+    "label": "xmake: compile commands",
+    "command": "xmake",
+    "args": ["project", "-k", "compile_commands", "--lsp=clangd", "build"],
+    "reveal": "no_focus",
+    "hide": "on_success"
+  }
+]

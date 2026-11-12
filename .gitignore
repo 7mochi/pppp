@@ -1,6 +1,7 @@
 # vscode
 .vscode/*
 !.vscode/settings.json
+!.vscode/tasks.json
 
 # rider
 .idea/
@@ -10,7 +11,8 @@
 .vs/
 
 # zed
-.zed/
+.zed/*
+!.zed/tasks.json
 
 # pppp
 build/

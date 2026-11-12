@@ -29,7 +29,6 @@ jobs:
               - 'tests/**'
               - 'codegen/**'
               - 'reference/**'
-              - 'cmake/ppppPlaceEngine.cmake'
               - 'xmake.lua'
               - 'xmake/**'
               - 'Makefile'

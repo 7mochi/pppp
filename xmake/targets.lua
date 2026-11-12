@@ -7,6 +7,8 @@ target("pppp_options")
     add_headerfiles(pppp.path("include/(pppp/**.h)"))
 target_end()
 
+-- pppp_c is a shared library and can load at any address. The static libraries it links must also
+-- work at any address.
 local function pppp_pic()
     if not is_plat("windows") then
         add_cxflags("-fPIC")
@@ -272,11 +274,14 @@ target("pppp_c")
     add_defines("PPPP_C_BUILD")
     add_headerfiles(pppp.path("include/pppp/capi.h"), pppp.path("include/pppp/version.h"))
 
+    pppp_library_flags()
+
     if not is_plat("windows") then
         add_cxflags("-fvisibility=hidden")
     end
 
     if is_plat("linux") then
+        -- Shared targets ignore add_ldflags and take link flags from shflags.
         add_shflags("-Wl,--version-script=" .. pppp.path("capi.map"))
         add_syslinks("dl")
     end

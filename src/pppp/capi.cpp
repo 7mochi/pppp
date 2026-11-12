@@ -35,6 +35,11 @@ struct PpppTimedResult {
     int ruleset;
 };
 
+struct PpppStrains {
+    pppp::Strains strains;
+    int ruleset;
+};
+
 namespace {
 #if defined(_MSC_VER)
     __declspec(thread) char g_last_message[256];
@@ -408,6 +413,73 @@ namespace {
         }
 
         return Pppp_Success;
+    }
+
+    PpppErrorCode calculate_strains_into(const PpppDifficultyCalculator* calculator, PpppMods* mods,
+                                         PpppStrains** out) {
+        pppp::Difficulty difficulty = calculator->difficulty;
+
+        if (mods) {
+            difficulty.mods(mods->mods);
+        }
+
+        pppp::Strains strains;
+        const pppp::Status status = difficulty.calculate_strains(calculator->beatmap->map, strains);
+        if (!status.ok()) {
+            return status_error(status);
+        }
+
+        PpppStrains* result = new (std::nothrow) PpppStrains;
+        if (!result) {
+            set_error("out of memory");
+            return Pppp_Allocation;
+        }
+
+        result->strains = strains;
+        result->ruleset = calculator->ruleset_id;
+        *out = result;
+
+        return Pppp_Success;
+    }
+
+    PpppErrorCode get_doubles(const std::vector<double>& values, double* buffer, PpppInt32* size) {
+        const PpppInt32 count = static_cast<PpppInt32>(values.size());
+
+        if (!buffer) {
+            *size = count;
+            return Pppp_BufferSizeQuery;
+        }
+
+        PpppInt32 copy = count;
+        if (copy > *size) {
+            copy = *size;
+        }
+
+        for (PpppInt32 i = 0; i < copy; i++) {
+            buffer[i] = values[static_cast<size_t>(i)];
+        }
+
+        return Pppp_Success;
+    }
+
+    PpppErrorCode get_strain_series(PpppStrains* result, int expected_ruleset,
+                                    const std::vector<double>* series, double* buffer, PpppInt32* size) {
+        if (!result || !size) {
+            set_error("a result and a size are required");
+            return Pppp_InvalidArgument;
+        }
+
+        if (result->ruleset != expected_ruleset) {
+            set_error("the result is for another ruleset");
+            return Pppp_UnexpectedRuleset;
+        }
+
+        if (!series) {
+            set_error("the result does not hold this strain series");
+            return Pppp_Internal;
+        }
+
+        return get_doubles(*series, buffer, size);
     }
 } // namespace
 
@@ -848,6 +920,21 @@ PpppErrorCode Pppp_OsuDifficultyCalculator_CalculateTimed(PpppOsuDifficultyCalcu
     return calculate_timed_into(calculator, mods, out);
 }
 
+PpppErrorCode Pppp_OsuDifficultyCalculator_CalculateStrains(PpppOsuDifficultyCalculator* calculator,
+                                                            PpppMods* mods, PpppStrains** out) {
+    clear_error();
+
+    if (!calculator || !out) {
+        set_error("a calculator and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    *out = 0;
+
+    return calculate_strains_into(calculator, mods, out);
+}
+
 PpppErrorCode Pppp_OsuDifficultyCalculator_SetClockRate(PpppOsuDifficultyCalculator* calculator,
                                                         double clock_rate) {
     clear_error();
@@ -927,6 +1014,21 @@ PpppErrorCode Pppp_TaikoDifficultyCalculator_CalculateTimed(PpppTaikoDifficultyC
     *out = 0;
 
     return calculate_timed_into(calculator, mods, out);
+}
+
+PpppErrorCode Pppp_TaikoDifficultyCalculator_CalculateStrains(PpppTaikoDifficultyCalculator* calculator,
+                                                              PpppMods* mods, PpppStrains** out) {
+    clear_error();
+
+    if (!calculator || !out) {
+        set_error("a calculator and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    *out = 0;
+
+    return calculate_strains_into(calculator, mods, out);
 }
 
 PpppErrorCode Pppp_TaikoDifficultyCalculator_SetClockRate(PpppTaikoDifficultyCalculator* calculator,
@@ -1010,6 +1112,21 @@ PpppErrorCode Pppp_CatchDifficultyCalculator_CalculateTimed(PpppCatchDifficultyC
     return calculate_timed_into(calculator, mods, out);
 }
 
+PpppErrorCode Pppp_CatchDifficultyCalculator_CalculateStrains(PpppCatchDifficultyCalculator* calculator,
+                                                              PpppMods* mods, PpppStrains** out) {
+    clear_error();
+
+    if (!calculator || !out) {
+        set_error("a calculator and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    *out = 0;
+
+    return calculate_strains_into(calculator, mods, out);
+}
+
 PpppErrorCode Pppp_CatchDifficultyCalculator_SetClockRate(PpppCatchDifficultyCalculator* calculator,
                                                           double clock_rate) {
     clear_error();
@@ -1091,6 +1208,21 @@ PpppErrorCode Pppp_ManiaDifficultyCalculator_CalculateTimed(PpppManiaDifficultyC
     return calculate_timed_into(calculator, mods, out);
 }
 
+PpppErrorCode Pppp_ManiaDifficultyCalculator_CalculateStrains(PpppManiaDifficultyCalculator* calculator,
+                                                              PpppMods* mods, PpppStrains** out) {
+    clear_error();
+
+    if (!calculator || !out) {
+        set_error("a calculator and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    *out = 0;
+
+    return calculate_strains_into(calculator, mods, out);
+}
+
 PpppErrorCode Pppp_ManiaDifficultyCalculator_SetClockRate(PpppManiaDifficultyCalculator* calculator,
                                                           double clock_rate) {
     clear_error();
@@ -1167,3 +1299,144 @@ PpppErrorCode Pppp_TimedResult_GetMania(PpppTimedResult* result, PpppTimedManiaD
 }
 
 void Pppp_TimedResult_Destroy(PpppTimedResult* result) { delete result; }
+
+PpppErrorCode Pppp_Strains_GetRuleset(PpppStrains* strains, PpppInt32* out) {
+    clear_error();
+
+    if (!strains || !out) {
+        set_error("strains and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    *out = strains->ruleset;
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_Strains_GetStartTime(PpppStrains* strains, double* out) {
+    clear_error();
+
+    if (!strains || !out) {
+        set_error("strains and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    *out = strains->strains.start_time();
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_Strains_GetSectionLength(PpppStrains* strains, double* out) {
+    clear_error();
+
+    if (!strains || !out) {
+        set_error("strains and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    *out = strains->strains.section_length();
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_Strains_GetOsuAim(PpppStrains* strains, double* buffer, PpppInt32* size) {
+    clear_error();
+
+    const pppp::OsuStrains* osu = strains ? strains->strains.osu() : 0;
+
+    return get_strain_series(strains, 0, osu ? &osu->aim : 0, buffer, size);
+}
+
+PpppErrorCode Pppp_Strains_GetOsuAimNoSliders(PpppStrains* strains, double* buffer, PpppInt32* size) {
+    clear_error();
+
+    const pppp::OsuStrains* osu = strains ? strains->strains.osu() : 0;
+
+    return get_strain_series(strains, 0, osu ? &osu->aim_no_sliders : 0, buffer, size);
+}
+
+PpppErrorCode Pppp_Strains_GetOsuSpeed(PpppStrains* strains, double* buffer, PpppInt32* size) {
+    clear_error();
+
+    const pppp::OsuStrains* osu = strains ? strains->strains.osu() : 0;
+
+    return get_strain_series(strains, 0, osu ? &osu->speed : 0, buffer, size);
+}
+
+PpppErrorCode Pppp_Strains_GetOsuReading(PpppStrains* strains, double* buffer, PpppInt32* size) {
+    clear_error();
+
+    const pppp::OsuStrains* osu = strains ? strains->strains.osu() : 0;
+
+    return get_strain_series(strains, 0, osu ? &osu->reading : 0, buffer, size);
+}
+
+PpppErrorCode Pppp_Strains_GetOsuFlashlight(PpppStrains* strains, double* buffer, PpppInt32* size) {
+    clear_error();
+
+    const pppp::OsuStrains* osu = strains ? strains->strains.osu() : 0;
+
+    return get_strain_series(strains, 0, osu ? &osu->flashlight : 0, buffer, size);
+}
+
+PpppErrorCode Pppp_Strains_GetTaikoColour(PpppStrains* strains, double* buffer, PpppInt32* size) {
+    clear_error();
+
+    const pppp::TaikoStrains* taiko = strains ? strains->strains.taiko() : 0;
+
+    return get_strain_series(strains, 1, taiko ? &taiko->colour : 0, buffer, size);
+}
+
+PpppErrorCode Pppp_Strains_GetTaikoReading(PpppStrains* strains, double* buffer, PpppInt32* size) {
+    clear_error();
+
+    const pppp::TaikoStrains* taiko = strains ? strains->strains.taiko() : 0;
+
+    return get_strain_series(strains, 1, taiko ? &taiko->reading : 0, buffer, size);
+}
+
+PpppErrorCode Pppp_Strains_GetTaikoRhythm(PpppStrains* strains, double* buffer, PpppInt32* size) {
+    clear_error();
+
+    const pppp::TaikoStrains* taiko = strains ? strains->strains.taiko() : 0;
+
+    return get_strain_series(strains, 1, taiko ? &taiko->rhythm : 0, buffer, size);
+}
+
+PpppErrorCode Pppp_Strains_GetTaikoStamina(PpppStrains* strains, double* buffer, PpppInt32* size) {
+    clear_error();
+
+    const pppp::TaikoStrains* taiko = strains ? strains->strains.taiko() : 0;
+
+    return get_strain_series(strains, 1, taiko ? &taiko->stamina : 0, buffer, size);
+}
+
+PpppErrorCode Pppp_Strains_GetTaikoSingleColourStamina(PpppStrains* strains, double* buffer,
+                                                       PpppInt32* size) {
+    clear_error();
+
+    const pppp::TaikoStrains* taiko = strains ? strains->strains.taiko() : 0;
+
+    return get_strain_series(strains, 1, taiko ? &taiko->single_colour_stamina : 0, buffer, size);
+}
+
+PpppErrorCode Pppp_Strains_GetCatchMovement(PpppStrains* strains, double* buffer, PpppInt32* size) {
+    clear_error();
+
+    const pppp::CatchStrains* catch_strains = strains ? strains->strains.fruits() : 0;
+
+    return get_strain_series(strains, 2, catch_strains ? &catch_strains->movement : 0, buffer, size);
+}
+
+PpppErrorCode Pppp_Strains_GetManiaStrain(PpppStrains* strains, double* buffer, PpppInt32* size) {
+    clear_error();
+
+    const pppp::ManiaStrains* mania = strains ? strains->strains.mania() : 0;
+
+    return get_strain_series(strains, 3, mania ? &mania->strain : 0, buffer, size);
+}
+
+void Pppp_Strains_Destroy(PpppStrains* strains) { delete strains; }

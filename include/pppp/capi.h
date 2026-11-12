@@ -64,6 +64,7 @@ typedef struct PpppTaikoDifficultyCalculator PpppTaikoDifficultyCalculator;
 typedef struct PpppCatchDifficultyCalculator PpppCatchDifficultyCalculator;
 typedef struct PpppManiaDifficultyCalculator PpppManiaDifficultyCalculator;
 typedef struct PpppTimedResult PpppTimedResult;
+typedef struct PpppStrains PpppStrains;
 
 typedef struct PpppNativeBeatmap {
     PpppBeatmap* handle;
@@ -230,6 +231,8 @@ PPPP_C_API PpppErrorCode Pppp_OsuDifficultyCalculator_Calculate(PpppOsuDifficult
                                                                 PpppOsuDifficultyAttributes* out);
 PPPP_C_API PpppErrorCode Pppp_OsuDifficultyCalculator_CalculateTimed(PpppOsuDifficultyCalculator* calculator,
                                                                      PpppMods* mods, PpppTimedResult** out);
+PPPP_C_API PpppErrorCode Pppp_OsuDifficultyCalculator_CalculateStrains(
+    PpppOsuDifficultyCalculator* calculator, PpppMods* mods, PpppStrains** out);
 PPPP_C_API PpppErrorCode Pppp_OsuDifficultyCalculator_SetClockRate(PpppOsuDifficultyCalculator* calculator,
                                                                    double clock_rate);
 PPPP_C_API PpppErrorCode Pppp_OsuDifficultyCalculator_ClearClockRate(PpppOsuDifficultyCalculator* calculator);
@@ -242,6 +245,8 @@ PPPP_C_API PpppErrorCode Pppp_TaikoDifficultyCalculator_Calculate(PpppTaikoDiffi
                                                                   PpppTaikoDifficultyAttributes* out);
 PPPP_C_API PpppErrorCode Pppp_TaikoDifficultyCalculator_CalculateTimed(
     PpppTaikoDifficultyCalculator* calculator, PpppMods* mods, PpppTimedResult** out);
+PPPP_C_API PpppErrorCode Pppp_TaikoDifficultyCalculator_CalculateStrains(
+    PpppTaikoDifficultyCalculator* calculator, PpppMods* mods, PpppStrains** out);
 PPPP_C_API PpppErrorCode
 Pppp_TaikoDifficultyCalculator_SetClockRate(PpppTaikoDifficultyCalculator* calculator, double clock_rate);
 PPPP_C_API PpppErrorCode
@@ -255,6 +260,8 @@ PPPP_C_API PpppErrorCode Pppp_CatchDifficultyCalculator_Calculate(PpppCatchDiffi
                                                                   PpppCatchDifficultyAttributes* out);
 PPPP_C_API PpppErrorCode Pppp_CatchDifficultyCalculator_CalculateTimed(
     PpppCatchDifficultyCalculator* calculator, PpppMods* mods, PpppTimedResult** out);
+PPPP_C_API PpppErrorCode Pppp_CatchDifficultyCalculator_CalculateStrains(
+    PpppCatchDifficultyCalculator* calculator, PpppMods* mods, PpppStrains** out);
 PPPP_C_API PpppErrorCode
 Pppp_CatchDifficultyCalculator_SetClockRate(PpppCatchDifficultyCalculator* calculator, double clock_rate);
 PPPP_C_API PpppErrorCode
@@ -268,6 +275,8 @@ PPPP_C_API PpppErrorCode Pppp_ManiaDifficultyCalculator_Calculate(PpppManiaDiffi
                                                                   PpppManiaDifficultyAttributes* out);
 PPPP_C_API PpppErrorCode Pppp_ManiaDifficultyCalculator_CalculateTimed(
     PpppManiaDifficultyCalculator* calculator, PpppMods* mods, PpppTimedResult** out);
+PPPP_C_API PpppErrorCode Pppp_ManiaDifficultyCalculator_CalculateStrains(
+    PpppManiaDifficultyCalculator* calculator, PpppMods* mods, PpppStrains** out);
 PPPP_C_API PpppErrorCode
 Pppp_ManiaDifficultyCalculator_SetClockRate(PpppManiaDifficultyCalculator* calculator, double clock_rate);
 PPPP_C_API PpppErrorCode
@@ -287,6 +296,29 @@ PPPP_C_API PpppErrorCode Pppp_TimedResult_GetMania(PpppTimedResult* result,
                                                    PpppTimedManiaDifficultyAttributes* buffer,
                                                    PpppInt32* size);
 PPPP_C_API void Pppp_TimedResult_Destroy(PpppTimedResult* result);
+
+PPPP_C_API PpppErrorCode Pppp_Strains_GetRuleset(PpppStrains* strains, PpppInt32* out);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetStartTime(PpppStrains* strains, double* out);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetSectionLength(PpppStrains* strains, double* out);
+
+PPPP_C_API PpppErrorCode Pppp_Strains_GetOsuAim(PpppStrains* strains, double* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetOsuAimNoSliders(PpppStrains* strains, double* buffer,
+                                                         PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetOsuSpeed(PpppStrains* strains, double* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetOsuReading(PpppStrains* strains, double* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetOsuFlashlight(PpppStrains* strains, double* buffer, PpppInt32* size);
+
+PPPP_C_API PpppErrorCode Pppp_Strains_GetTaikoColour(PpppStrains* strains, double* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetTaikoReading(PpppStrains* strains, double* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetTaikoRhythm(PpppStrains* strains, double* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetTaikoStamina(PpppStrains* strains, double* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetTaikoSingleColourStamina(PpppStrains* strains, double* buffer,
+                                                                  PpppInt32* size);
+
+PPPP_C_API PpppErrorCode Pppp_Strains_GetCatchMovement(PpppStrains* strains, double* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetManiaStrain(PpppStrains* strains, double* buffer, PpppInt32* size);
+
+PPPP_C_API void Pppp_Strains_Destroy(PpppStrains* strains);
 
 #ifdef __cplusplus
 }

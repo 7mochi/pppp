@@ -8,6 +8,21 @@
 #include <string>
 #include <vector>
 
+namespace {
+    typedef PpppErrorCode (*StrainGetter)(PpppStrains*, double*, PpppInt32*);
+
+    void check_strain_series(StrainGetter getter, PpppStrains* result, const std::vector<double>& expected) {
+        PpppInt32 size = 0;
+        CHECK(getter(result, 0, &size) == Pppp_BufferSizeQuery);
+        CHECK(static_cast<size_t>(size) == expected.size());
+        if (!expected.empty()) {
+            std::vector<double> values(size);
+            CHECK(getter(result, &values[0], &size) == Pppp_Success);
+            CHECK(values == expected);
+        }
+    }
+} // namespace
+
 TEST_CASE("the C ABI reports the header version") {
     CHECK(std::string(Pppp_Version()) == PPPP_VERSION_STRING);
     CHECK(Pppp_VersionNumber() == PPPP_VERSION_NUMBER);
@@ -471,6 +486,196 @@ TEST_CASE("the C ABI timed result exposes the other rulesets") {
         CHECK(Pppp_TimedResult_GetCatch(result, 0, &size) == Pppp_UnexpectedRuleset);
 
         Pppp_TimedResult_Destroy(result);
+        Pppp_ManiaDifficultyCalculator_Destroy(calc.handle);
+        Pppp_Ruleset_Destroy(ruleset.handle);
+        Pppp_Beatmap_Destroy(map.handle);
+    }
+}
+
+TEST_CASE("the C ABI strains match the C++ calculator") {
+    pppp::Beatmap source;
+    pppp_test::load(source, PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu");
+    const pppp::Strains expected =
+        pppp_test::strains(pppp::Difficulty().mods(pppp_test::parse_mods("HD,FL")), source);
+    REQUIRE(expected.osu());
+
+    PpppNativeBeatmap map;
+    REQUIRE(Pppp_Beatmap_CreateFromFile(PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu", &map) == Pppp_Success);
+    PpppNativeRuleset ruleset;
+    REQUIRE(Pppp_Ruleset_CreateFromId(0, &ruleset) == Pppp_Success);
+    PpppNativeMods mods;
+    REQUIRE(Pppp_Mods_Create(&mods) == Pppp_Success);
+    REQUIRE(Pppp_Mods_Parse(mods.handle, "HD,FL") == Pppp_Success);
+    PpppNativeOsuDifficultyCalculator calc;
+    REQUIRE(Pppp_OsuDifficultyCalculator_Create(ruleset.handle, map.handle, &calc) == Pppp_Success);
+
+    PpppStrains* result = 0;
+    REQUIRE(Pppp_OsuDifficultyCalculator_CalculateStrains(calc.handle, mods.handle, &result) == Pppp_Success);
+
+    PpppInt32 ruleset_id = -1;
+    CHECK(Pppp_Strains_GetRuleset(result, &ruleset_id) == Pppp_Success);
+    CHECK(ruleset_id == 0);
+    double start = 0.0;
+    double section = 0.0;
+    CHECK(Pppp_Strains_GetStartTime(result, &start) == Pppp_Success);
+    CHECK(Pppp_Strains_GetSectionLength(result, &section) == Pppp_Success);
+    CHECK(start == expected.start_time());
+    CHECK(section == expected.section_length());
+
+    check_strain_series(Pppp_Strains_GetOsuAim, result, expected.osu()->aim);
+    check_strain_series(Pppp_Strains_GetOsuAimNoSliders, result, expected.osu()->aim_no_sliders);
+    check_strain_series(Pppp_Strains_GetOsuSpeed, result, expected.osu()->speed);
+    check_strain_series(Pppp_Strains_GetOsuReading, result, expected.osu()->reading);
+    check_strain_series(Pppp_Strains_GetOsuFlashlight, result, expected.osu()->flashlight);
+
+    PpppInt32 size = 0;
+    CHECK(Pppp_Strains_GetTaikoColour(result, 0, &size) == Pppp_UnexpectedRuleset);
+    Pppp_Strains_Destroy(result);
+    Pppp_Strains_Destroy(0);
+    Pppp_OsuDifficultyCalculator_Destroy(calc.handle);
+    Pppp_Mods_Destroy(mods.handle);
+    Pppp_Ruleset_Destroy(ruleset.handle);
+    Pppp_Beatmap_Destroy(map.handle);
+}
+
+TEST_CASE("the C ABI strains expose an empty flashlight without FL") {
+    pppp::Beatmap source;
+    pppp_test::load(source, PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu");
+    const pppp::Strains expected =
+        pppp_test::strains(pppp::Difficulty().mods(pppp_test::parse_mods("HD")), source);
+    REQUIRE(expected.osu());
+    REQUIRE(expected.osu()->flashlight.empty());
+
+    PpppNativeBeatmap map;
+    REQUIRE(Pppp_Beatmap_CreateFromFile(PPPP_TEST_RESOURCES "/osu/diffcalc-test.osu", &map) == Pppp_Success);
+    PpppNativeRuleset ruleset;
+    REQUIRE(Pppp_Ruleset_CreateFromId(0, &ruleset) == Pppp_Success);
+    PpppNativeMods mods;
+    REQUIRE(Pppp_Mods_Create(&mods) == Pppp_Success);
+    REQUIRE(Pppp_Mods_Parse(mods.handle, "HD") == Pppp_Success);
+    PpppNativeOsuDifficultyCalculator calc;
+    REQUIRE(Pppp_OsuDifficultyCalculator_Create(ruleset.handle, map.handle, &calc) == Pppp_Success);
+
+    PpppStrains* result = 0;
+    REQUIRE(Pppp_OsuDifficultyCalculator_CalculateStrains(calc.handle, mods.handle, &result) == Pppp_Success);
+
+    PpppInt32 size = -1;
+    CHECK(Pppp_Strains_GetOsuFlashlight(result, 0, &size) == Pppp_BufferSizeQuery);
+    CHECK(size == 0);
+
+    Pppp_Strains_Destroy(result);
+    Pppp_OsuDifficultyCalculator_Destroy(calc.handle);
+    Pppp_Mods_Destroy(mods.handle);
+    Pppp_Ruleset_Destroy(ruleset.handle);
+    Pppp_Beatmap_Destroy(map.handle);
+}
+
+TEST_CASE("the C ABI strains expose taiko, catch and mania") {
+    {
+        pppp::Beatmap source;
+        pppp_test::load(source, PPPP_TEST_RESOURCES "/taiko/diffcalc-test.osu");
+        const pppp::Strains expected =
+            pppp_test::strains(pppp::Difficulty().mods(pppp_test::parse_mods("HD,DT")), source);
+        REQUIRE(expected.taiko());
+
+        PpppNativeBeatmap map;
+        REQUIRE(Pppp_Beatmap_CreateFromFile(PPPP_TEST_RESOURCES "/taiko/diffcalc-test.osu", &map) ==
+                Pppp_Success);
+        PpppNativeRuleset ruleset;
+        REQUIRE(Pppp_Ruleset_CreateFromId(1, &ruleset) == Pppp_Success);
+        PpppNativeMods mods;
+        REQUIRE(Pppp_Mods_Create(&mods) == Pppp_Success);
+        REQUIRE(Pppp_Mods_Parse(mods.handle, "HD,DT") == Pppp_Success);
+        PpppNativeTaikoDifficultyCalculator calc;
+        REQUIRE(Pppp_TaikoDifficultyCalculator_Create(ruleset.handle, map.handle, &calc) == Pppp_Success);
+
+        PpppStrains* result = 0;
+        REQUIRE(Pppp_TaikoDifficultyCalculator_CalculateStrains(calc.handle, mods.handle, &result) ==
+                Pppp_Success);
+
+        PpppInt32 ruleset_id = -1;
+        CHECK(Pppp_Strains_GetRuleset(result, &ruleset_id) == Pppp_Success);
+        CHECK(ruleset_id == 1);
+        check_strain_series(Pppp_Strains_GetTaikoColour, result, expected.taiko()->colour);
+        check_strain_series(Pppp_Strains_GetTaikoReading, result, expected.taiko()->reading);
+        check_strain_series(Pppp_Strains_GetTaikoRhythm, result, expected.taiko()->rhythm);
+        check_strain_series(Pppp_Strains_GetTaikoStamina, result, expected.taiko()->stamina);
+        check_strain_series(Pppp_Strains_GetTaikoSingleColourStamina, result,
+                            expected.taiko()->single_colour_stamina);
+
+        PpppInt32 size = 0;
+        CHECK(Pppp_Strains_GetOsuAim(result, 0, &size) == Pppp_UnexpectedRuleset);
+
+        Pppp_Strains_Destroy(result);
+        Pppp_TaikoDifficultyCalculator_Destroy(calc.handle);
+        Pppp_Mods_Destroy(mods.handle);
+        Pppp_Ruleset_Destroy(ruleset.handle);
+        Pppp_Beatmap_Destroy(map.handle);
+    }
+
+    {
+        pppp::Beatmap source;
+        pppp_test::load(source, PPPP_TEST_RESOURCES "/fruits/diffcalc-test.osu");
+        const pppp::Strains expected =
+            pppp_test::strains(pppp::Difficulty().mods(pppp_test::parse_mods("HD,DT")), source);
+        REQUIRE(expected.fruits());
+
+        PpppNativeBeatmap map;
+        REQUIRE(Pppp_Beatmap_CreateFromFile(PPPP_TEST_RESOURCES "/fruits/diffcalc-test.osu", &map) ==
+                Pppp_Success);
+        PpppNativeRuleset ruleset;
+        REQUIRE(Pppp_Ruleset_CreateFromId(2, &ruleset) == Pppp_Success);
+        PpppNativeMods mods;
+        REQUIRE(Pppp_Mods_Create(&mods) == Pppp_Success);
+        REQUIRE(Pppp_Mods_Parse(mods.handle, "HD,DT") == Pppp_Success);
+        PpppNativeCatchDifficultyCalculator calc;
+        REQUIRE(Pppp_CatchDifficultyCalculator_Create(ruleset.handle, map.handle, &calc) == Pppp_Success);
+
+        PpppStrains* result = 0;
+        REQUIRE(Pppp_CatchDifficultyCalculator_CalculateStrains(calc.handle, mods.handle, &result) ==
+                Pppp_Success);
+
+        PpppInt32 ruleset_id = -1;
+        CHECK(Pppp_Strains_GetRuleset(result, &ruleset_id) == Pppp_Success);
+        CHECK(ruleset_id == 2);
+        check_strain_series(Pppp_Strains_GetCatchMovement, result, expected.fruits()->movement);
+
+        PpppInt32 size = 0;
+        CHECK(Pppp_Strains_GetTaikoColour(result, 0, &size) == Pppp_UnexpectedRuleset);
+
+        Pppp_Strains_Destroy(result);
+        Pppp_CatchDifficultyCalculator_Destroy(calc.handle);
+        Pppp_Mods_Destroy(mods.handle);
+        Pppp_Ruleset_Destroy(ruleset.handle);
+        Pppp_Beatmap_Destroy(map.handle);
+    }
+
+    {
+        pppp::Beatmap source;
+        pppp_test::load(source, PPPP_TEST_RESOURCES "/mania/diffcalc-test.osu");
+        const pppp::Strains expected = pppp_test::strains(pppp::Difficulty(), source);
+        REQUIRE(expected.mania());
+
+        PpppNativeBeatmap map;
+        REQUIRE(Pppp_Beatmap_CreateFromFile(PPPP_TEST_RESOURCES "/mania/diffcalc-test.osu", &map) ==
+                Pppp_Success);
+        PpppNativeRuleset ruleset;
+        REQUIRE(Pppp_Ruleset_CreateFromId(3, &ruleset) == Pppp_Success);
+        PpppNativeManiaDifficultyCalculator calc;
+        REQUIRE(Pppp_ManiaDifficultyCalculator_Create(ruleset.handle, map.handle, &calc) == Pppp_Success);
+
+        PpppStrains* result = 0;
+        REQUIRE(Pppp_ManiaDifficultyCalculator_CalculateStrains(calc.handle, 0, &result) == Pppp_Success);
+
+        PpppInt32 ruleset_id = -1;
+        CHECK(Pppp_Strains_GetRuleset(result, &ruleset_id) == Pppp_Success);
+        CHECK(ruleset_id == 3);
+        check_strain_series(Pppp_Strains_GetManiaStrain, result, expected.mania()->strain);
+
+        PpppInt32 size = 0;
+        CHECK(Pppp_Strains_GetCatchMovement(result, 0, &size) == Pppp_UnexpectedRuleset);
+
+        Pppp_Strains_Destroy(result);
         Pppp_ManiaDifficultyCalculator_Destroy(calc.handle);
         Pppp_Ruleset_Destroy(ruleset.handle);
         Pppp_Beatmap_Destroy(map.handle);

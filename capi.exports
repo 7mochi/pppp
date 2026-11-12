@@ -1,0 +1,3 @@
+# The symbols libpppp_c.dylib exports on macOS. macOS adds the leading underscore.
+# Linux uses capi.map instead.
+_Pppp_*

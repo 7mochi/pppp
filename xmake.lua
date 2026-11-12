@@ -94,24 +94,49 @@ task("test_install")
         import("core.project.project")
         local target = project.target("pppp")
         local cxx = target:tool("cxx")
+        local cc = target:tool("cc")
         local function p(rel) return path.join(os.projectdir(), rel) end
+        local function pkgflags(package)
+            local out = {}
+            local flags = (os.iorunv("pkg-config", {"--cflags", "--libs", package})):trim()
+            for _, arg in ipairs(string.split(flags, " ", { plain = true })) do
+                if arg ~= "" then
+                    table.insert(out, arg)
+                end
+            end
+            return out
+        end
         local prefix = path.join(os.tmpdir(), "pppp-test-install")
 
         os.tryrm(prefix)
         os.execv("xmake", {"install", "-y", "-o", prefix})
         os.setenv("PKG_CONFIG_PATH", path.join(prefix, "lib", "pkgconfig"))
 
-        local package = get_config("pppp_with_fosu") ~= false and "pppp_fosu" or "pppp"
-        local flags = (os.iorunv("pkg-config", {"--cflags", "--libs", package})):trim()
-        local args = {"-std=c++98", p("tests/install/consumer.cpp"), "-o", path.join(prefix, "consumer")}
-
-        for _, arg in ipairs(string.split(flags, " ", { plain = true })) do
-            if arg ~= "" then
-                table.insert(args, arg)
-            end
-        end
-
-        os.execv(cxx, args)
+        -- The C++ consumer: the static pppp package, plus the parser when fosu is built.
+        -- The install only has pppp_fosu.pc when the parser is built.
+        local with_fosu = os.isfile(path.join(prefix, "lib", "pkgconfig", "pppp_fosu.pc"))
+        local package = with_fosu and "pppp_fosu" or "pppp"
+        local parser_define = with_fosu and {"-DPPPP_INSTALL_TEST_WITH_FOSU"} or {}
+        local cxx_args = table.join({"-std=c++98"}, parser_define,
+                                    {p("tests/install/consumer.cpp"), "-o",
+                                     path.join(prefix, "consumer")}, pkgflags(package))
+        os.execv(cxx, cxx_args)
         os.execv(path.join(prefix, "consumer"))
+
+        -- The C consumer: the public header as ANSI C, linked against the shared C ABI package.
+        -- The C ABI target only exists when the parser adapter is built.
+        if with_fosu then
+            local c_args = table.join({"-std=c89", p("tests/install/consumer.c"), "-o",
+                                       path.join(prefix, "consumer_c")}, pkgflags("pppp_c"))
+            os.execv(cc, c_args)
+
+            -- The shared library is found through the loader path, not an RPATH in the consumer.
+            if is_plat("macosx") then
+                os.setenv("DYLD_LIBRARY_PATH", path.join(prefix, "lib"))
+            else
+                os.setenv("LD_LIBRARY_PATH", path.join(prefix, "lib"))
+            end
+            os.execv(path.join(prefix, "consumer_c"))
+        end
     end)
 task_end()

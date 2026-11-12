@@ -272,7 +272,7 @@ target("pppp_c")
     add_files(pppp.path("src/pppp/capi.cpp"))
     add_deps("pppp", "fosu")
     add_defines("PPPP_C_BUILD")
-    add_headerfiles(pppp.path("include/pppp/capi.h"), pppp.path("include/pppp/version.h"))
+    add_headerfiles(pppp.path("include/(pppp/capi.h)"), pppp.path("include/(pppp/version.h)"))
 
     pppp_library_flags()
 
@@ -284,7 +284,41 @@ target("pppp_c")
         -- Shared targets ignore add_ldflags and take link flags from shflags.
         add_shflags("-Wl,--version-script=" .. pppp.path("capi.map"))
         add_syslinks("dl")
+    elseif is_plat("macosx") then
+        -- macOS uses an exported symbols list instead of an ELF version script.
+        add_shflags("-Wl,-exported_symbols_list," .. pppp.path("capi.exports"))
     end
+
+    pppp_install_pkgconfig("pppp_c", false)
+
+    -- The parser's core is static, so its loader searches for `fosu_engine_*` beside the
+    -- consumer's own binary. Place the engine beside the shared library for the build tree and
+    -- in the install lib directory for the package.
+    after_build(function (target)
+        import("core.project.project")
+        local engine = project.target("fosu_engine_avx2") or project.target("fosu_engine_neon")
+        if engine then
+            -- Copying a file onto itself would truncate it. Skip the copy when the directories
+            -- match.
+            local source = engine:targetfile()
+            local destdir = target:targetdir()
+            if path.absolute(path.directory(source)) ~= path.absolute(destdir) then
+                os.cp(source, destdir)
+            end
+        end
+    end)
+
+    after_install(function (target)
+        import("core.project.project")
+        local engine = project.target("fosu_engine_avx2") or project.target("fosu_engine_neon")
+        if engine then
+            local source = engine:targetfile()
+            local destdir = path.join(target:installdir(), "lib")
+            if path.absolute(path.directory(source)) ~= path.absolute(destdir) then
+                os.cp(source, destdir)
+            end
+        end
+    end)
 target_end()
 
 end

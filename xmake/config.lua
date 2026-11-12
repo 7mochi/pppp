@@ -37,5 +37,7 @@ if pppp.build_tests and pppp.doctest_dir == "" then
 end
 
 if pppp.build_tests and pppp.with_fosu and pppp.cjson_dir == "" then
-    add_requires("pppp-cjson")
+    -- cJSON is only for the tests. Build it without LTO because the release test binaries cannot
+    -- link the LTO version.
+    add_requires("pppp-cjson", { configs = { lto = false } })
 end

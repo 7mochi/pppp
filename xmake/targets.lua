@@ -7,12 +7,19 @@ target("pppp_options")
     add_headerfiles(pppp.path("include/(pppp/**.h)"))
 target_end()
 
+local function pppp_pic()
+    if not is_plat("windows") then
+        add_cxflags("-fPIC")
+    end
+end
+
 local function pppp_library(name, basename, files, deps, extra)
     target(name)
         set_kind("static")
         set_basename(basename)
 
         add_includedirs(pppp.path("src"))
+        pppp_pic()
 
         for _, file in ipairs(pppp.as_list(files)) do
             add_files(pppp.path(file))
@@ -37,6 +44,7 @@ target("utils")
     set_basename("pppp_utils")
 
     add_includedirs(pppp.path("src"))
+    pppp_pic()
     add_files(pppp.path("src/pppp/utils/**.cpp"))
 
     add_deps("pppp_options")
@@ -151,6 +159,7 @@ target("fosu_parser")
     set_kind("static")
     set_basename("fosu")
 
+    pppp_pic()
     add_files(
         pppp.path("third_party/fosu/src/fosu/engine/parsing/decimal.cpp"),
         pppp.path("third_party/fosu/src/fosu/engine/parsing/lookup_tables.cpp"),
@@ -233,6 +242,7 @@ target("fosu")
     set_basename("pppp_fosu")
 
     add_includedirs(pppp.path("src"))
+    pppp_pic()
     add_files(pppp.path("src/pppp/fosu/beatmap.cpp"), pppp.path("src/pppp/fosu/backend.cpp"))
 
     add_deps("pppp", "fosu_parser")
@@ -250,6 +260,26 @@ target("fosu")
     end
 
     pppp_install_pkgconfig("pppp_fosu")
+target_end()
+
+target("pppp_c")
+    set_kind("shared")
+    set_basename("pppp_c")
+
+    add_includedirs(pppp.path("src"))
+    add_files(pppp.path("src/pppp/capi.cpp"))
+    add_deps("pppp", "fosu")
+    add_defines("PPPP_C_BUILD")
+    add_headerfiles(pppp.path("include/pppp/capi.h"), pppp.path("include/pppp/version.h"))
+
+    if not is_plat("windows") then
+        add_cxflags("-fvisibility=hidden")
+    end
+
+    if is_plat("linux") then
+        add_shflags("-Wl,--version-script=" .. pppp.path("capi.map"))
+        add_syslinks("dl")
+    end
 target_end()
 
 end

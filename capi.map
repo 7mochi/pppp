@@ -1,0 +1,5 @@
+{
+  global:
+    Pppp_*;
+  local: *;
+};

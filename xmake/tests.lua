@@ -106,4 +106,19 @@ for _, name in ipairs(fosu_tests) do
                               runenvs = { FOSU_BACKEND = "scalar" } })
     target_end()
 end
+
+pppp_test("capi", "pppp_c")
+
+target("test_capi_c")
+    set_kind("binary")
+    set_default(false)
+    set_languages("c89")
+
+    add_files(pppp.path("tests/test_capi_c.c"))
+    add_includedirs(pppp.path("include"))
+    add_deps("pppp_c")
+    add_links("pppp_c")
+
+    add_tests("default", { run_timeout = 300000, group = "library" })
+target_end()
 end

@@ -1,0 +1,14 @@
+#ifndef PPPP_VERSION_H
+#define PPPP_VERSION_H
+
+#define PPPP_VERSION_MAJOR 1
+#define PPPP_VERSION_MINOR 0
+#define PPPP_VERSION_PATCH 0
+#define PPPP_VERSION_NUMBER (PPPP_VERSION_MAJOR * 1000000 + PPPP_VERSION_MINOR * 1000 + PPPP_VERSION_PATCH)
+#define PPPP_VERSION_STRINGIFY_(x) #x
+#define PPPP_VERSION_STRINGIFY(x) PPPP_VERSION_STRINGIFY_(x)
+#define PPPP_VERSION_STRING                                                                                  \
+    PPPP_VERSION_STRINGIFY(PPPP_VERSION_MAJOR)                                                               \
+    "." PPPP_VERSION_STRINGIFY(PPPP_VERSION_MINOR) "." PPPP_VERSION_STRINGIFY(PPPP_VERSION_PATCH)
+
+#endif

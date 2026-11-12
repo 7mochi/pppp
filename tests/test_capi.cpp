@@ -85,6 +85,48 @@ TEST_CASE("the C ABI ruleset exposes its id and short name") {
     Pppp_Ruleset_Destroy(0);
 }
 
+TEST_CASE("the C ABI mods object parses, reads and converts") {
+    PpppNativeMods mods;
+    REQUIRE(Pppp_Mods_Create(&mods) == Pppp_Success);
+    REQUIRE(Pppp_Mods_Parse(mods.handle, "HD,DT:speed_change=1.4") == Pppp_Success);
+
+    PpppInt32 count = 0;
+    CHECK(Pppp_Mods_GetCount(mods.handle, &count) == Pppp_Success);
+    CHECK(count == 2);
+
+    PpppBool has = 0;
+    CHECK(Pppp_Mods_Contains(mods.handle, "HD", &has) == Pppp_Success);
+    CHECK(has == 1);
+    CHECK(Pppp_Mods_Contains(mods.handle, "HR", &has) == Pppp_Success);
+    CHECK(has == 0);
+
+    double rate = 0.0;
+    CHECK(Pppp_Mods_GetClockRate(mods.handle, &rate) == Pppp_Success);
+    CHECK(rate == doctest::Approx(1.4).epsilon(1e-12));
+
+    PpppInt32 size = 0;
+    CHECK(Pppp_Mods_GetAcronym(mods.handle, 0, 0, &size) == Pppp_BufferSizeQuery);
+    std::vector<char> acronym(size);
+    CHECK(Pppp_Mods_GetAcronym(mods.handle, 0, &acronym[0], &size) == Pppp_Success);
+    CHECK(std::string(&acronym[0]) == "HD");
+
+    PpppUint32 bits = 0;
+    CHECK(Pppp_Mods_GetLegacyBits(mods.handle, 0, &bits) == Pppp_Success);
+    CHECK(bits == 72u); /* HD | DT */
+
+    CHECK(Pppp_Mods_FromLegacy(mods.handle, 0x48u, 0) == Pppp_Success);
+    CHECK(Pppp_Mods_AddClassic(mods.handle) == Pppp_Success);
+    CHECK(Pppp_Mods_Contains(mods.handle, "CL", &has) == Pppp_Success);
+    CHECK(has == 1);
+
+    CHECK(Pppp_Mods_Parse(mods.handle, "bad") == Pppp_InvalidArgument);
+    CHECK(Pppp_Mods_FromLegacy(mods.handle, 0, 4) == Pppp_InvalidArgument);
+    CHECK(Pppp_Mods_GetAcronym(mods.handle, 99, 0, &size) == Pppp_InvalidArgument);
+
+    Pppp_Mods_Destroy(mods.handle);
+    Pppp_Mods_Destroy(0);
+}
+
 TEST_CASE("the C ABI loads the same beatmap from bytes and text") {
     std::ifstream file(PPPP_TEST_RESOURCES "/osu/2785319.osu", std::ios::binary);
     const std::string bytes((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());

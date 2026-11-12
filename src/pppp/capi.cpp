@@ -1,6 +1,7 @@
 #include "pppp/capi.h"
 #include "pppp/backend.h"
 #include "pppp/beatmap.h"
+#include "pppp/mods/mods.h"
 #include <cstring>
 #include <new>
 
@@ -11,6 +12,10 @@ struct PpppBeatmap {
 
 struct PpppRuleset {
     int id;
+};
+
+struct PpppMods {
+    pppp::mods::Mods mods;
 };
 
 namespace {
@@ -382,3 +387,171 @@ PpppErrorCode Pppp_Ruleset_GetShortName(PpppRuleset* ruleset, char* buffer, Pppp
 }
 
 void Pppp_Ruleset_Destroy(PpppRuleset* ruleset) { delete ruleset; }
+
+PpppErrorCode Pppp_Mods_Create(PpppNativeMods* out) {
+    clear_error();
+
+    if (!out) {
+        set_error("an output is required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    PpppMods* mods = new (std::nothrow) PpppMods;
+    if (!mods) {
+        set_error("out of memory");
+
+        return Pppp_Allocation;
+    }
+
+    out->handle = mods;
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_Mods_Parse(PpppMods* mods, const char* specification) {
+    clear_error();
+
+    if (!mods || !specification) {
+        set_error("mods and a specification are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    const pppp::Status status = mods->mods.parse(specification);
+    if (!status.ok()) {
+        set_error(status.message());
+
+        return Pppp_InvalidArgument;
+    }
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_Mods_FromLegacy(PpppMods* mods, PpppUint32 bits, PpppInt32 ruleset) {
+    clear_error();
+
+    if (!mods) {
+        set_error("mods are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    if (!ruleset_short_name(ruleset)) {
+        set_error("unknown ruleset id");
+        return Pppp_InvalidArgument;
+    }
+
+    mods->mods = pppp::mods::Mods::from_legacy(bits, ruleset);
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_Mods_AddClassic(PpppMods* mods) {
+    clear_error();
+
+    if (!mods) {
+        set_error("mods are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    mods->mods.add_classic();
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_Mods_Contains(PpppMods* mods, const char* acronym, PpppBool* out) {
+    clear_error();
+
+    if (!mods || !acronym || !out) {
+        set_error("mods, an acronym and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    pppp::mods::Mod mod;
+    if (pppp::mods::mod_from_acronym(&mod, acronym) != 0) {
+        set_error("unknown mod acronym");
+
+        return Pppp_InvalidArgument;
+    }
+
+    *out = mods->mods.contains(mod.id) ? 1 : 0;
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_Mods_GetCount(PpppMods* mods, PpppInt32* out) {
+    clear_error();
+
+    if (!mods || !out) {
+        set_error("mods and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    *out = static_cast<PpppInt32>(mods->mods.size());
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_Mods_GetAcronym(PpppMods* mods, PpppInt32 index, char* buffer, PpppInt32* size) {
+    clear_error();
+
+    if (!mods || !size) {
+        set_error("mods and a size are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    if (index < 0 || static_cast<size_t>(index) >= mods->mods.size()) {
+        set_error("the mod index is out of range");
+
+        return Pppp_InvalidArgument;
+    }
+
+    const char* acronym = pppp::mods::mod_acronym(mods->mods[static_cast<size_t>(index)].id);
+    if (!acronym) {
+        set_error("the mod has no acronym");
+
+        return Pppp_Internal;
+    }
+
+    return get_text(acronym, std::strlen(acronym), buffer, size);
+}
+
+PpppErrorCode Pppp_Mods_GetClockRate(PpppMods* mods, double* out) {
+    clear_error();
+
+    if (!mods || !out) {
+        set_error("mods and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    *out = mods->mods.clock_rate();
+
+    return Pppp_Success;
+}
+
+PpppErrorCode Pppp_Mods_GetLegacyBits(PpppMods* mods, PpppInt32 ruleset, PpppUint32* out) {
+    clear_error();
+
+    if (!mods || !out) {
+        set_error("mods and an output are required");
+
+        return Pppp_InvalidArgument;
+    }
+
+    if (!ruleset_short_name(ruleset)) {
+        set_error("unknown ruleset id");
+        return Pppp_InvalidArgument;
+    }
+
+    *out = mods->mods.to_legacy(ruleset);
+
+    return Pppp_Success;
+}
+
+void Pppp_Mods_Destroy(PpppMods* mods) { delete mods; }

@@ -58,6 +58,7 @@ typedef enum PpppErrorCode {
 
 typedef struct PpppBeatmap PpppBeatmap;
 typedef struct PpppRuleset PpppRuleset;
+typedef struct PpppMods PpppMods;
 
 typedef struct PpppNativeBeatmap {
     PpppBeatmap* handle;
@@ -77,6 +78,10 @@ typedef struct PpppNativeRuleset {
     PpppRuleset* handle;
     PpppInt32 ruleset_id;
 } PpppNativeRuleset;
+
+typedef struct PpppNativeMods {
+    PpppMods* handle;
+} PpppNativeMods;
 
 #ifdef __cplusplus
 extern "C" {
@@ -111,6 +116,21 @@ PPPP_C_API PpppErrorCode Pppp_Ruleset_CreateFromId(PpppInt32 id, PpppNativeRules
 PPPP_C_API PpppErrorCode Pppp_Ruleset_CreateFromShortName(const char* name, PpppNativeRuleset* out);
 PPPP_C_API PpppErrorCode Pppp_Ruleset_GetShortName(PpppRuleset* ruleset, char* buffer, PpppInt32* size);
 PPPP_C_API void Pppp_Ruleset_Destroy(PpppRuleset* ruleset);
+
+PPPP_C_API PpppErrorCode Pppp_Mods_Create(PpppNativeMods* out);
+PPPP_C_API PpppErrorCode Pppp_Mods_Parse(PpppMods* mods, const char* specification);
+
+/* The ruleset id is 0..3. An unknown id returns Pppp_RulesetUnavailable. */
+PPPP_C_API PpppErrorCode Pppp_Mods_FromLegacy(PpppMods* mods, PpppUint32 bits, PpppInt32 ruleset);
+PPPP_C_API PpppErrorCode Pppp_Mods_AddClassic(PpppMods* mods);
+PPPP_C_API PpppErrorCode Pppp_Mods_Contains(PpppMods* mods, const char* acronym, PpppBool* out);
+PPPP_C_API PpppErrorCode Pppp_Mods_GetCount(PpppMods* mods, PpppInt32* out);
+PPPP_C_API PpppErrorCode Pppp_Mods_GetAcronym(PpppMods* mods, PpppInt32 index, char* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Mods_GetClockRate(PpppMods* mods, double* out);
+
+/* The ruleset id is 0..3. An unknown id returns Pppp_RulesetUnavailable. */
+PPPP_C_API PpppErrorCode Pppp_Mods_GetLegacyBits(PpppMods* mods, PpppInt32 ruleset, PpppUint32* out);
+PPPP_C_API void Pppp_Mods_Destroy(PpppMods* mods);
 
 #ifdef __cplusplus
 }

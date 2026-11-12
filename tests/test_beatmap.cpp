@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <doctest.h>
 #include <fosu/parser.h>
+#include <string>
 #include <vector>
 
 namespace beatmaps = ::pppp::beatmaps;
@@ -61,6 +62,16 @@ TEST_CASE("from_file fills a beatmap and clear() empties it") {
     beatmap.clear();
     CHECK_FALSE(beatmap.slider_path.recompute);
     CHECK(beatmap.hit_objects.empty());
+}
+
+TEST_CASE("the adapter keeps the beatmap metadata") {
+    pppp::Beatmap beatmap;
+    pppp_test::load(beatmap, PPPP_TEST_RESOURCES "/osu/2785319.osu");
+
+    CHECK(beatmap.beatmap_id == 2785319);
+    CHECK(std::string(beatmap.title.empty() ? "" : &beatmap.title[0]) == "re[in]flaw");
+    CHECK(std::string(beatmap.artist.empty() ? "" : &beatmap.artist[0]) == "MYUKKE.");
+    CHECK(std::string(beatmap.version.empty() ? "" : &beatmap.version[0]) == "toybot's Expert");
 }
 
 TEST_CASE("the mode and the hit sounds survive the adapter") {

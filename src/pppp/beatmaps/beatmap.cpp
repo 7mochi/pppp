@@ -7,7 +7,8 @@ namespace pppp { namespace beatmaps {
     Beatmap::Beatmap()
         : format_version(14),
           mode(0),
-          stack_leniency(0.7) {
+          stack_leniency(0.7),
+          beatmap_id(-1) {
         difficulty.drain_rate = 5.0;
         difficulty.circle_size = 5.0;
         difficulty.overall_difficulty = 5.0;
@@ -29,6 +30,11 @@ namespace pppp { namespace beatmaps {
         slider_path.recompute = 0;
         slider_path.release = 0;
         slider_path.ctx = 0;
+
+        beatmap_id = -1;
+        title.clear();
+        artist.clear();
+        version.clear();
 
         hit_objects.clear();
         sliders.clear();

@@ -296,10 +296,23 @@ namespace pppp { namespace beatmaps {
             }
         }
 
+        void copy_text(std::vector<char>& out, const nonstd::string_view& text) {
+            out.resize(text.size() + 1);
+            for (size_t i = 0; i < text.size(); i++) {
+                out[i] = text[i];
+            }
+            out[text.size()] = '\0';
+        }
+
         void copy_from_fosu(Beatmap& out, const fosu::Beatmap& map) {
             out.format_version = map.format_version;
             out.mode = map.mode;
             out.stack_leniency = static_cast<float>(map.stack_leniency);
+
+            out.beatmap_id = map.beatmap_id;
+            copy_text(out.title, map.title);
+            copy_text(out.artist, map.artist);
+            copy_text(out.version, map.version);
 
             out.difficulty.drain_rate = static_cast<float>(map.hp);
             out.difficulty.circle_size = static_cast<float>(map.cs);

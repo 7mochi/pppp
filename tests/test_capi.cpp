@@ -363,6 +363,16 @@ TEST_CASE("the C ABI rejects a missing file and a null beatmap") {
     CHECK(Pppp_Beatmap_CreateFromFile(0, &native) == Pppp_InvalidArgument);
 }
 
+TEST_CASE("the C ABI clears the last message after success") {
+    PpppNativeMods mods;
+    REQUIRE(Pppp_Mods_Create(&mods) == Pppp_Success);
+    CHECK(Pppp_Mods_Parse(mods.handle, "bad") == Pppp_InvalidArgument);
+    REQUIRE(Pppp_ErrorHandler_GetLastMessage());
+    CHECK(Pppp_Mods_Parse(mods.handle, "HD") == Pppp_Success);
+    CHECK_FALSE(Pppp_ErrorHandler_GetLastMessage());
+    Pppp_Mods_Destroy(mods.handle);
+}
+
 TEST_CASE("the C ABI ruleset exposes its id and short name") {
     PpppNativeRuleset ruleset;
     REQUIRE(Pppp_Ruleset_CreateFromId(0, &ruleset) == Pppp_Success);
@@ -375,6 +385,9 @@ TEST_CASE("the C ABI ruleset exposes its id and short name") {
     CHECK(std::string(&name[0]) == "osu");
 
     CHECK(Pppp_Ruleset_CreateFromId(4, &ruleset) == Pppp_RulesetUnavailable);
+    Pppp_Ruleset_Destroy(ruleset.handle);
+
+    CHECK(Pppp_Ruleset_CreateFromShortName("nope", &ruleset) == Pppp_RulesetUnavailable);
     CHECK(Pppp_Ruleset_CreateFromShortName("taiko", &ruleset) == Pppp_Success);
     CHECK(ruleset.ruleset_id == 1);
 
@@ -417,7 +430,9 @@ TEST_CASE("the C ABI mods object parses, reads and converts") {
     CHECK(has == 1);
 
     CHECK(Pppp_Mods_Parse(mods.handle, "bad") == Pppp_InvalidArgument);
-    CHECK(Pppp_Mods_FromLegacy(mods.handle, 0, 4) == Pppp_InvalidArgument);
+    CHECK(Pppp_Mods_FromLegacy(mods.handle, 0, 4) == Pppp_RulesetUnavailable);
+    CHECK(Pppp_Mods_GetLegacyBits(mods.handle, 4, &bits) == Pppp_RulesetUnavailable);
+    CHECK(Pppp_Mods_Contains(mods.handle, "ZZ", &has) == Pppp_InvalidArgument);
     CHECK(Pppp_Mods_GetAcronym(mods.handle, 99, 0, &size) == Pppp_InvalidArgument);
 
     Pppp_Mods_Destroy(mods.handle);
@@ -589,6 +604,13 @@ TEST_CASE("the C ABI calculator keeps the beatmap alive") {
     Pppp_Ruleset_Destroy(ruleset.handle);
 }
 
+TEST_CASE("the C ABI difficulty calculator rejects a null handle") {
+    PpppOsuDifficultyAttributes attrs;
+    CHECK(Pppp_OsuDifficultyCalculator_Calculate(0, 0, &attrs) == Pppp_InvalidArgument);
+    CHECK(Pppp_OsuDifficultyCalculator_SetClockRate(0, 1.0) == Pppp_InvalidArgument);
+    CHECK(Pppp_OsuDifficultyCalculator_ClearClockRate(0) == Pppp_InvalidArgument);
+}
+
 TEST_CASE("the C ABI timed result matches the C++ calculator") {
     pppp::Beatmap source;
     pppp_test::load(source, PPPP_TEST_RESOURCES "/osu/2785319.osu");
@@ -621,6 +643,15 @@ TEST_CASE("the C ABI timed result matches the C++ calculator") {
     CHECK(buffer[0].attributes.star_rating ==
           pppp_test::difficulty_approx(expected[0].attributes.star_rating()));
     CHECK(buffer.back().attributes.max_combo == expected.back().attributes.max_combo());
+
+    REQUIRE(expected.size() > 1);
+    PpppTimedOsuDifficultyAttributes truncated;
+    PpppInt32 truncated_size = 1;
+    CHECK(Pppp_TimedResult_GetOsu(result, &truncated, &truncated_size) == Pppp_Success);
+    CHECK(truncated.time == expected[0].time);
+
+    PpppInt32 negative_size = -1;
+    CHECK(Pppp_TimedResult_GetOsu(result, &truncated, &negative_size) == Pppp_InvalidArgument);
 
     CHECK(Pppp_TimedResult_GetTaiko(result, 0, &size) == Pppp_UnexpectedRuleset);
     Pppp_TimedResult_Destroy(result);
@@ -807,6 +838,15 @@ TEST_CASE("the C ABI strains match the C++ calculator") {
     check_strain_series(Pppp_Strains_GetOsuSpeed, result, expected.osu()->speed);
     check_strain_series(Pppp_Strains_GetOsuReading, result, expected.osu()->reading);
     check_strain_series(Pppp_Strains_GetOsuFlashlight, result, expected.osu()->flashlight);
+
+    REQUIRE(!expected.osu()->aim.empty());
+    double truncated = 0.0;
+    PpppInt32 truncated_size = 1;
+    CHECK(Pppp_Strains_GetOsuAim(result, &truncated, &truncated_size) == Pppp_Success);
+    CHECK(truncated == expected.osu()->aim[0]);
+
+    PpppInt32 negative_size = -1;
+    CHECK(Pppp_Strains_GetOsuAim(result, &truncated, &negative_size) == Pppp_InvalidArgument);
 
     PpppInt32 size = 0;
     CHECK(Pppp_Strains_GetTaikoColour(result, 0, &size) == Pppp_UnexpectedRuleset);

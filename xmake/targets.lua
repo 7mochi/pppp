@@ -5,6 +5,8 @@ target("pppp_options")
     add_includedirs(pppp.path("include"), { public = true })
     add_sysincludedirs(pppp.path("third_party/optional-bare/include"), pppp.path("third_party/variant-lite/include"), { public = true })
     add_headerfiles(pppp.path("include/(pppp/**.h)"))
+    -- capi.h is installed with pppp_c. version.h stays here because config.h includes it.
+    remove_headerfiles(pppp.path("include/pppp/capi.h"))
 target_end()
 
 -- pppp_c is a shared library and can load at any address. The static libraries it links must also
@@ -252,9 +254,11 @@ target("fosu")
     pppp_library_flags(true)
 
     if pppp.x86_engine then
-        add_deps("fosu_engine_avx2")
+        -- Build and install the engine, but don't link it into the static `fosu` library. At run
+        -- time, the loader finds it next to the library or program that uses it.
+        add_deps("fosu_engine_avx2", {links = false})
     elseif pppp.arm_engine then
-        add_deps("fosu_engine_neon")
+        add_deps("fosu_engine_neon", {links = false})
     end
 
     if is_plat("linux") then
@@ -271,6 +275,12 @@ target("pppp_c")
     add_includedirs(pppp.path("src"))
     add_files(pppp.path("src/pppp/capi.cpp"))
     add_deps("pppp", "fosu")
+    -- Don't link the engine into the shared library because the loader opens it at run time.
+    if pppp.x86_engine then
+        add_deps("fosu_engine_avx2", {links = false})
+    elseif pppp.arm_engine then
+        add_deps("fosu_engine_neon", {links = false})
+    end
     add_defines("PPPP_C_BUILD")
     add_headerfiles(pppp.path("include/(pppp/capi.h)"), pppp.path("include/(pppp/version.h)"))
 
@@ -291,9 +301,8 @@ target("pppp_c")
 
     pppp_install_pkgconfig("pppp_c", false)
 
-    -- The parser's core is static, so its loader searches for `fosu_engine_*` beside the
-    -- consumer's own binary. Place the engine beside the shared library for the build tree and
-    -- in the install lib directory for the package.
+    -- The parser loader looks for `fosu_engine_*` beside the library that uses it. Keep the
+    -- engine next to `libpppp_c.so` in the build tree and in the install lib directory.
     after_build(function (target)
         import("core.project.project")
         local engine = project.target("fosu_engine_avx2") or project.target("fosu_engine_neon")

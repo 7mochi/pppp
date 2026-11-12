@@ -624,6 +624,11 @@ namespace {
             return Pppp_BufferSizeQuery;
         }
 
+        if (*size < 0) {
+            set_error("the buffer size must not be negative");
+            return Pppp_InvalidArgument;
+        }
+
         PpppInt32 copy = count;
         if (copy > *size) {
             copy = *size;
@@ -673,6 +678,11 @@ namespace {
         if (!buffer) {
             *size = count;
             return Pppp_BufferSizeQuery;
+        }
+
+        if (*size < 0) {
+            set_error("the buffer size must not be negative");
+            return Pppp_InvalidArgument;
         }
 
         PpppInt32 copy = count;
@@ -980,7 +990,8 @@ PpppErrorCode Pppp_Mods_FromLegacy(PpppMods* mods, PpppUint32 bits, PpppInt32 ru
 
     if (!ruleset_short_name(ruleset)) {
         set_error("unknown ruleset id");
-        return Pppp_InvalidArgument;
+
+        return Pppp_RulesetUnavailable;
     }
 
     mods->mods = pppp::mods::Mods::from_legacy(bits, ruleset);
@@ -1087,7 +1098,8 @@ PpppErrorCode Pppp_Mods_GetLegacyBits(PpppMods* mods, PpppInt32 ruleset, PpppUin
 
     if (!ruleset_short_name(ruleset)) {
         set_error("unknown ruleset id");
-        return Pppp_InvalidArgument;
+
+        return Pppp_RulesetUnavailable;
     }
 
     *out = mods->mods.to_legacy(ruleset);

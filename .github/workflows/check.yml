@@ -29,9 +29,9 @@ jobs:
               - 'tests/**'
               - 'codegen/**'
               - 'reference/**'
-              - 'CMakeLists.txt'
-              - 'CMakePresets.json'
-              - 'cmake/**'
+              - 'cmake/ppppPlaceEngine.cmake'
+              - 'xmake.lua'
+              - 'xmake/**'
               - 'Makefile'
               - 'flake.nix'
               - 'flake.lock'
@@ -78,12 +78,15 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7.0.1
+      - uses: xmake-io/github-action-setup-xmake@v1.2.5
+        with:
+          xmake-version: '3.1.1'
       - name: Configure
-        run: cmake -S . -B build -DPPPP_BUILD_TESTS=ON
+        run: xmake f -y -m release
       - name: Build
-        run: cmake --build build --config Release
+        run: xmake -y
       - name: Test
-        run: ctest --test-dir build -C Release --output-on-failure
+        run: xmake test
 
   check-configurations:
     name: Check ${{ matrix.isa }} on ${{ matrix.os }}

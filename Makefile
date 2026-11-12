@@ -1,74 +1,84 @@
-BUILD_DIR   := build
+XMAKE       ?= xmake
 PYTHON      ?= python3
-NPROC := $(shell nproc 2>/dev/null || echo 4)
+CLANG_FORMAT ?= clang-format
 
-.PHONY: all clean rebuild test-auto test-scalar test-avx2 test-neon generate-parity-tests generate-mods fetch-mods configure format check check-format check-tidy build-windows-2k build-windows-xp-x64
+FORMAT_DIRS  = include src tests third_party/fosu/src third_party/fosu/tests
+FORMAT_FILES = $(shell find $(FORMAT_DIRS) -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.cc' \) 2>/dev/null)
+
+.PHONY: all configure build release rebuild test-auto test-scalar test-avx2 test-neon \
+        generate-parity-tests generate-mods fetch-mods \
+        format check check-format check-headers check-tidy \
+        build-windows-2k build-windows-xp-x64
 
 all: build
 
 configure:
-	@echo "Configuring pppp:"
-	cmake --preset dev
+	@echo "Configuring pppp with xmake:"
+	$(XMAKE) f -y -c -m debug --pppp_warnings_as_errors=y
 
 build: configure
 	@echo "Building pppp:"
-	cmake --build $(BUILD_DIR) -j$(NPROC)
+	$(XMAKE) -y
 
-build-windows-2k:
-	@echo "Run this in 'nix develop .#legacyWindows':"
-	cmake --preset win2k
-	cmake --build --preset win2k
-
-build-windows-xp-x64:
-	@echo "Run this in 'nix develop .#legacyWindows':"
-	cmake --preset winxp-x64
-	cmake --build --preset winxp-x64
-
-test-auto: build
-	@echo "Testing pppp (PPPP_ISA=auto):"
-	ctest --test-dir $(BUILD_DIR) --output-on-failure
-
-test-scalar:
-	@echo "Testing pppp (PPPP_ISA=scalar):"
-	cmake --preset scalar
-	cmake --build --preset scalar
-	ctest --test-dir build_scalar --output-on-failure
-
-test-avx2:
-	@echo "Testing pppp (PPPP_ISA=avx2) - needs an x86-64 host:"
-	cmake --preset avx2
-	cmake --build --preset avx2
-	ctest --test-dir build_avx2 --output-on-failure
-
-test-neon:
-	@echo "Testing pppp (PPPP_ISA=neon) - needs an AArch64 host:"
-	cmake --preset neon
-	cmake --build --preset neon
-	ctest --test-dir build_neon --output-on-failure
-
-clean:
-	rm -rf $(BUILD_DIR) build_scalar build_avx2 build_neon
+release:
+	$(XMAKE) f -y -c -m release --pppp_build_tests=n
+	$(XMAKE) -y
 
 rebuild: clean build test-auto
 
-format: configure
-	cmake --build $(BUILD_DIR) --target format
+test-auto: build
+	@echo "Testing pppp (pppp_isa=auto):"
+	$(XMAKE) test
+	$(XMAKE) test_install
 
-check: check-format check-tidy
+test-scalar:
+	@echo "Testing pppp (pppp_isa=scalar):"
+	$(XMAKE) f -y -c -m debug --pppp_isa=scalar
+	$(XMAKE) -y
+	$(XMAKE) test
+	$(XMAKE) test_install
 
-check-format: configure
-	cmake --build $(BUILD_DIR) --target check_format
+test-avx2:
+	@echo "Testing pppp (pppp_isa=avx2) - needs an x86-64 host:"
+	$(XMAKE) f -y -c -m debug --pppp_isa=avx2
+	$(XMAKE) -y
+	$(XMAKE) test
+	$(XMAKE) test_install
 
-check-tidy:
-	cmake --preset clang_tidy
-	cmake --build build_clang_tidy -j$(NPROC) -- -k 0 || true
+test-neon:
+	@echo "Testing pppp (pppp_isa=neon) - needs an AArch64 host:"
+	$(XMAKE) f -y -c -m debug --pppp_isa=neon
+	$(XMAKE) -y
+	$(XMAKE) test
+	$(XMAKE) test_install
+
+clean:
+	rm -rf build .xmake
+
+format:
+	$(CLANG_FORMAT) -i $(FORMAT_FILES)
+
+check: check-format check-headers check-tidy
+
+check-format:
+	$(CLANG_FORMAT) --dry-run --Werror $(FORMAT_FILES)
+
+check-headers:
+	$(XMAKE) check_headers
+
+check-tidy: configure
+	$(XMAKE) check clang.tidy || true
 
 fetch-mods:
 	$(PYTHON) codegen/mods/fetch_mods.py
 
 generate-mods:
 	$(PYTHON) codegen/mods/gen_mods.py
-	clang-format -i src/pppp/mods/generated_mods.h src/pppp/mods/generated_mods.cpp
+	$(CLANG_FORMAT) -i src/pppp/mods/generated_mods.h src/pppp/mods/generated_mods.cpp
 
 generate-parity-tests:
 	$(PYTHON) tests/parity/gen_parity.py
+
+build-windows-2k build-windows-xp-x64:
+	@echo "Legacy Windows cross-compilation is deferred to the xmake port; see docs/portability.md."
+	@false

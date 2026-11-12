@@ -11,9 +11,11 @@
           packages = [
             pkgs.cmake
             pkgs.ninja
+            pkgs.xmake
             pkgs.gcc
             pkgs.clang-tools
             pkgs.gnumake
+            pkgs.pkg-config
             pkgs.git
             pkgs.pre-commit
             pkgs.nixfmt
@@ -27,7 +29,7 @@
 
           shellHook = ''
             echo "pp++"
-            echo "  make configure                           # configure CMake"
+            echo "  make configure                           # configure xmake"
             echo "  make test-auto                           # build and run the suites"
             echo "  make format                              # C++ formatting"
             echo "  make check-format                        # C++ formatting, checked"
@@ -44,8 +46,7 @@
         # nixos-24.05's libc: loads on any newer glibc
         release = releasePkgs.mkShell {
           packages = [
-            releasePkgs.cmake
-            releasePkgs.ninja
+            pkgs.xmake
             releasePkgs.gcc
             releasePkgs.gnumake
             releasePkgs.git
@@ -54,7 +55,7 @@
           shellHook = ''
             echo "pp++ / release"
             echo "  builds against glibc $(getconf GNU_LIBC_VERSION | cut -d' ' -f2)"
-            echo "  cmake --preset release && cmake --build --preset release   # a Release build in build/release"
+            echo "  xmake f -m release && xmake   # a Release build in build/"
           '';
         };
 
@@ -75,9 +76,8 @@
 
           shellHook = ''
             echo "pp++ / legacy Windows"
-            echo "  cross-compiles pp++ from Linux with MinGW-w64"
-            echo "  make build-windows-2k      # x86, Windows 2000 and later"
-            echo "  make build-windows-xp-x64  # x64, Windows XP x64 and later"
+            echo "  cross-compilation is deferred to the xmake port"
+            echo "  the MinGW-w64 compilers are provisioned for that follow-up"
           '';
         };
       };

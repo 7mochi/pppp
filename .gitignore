@@ -1,16 +1,40 @@
+# vscode
+.vscode/*
+!.vscode/settings.json
+
+# rider
+.idea/
+*.sln.DotSettings.user
+
+# visual studio
+.vs/
+
+# zed
+.zed/
+
+# pppp
 build/
 build_*/
+.xmake/
 compile_commands.json
-CMakeUserPresets.json
 
-.cache/
+# cmake
+CMakeUserPresets.json
+Testing/
+
+# direnv
 .direnv
 
+# local caches
+.cache/
+
+# python
 __pycache__/
 *.pyc
 
+# commandcode
 .commandcode/
 
+# .NET reference build output
 reference/**/bin/
 reference/**/obj/
-Testing/

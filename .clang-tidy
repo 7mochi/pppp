@@ -1,3 +1,9 @@
+# Only the checks we want are on. The analyzer wildcard also turns on a few noisy ones. They're
+# off again:
+#   UninitializedObject - false alarms here.
+#   Padding - layout advice, not a bug.
+#   FloatLoopCounter - duplicate of cert-flp30-c, the check our comments already silence.
+#   unix.* - checks POSIX calls, which we don't use.
 Checks: >
     -*,
     clang-diagnostic-*,
@@ -20,10 +26,17 @@ Checks: >
     performance-unnecessary-copy-initialization,
     performance-unnecessary-value-param,
     readability-identifier-naming
-HeaderFilterRegex: '.*/pppp/(include|src|tests)/.*'
+# Matches our headers even when the folder has another name, and skips the vendored code, which we
+# don't change.
+HeaderFilterRegex: '.*/(include|src)/pppp/.*|.*/pppp[^/]*/tests/.*\.h'
 FormatStyle: file
+# The build flags come from GCC, and clang doesn't know all of them. Without this, clang-tidy
+# stops before it checks anything.
+ExtraArgs: ['-Wno-unknown-warning-option']
 
 CheckOptions:
+    # We want to know about unused includes. A missing one that already comes in through another
+    # header is harmless. It isn't worth reporting.
     - { key: misc-include-cleaner.MissingIncludes, value: false }
     - { key: readability-identifier-naming.NamespaceCase,         value: lower_case }
     - { key: readability-identifier-naming.ClassCase,             value: CamelCase }
@@ -33,6 +46,8 @@ CheckOptions:
     - { key: readability-identifier-naming.FunctionCase,          value: lower_case }
     - { key: readability-identifier-naming.FunctionIgnoredRegexp, value: '.*_' }
     - { key: readability-identifier-naming.VariableCase,          value: lower_case }
+    # Constants and enum values are upper case on purpose, and `_1` is a fixed name in the linq code.
+    # The naming rules below would complain about both.
     - { key: readability-identifier-naming.VariableIgnoredRegexp, value: '^([A-Z][A-Z0-9_]*|_1)$' }
     - { key: readability-identifier-naming.ParameterCase,         value: lower_case }
     - { key: readability-identifier-naming.MemberCase,            value: lower_case }

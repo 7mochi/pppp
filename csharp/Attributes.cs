@@ -210,4 +210,22 @@ namespace Pppp {
             return value;
         }
     }
+
+    public sealed class TimedDifficultyAttributes {
+        private readonly double time;
+        private readonly DifficultyAttributes attributes;
+
+        internal TimedDifficultyAttributes(double time, DifficultyAttributes attributes) {
+            this.time = time;
+            this.attributes = attributes;
+        }
+
+        public double Time {
+            get { return time; }
+        }
+
+        public DifficultyAttributes Attributes {
+            get { return attributes; }
+        }
+    }
 }

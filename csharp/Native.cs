@@ -146,6 +146,92 @@ namespace Pppp {
             return new ManiaDifficultyAttributes(value);
         }
 
+        internal static double[] ReadDoubles(DoubleGetter getter, PpppStrains* handle) {
+            int size = 0;
+            PpppErrorCode status = getter(handle, null, &size);
+            if (status != PpppErrorCode.Pppp_BufferSizeQuery) {
+                Check(status);
+            }
+            if (size <= 0) {
+                return new double[0];
+            }
+
+            double[] values = new double[size];
+            fixed (double* buffer = values) {
+                status = getter(handle, buffer, &size);
+            }
+            Check(status);
+
+            return values;
+        }
+
+        internal static PpppTimedOsuDifficultyAttributes[] ReadTimedOsu(PpppTimedResult* result) {
+            int count;
+            Check(Pppp_TimedResult_GetCount(result, &count));
+            PpppTimedOsuDifficultyAttributes[] entries = new PpppTimedOsuDifficultyAttributes[count];
+
+            if (count == 0) {
+                return entries;
+            }
+
+            int size = count;
+            fixed (PpppTimedOsuDifficultyAttributes* buffer = entries) {
+                Check(Pppp_TimedResult_GetOsu(result, buffer, &size));
+            }
+
+            return entries;
+        }
+
+        internal static PpppTimedTaikoDifficultyAttributes[] ReadTimedTaiko(PpppTimedResult* result) {
+            int count;
+            Check(Pppp_TimedResult_GetCount(result, &count));
+            PpppTimedTaikoDifficultyAttributes[] entries = new PpppTimedTaikoDifficultyAttributes[count];
+
+            if (count == 0) {
+                return entries;
+            }
+
+            int size = count;
+            fixed (PpppTimedTaikoDifficultyAttributes* buffer = entries) {
+                Check(Pppp_TimedResult_GetTaiko(result, buffer, &size));
+            }
+
+            return entries;
+        }
+
+        internal static PpppTimedCatchDifficultyAttributes[] ReadTimedCatch(PpppTimedResult* result) {
+            int count;
+            Check(Pppp_TimedResult_GetCount(result, &count));
+            PpppTimedCatchDifficultyAttributes[] entries = new PpppTimedCatchDifficultyAttributes[count];
+
+            if (count == 0) {
+                return entries;
+            }
+
+            int size = count;
+            fixed (PpppTimedCatchDifficultyAttributes* buffer = entries) {
+                Check(Pppp_TimedResult_GetCatch(result, buffer, &size));
+            }
+
+            return entries;
+        }
+
+        internal static PpppTimedManiaDifficultyAttributes[] ReadTimedMania(PpppTimedResult* result) {
+            int count;
+            Check(Pppp_TimedResult_GetCount(result, &count));
+            PpppTimedManiaDifficultyAttributes[] entries = new PpppTimedManiaDifficultyAttributes[count];
+
+            if (count == 0) {
+                return entries;
+            }
+
+            int size = count;
+            fixed (PpppTimedManiaDifficultyAttributes* buffer = entries) {
+                Check(Pppp_TimedResult_GetMania(result, buffer, &size));
+            }
+
+            return entries;
+        }
     }
 
     internal sealed class RulesetHandle : SafeHandleZeroOrMinusOneIsInvalid {

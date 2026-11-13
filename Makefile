@@ -27,8 +27,7 @@ release:
 	$(XMAKE) f -y -c -m release --pppp_build_tests=n
 	$(XMAKE) -y
 
-build-python-wheel:
-	@$(MAKE) release
+build-python-wheel: release
 	@$(UV) build --wheel --no-build-isolation
 
 rebuild: clean build test-auto

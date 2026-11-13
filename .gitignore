@@ -37,6 +37,11 @@ __pycache__/
 # commandcode
 .commandcode/
 
-# .NET reference build output
+# .NET
+!csharp/build/
 reference/**/bin/
 reference/**/obj/
+csharp/**/bin/
+csharp/**/obj/
+*.nupkg
+artifacts/

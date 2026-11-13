@@ -20,6 +20,8 @@
             pkgs.pre-commit
             pkgs.nixfmt
             pkgs.dotnet-sdk
+            (pkgs.callPackage ./packages/clangsharp-generator/package.nix { })
+            pkgs.libclang.lib
             (pkgs.python3.withPackages (ps: with ps; [ jinja2 ]))
           ]
           ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isDarwin [

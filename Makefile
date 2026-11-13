@@ -7,9 +7,9 @@ CLANG_FORMAT ?= clang-format
 FORMAT_DIRS  = include src tests third_party/fosu/src third_party/fosu/tests
 FORMAT_FILES = $(shell find $(FORMAT_DIRS) -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.cc' \) 2>/dev/null)
 
-.PHONY: all configure build release build-python-wheel rebuild \
-        test-auto test-scalar test-avx2 test-neon test-python \
-        generate-parity-tests generate-mods fetch-mods generate-python \
+.PHONY: all configure build release build-python-wheel build-csharp-nupkg rebuild \
+        test-auto test-scalar test-avx2 test-neon test-python test-csharp \
+        fetch-mods generate-mods generate-parity-tests generate-python generate-csharp \
         format check check-format check-headers check-tidy \
         build-windows-2k build-windows-xp-x64
 
@@ -29,6 +29,9 @@ release:
 
 build-python-wheel: release
 	@$(UV) build --wheel --no-build-isolation
+
+build-csharp-nupkg: release
+	dotnet pack csharp/Pppp.csproj -c Release -o artifacts
 
 rebuild: clean build test-auto
 
@@ -62,6 +65,9 @@ test-python: build
 	@$(PYTHON) -m pytest python/tests -q
 	@$(PYTHON) -m mypy
 
+test-csharp: build
+	dotnet test csharp/tests/Pppp.Tests.csproj -c Debug
+
 clean:
 	rm -rf build .xmake
 
@@ -92,6 +98,13 @@ generate-parity-tests:
 generate-python:
 	@$(CTYPESGEN) --no-embed-preamble -l pppp_c --strip-build-path "$(CURDIR)" \
 	  --header-template /dev/null -I include -o python/pppp/_ctypes/_native.py include/pppp/capi.h
+
+# ClangSharp exits with the number of warnings. The visibility warnings from capi.h are expected.
+generate-csharp:
+	@ClangSharpPInvokeGenerator -f include/pppp/capi.h -I include -n Pppp -m Native \
+	  -o csharp/Generated/Native.g.cs -l pppp_c -c codegen=compatible \
+	  -was "*=internal" -wu "*=System.Runtime.CompilerServices" \
+	  --resource-directory "$$(clang -print-resource-dir)" || test -s csharp/Generated/Native.g.cs
 
 build-windows-2k build-windows-xp-x64:
 	@echo "Legacy Windows cross-compilation is deferred to the xmake port; see docs/portability.md."

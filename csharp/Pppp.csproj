@@ -1,13 +1,67 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net20;netstandard2.0</TargetFrameworks>
-    <AssemblyName>Pppp</AssemblyName>
-    <RootNamespace>Pppp</RootNamespace>
+    <Version>0.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoWarn>$(NoWarn);0649</NoWarn>
+    <NoWarn>$(NoWarn);NU5131</NoWarn>
+
+    <PackageId>pppp-dotnet</PackageId>
+    <Authors>7mochi</Authors>
+    <Description>osu! difficulty and performance calculation for all four gamemodes</Description>
+    <PackageLicenseFile>LICENCE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>native;osu;performance;difficulty</PackageTags>
+    <RepositoryUrl>https://github.com/7mochi/pppp</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <PpppNativeRid Condition="'$(PpppNativeRid)' == '' and '$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</PpppNativeRid>
+    <PpppNativeRid Condition="'$(PpppNativeRid)' == ''">$(NETCoreSdkRuntimeIdentifier)</PpppNativeRid>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);PpppPackageAssemblies</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="tests/**" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../LICENCE" Pack="true" PackagePath="/" />
+    <None Include="../README.md" Pack="true" PackagePath="/" />
+    <None Include="build/net20/pppp-dotnet.targets" Pack="true" PackagePath="build/net20/" />
+    <None Include="buildTransitive/net20/pppp-dotnet.targets" Pack="true" PackagePath="buildTransitive/net20/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PpppNative Include="../build/**/$(PpppBuildMode)/*pppp_c.so" />
+    <PpppNative Include="../build/**/$(PpppBuildMode)/*pppp_c.dylib" />
+    <PpppNative Include="../build/**/$(PpppBuildMode)/pppp_c.dll" />
+    <PpppNative Include="../build/**/$(PpppBuildMode)/*fosu_engine_*.so" />
+    <PpppNative Include="../build/**/$(PpppBuildMode)/*fosu_engine_*.dylib" />
+    <PpppNative Include="../build/**/$(PpppBuildMode)/fosu_engine_*.dll" />
+    <None Include="@(PpppNative)" Pack="true" PackagePath="runtimes/$(PpppNativeRid)/native/%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <Target Name="PpppValidateNative" BeforeTargets="GenerateNuspec">
+    <Error Condition="'$(PpppNativeRid)' == ''" Text="PpppNativeRid is empty; set it or use a .NET SDK with a host runtime identifier." />
+    <Error Condition="'@(PpppNative)' == ''" Text="No pppp native library found under ../build/**/$(PpppBuildMode)/; run make release or make build." />
+  </Target>
+
+  <Target Name="PpppPackageAssemblies">
+    <ItemGroup Condition="'$(TargetFramework)' == 'net20'">
+      <TfmSpecificPackageFile Include="$(TargetPath)">
+        <PackagePath>lib/net20/</PackagePath>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+      <TfmSpecificPackageFile Include="$(TargetPath)">
+        <PackagePath>ref/netstandard2.0/</PackagePath>
+      </TfmSpecificPackageFile>
+      <TfmSpecificPackageFile Include="$(TargetPath)">
+        <PackagePath>runtimes/any/lib/netstandard2.0/</PackagePath>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+  </Target>
 </Project>

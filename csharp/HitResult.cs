@@ -1,0 +1,22 @@
+namespace Pppp {
+    public enum HitResult {
+        None = 0,
+        Miss,
+        Meh,
+        Ok,
+        Good,
+        Great,
+        Perfect,
+        SmallTickMiss,
+        SmallTickHit,
+        LargeTickMiss,
+        LargeTickHit,
+        SmallBonus,
+        LargeBonus,
+        IgnoreMiss,
+        IgnoreHit,
+        ComboBreak,
+        SliderTailHit,
+        LegacyComboIncrease
+    }
+}

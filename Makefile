@@ -58,7 +58,7 @@ test-neon:
 	$(XMAKE) test
 	$(XMAKE) test_install
 
-test-python:
+test-python: build
 	@$(PYTHON) -m pytest python/tests -q
 	@$(PYTHON) -m mypy
 

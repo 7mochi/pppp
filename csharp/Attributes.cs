@@ -228,4 +228,144 @@ namespace Pppp {
             get { return attributes; }
         }
     }
+
+    public abstract class PerformanceAttributes {
+        public abstract Ruleset Ruleset { get; }
+
+        public abstract double Total { get; }
+    }
+
+    public sealed class OsuPerformanceAttributes : PerformanceAttributes {
+        private readonly PpppOsuPerformanceAttributes value;
+
+        internal OsuPerformanceAttributes(PpppOsuPerformanceAttributes value) {
+            this.value = value;
+        }
+
+        public override Ruleset Ruleset {
+            get { return Ruleset.Osu; }
+        }
+
+        public override double Total {
+            get { return value.total; }
+        }
+
+        public double Aim {
+            get { return value.aim; }
+        }
+
+        public double Speed {
+            get { return value.speed; }
+        }
+
+        public double Accuracy {
+            get { return value.accuracy; }
+        }
+
+        public double Flashlight {
+            get { return value.flashlight; }
+        }
+
+        public double Reading {
+            get { return value.reading; }
+        }
+
+        public double EffectiveMissCount {
+            get { return value.effective_miss_count; }
+        }
+
+        public double ComboBasedEstimatedMissCount {
+            get { return value.combo_based_estimated_miss_count; }
+        }
+
+        public double? ScoreBasedEstimatedMissCount {
+            get {
+                return value.score_based_estimated_miss_count.has_value != 0
+                           ? (double?)value.score_based_estimated_miss_count.value
+                           : null;
+            }
+        }
+
+        public double AimEstimatedSliderBreaks {
+            get { return value.aim_estimated_slider_breaks; }
+        }
+
+        public double SpeedEstimatedSliderBreaks {
+            get { return value.speed_estimated_slider_breaks; }
+        }
+
+        public double? SpeedDeviation {
+            get {
+                return value.speed_deviation.has_value != 0 ? (double?)value.speed_deviation.value : null;
+            }
+        }
+    }
+
+    public sealed class TaikoPerformanceAttributes : PerformanceAttributes {
+        private readonly PpppTaikoPerformanceAttributes value;
+
+        internal TaikoPerformanceAttributes(PpppTaikoPerformanceAttributes value) {
+            this.value = value;
+        }
+
+        public override Ruleset Ruleset {
+            get { return Ruleset.Taiko; }
+        }
+
+        public override double Total {
+            get { return value.total; }
+        }
+
+        public double Difficulty {
+            get { return value.difficulty; }
+        }
+
+        public double Accuracy {
+            get { return value.accuracy; }
+        }
+
+        public double? EstimatedUnstableRate {
+            get {
+                return value.estimated_unstable_rate.has_value != 0
+                           ? (double?)value.estimated_unstable_rate.value
+                           : null;
+            }
+        }
+    }
+
+    public sealed class CatchPerformanceAttributes : PerformanceAttributes {
+        private readonly PpppCatchPerformanceAttributes value;
+
+        internal CatchPerformanceAttributes(PpppCatchPerformanceAttributes value) {
+            this.value = value;
+        }
+
+        public override Ruleset Ruleset {
+            get { return Ruleset.Catch; }
+        }
+
+        public override double Total {
+            get { return value.total; }
+        }
+    }
+
+    public sealed class ManiaPerformanceAttributes : PerformanceAttributes {
+        private readonly PpppManiaPerformanceAttributes value;
+
+        internal ManiaPerformanceAttributes(PpppManiaPerformanceAttributes value) {
+            this.value = value;
+        }
+
+        public override Ruleset Ruleset {
+            get { return Ruleset.Mania; }
+        }
+
+        public override double Total {
+            get { return value.total; }
+        }
+
+        public double Difficulty {
+            get { return value.difficulty; }
+        }
+    }
 }

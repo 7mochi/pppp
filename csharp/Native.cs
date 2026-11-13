@@ -165,6 +165,67 @@ namespace Pppp {
             return values;
         }
 
+        internal static PpppNativeScoreInfo ScoreInfo(RulesetHandle ruleset, Beatmap beatmap, ModsHandle mods,
+                                                      int? maxCombo, double? accuracy, int? misses,
+                                                      long? legacyTotalScore, IDictionary<HitResult, int> statistics) {
+            PpppNativeScoreInfo score = new PpppNativeScoreInfo();
+            score.ruleset = ruleset.Pointer;
+            score.beatmap = beatmap.Map;
+            if (mods != null) {
+                score.mods = mods.Pointer;
+            }
+            score.max_combo = maxCombo.GetValueOrDefault();
+            score.accuracy = accuracy.GetValueOrDefault();
+
+            if (legacyTotalScore.HasValue) {
+                score.legacy_total_score.has_value = 1;
+                score.legacy_total_score.value = legacyTotalScore.Value;
+            }
+
+            if (statistics != null) {
+                foreach (KeyValuePair<HitResult, int> entry in statistics) {
+                    switch (entry.Key) {
+                    case HitResult.Miss: score.count_miss = entry.Value; break;
+                    case HitResult.Meh: score.count_meh = entry.Value; break;
+                    case HitResult.Ok: score.count_ok = entry.Value; break;
+                    case HitResult.Good: score.count_good = entry.Value; break;
+                    case HitResult.Great: score.count_great = entry.Value; break;
+                    case HitResult.Perfect: score.count_perfect = entry.Value; break;
+                    case HitResult.SmallTickMiss: score.count_small_tick_miss = entry.Value; break;
+                    case HitResult.SmallTickHit: score.count_small_tick_hit = entry.Value; break;
+                    case HitResult.LargeTickMiss: score.count_large_tick_miss = entry.Value; break;
+                    case HitResult.LargeTickHit: score.count_large_tick_hit = entry.Value; break;
+                    case HitResult.SliderTailHit: score.count_slider_tail_hit = entry.Value; break;
+                    default:
+                        throw new ArgumentOutOfRangeException("Statistics",
+                                                              "statistics keys must be supported hit results");
+                    }
+                }
+            }
+
+            if (misses.HasValue) {
+                score.count_miss = misses.Value;
+            }
+
+            return score;
+        }
+
+        internal static PerformanceAttributes FromNative(PpppOsuPerformanceAttributes value) {
+            return new OsuPerformanceAttributes(value);
+        }
+
+        internal static PerformanceAttributes FromNative(PpppTaikoPerformanceAttributes value) {
+            return new TaikoPerformanceAttributes(value);
+        }
+
+        internal static PerformanceAttributes FromNative(PpppCatchPerformanceAttributes value) {
+            return new CatchPerformanceAttributes(value);
+        }
+
+        internal static PerformanceAttributes FromNative(PpppManiaPerformanceAttributes value) {
+            return new ManiaPerformanceAttributes(value);
+        }
+
         internal static PpppTimedOsuDifficultyAttributes[] ReadTimedOsu(PpppTimedResult* result) {
             int count;
             Check(Pppp_TimedResult_GetCount(result, &count));

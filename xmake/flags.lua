@@ -87,6 +87,12 @@ function pppp_parser_test_flags()
 
     pppp_compiler_suppressions(true)
 
+    if is_plat("macosx") then
+        -- macOS deprecates sprintf; fosu's tests still use it.
+        -- https://github.com/apple-oss-distributions/Libc/blob/main/include/_stdio.h#L311-L313
+        add_cxflags("-Wno-deprecated-declarations")
+    end
+
     if not is_plat("windows") then
         add_cxflags("-ffp-contract=off")
 

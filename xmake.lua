@@ -15,9 +15,11 @@ elseif is_mode("release") then
     set_optimize("fastest")
     add_defines("NDEBUG")
     set_policy("build.optimization.lto", true)
-    -- Programs that link with pkg-config don't use -flto. The release archives include both
-    -- regular and LTO objects.
-    add_cxflags("-ffat-lto-objects")
+    -- Linux consumers that link with pkg-config don't use -flto. The static libraries include
+    -- both regular and LTO objects.
+    if is_plat("linux") then
+        add_cxflags("-ffat-lto-objects")
+    end
 end
 
 -- The test dependencies have a fixed URL and checksum. The *_dir options point the build at

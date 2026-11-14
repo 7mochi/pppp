@@ -28,6 +28,11 @@ target_end()
 end
 end
 
+-- Windows backslashes become escapes in C string literals.
+local function define_test_path(name, value)
+    add_defines(name .. '="' .. value:gsub("\\", "/") .. '"')
+end
+
 local function pppp_test(name, deps, scalar, setup)
     target("test_" .. name)
         set_kind("binary")
@@ -49,8 +54,8 @@ local function pppp_test(name, deps, scalar, setup)
             add_deps(dep)
         end
 
-        add_defines('PPPP_TEST_RESOURCES="' .. pppp.path("tests/resources") .. '"',
-                    'PPPP_TEST_PARITY="' .. pppp.path("tests/parity/parity.json") .. '"')
+        define_test_path("PPPP_TEST_RESOURCES", pppp.path("tests/resources"))
+        define_test_path("PPPP_TEST_PARITY", pppp.path("tests/parity/parity.json"))
 
         if setup then
             setup()

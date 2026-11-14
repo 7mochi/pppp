@@ -46,9 +46,9 @@ bump:
 	GIT_COMMITTER_EMAIL="$(BUMP_AUTHOR_EMAIL)" \
 	$(BUMP_VERSION) bump --config-file .bumpversion/$(ARTIFACT).toml $(PART)
 	@tag="$$(git tag --points-at HEAD | grep -E '^(core|py|cs)-v' | head -1)"; \
-	  test -n "$$tag" || { echo "error: bumpversion did not create a release tag"; exit 1; }; \
-	  git push origin HEAD; \
-	  git push origin "$$tag"
+	  test -n "$$tag" || { echo "error: bumpversion didn't create a release tag"; exit 1; }; \
+	  echo "Created $$tag. Review it, then push:"; \
+	  echo "  git push origin HEAD $$tag"
 
 build-python-wheel: release
 	@$(UV) build --wheel --no-build-isolation

@@ -8,8 +8,8 @@ pppp = {
     isa = get_config("pppp_isa") or "auto",
 }
 
-if pppp.isa == "avx2" and not (is_arch("x86_64") or is_arch("x86")) then
-    raise("isa=avx2 needs an x86 target")
+if pppp.isa == "avx2" and not is_arch("x64", "x86_64") then
+    raise("isa=avx2 needs an x86-64 target")
 end
 
 if pppp.isa == "neon" and not is_arch("arm64", "aarch64") then
@@ -17,7 +17,8 @@ if pppp.isa == "neon" and not is_arch("arm64", "aarch64") then
 end
 
 pppp.engine_suffix = is_plat("windows") and ".dll" or is_plat("macosx") and ".dylib" or ".so"
-pppp.x86_engine = (pppp.isa == "auto" or pppp.isa == "avx2") and (is_arch("x86_64") or is_arch("x86"))
+-- The AVX2 engine is x86-64 only.
+pppp.x86_engine = (pppp.isa == "auto" or pppp.isa == "avx2") and is_arch("x64", "x86_64")
 pppp.arm_engine = (pppp.isa == "auto" or pppp.isa == "neon") and is_arch("arm64", "aarch64")
 
 function pppp.as_list(value)

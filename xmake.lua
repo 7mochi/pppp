@@ -7,6 +7,10 @@ set_policy("build.warning", true)
 -- Use Apple's compiler and sdk together on macos.
 if is_plat("macosx") then
     set_toolchains("xcode")
+elseif is_plat("windows") then
+    -- Git bash makes xmake select MinGW. Use MSVC for all Windows targets.
+    -- https://github.com/xmake-io/xmake/blob/v3.1.1/xmake/modules/private/detect/find_platform.lua#L24-L39
+    set_toolchains("msvc")
 end
 
 if is_mode("debug") then

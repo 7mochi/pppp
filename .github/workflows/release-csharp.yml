@@ -47,13 +47,13 @@ jobs:
         include:
           - os: windows-2022
             rid: win-x64
-            args: -a x86_64
+            args: -p windows -a x64
           - os: windows-2022
             rid: win-x86
-            args: -a x86
+            args: -p windows -a x86
           - os: windows-11-arm
             rid: win-arm64
-            args: -a arm64
+            args: -p windows -a arm64
           - os: ubuntu-latest
             rid: linux-x64
             args: ""

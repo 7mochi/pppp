@@ -3,6 +3,12 @@ set_project("pppp")
 set_version("1.0.0")
 set_languages("c++98")
 set_policy("build.warning", true)
+
+-- Use Apple's compiler and sdk together on macos.
+if is_plat("macosx") then
+    set_toolchains("xcode")
+end
+
 if is_mode("debug") then
     set_symbols("debug")
 elseif is_mode("release") then

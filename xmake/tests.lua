@@ -98,7 +98,8 @@ for _, name in ipairs(fosu_tests) do
         pppp_doctest_flags()
         pppp_parser_test_flags()
 
-        if name == "dispatch" then
+        -- Windows uses Win32 threads instead of pthreads.
+        if name == "dispatch" and not is_plat("windows") then
             add_syslinks("pthread")
         end
 

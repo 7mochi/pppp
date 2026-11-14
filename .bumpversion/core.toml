@@ -1,25 +1,26 @@
 [tool.bumpversion]
-current_version = "1.0.0"
+current_version = "0.0.0"
 commit = true
-tag = false
-message = "chore: bump version (core)"
+tag = true
+tag_name = "core-v{new_version}"
+message = "chore: bump core version"
 
 [[tool.bumpversion.files]]
-filename = "{repo_root}/CMakeLists.txt"
-search = "project(pppp VERSION {current_version}"
-replace = "project(pppp VERSION {new_version}"
+filename = "xmake.lua"
+search = 'set_version("{current_version}")'
+replace = 'set_version("{new_version}")'
 
 [[tool.bumpversion.files]]
-filename = "{repo_root}/include/pppp/config.h"
+filename = "include/pppp/version.h"
 search = "#define PPPP_VERSION_MAJOR {current_major}"
 replace = "#define PPPP_VERSION_MAJOR {new_major}"
 
 [[tool.bumpversion.files]]
-filename = "{repo_root}/include/pppp/config.h"
+filename = "include/pppp/version.h"
 search = "#define PPPP_VERSION_MINOR {current_minor}"
 replace = "#define PPPP_VERSION_MINOR {new_minor}"
 
 [[tool.bumpversion.files]]
-filename = "{repo_root}/include/pppp/config.h"
+filename = "include/pppp/version.h"
 search = "#define PPPP_VERSION_PATCH {current_patch}"
 replace = "#define PPPP_VERSION_PATCH {new_patch}"

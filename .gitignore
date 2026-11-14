@@ -43,5 +43,6 @@ reference/**/bin/
 reference/**/obj/
 csharp/**/bin/
 csharp/**/obj/
+csharp/native/
 *.nupkg
 artifacts/

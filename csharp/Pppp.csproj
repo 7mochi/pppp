@@ -44,9 +44,20 @@
     <None Include="@(PpppNative)" Pack="true" PackagePath="runtimes/$(PpppNativeRid)/native/%(Filename)%(Extension)" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PpppNativeRidFile Include="native/*/*" />
+    <None Include="native/win-x64/*" Pack="true" PackagePath="runtimes/win-x64/native/%(Filename)%(Extension)" Condition="Exists('native/win-x64')" />
+    <None Include="native/win-x86/*" Pack="true" PackagePath="runtimes/win-x86/native/%(Filename)%(Extension)" Condition="Exists('native/win-x86')" />
+    <None Include="native/win-arm64/*" Pack="true" PackagePath="runtimes/win-arm64/native/%(Filename)%(Extension)" Condition="Exists('native/win-arm64')" />
+    <None Include="native/linux-x64/*" Pack="true" PackagePath="runtimes/linux-x64/native/%(Filename)%(Extension)" Condition="Exists('native/linux-x64')" />
+    <None Include="native/linux-arm64/*" Pack="true" PackagePath="runtimes/linux-arm64/native/%(Filename)%(Extension)" Condition="Exists('native/linux-arm64')" />
+    <None Include="native/osx-x64/*" Pack="true" PackagePath="runtimes/osx-x64/native/%(Filename)%(Extension)" Condition="Exists('native/osx-x64')" />
+    <None Include="native/osx-arm64/*" Pack="true" PackagePath="runtimes/osx-arm64/native/%(Filename)%(Extension)" Condition="Exists('native/osx-arm64')" />
+  </ItemGroup>
+
   <Target Name="PpppValidateNative" BeforeTargets="GenerateNuspec">
     <Error Condition="'$(PpppNativeRid)' == ''" Text="PpppNativeRid is empty; set it or use a .NET SDK with a host runtime identifier." />
-    <Error Condition="'@(PpppNative)' == ''" Text="No pppp native library found under ../build/**/$(PpppBuildMode)/; run make release or make build." />
+    <Error Condition="'@(PpppNative)' == '' and '@(PpppNativeRidFile)' == ''" Text="No pppp native library found under ../build/**/$(PpppBuildMode)/ or native/." />
   </Target>
 
   <Target Name="PpppPackageAssemblies">

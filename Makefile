@@ -4,10 +4,17 @@ CTYPESGEN   ?= ctypesgen
 UV          ?= uv
 CLANG_FORMAT ?= clang-format
 
+BUMP_VERSION ?= bump-my-version
+BUMP_AUTHOR_NAME ?= 7mochi-bot
+BUMP_AUTHOR_EMAIL ?= bot@osupe.ru
+
+ARTIFACT    ?=
+PART        ?= patch
+
 FORMAT_DIRS  = include src tests third_party/fosu/src third_party/fosu/tests
 FORMAT_FILES = $(shell find $(FORMAT_DIRS) -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.cc' \) 2>/dev/null)
 
-.PHONY: all configure build release build-python-wheel build-csharp-nupkg rebuild \
+.PHONY: all configure build release bump build-python-wheel build-csharp-nupkg rebuild \
         test-auto test-scalar test-avx2 test-neon test-python test-csharp \
         fetch-mods generate-mods generate-parity-tests generate-python generate-csharp \
         format check check-format check-headers check-tidy \
@@ -26,6 +33,22 @@ build: configure
 release:
 	$(XMAKE) f -y -c -m release --pppp_build_tests=n
 	$(XMAKE) -y
+
+bump:
+	@case "$(ARTIFACT)" in core|python|csharp) ;; *) echo "usage: make bump ARTIFACT=core|python|csharp PART=patch|minor|major"; exit 1;; esac
+	@case "$(PART)" in patch|minor|major) ;; *) echo "usage: make bump ARTIFACT=core|python|csharp PART=patch|minor|major"; exit 1;; esac
+	@test "$$(git branch --show-current)" = master || { echo "error: make bump must run on master"; exit 1; }
+	@test -z "$$(git status --porcelain --untracked-files=no)" || { echo "error: tracked or staged changes must be committed first"; exit 1; }
+
+	GIT_AUTHOR_NAME="$(BUMP_AUTHOR_NAME)" \
+	GIT_AUTHOR_EMAIL="$(BUMP_AUTHOR_EMAIL)" \
+	GIT_COMMITTER_NAME="$(BUMP_AUTHOR_NAME)" \
+	GIT_COMMITTER_EMAIL="$(BUMP_AUTHOR_EMAIL)" \
+	$(BUMP_VERSION) bump --config-file .bumpversion/$(ARTIFACT).toml $(PART)
+	@tag="$$(git tag --points-at HEAD | grep -E '^(core|py|cs)-v' | head -1)"; \
+	  test -n "$$tag" || { echo "error: bumpversion did not create a release tag"; exit 1; }; \
+	  git push origin HEAD; \
+	  git push origin "$$tag"
 
 build-python-wheel: release
 	@$(UV) build --wheel --no-build-isolation

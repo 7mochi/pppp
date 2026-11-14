@@ -1,0 +1,11 @@
+[tool.bumpversion]
+current_version = "0.0.0"
+commit = true
+tag = true
+tag_name = "cs-v{new_version}"
+message = "chore: bump csharp version"
+
+[[tool.bumpversion.files]]
+filename = "csharp/Pppp.csproj"
+search = "<Version>{current_version}</Version>"
+replace = "<Version>{new_version}</Version>"

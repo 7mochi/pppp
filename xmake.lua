@@ -132,16 +132,15 @@ task("test_install")
         -- The C consumer: the public header as ANSI C, linked against the shared C ABI package.
         -- The C ABI target only exists when the parser adapter is built.
         if with_fosu then
-            local c_args = table.join({"-std=c89", p("tests/install/consumer.c"), "-o",
-                                       path.join(prefix, "consumer_c")}, pkgflags("pppp_c"))
-            os.execv(cc, c_args)
-
-            -- The shared library is found through the loader path, not an RPATH in the consumer.
-            if is_plat("macosx") then
-                os.setenv("DYLD_LIBRARY_PATH", path.join(prefix, "lib"))
-            else
-                os.setenv("LD_LIBRARY_PATH", path.join(prefix, "lib"))
+            local c_flags = pkgflags("pppp_c")
+            if not is_plat("windows") then
+                -- Let the consumer find libpppp_c at runtime.
+                table.insert(c_flags, "-Wl,-rpath," .. path.join(prefix, "lib"))
             end
+
+            local c_args = table.join({"-std=c89", p("tests/install/consumer.c"), "-o",
+                                       path.join(prefix, "consumer_c")}, c_flags)
+            os.execv(cc, c_args)
             os.execv(path.join(prefix, "consumer_c"))
         end
     end)

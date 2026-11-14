@@ -1,14 +1,12 @@
-"""pppp: osu! difficulty and performance points, in native code."""
+"""osu! difficulty and performance calculations."""
 
 from __future__ import annotations
 
-from . import library
+from pppp import library
 
-# The generated `_native` loads `pppp_c` when it is imported, so the directory the glue resolved has
-# to be registered first. This is the only place the import order matters.
 library.prepare(library.search_directory())
 
-from .attributes import (  # noqa: E402
+from pppp.attributes import (
     CatchDifficultyAttributes,
     CatchPerformanceAttributes,
     DifficultyAttributes,
@@ -21,56 +19,42 @@ from .attributes import (  # noqa: E402
     TaikoPerformanceAttributes,
     TimedDifficultyAttributes,
 )
-from .backend import __version__, backend  # noqa: E402
-from .beatmap import Beatmap  # noqa: E402
-from .data import (  # noqa: E402
-    BeatmapDifficulty,
-    BreakPeriod,
-    HitObject,
-    Slider,
-    SliderEvent,
-    TimingPoint,
-    Vector2,
-)
-from .difficulty import Difficulty  # noqa: E402
-from .errors import Error, ModsError, ParseError  # noqa: E402
-from .hit_result import HitResult  # noqa: E402
-from .performance import Performance  # noqa: E402
-from .ruleset import Ruleset  # noqa: E402
-from .strains import CatchStrains, ManiaStrains, OsuStrains, Strains, TaikoStrains  # noqa: E402
+from pppp.beatmap import Beatmap, BeatmapDifficulty
+from pppp.difficulty import Difficulty
+from pppp.hit_result import HitResult
+from pppp.performance import Performance
+from pppp.ruleset import Ruleset
+from pppp.strains import CatchStrains, ManiaStrains, OsuStrains, Strains, TaikoStrains
+from pppp.backend import __version__, backend
+from pppp.errors import Error, ModsError, ParseError
 
 __all__ = [
     "Beatmap",
     "BeatmapDifficulty",
-    "BreakPeriod",
     "CatchDifficultyAttributes",
     "CatchPerformanceAttributes",
     "CatchStrains",
     "Difficulty",
     "DifficultyAttributes",
-    "Error",
-    "HitObject",
     "HitResult",
     "ManiaDifficultyAttributes",
     "ManiaPerformanceAttributes",
     "ManiaStrains",
-    "ModsError",
     "OsuDifficultyAttributes",
     "OsuPerformanceAttributes",
     "OsuStrains",
-    "ParseError",
     "Performance",
     "PerformanceAttributes",
     "Ruleset",
-    "Slider",
-    "SliderEvent",
     "Strains",
     "TaikoDifficultyAttributes",
     "TaikoPerformanceAttributes",
     "TaikoStrains",
     "TimedDifficultyAttributes",
-    "TimingPoint",
-    "Vector2",
+    "Error",
+    "ModsError",
+    "ParseError",
     "__version__",
     "backend",
+    "library",
 ]

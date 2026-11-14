@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <PpppBuildMode Condition="'$(PpppBuildMode)' == '' and '$(Configuration)' == 'Release'">release</PpppBuildMode>
+    <PpppBuildMode Condition="'$(PpppBuildMode)' == ''">debug</PpppBuildMode>
+  </PropertyGroup>
+</Project>

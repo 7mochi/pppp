@@ -6,6 +6,7 @@
 
 #include "pppp/beatmaps/slider_event_descriptor.h"
 #include "pppp/beatmaps/timing/break_period.h"
+#include "pppp/config.h"
 #include "pppp/utils/vector2.h"
 #include <cstddef>
 #include <vector>
@@ -93,6 +94,11 @@ namespace pppp { namespace beatmaps {
         int format_version;
         int mode;
         float stack_leniency;
+
+        pppp_int64 beatmap_id;
+        std::vector<char> title;
+        std::vector<char> artist;
+        std::vector<char> version;
 
         BeatmapDifficulty difficulty;
         std::vector<HitObject> hit_objects;

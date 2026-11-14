@@ -1,35 +1,22 @@
-"""The strain series a difficulty calculation returns, per ruleset."""
+"""Strain series for each ruleset."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import ClassVar, TypeAlias
 
-from .ruleset import Ruleset
+from pppp.ruleset import Ruleset
 
 
 @dataclass(frozen=True)
 class _StrainsBase:
-    """The fields every ruleset's strain series shares."""
-
     start_time: float
     section_length: float
 
 
 @dataclass(frozen=True)
 class OsuStrains(_StrainsBase):
-    """The series of an osu! strain graph, taken from a `pppp_strains`. An empty series has a null
-    pointer and a count of 0.
-
-    Attributes:
-        start_time: The time of the first strain section.
-        section_length: The length of a strain section.
-        aim: The aim strains.
-        aim_no_sliders: The aim strains without sliders.
-        speed: The speed strains.
-        reading: The reading strains.
-        flashlight: The flashlight strains.
-    """
+    """Strain series for osu!standard maps."""
 
     ruleset: ClassVar[Ruleset] = Ruleset.OSU
     aim: list[float]
@@ -41,17 +28,7 @@ class OsuStrains(_StrainsBase):
 
 @dataclass(frozen=True)
 class TaikoStrains(_StrainsBase):
-    """The strain series of an osu!taiko map, suitable for plotting difficulty over time.
-
-    Attributes:
-        start_time: The time of the first strain section.
-        section_length: The length of a strain section.
-        colour: The colour strains.
-        reading: The reading strains.
-        rhythm: The rhythm strains.
-        stamina: The stamina strains.
-        single_colour_stamina: The single-colour stamina strains.
-    """
+    """Strain series for osu!taiko maps."""
 
     ruleset: ClassVar[Ruleset] = Ruleset.TAIKO
     colour: list[float]
@@ -63,13 +40,7 @@ class TaikoStrains(_StrainsBase):
 
 @dataclass(frozen=True)
 class CatchStrains(_StrainsBase):
-    """The strain series of an osu!catch map, suitable for plotting difficulty over time.
-
-    Attributes:
-        start_time: The time of the first strain section.
-        section_length: The length of a strain section.
-        movement: The movement strains.
-    """
+    """Strain series for osu!catch maps."""
 
     ruleset: ClassVar[Ruleset] = Ruleset.CATCH
     movement: list[float]
@@ -77,13 +48,7 @@ class CatchStrains(_StrainsBase):
 
 @dataclass(frozen=True)
 class ManiaStrains(_StrainsBase):
-    """The strain series of an osu!mania map, suitable for plotting difficulty over time.
-
-    Attributes:
-        start_time: The time of the first strain section.
-        section_length: The length of a strain section.
-        strain: The strains.
-    """
+    """Strain series for osu!mania maps."""
 
     ruleset: ClassVar[Ruleset] = Ruleset.MANIA
     strain: list[float]

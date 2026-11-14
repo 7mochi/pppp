@@ -1,4 +1,4 @@
-"""The ruleset ids an attribute set belongs to."""
+"""Ruleset ids."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from enum import IntEnum
 
 
 class Ruleset(IntEnum):
-    """Which ruleset an attribute set belongs to. The values are the beatmap's `Mode`."""
+    """A ruleset id, matching the beatmap's Mode."""
 
     OSU = 0
     TAIKO = 1

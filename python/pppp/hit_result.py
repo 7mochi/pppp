@@ -1,4 +1,4 @@
-"""The hit result ids of a play's score."""
+"""Hit results used by score statistics."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from enum import IntEnum
 
 
 class HitResult(IntEnum):
-    """Every judgement a score counts, in the order the ABI indexes them."""
+    """Judgements a score can count."""
 
     NONE = 0
     MISS = 1

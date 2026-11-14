@@ -1,166 +1,156 @@
-"""A parsed `.osu` file and its lazily read contents."""
+"""A parsed beatmap and its difficulty settings."""
 
 from __future__ import annotations
 
 import ctypes
 import os
-from typing import Any, cast
+from dataclasses import dataclass
 
-from . import _native
-from .data import (
-    BeatmapDifficulty,
-    BreakPeriod,
-    HitObject,
-    Slider,
-    TimingPoint,
-    break_period,
-    difficulty_of,
-    hit_object,
-    slider,
-    timing_point,
-    values,
-)
-from .errors import ParseError
-from .native import check
+from pppp._ctypes import _native
+from pppp._ctypes._native import struct_PpppNativeBeatmap as PpppNativeBeatmap
+from pppp.errors import ParseError
+from pppp.native import check_status, read_string
+
+
+@dataclass(frozen=True)
+class BeatmapDifficulty:
+    """The difficulty settings of a parsed beatmap."""
+
+    drain_rate: float
+    circle_size: float
+    overall_difficulty: float
+    approach_rate: float
+    slider_multiplier: float
+    slider_tick_rate: float
 
 
 class Beatmap:
-    """A loaded beatmap."""
+    """A parsed beatmap."""
 
-    __slots__ = ("_handle", "_prepared", "_cache")
+    __slots__: tuple[str, ...] = ("_native",)
 
-    def __init__(self, handle: Any) -> None:
-        self._handle = handle
-        self._prepared = False
-        self._cache: dict[str, Any] | None = None
+    def __init__(self, native: PpppNativeBeatmap) -> None:
+        self._native: PpppNativeBeatmap | None = native
 
     @classmethod
     def from_bytes(cls, data: bytes | bytearray | memoryview) -> Beatmap:
-        """Parse a `Beatmap` by providing the content of a `.osu` file as a slice of bytes."""
+        """Parse a beatmap from the bytes of a .osu file."""
         if isinstance(data, memoryview):
             data = data.tobytes()
         elif isinstance(data, bytearray):
             data = bytes(data)
-        if not isinstance(data, bytes):
-            raise TypeError("data must be bytes-like")
+
+        # Without type checking, Beatmap.from_bytes("...") reaches this.
+        if not isinstance(data, bytes):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise TypeError("data must be bytes-like")  # pyright: ignore[reportUnreachable]
+
         buffer = ctypes.create_string_buffer(data, max(len(data), 1))
-        handle = ctypes.POINTER(_native.pppp_beatmap)()
-        status = _native.pppp_beatmap_from_bytes(
-            ctypes.cast(buffer, ctypes.c_void_p), len(data), ctypes.byref(handle)
+        native = PpppNativeBeatmap()
+        status = _native.Pppp_Beatmap_CreateFromBytes(
+            ctypes.cast(buffer, ctypes.c_void_p), len(data), ctypes.byref(native)
         )
-        if status != 0:
-            check(status, ParseError)
-        return cls(handle)
+        check_status(status, ParseError)
+
+        return cls(native)
 
     @classmethod
     def from_file(cls, path: str | bytes | os.PathLike[str] | os.PathLike[bytes]) -> Beatmap:
-        """Parse a `Beatmap` by providing a path to a `.osu` file."""
+        """Parse a beatmap from a .osu file."""
         with open(path, "rb") as file:
             return cls.from_bytes(file.read())
 
-    def __del__(self) -> None:
-        handle = getattr(self, "_handle", None)
-        if handle is not None and bool(handle):
-            _native.pppp_beatmap_free(handle)
+    @classmethod
+    def from_text(cls, text: str) -> Beatmap:
+        """Parse a beatmap from the text of a .osu file."""
+        # Without type checking, Beatmap.from_text(b"...") reaches this.
+        if not isinstance(text, str):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise TypeError("text must be a str")  # pyright: ignore[reportUnreachable]
 
-    def _ensure_open(self) -> Any:
-        if not bool(self._handle):
-            raise AttributeError("beatmap is not loaded")
-        return self._handle
+        native = PpppNativeBeatmap()
+        status = _native.Pppp_Beatmap_CreateFromText(text.encode("utf-8"), ctypes.byref(native))
+        check_status(status, ParseError)
 
-    def _prepare(self) -> None:
-        handle = self._ensure_open()
-        if self._prepared:
-            return
-        check(_native.pppp_beatmap_prepare_data(handle))
-        self._prepared = True
+        return cls(native)
 
-    def _data(self) -> dict[str, Any]:
-        self._prepare()
-        if self._cache is None:
-            handle = self._ensure_open()
-            difficulty = _native.pppp_beatmap_difficulty()
-            check(_native.pppp_beatmap_get_difficulty(handle, ctypes.byref(difficulty)))
-            objects, object_count = ctypes.POINTER(_native.pppp_hit_object)(), ctypes.c_size_t()
-            check(
-                _native.pppp_beatmap_hit_objects(
-                    handle, ctypes.byref(objects), ctypes.byref(object_count)
-                )
-            )
-            sliders, slider_count = ctypes.POINTER(_native.pppp_slider)(), ctypes.c_size_t()
-            check(
-                _native.pppp_beatmap_sliders(
-                    handle, ctypes.byref(sliders), ctypes.byref(slider_count)
-                )
-            )
-            points, point_count = ctypes.POINTER(_native.pppp_timing_point)(), ctypes.c_size_t()
-            check(
-                _native.pppp_beatmap_timing_points(
-                    handle, ctypes.byref(points), ctypes.byref(point_count)
-                )
-            )
-            breaks, break_count = ctypes.POINTER(_native.pppp_break_period)(), ctypes.c_size_t()
-            check(
-                _native.pppp_beatmap_breaks(handle, ctypes.byref(breaks), ctypes.byref(break_count))
-            )
-            self._cache = {
-                "difficulty": difficulty_of(difficulty),
-                "hit_objects": [
-                    hit_object(item) for item in values(objects, object_count.value)
-                ],
-                "sliders": [slider(item) for item in values(sliders, slider_count.value)],
-                "timing_points": [
-                    timing_point(item) for item in values(points, point_count.value)
-                ],
-                "breaks": [break_period(item) for item in values(breaks, break_count.value)],
-            }
-        return self._cache
+    def ensure_open(self) -> PpppNativeBeatmap:
+        native = self._native
+        if native is None or not bool(native.handle):
+            raise ValueError("beatmap is not loaded")
+
+        return native
+
+    @property
+    def title(self) -> str:
+        native = self.ensure_open()
+
+        return read_string(_native.Pppp_Beatmap_GetTitle, native.handle)
+
+    @property
+    def artist(self) -> str:
+        native = self.ensure_open()
+
+        return read_string(_native.Pppp_Beatmap_GetArtist, native.handle)
+
+    @property
+    def version(self) -> str:
+        native = self.ensure_open()
+
+        return read_string(_native.Pppp_Beatmap_GetVersion, native.handle)
+
+    @property
+    def beatmap_id(self) -> int:
+        return int(self.ensure_open().beatmap_id)
 
     @property
     def format_version(self) -> int:
-        """The `.osu` format version."""
-        return int(_native.pppp_beatmap_format_version(self._ensure_open()))
+        return int(self.ensure_open().format_version)
 
     @property
     def mode(self) -> int:
-        """The beatmap's ruleset id."""
-        return int(_native.pppp_beatmap_mode(self._ensure_open()))
+        return int(self.ensure_open().ruleset_id)
 
     @property
     def stack_leniency(self) -> float:
-        """The beatmap's stacking leniency."""
-        return float(_native.pppp_beatmap_stack_leniency(self._ensure_open()))
+        return float(self.ensure_open().stack_leniency)
 
     @property
     def difficulty(self) -> BeatmapDifficulty:
-        """The top-level difficulty settings."""
-        return cast(BeatmapDifficulty, self._data()["difficulty"])
+        native = self.ensure_open()
+        return BeatmapDifficulty(
+            drain_rate=float(native.drain_rate),
+            circle_size=float(native.circle_size),
+            overall_difficulty=float(native.overall_difficulty),
+            approach_rate=float(native.approach_rate),
+            slider_multiplier=float(native.slider_multiplier),
+            slider_tick_rate=float(native.slider_tick_rate),
+        )
 
-    @property
-    def hit_objects(self) -> list[HitObject]:
-        """The map's hit objects."""
-        return cast(list[HitObject], self._data()["hit_objects"])
+    def close(self) -> None:
+        native = self._native
+        if native is None:
+            return
 
-    @property
-    def sliders(self) -> list[Slider]:
-        """The map's sliders."""
-        return cast(list[Slider], self._data()["sliders"])
+        self._native = None
+        if bool(native.handle):
+            _native.Pppp_Beatmap_Destroy(native.handle)
 
-    @property
-    def timing_points(self) -> list[TimingPoint]:
-        """The map's timing points."""
-        return cast(list[TimingPoint], self._data()["timing_points"])
+    def __enter__(self) -> Beatmap:
+        return self
 
-    @property
-    def breaks(self) -> list[BreakPeriod]:
-        """The map's break periods."""
-        return cast(list[BreakPeriod], self._data()["breaks"])
+    def __exit__(self, *_: object) -> None:
+        self.close()
+
+    def __del__(self) -> None:
+        try:
+            self.close()
+        except Exception:
+            pass
 
 
 def require(beatmap: object) -> Beatmap:
-    """Reject anything that is not an open `Beatmap`."""
+    """Check that a Beatmap is open, then return it."""
     if not isinstance(beatmap, Beatmap):
         raise TypeError("expected a Beatmap")
-    if not bool(beatmap._handle):
-        raise AttributeError("beatmap is not loaded")
+    _ = beatmap.ensure_open()
+
     return beatmap

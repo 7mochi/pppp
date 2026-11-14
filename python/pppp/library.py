@@ -1,57 +1,75 @@
-"""Locating and loading `pppp_c`, and the ABI version check."""
+"""Find and load the pppp_c shared library."""
 
 from __future__ import annotations
 
-import ctypes
 import os
 import sys
 from pathlib import Path
 
-from . import ctypes_loader
+from pppp._ctypes import ctypes_loader
 
-_LIBRARY_NAMES = {"win32": "pppp_c.dll", "darwin": "pppp_c.dylib"}
-
-# The constants the header declares as macros. ctypesgen does not read macros, so they are written
-# here; `include/pppp/capi.h` is the source of truth for the values.
-PPPP_C_ABI_VERSION = 1
-PPPP_HIT_RESULT_COUNT = 18
-PPPP_DIFFICULTY_OPTIONS_VERSION = 1
-PPPP_PERFORMANCE_OPTIONS_VERSION = 1
+_PLATFORM_NAMES = {
+    "win32": ("pppp_c.dll",),
+    "darwin": ("libpppp_c.dylib", "pppp_c.dylib"),
+}
+_DEFAULT_NAMES = ("libpppp_c.so", "pppp_c.so")
 
 
-def library_name() -> str:
-    """The file name of `pppp_c` on this platform."""
-    return _LIBRARY_NAMES.get(sys.platform, "pppp_c.so")
+def _names() -> tuple[str, ...]:
+    return _PLATFORM_NAMES.get(sys.platform, _DEFAULT_NAMES)
+
+
+def _candidate(path: Path) -> Path | None:
+    if path.is_file():
+        return path
+
+    if path.is_dir():
+        for name in _names():
+            candidate = path / name
+            if candidate.is_file():
+                return candidate
+
+    return None
 
 
 def library_path() -> Path:
-    """The path of `pppp_c`, honouring `PPPP_LIBRARY`, the package directory and `build/`."""
-    name = library_name()
+    """Return the path to the pppp_c library."""
     here = Path(__file__).resolve().parent
-    candidates = []
     configured = os.environ.get("PPPP_LIBRARY")
+    candidates: list[Path] = []
+
     if configured:
         candidates.append(Path(configured))
-    candidates.append(here / name)
-    candidates.append(here.parents[1] / "build" / name)
+    for name in _names():
+        candidates.append(here / name)
+
+    root = here.parents[1]
+    for mode in ("debug", "release"):
+        for name in _names():
+            candidates.extend(sorted(root.glob(f"build/**/{mode}/{name}"), reverse=True))
+
     for candidate in candidates:
-        if candidate.exists():
-            return candidate
+        found = _candidate(candidate)
+        if found is not None:
+            return found
+
+    searched = "\n".join(str(candidate) for candidate in candidates)
+
     raise ImportError(
-        f"cannot find {name}; build pppp or set PPPP_LIBRARY to the shared library"
+        f"cannot find pppp_c, build pppp or set PPPP_LIBRARY to the shared library\nsearched:\n{searched}"
     )
 
 
 def search_directory() -> Path:
-    """The directory the generated loader has to scan before `_native` is imported."""
+    """Return the directory containing pppp_c."""
     return library_path().parent
 
 
 def prepare(path: Path) -> None:
-    """Let the platform find a library beside `path`."""
+    """Register a directory for loading pppp_c."""
     if sys.platform == "win32":
         try:
-            os.add_dll_directory(str(path))
+            _ = os.add_dll_directory(str(path))
         except (AttributeError, OSError):
             pass
     ctypes_loader.add_library_search_dirs([str(path)])  # type: ignore[no-untyped-call]

@@ -1,8 +1,7 @@
 namespace Pppp {
-    /// <summary>The version of the native library, as `major.minor.patch`.</summary>
     public static unsafe class VersionInfo {
         public static string Current {
-            get { return Native.String(Native.pppp_version()); }
+            get { return Native.Utf8String(Native.Pppp_Version()); }
         }
     }
 }

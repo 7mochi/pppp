@@ -1,4 +1,4 @@
-name: Check pppp
+name: Check
 
 on:
   push:
@@ -11,60 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  changes:
-    name: Detect changes
-    runs-on: ubuntu-latest
-    outputs:
-      core: ${{ steps.filter.outputs.core }}
-      python: ${{ steps.filter.outputs.python }}
-      node: ${{ steps.filter.outputs.node }}
-      csharp: ${{ steps.filter.outputs.csharp }}
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: dorny/paths-filter@v4.0.3
-        id: filter
-        with:
-          filters: |
-            core:
-              - 'src/**'
-              - 'include/**'
-              - 'third_party/**'
-              - 'tests/**'
-              - 'codegen/**'
-              - 'reference/**'
-              - 'CMakeLists.txt'
-              - 'CMakePresets.json'
-              - 'cmake/**'
-              - 'Makefile'
-              - 'capi.map'
-              - 'flake.nix'
-              - 'flake.lock'
-              - 'nix/**'
-            python:
-              - 'python/**'
-              - 'pyproject.toml'
-            node:
-              - 'package.json'
-              - 'package-lock.json'
-              - 'node/**'
-            csharp:
-              - 'csharp/**'
-
-  all-succeeded:
-    name: All Succeeded
-    if: always()
-    runs-on: ubuntu-latest
-    needs: [changes, check, check-windows, check-configurations, mods-freshness, parity-freshness, pre-commit]
-    steps:
-      - uses: re-actors/alls-green@v1.3.0
-        with:
-          jobs: ${{ toJSON(needs) }}
-          allowed-skips: check,check-windows,check-configurations,mods-freshness,parity-freshness
-
   check:
-    name: Check on ${{ matrix.os }}
-    needs: changes
-    if: needs.changes.outputs.core == 'true' || needs.changes.outputs.python == 'true' || needs.changes.outputs.node == 'true' || needs.changes.outputs.csharp == 'true'
+    name: Test ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -72,90 +20,53 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v7.0.1
+
       - uses: nixbuild/nix-quick-install-action@v35
+
       - uses: nix-community/cache-nix-action@v7.0.2
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
-      - name: Format
-        run: nix develop -c make check-format
-      - name: Tidy
-        continue-on-error: true
-        run: nix develop -c make check-tidy
+
       - name: Build and test
         run: nix develop -c make test-auto
-      - name: Test the bindings
-        if: needs.changes.outputs.core == 'true' || needs.changes.outputs.python == 'true'
+
+      - name: Test Python
         run: |
-          nix develop -c python3 -m venv --system-site-packages "$RUNNER_TEMP/venv"
-          nix develop -c "$RUNNER_TEMP/venv/bin/python" -m pip install --no-build-isolation --no-deps .
-          nix develop -c "$RUNNER_TEMP/venv/bin/python" -m pytest python/tests
-      - name: Check the types
-        run: |
-          for platform in linux darwin win32; do
-            echo "== $platform"
-            nix develop -c mypy --platform "$platform"
-          done
-      - name: Test the Node bindings
-        if: needs.changes.outputs.core == 'true' || needs.changes.outputs.node == 'true'
-        run: |
-          nix develop -c npm install
-          nix develop -c npm test
-      - name: Check the Node types
-        if: needs.changes.outputs.core == 'true' || needs.changes.outputs.node == 'true'
-        run: nix develop -c npm run types
-      - name: Test the C# bindings
-        if: matrix.os == 'ubuntu-latest' && (needs.changes.outputs.core == 'true' || needs.changes.outputs.csharp == 'true')
-        run: |
-          nix develop -c bash -c "cd csharp/tests && dotnet build && LD_LIBRARY_PATH=$GITHUB_WORKSPACE/build dotnet run -f net8.0 --no-build"
+          nix develop -c python3 -m pytest python/tests -q
+          nix develop -c python3 -m mypy
+
+      - name: Test C#
+        if: matrix.os == 'ubuntu-latest'
+        run: nix develop -c dotnet test csharp/tests/Pppp.Tests.csproj -c Debug
 
   check-windows:
-    name: Check on windows-latest
-    needs: changes
-    if: needs.changes.outputs.core == 'true' || needs.changes.outputs.python == 'true' || needs.changes.outputs.node == 'true' || needs.changes.outputs.csharp == 'true'
+    name: Test Windows
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-python@v7.0.0
+
+      - uses: xmake-io/github-action-setup-xmake@v1.2.5
         with:
-          python-version: "3.12"
-      - uses: actions/setup-node@v7.0.0
+          xmake-version: "3.1.1"
+
+      - uses: actions/setup-dotnet@v6.1.0
         with:
-          node-version: "24"
+          dotnet-version: "8.0.x"
+
       - name: Configure
-        run: cmake -S . -B build -DPPPP_BUILD_TESTS=ON -DPPPP_BUILD_PYTHON=ON -DPPPP_BUILD_CAPI=ON
+        run: xmake f -y -c -m debug
+
       - name: Build
-        run: cmake --build build --config Release
+        run: xmake -y
+
       - name: Test
-        run: ctest --test-dir build -C Release --output-on-failure
-      - name: Test the python bindings
-        run: |
-          python -m pip install . "pytest>=8"
-          python -m pytest python/tests
-      - name: Check the types
-        run: |
-          python -m pip install mypy
-          python -m mypy --platform win32
-      - name: Test the node bindings
-        run: |
-          npm install
-          npm test
-      - name: Check the node types
-        run: npm run types
-      - uses: actions/cache@v6.1.0
-        with:
-          path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
-      - name: Test the C# bindings
-        run: |
-          $env:PATH = "$pwd\build\Release;$env:PATH"
-          cd csharp/tests
-          dotnet build
-          dotnet run -f net20 --no-build
+        run: xmake test
+
+      - name: Test C#
+        run: dotnet test csharp/tests/Pppp.Tests.csproj -c Debug
 
   check-configurations:
-    name: Check ${{ matrix.isa }} on ${{ matrix.os }}
-    needs: changes
-    if: needs.changes.outputs.core == 'true'
+    name: Test ${{ matrix.isa }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -169,53 +80,57 @@ jobs:
             isa: neon
     steps:
       - uses: actions/checkout@v7.0.1
+
       - uses: nixbuild/nix-quick-install-action@v35
+
       - uses: nix-community/cache-nix-action@v7.0.2
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
-      - name: Build and test (${{ matrix.isa }})
+
+      - name: Build and test
         run: nix develop -c make test-${{ matrix.isa }}
 
-  mods-freshness:
-    name: Check the generated mod table is current
-    needs: changes
-    if: needs.changes.outputs.core == 'true'
+  generated:
+    name: Generated files
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: nixbuild/nix-quick-install-action@v35
-      - uses: nix-community/cache-nix-action@v7.0.2
-        with:
-          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
-      - name: Refresh the data and regenerate the mod table
-        run: nix develop -c make fetch-mods generate-mods
-      - name: Fail if the committed data or table moved
-        run: git diff --exit-code -- codegen/mods/mods.json src/pppp/mods/generated_mods.h src/pppp/mods/generated_mods.cpp
 
-  parity-freshness:
-    name: Check the parity fixture is current
-    needs: changes
-    if: needs.changes.outputs.core == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7.0.1
       - uses: nixbuild/nix-quick-install-action@v35
+
       - uses: nix-community/cache-nix-action@v7.0.2
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
-      - name: Regenerate the parity fixture
+
+      - name: Update mods
+        run: nix develop -c make fetch-mods generate-mods
+
+      - name: Check mods
+        run: |
+          git diff --exit-code -- \
+            codegen/mods/mods.json \
+            src/pppp/mods/generated_mods.h \
+            src/pppp/mods/generated_mods.cpp
+
+      - name: Update parity
         run: nix develop -c make generate-parity-tests
-      - name: Fail if the committed fixture moved
-        run: git diff --exit-code -- tests/parity/parity.json
+
+      - name: Check parity
+        run: |
+          git diff --exit-code -- \
+            tests/parity/parity.json
 
   pre-commit:
-    name: pre-commit
+    name: File checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
+
       - uses: nixbuild/nix-quick-install-action@v35
+
       - uses: nix-community/cache-nix-action@v7.0.2
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
-      - name: Run the hooks
+
+      - name: Run checks
         run: nix develop -c pre-commit run --all-files --show-diff-on-failure

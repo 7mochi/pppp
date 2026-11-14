@@ -1,107 +1,139 @@
-using System;
-
 namespace Pppp {
-    /// <summary>The result of calculating the strains on a map.
-    ///
-    /// Suitable to plot the difficulty of a map over time.</summary>
     public abstract class Strains {
+        private readonly double startTime;
+        private readonly double sectionLength;
+
         internal Strains(double startTime, double sectionLength) {
-            StartTime = startTime;
-            SectionLength = sectionLength;
+            this.startTime = startTime;
+            this.sectionLength = sectionLength;
         }
 
         public abstract Ruleset Ruleset { get; }
 
-        public double StartTime { get; private set; }
+        public double StartTime {
+            get { return startTime; }
+        }
 
-        public double SectionLength { get; private set; }
+        public double SectionLength {
+            get { return sectionLength; }
+        }
     }
 
-    /// <summary>The result of calculating the strains on a osu! map.
-    ///
-    /// Suitable to plot the difficulty of a map over time.</summary>
     public sealed class OsuStrains : Strains {
-        internal unsafe OsuStrains(double startTime, double sectionLength, pppp_osu_strains value)
+        private readonly double[] aim;
+        private readonly double[] aimNoSliders;
+        private readonly double[] speed;
+        private readonly double[] reading;
+        private readonly double[] flashlight;
+
+        internal OsuStrains(double startTime, double sectionLength, double[] aim, double[] aimNoSliders,
+                            double[] speed, double[] reading, double[] flashlight)
             : base(startTime, sectionLength) {
-            Aim = Native.CopyDoubles((IntPtr)value.aim, value.aim_count);
-            AimNoSliders = Native.CopyDoubles((IntPtr)value.aim_no_sliders, value.aim_no_sliders_count);
-            Speed = Native.CopyDoubles((IntPtr)value.speed, value.speed_count);
-            Reading = Native.CopyDoubles((IntPtr)value.reading, value.reading_count);
-            Flashlight = Native.CopyDoubles((IntPtr)value.flashlight, value.flashlight_count);
+            this.aim = aim;
+            this.aimNoSliders = aimNoSliders;
+            this.speed = speed;
+            this.reading = reading;
+            this.flashlight = flashlight;
         }
 
         public override Ruleset Ruleset {
             get { return Ruleset.Osu; }
         }
 
-        public double[] Aim { get; private set; }
+        public double[] Aim {
+            get { return aim; }
+        }
 
-        public double[] AimNoSliders { get; private set; }
+        public double[] AimNoSliders {
+            get { return aimNoSliders; }
+        }
 
-        public double[] Speed { get; private set; }
+        public double[] Speed {
+            get { return speed; }
+        }
 
-        public double[] Reading { get; private set; }
+        public double[] Reading {
+            get { return reading; }
+        }
 
-        public double[] Flashlight { get; private set; }
+        public double[] Flashlight {
+            get { return flashlight; }
+        }
     }
 
-    /// <summary>The result of calculating the strains on a osu!taiko map.
-    ///
-    /// Suitable to plot the difficulty of a map over time.</summary>
     public sealed class TaikoStrains : Strains {
-        internal unsafe TaikoStrains(double startTime, double sectionLength, pppp_taiko_strains value)
+        private readonly double[] colour;
+        private readonly double[] reading;
+        private readonly double[] rhythm;
+        private readonly double[] stamina;
+        private readonly double[] singleColourStamina;
+
+        internal TaikoStrains(double startTime, double sectionLength, double[] colour, double[] reading,
+                              double[] rhythm, double[] stamina, double[] singleColourStamina)
             : base(startTime, sectionLength) {
-            Colour = Native.CopyDoubles((IntPtr)value.colour, value.colour_count);
-            Reading = Native.CopyDoubles((IntPtr)value.reading, value.reading_count);
-            Rhythm = Native.CopyDoubles((IntPtr)value.rhythm, value.rhythm_count);
-            Stamina = Native.CopyDoubles((IntPtr)value.stamina, value.stamina_count);
-            SingleColourStamina = Native.CopyDoubles((IntPtr)value.single_colour_stamina, value.single_colour_stamina_count);
+            this.colour = colour;
+            this.reading = reading;
+            this.rhythm = rhythm;
+            this.stamina = stamina;
+            this.singleColourStamina = singleColourStamina;
         }
 
         public override Ruleset Ruleset {
             get { return Ruleset.Taiko; }
         }
 
-        public double[] Colour { get; private set; }
+        public double[] Colour {
+            get { return colour; }
+        }
 
-        public double[] Reading { get; private set; }
+        public double[] Reading {
+            get { return reading; }
+        }
 
-        public double[] Rhythm { get; private set; }
+        public double[] Rhythm {
+            get { return rhythm; }
+        }
 
-        public double[] Stamina { get; private set; }
+        public double[] Stamina {
+            get { return stamina; }
+        }
 
-        public double[] SingleColourStamina { get; private set; }
+        public double[] SingleColourStamina {
+            get { return singleColourStamina; }
+        }
     }
 
-    /// <summary>The result of calculating the strains on a osu!catch map.
-    ///
-    /// Suitable to plot the difficulty of a map over time.</summary>
     public sealed class CatchStrains : Strains {
-        internal unsafe CatchStrains(double startTime, double sectionLength, pppp_catch_strains value)
+        private readonly double[] movement;
+
+        internal CatchStrains(double startTime, double sectionLength, double[] movement)
             : base(startTime, sectionLength) {
-            Movement = Native.CopyDoubles((IntPtr)value.movement, value.movement_count);
+            this.movement = movement;
         }
 
         public override Ruleset Ruleset {
             get { return Ruleset.Catch; }
         }
 
-        public double[] Movement { get; private set; }
+        public double[] Movement {
+            get { return movement; }
+        }
     }
 
-    /// <summary>The result of calculating the strains on a osu!mania map.
-    ///
-    /// Suitable to plot the difficulty of a map over time.</summary>
     public sealed class ManiaStrains : Strains {
-        internal unsafe ManiaStrains(double startTime, double sectionLength, pppp_mania_strains value)
+        private readonly double[] strain;
+
+        internal ManiaStrains(double startTime, double sectionLength, double[] strain)
             : base(startTime, sectionLength) {
-            Strain = Native.CopyDoubles((IntPtr)value.strain, value.strain_count);
+            this.strain = strain;
         }
 
         public override Ruleset Ruleset {
             get { return Ruleset.Mania; }
         }
 
-        public double[] Strain { get; private set; }
+        public double[] Strain {
+            get { return strain; }
+        }
     }
 }

@@ -12,9 +12,7 @@
 #define variant_CONFIG_NO_EXCEPTIONS 1
 #include "nonstd/variant.hpp" // IWYU pragma: keep
 
-#define PPPP_VERSION_MAJOR 1
-#define PPPP_VERSION_MINOR 0
-#define PPPP_VERSION_PATCH 0
+#include "pppp/version.h"
 
 #if defined(_MSC_VER) && _MSC_VER < 1310
 typedef __int64 pppp_int64;

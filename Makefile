@@ -1,126 +1,134 @@
-BUILD_DIR   := build
+XMAKE       ?= xmake
 PYTHON      ?= python3
-NPROC := $(shell nproc 2>/dev/null || echo 4)
+CTYPESGEN   ?= ctypesgen
+UV          ?= uv
+CLANG_FORMAT ?= clang-format
 
-PGO_BUILD_DIR := build_pgo
-PGO_DIR = $(CURDIR)/$(PGO_BUILD_DIR)-profile-data
-PGO_TRAINING := parity_difficulty|parity_performance
+BUMP_VERSION ?= bump-my-version
+BUMP_AUTHOR_NAME ?= 7mochi-bot
+BUMP_AUTHOR_EMAIL ?= bot@osupe.ru
 
-LLVM_PROFDATA := $(dir $(realpath $(shell which $(CXX) 2> /dev/null)))llvm-profdata
-ifeq ($(wildcard $(LLVM_PROFDATA)),)
-	LLVM_PROFDATA := llvm-profdata
-endif
+ARTIFACT    ?=
+PART        ?= patch
 
-ifeq ($(shell uname -s 2>/dev/null),Darwin)
-	XCRUN = xcrun
-endif
+FORMAT_DIRS  = include src tests third_party/fosu/src third_party/fosu/tests
+FORMAT_FILES = $(shell find $(FORMAT_DIRS) -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.cc' \) 2>/dev/null)
 
-cxxisclang := $(findstring clang,$(shell $(CXX) --version 2>/dev/null))
-
-.PHONY: all clean rebuild test-auto test-scalar test-avx2 test-neon generate-parity-tests generate-mods fetch-mods generate-csharp generate-python generate-node generate-bindings configure format check check-format check-tidy build-windows-2k build-windows-xp-x64 build-pgo clean-pgo-build clean-pgo
+.PHONY: all configure build release bump build-python-wheel build-csharp-nupkg rebuild \
+        test-auto test-scalar test-avx2 test-neon test-python test-csharp \
+        fetch-mods generate-mods generate-parity-tests generate-python generate-csharp \
+        format check check-format check-headers check-tidy \
+        build-windows-2k build-windows-xp-x64
 
 all: build
 
 configure:
-	@echo "Configuring pppp:"
-	cmake --preset dev
+	@echo "Configuring pppp with xmake:"
+	$(XMAKE) f -y -c -m debug --pppp_warnings_as_errors=y
 
 build: configure
 	@echo "Building pppp:"
-	cmake --build $(BUILD_DIR) -j$(NPROC)
+	$(XMAKE) -y
 
-build-windows-2k:
-	@echo "Run this in 'nix develop .#legacyWindows':"
-	cmake --preset win2k
-	cmake --build --preset win2k
+release:
+	$(XMAKE) f -y -c -m release --pppp_build_tests=n
+	$(XMAKE) -y
 
-build-windows-xp-x64:
-	@echo "Run this in 'nix develop .#legacyWindows':"
-	cmake --preset winxp-x64
-	cmake --build --preset winxp-x64
+bump:
+	@case "$(ARTIFACT)" in core|python|csharp) ;; *) echo "usage: make bump ARTIFACT=core|python|csharp PART=patch|minor|major"; exit 1;; esac
+	@case "$(PART)" in patch|minor|major) ;; *) echo "usage: make bump ARTIFACT=core|python|csharp PART=patch|minor|major"; exit 1;; esac
+	@test "$$(git branch --show-current)" = master || { echo "error: make bump must run on master"; exit 1; }
+	@test -z "$$(git status --porcelain --untracked-files=no)" || { echo "error: tracked or staged changes must be committed first"; exit 1; }
 
-build-pgo: clean-pgo-build clean-pgo
-	@echo "Step 1/4. Building instrumented library ..."
-	cmake --preset pgo -DPPPP_PGO=GENERATE -DPPPP_PGO_DIR=$(PGO_DIR)
-	cmake --build --preset pgo
-	@echo "Step 2/4. Running the parity suites for pgo-build ..."
-	ctest --test-dir $(PGO_BUILD_DIR) -R "^($(PGO_TRAINING))$$" --output-on-failure
-	@echo "Step 3/4. Building optimized library ..."
-ifneq ($(cxxisclang),)
-	$(XCRUN) $(LLVM_PROFDATA) merge -output=$(PGO_DIR)/default.profdata $(PGO_DIR)/*.profraw
-endif
-	cmake --build --preset pgo --target clean
-	cmake --preset pgo -DPPPP_PGO=USE
-	cmake --build --preset pgo
-	@echo "Step 4/4. Deleting profile data ..."
-	$(MAKE) clean-pgo
+	GIT_AUTHOR_NAME="$(BUMP_AUTHOR_NAME)" \
+	GIT_AUTHOR_EMAIL="$(BUMP_AUTHOR_EMAIL)" \
+	GIT_COMMITTER_NAME="$(BUMP_AUTHOR_NAME)" \
+	GIT_COMMITTER_EMAIL="$(BUMP_AUTHOR_EMAIL)" \
+	$(BUMP_VERSION) bump --config-file .bumpversion/$(ARTIFACT).toml $(PART)
+	@tag="$$(git tag --points-at HEAD | grep -E '^(core|py|cs)-v' | head -1)"; \
+	  test -n "$$tag" || { echo "error: bumpversion did not create a release tag"; exit 1; }; \
+	  git push origin HEAD; \
+	  git push origin "$$tag"
 
-test-auto: build
-	@echo "Testing pppp (PPPP_ISA=auto):"
-	ctest --test-dir $(BUILD_DIR) --output-on-failure
+build-python-wheel: release
+	@$(UV) build --wheel --no-build-isolation
 
-test-scalar:
-	@echo "Testing pppp (PPPP_ISA=scalar):"
-	cmake --preset scalar
-	cmake --build --preset scalar
-	ctest --test-dir build_scalar --output-on-failure
-
-test-avx2:
-	@echo "Testing pppp (PPPP_ISA=avx2) - needs an x86-64 host:"
-	cmake --preset avx2
-	cmake --build --preset avx2
-	ctest --test-dir build_avx2 --output-on-failure
-
-test-neon:
-	@echo "Testing pppp (PPPP_ISA=neon) - needs an AArch64 host:"
-	cmake --preset neon
-	cmake --build --preset neon
-	ctest --test-dir build_neon --output-on-failure
-
-clean-pgo-build:
-	rm -rf $(PGO_BUILD_DIR)
-
-clean-pgo:
-	rm -rf $(PGO_DIR)
-	if [ -d $(PGO_BUILD_DIR) ]; then find $(PGO_BUILD_DIR) -name '*.gcda' -delete; fi
-
-clean: clean-pgo-build clean-pgo
-	rm -rf $(BUILD_DIR) build_scalar build_avx2 build_neon
+build-csharp-nupkg: release
+	dotnet pack csharp/Pppp.csproj -c Release -o artifacts
 
 rebuild: clean build test-auto
 
-format: configure
-	cmake --build $(BUILD_DIR) --target format
+test-auto: build
+	@echo "Testing pppp (pppp_isa=auto):"
+	$(XMAKE) test
+	$(XMAKE) test_install
 
-check: check-format check-tidy
+test-scalar:
+	@echo "Testing pppp (pppp_isa=scalar):"
+	$(XMAKE) f -y -c -m debug --pppp_isa=scalar
+	$(XMAKE) -y
+	$(XMAKE) test
+	$(XMAKE) test_install
 
-check-format: configure
-	cmake --build $(BUILD_DIR) --target check_format
+test-avx2:
+	@echo "Testing pppp (pppp_isa=avx2) - needs an x86-64 host:"
+	$(XMAKE) f -y -c -m debug --pppp_isa=avx2
+	$(XMAKE) -y
+	$(XMAKE) test
+	$(XMAKE) test_install
 
-check-tidy:
-	cmake --preset clang_tidy
-	cmake --build build_clang_tidy -j$(NPROC) -- -k 0 || true
+test-neon:
+	@echo "Testing pppp (pppp_isa=neon) - needs an AArch64 host:"
+	$(XMAKE) f -y -c -m debug --pppp_isa=neon
+	$(XMAKE) -y
+	$(XMAKE) test
+	$(XMAKE) test_install
+
+test-python: build
+	@$(PYTHON) -m pytest python/tests -q
+	@$(PYTHON) -m mypy
+
+test-csharp: build
+	dotnet test csharp/tests/Pppp.Tests.csproj -c Debug
+
+clean:
+	rm -rf build .xmake
+
+format:
+	$(CLANG_FORMAT) -i $(FORMAT_FILES)
+
+check: check-format check-headers check-tidy
+
+check-format:
+	$(CLANG_FORMAT) --dry-run --Werror $(FORMAT_FILES)
+
+check-headers:
+	$(XMAKE) check_headers
+
+check-tidy: configure
+	$(XMAKE) check clang.tidy || true
 
 fetch-mods:
 	$(PYTHON) codegen/mods/fetch_mods.py
 
 generate-mods:
 	$(PYTHON) codegen/mods/gen_mods.py
-	clang-format -i src/pppp/mods/generated_mods.h src/pppp/mods/generated_mods.cpp
+	$(CLANG_FORMAT) -i src/pppp/mods/generated_mods.h src/pppp/mods/generated_mods.cpp
 
 generate-parity-tests:
 	$(PYTHON) tests/parity/gen_parity.py
 
-generate-csharp:
-	@ClangSharpPInvokeGenerator -f include/pppp/capi.h -n Pppp -m Native -o csharp/Native.g.cs \
-	  -l pppp_c -c codegen=compatible -was "*=internal" -wu "*=System.Runtime.CompilerServices" \
-	  --resource-directory "$$(clang -print-resource-dir)" || [ $$? -eq 32 ]
-
 generate-python:
-	@ctypesgen --no-embed-preamble -l pppp_c --strip-build-path "$(CURDIR)" \
-	  --header-template /dev/null -o python/pppp/_native.py include/pppp/capi.h
+	@$(CTYPESGEN) --no-embed-preamble -l pppp_c --strip-build-path "$(CURDIR)" \
+	  --header-template /dev/null -I include -o python/pppp/_ctypes/_native.py include/pppp/capi.h
 
-generate-node:
-	@$(PYTHON) codegen/bindings/gen_node.py
+# ClangSharp exits with the number of warnings. The visibility warnings from capi.h are expected.
+generate-csharp:
+	@ClangSharpPInvokeGenerator -f include/pppp/capi.h -I include -n Pppp -m Native \
+	  -o csharp/Generated/Native.g.cs -l pppp_c -c codegen=compatible \
+	  -was "*=internal" -wu "*=System.Runtime.CompilerServices" \
+	  --resource-directory "$$(clang -print-resource-dir)" || test -s csharp/Generated/Native.g.cs
 
-generate-bindings: generate-csharp generate-python generate-node
+build-windows-2k build-windows-xp-x64:
+	@echo "Legacy Windows cross-compilation is deferred to the xmake port; see docs/portability.md."
+	@false

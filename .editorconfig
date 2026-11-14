@@ -1,4 +1,0 @@
-# The generated interop is filled by the native side, so the compiler cannot see the writes to
-# those fields. The rest of the C# sources keep the warning.
-[csharp/Native.g.cs]
-dotnet_diagnostic.CS0649.severity = none

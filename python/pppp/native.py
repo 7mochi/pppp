@@ -1,44 +1,51 @@
-"""The helpers over the generated declarations that every other module uses."""
+"""Helpers for the generated ctypes bindings."""
 
 from __future__ import annotations
 
 import ctypes
-from typing import cast
+from collections.abc import Callable
+from typing import Any, cast
 
-from . import _native
-from .errors import Error
+from pppp._ctypes import _native
+from pppp.errors import Error
 
 
-def message(status: int) -> str:
-    """The native description of a `pppp_result`."""
-    value = _native.pppp_result_message(status)
+def _message(status: int) -> str:
+    value = _native.Pppp_ErrorHandler_GetLastMessage()
     if value is None:
         return f"pppp error {status}"
-    return cast(str, value.decode("utf-8", "replace"))
+    return cast(bytes, value).decode("utf-8", "replace")
 
 
-def check(status: int, error: type[Error] = Error) -> None:
-    """Raise unless `status` is `PPPP_OK`, turning an allocation failure into `MemoryError`."""
-    if status == 0:
+def check_status(status: int, error: type[Error] = Error) -> None:
+    if status == _native.Pppp_Success:
         return
-    if status == _native.PPPP_ALLOCATION:
+    if status == _native.Pppp_Allocation:
         raise MemoryError
-    raise error(message(status))
+    raise error(_message(status))
 
 
-def difficulty_options(
-    mods: ctypes.c_void_p, ruleset: int | None, clock_rate: float | None
-) -> _native.pppp_difficulty_options:
-    """Build a `pppp_difficulty_options` with only the fields the caller set."""
-    from .library import PPPP_DIFFICULTY_OPTIONS_VERSION
+def read_string(getter: Callable[..., int], handle: Any) -> str:
+    size = _native.PpppInt32(0)
+    status = getter(handle, None, ctypes.byref(size))
+    if status != _native.Pppp_BufferSizeQuery:
+        check_status(status)
+    if size.value <= 0:
+        return ""
+    buffer = (ctypes.c_char * size.value)()
+    status = getter(handle, buffer, ctypes.byref(size))
+    check_status(status)
+    return buffer.raw[: max(size.value - 1, 0)].decode("utf-8", "replace")
 
-    options = _native.pppp_difficulty_options()
-    options.version = PPPP_DIFFICULTY_OPTIONS_VERSION
-    options.mods = mods
-    if ruleset is not None:
-        options.ruleset = int(ruleset)
-        options.has_ruleset = 1
-    if clock_rate is not None:
-        options.clock_rate = float(clock_rate)
-        options.has_clock_rate = 1
-    return options
+
+def read_doubles(getter: Callable[..., int], handle: Any) -> list[float]:
+    size = _native.PpppInt32(0)
+    status = getter(handle, None, ctypes.byref(size))
+    if status != _native.Pppp_BufferSizeQuery:
+        check_status(status)
+    if size.value <= 0:
+        return []
+    buffer = (ctypes.c_double * size.value)()
+    status = getter(handle, buffer, ctypes.byref(size))
+    check_status(status)
+    return [float(buffer[index]) for index in range(size.value)]

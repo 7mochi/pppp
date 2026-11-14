@@ -1,7 +1,12 @@
 {
-  "cmake.buildDirectory": "${workspaceFolder}/build",
-  "cmake.cmakePath": "cmake",
-  "cmake.generator": "Ninja",
+  "xmake.executable": "xmake",
+  "xmake.buildDirectory": "${workspaceFolder}/build",
+  "xmake.compileCommandsDirectory": "build",
+  "xmake.compileCommandsBackend": "clangd",
+  "xmake.autoGenerateCompileCommands": "onFileChange",
 
-  "files.associations": { "*.h": "cpp" }
+  "files.associations": {
+    "*.h": "cpp"
+  },
+  "cmake.ignoreCMakeListsMissing": true
 }

@@ -1,20 +1,30 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFrameworks>net20;net8.0</TargetFrameworks>
-    <AssemblyName>Pppp.Tests</AssemblyName>
-    <RootNamespace>Pppp.Tests</RootNamespace>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" PrivateAssets="all" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../Pppp.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net20'">
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net20" Version="1.0.3" PrivateAssets="All" />
-  </ItemGroup>
+  <Target Name="CopyPpppNative" AfterTargets="Build">
+    <ItemGroup>
+      <PpppNative Include="$(MSBuildThisFileDirectory)../../build/**/$(PpppBuildMode)/*pppp_c.so" />
+      <PpppNative Include="$(MSBuildThisFileDirectory)../../build/**/$(PpppBuildMode)/*pppp_c.dylib" />
+      <PpppNative Include="$(MSBuildThisFileDirectory)../../build/**/$(PpppBuildMode)/pppp_c.dll" />
+      <PpppNative Include="$(MSBuildThisFileDirectory)../../build/**/$(PpppBuildMode)/*fosu_engine_*.so" />
+      <PpppNative Include="$(MSBuildThisFileDirectory)../../build/**/$(PpppBuildMode)/*fosu_engine_*.dylib" />
+      <PpppNative Include="$(MSBuildThisFileDirectory)../../build/**/$(PpppBuildMode)/fosu_engine_*.dll" />
+    </ItemGroup>
+    <Error Condition="'@(PpppNative)' == ''" Text="No pppp native library found under build/**/$(PpppBuildMode)/; run make build first." />
+    <Copy SourceFiles="@(PpppNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

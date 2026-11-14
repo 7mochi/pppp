@@ -54,9 +54,13 @@ namespace Pppp {
             return new Mods(specification == null ? "" : specification, LegacyMods.None, false, false);
         }
 
-        public static implicit operator Mods(LegacyMods legacy) { return new Mods(null, legacy, true, false); }
+        public static implicit operator Mods(LegacyMods legacy) {
+            return new Mods(null, legacy, true, false);
+        }
 
-        public Mods WithClassic() { return new Mods(specification, legacy, isLegacyBitmask, true); }
+        public Mods WithClassic() {
+            return new Mods(specification, legacy, isLegacyBitmask, true);
+        }
 
         internal string Specification {
             get { return specification == null ? "" : specification; }
@@ -74,6 +78,12 @@ namespace Pppp {
             get { return classic; }
         }
 
-        public override string ToString() { return isLegacyBitmask ? legacy.ToString() : Specification; }
+        internal bool IsEmpty {
+            get { return !isLegacyBitmask && !classic && string.IsNullOrEmpty(Specification); }
+        }
+
+        public override string ToString() {
+            return isLegacyBitmask ? legacy.ToString() : Specification;
+        }
     }
 }

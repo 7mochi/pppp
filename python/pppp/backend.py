@@ -1,12 +1,8 @@
-"""The values of the native library the package exposes as-is."""
+"""Version and parser backend of the loaded library."""
 
 from __future__ import annotations
 
-from . import _native
-from .library import PPPP_C_ABI_VERSION
+from pppp._ctypes import _native
 
-if _native.pppp_abi_version() != PPPP_C_ABI_VERSION:
-    raise ImportError("pppp_c has an incompatible C ABI")
-
-__version__ = _native.pppp_version().decode("utf-8")
-backend = _native.pppp_backend().decode("utf-8")
+__version__ = _native.Pppp_Version().decode("utf-8")
+backend = _native.Pppp_Backend().decode("utf-8")

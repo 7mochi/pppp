@@ -1,6 +1,7 @@
 #ifndef PPPP_CAPI_H
 #define PPPP_CAPI_H
 
+#include "pppp/version.h" /* IWYU pragma: export */
 #include <stddef.h>
 
 #if defined(_WIN32) || defined(__CYGWIN__)
@@ -17,573 +18,420 @@
 #define PPPP_C_API
 #endif
 
-#if defined(__GNUC__)
-#define PPPP_C_EXTENSION __extension__
-#else
-#define PPPP_C_EXTENSION
-#endif
-
-#define PPPP_C_ABI_VERSION 1
-
-// NOLINTBEGIN(readability-identifier-naming): the C naming convention has no namespaces, so every
-// name here starts with the prefix and keeps the underscores.
+/* NOLINTBEGIN(readability-identifier-naming): Public names use the Pppp_ prefix and underscores
+   because C has no namespaces. */
 
 #if defined(_MSC_VER) && _MSC_VER < 1310
-typedef __int64 pppp_int64;
-typedef unsigned __int64 pppp_uint64;
+typedef __int64 PpppInt64;
+typedef unsigned __int64 PpppUint64;
 #elif defined(__GNUC__)
-__extension__ typedef long long pppp_int64;
-__extension__ typedef unsigned long long pppp_uint64;
+__extension__ typedef long long PpppInt64;
+__extension__ typedef unsigned long long PpppUint64;
 #else
-typedef long long pppp_int64;
-typedef unsigned long long pppp_uint64;
+typedef long long PpppInt64;
+typedef unsigned long long PpppUint64;
 #endif
 
-typedef int pppp_int32;
-typedef unsigned int pppp_uint32;
+typedef int PpppInt32;
+typedef unsigned int PpppUint32;
+typedef PpppInt32 PpppBool;
 
-typedef enum pppp_result {
-    PPPP_OK = 0,
-    PPPP_INVALID_ARGUMENT,
-    PPPP_ALLOCATION,
-    PPPP_PARSE,
-    PPPP_NO_SLIDER_PATH_BACKEND,
-    PPPP_SLIDER_PATH,
-    PPPP_INTERNAL,
-    PPPP_NOT_PREPARED
-} pppp_result;
+/* A call that can fail returns PpppErrorCode. The error message belongs to the calling thread.
+   A successful call clears it, and a failed call sets it. GetLastMessage returns NULL after
+   success, and its text stays valid until the next call on that thread. BufferSizeQuery is not
+   an error. It reports the required size, and the call should be repeated with a buffer. */
+typedef enum PpppErrorCode {
+    Pppp_BufferSizeQuery = -1,
+    Pppp_Success = 0,
+    Pppp_InvalidArgument = 1,
+    Pppp_RulesetUnavailable = 2,
+    Pppp_UnexpectedRuleset = 3,
+    Pppp_Parse = 4,
+    Pppp_Allocation = 5,
+    Pppp_NoSliderPathBackend = 6,
+    Pppp_SliderPath = 7,
+    Pppp_Internal = 8,
+    Pppp_Failure = 127
+} PpppErrorCode;
 
-/// The ruleset an attribute set belongs to. The values are the beatmap's `Mode`.
-typedef enum pppp_ruleset {
-    PPPP_RULESET_OSU = 0,
-    PPPP_RULESET_TAIKO,
-    PPPP_RULESET_CATCH,
-    PPPP_RULESET_MANIA
-} pppp_ruleset;
+/* Handles hide their contents. Destroy accepts NULL and does nothing. */
 
-typedef enum pppp_slider_event_type {
-    PPPP_SLIDER_EVENT_TICK = 0,
+typedef struct PpppBeatmap PpppBeatmap;
+typedef struct PpppRuleset PpppRuleset;
+typedef struct PpppMods PpppMods;
+typedef struct PpppOsuDifficultyCalculator PpppOsuDifficultyCalculator;
+typedef struct PpppTaikoDifficultyCalculator PpppTaikoDifficultyCalculator;
+typedef struct PpppCatchDifficultyCalculator PpppCatchDifficultyCalculator;
+typedef struct PpppManiaDifficultyCalculator PpppManiaDifficultyCalculator;
+typedef struct PpppTimedResult PpppTimedResult;
+typedef struct PpppStrains PpppStrains;
+typedef struct PpppOsuPerformanceCalculator PpppOsuPerformanceCalculator;
+typedef struct PpppTaikoPerformanceCalculator PpppTaikoPerformanceCalculator;
+typedef struct PpppCatchPerformanceCalculator PpppCatchPerformanceCalculator;
+typedef struct PpppManiaPerformanceCalculator PpppManiaPerformanceCalculator;
 
-    /// Occurs just before the tail. Should generally be ignored.
-    PPPP_SLIDER_EVENT_LEGACY_LAST_TICK = 1,
-
-    PPPP_SLIDER_EVENT_HEAD = 2,
-    PPPP_SLIDER_EVENT_TAIL = 3,
-    PPPP_SLIDER_EVENT_REPEAT = 4
-} pppp_slider_event_type;
-
-/// The length of `pppp_score_info::statistics` and `::maximum_statistics`.
-#define PPPP_HIT_RESULT_COUNT 18
-
-/// A two-dimensional point.
-typedef struct pppp_vector2 {
-    /// The x coordinate.
-    float x;
-    /// The y coordinate.
-    float y;
-} pppp_vector2;
-
-/// A representation of all top-level difficulty settings for a beatmap.
-typedef struct pppp_beatmap_difficulty {
-    /// The drain rate (HP drain).
-    double drain_rate;
-    /// The circle size.
-    double circle_size;
-    /// The overall difficulty.
-    double overall_difficulty;
-    /// The approach rate.
-    double approach_rate;
-    /// The slider velocity multiplier.
+typedef struct PpppNativeBeatmap {
+    PpppBeatmap* handle;
+    PpppInt32 ruleset_id;
+    PpppInt64 beatmap_id;
+    float approach_rate;
+    float drain_rate;
+    float overall_difficulty;
+    float circle_size;
     double slider_multiplier;
-    /// The number of slider ticks per beat.
     double slider_tick_rate;
-} pppp_beatmap_difficulty;
+    PpppInt32 format_version;
+    float stack_leniency;
+} PpppNativeBeatmap;
 
-/// Describes a point in time on a slider given special meaning.
-typedef struct pppp_slider_event_descriptor {
-    /// The event type.
-    pppp_int32 type;
-    /// The time of the event relative to the slider start.
-    double time;
-    /// The index of the slider span the event belongs to.
-    pppp_int32 span_index;
-    /// The start time of that span.
-    double span_start_time;
-    /// The progress along the slider path at the event.
-    double path_progress;
-    /// The position of the event on the playfield.
-    pppp_vector2 position;
-} pppp_slider_event_descriptor;
+typedef struct PpppNativeRuleset {
+    PpppRuleset* handle;
+    PpppInt32 ruleset_id;
+} PpppNativeRuleset;
 
-/// A HitObject describes an object in a Beatmap.
-typedef struct pppp_hit_object {
-    /// The position of the object on the playfield.
-    pppp_vector2 position;
-    /// The object type bitfield.
-    pppp_uint32 type;
-    /// The hitsound bitfield.
-    pppp_uint32 hitsound;
-    /// The start time in milliseconds.
-    double start_time;
-    /// The end time in milliseconds.
-    double end_time;
-    /// Whether the object starts a new combo.
-    pppp_int32 new_combo;
-    /// The combo colour offset.
-    pppp_int32 combo_offset;
-    /// The index of the object's slider, or -1 if it is not a slider.
-    pppp_int32 slider;
-} pppp_hit_object;
+typedef struct PpppNativeMods {
+    PpppMods* handle;
+} PpppNativeMods;
 
-/// A timing point from the beatmap.
-typedef struct pppp_timing_point {
-    /// The time of the timing point in milliseconds.
-    double time;
-    /// The beat length, or the slider velocity for inherited points.
-    double beat_length;
-    /// The number of beats per measure.
-    pppp_int32 meter;
-    /// Whether this is an uninherited timing point.
-    pppp_int32 uninherited;
-    /// The effects bitfield.
-    pppp_uint32 effects;
-} pppp_timing_point;
+/* A value is present when has_value is nonzero. */
 
-/// A break in the beatmap.
-typedef struct pppp_break_period {
-    /// The start time of the break in milliseconds.
-    double start_time;
-    /// The end time of the break in milliseconds.
-    double end_time;
-} pppp_break_period;
+typedef struct PpppOptionalInt64 {
+    PpppBool has_value;
+    PpppInt64 value;
+} PpppOptionalInt64;
 
-/// A slider and the arrays that describe it. Every pointer belongs to the beatmap and stays valid
-/// until `pppp_beatmap_free`.
-typedef struct pppp_slider {
-    /// The number of slides.
-    pppp_int32 slides;
-    /// The expected length of the slider.
-    double expected_length;
+typedef struct PpppOptionalDouble {
+    PpppBool has_value;
+    double value;
+} PpppOptionalDouble;
 
-    /// The hitsound of each node.
-    const pppp_uint32* node_sounds;
-    size_t node_sound_count;
-
-    /// The control points that define the path.
-    const pppp_vector2* control_points;
-    size_t control_point_count;
-
-    /// The decimated points of the path.
-    const pppp_vector2* path;
-    size_t path_count;
-
-    /// The cumulative length at each path point.
-    const double* cumulative_lengths;
-    size_t cumulative_length_count;
-
-    /// The undecimated points of the path.
-    const pppp_vector2* undecimated_path;
-    size_t undecimated_path_count;
-
-    /// The cumulative length at each undecimated path point.
-    const double* undecimated_cumulative_lengths;
-    size_t undecimated_cumulative_length_count;
-
-    /// The legacy events on the slider.
-    const pppp_slider_event_descriptor* events;
-    size_t event_count;
-
-    /// The events used by the osu!catch conversion.
-    const pppp_slider_event_descriptor* catch_events;
-    size_t catch_event_count;
-} pppp_slider;
-
-/// The state of a play. `has_legacy_total_score` says whether `legacy_total_score` applies.
-typedef struct pppp_score_info {
-    pppp_int32 statistics[PPPP_HIT_RESULT_COUNT];
-    pppp_int32 maximum_statistics[PPPP_HIT_RESULT_COUNT];
-    pppp_int32 max_combo;
+/* Hit counts are separate fields. maximum_statistics is not exposed. */
+typedef struct PpppNativeScoreInfo {
+    PpppRuleset* ruleset;
+    PpppBeatmap* beatmap;
+    PpppMods* mods; /* NULL means no mods */
+    PpppInt32 max_combo;
     double accuracy;
-    pppp_int32 has_legacy_total_score;
-    pppp_int64 legacy_total_score;
-} pppp_score_info;
+    PpppOptionalInt64 legacy_total_score;
+    PpppInt32 count_miss;
+    PpppInt32 count_meh;
+    PpppInt32 count_ok;
+    PpppInt32 count_good;
+    PpppInt32 count_great;
+    PpppInt32 count_perfect;
+    PpppInt32 count_small_tick_miss;
+    PpppInt32 count_small_tick_hit;
+    PpppInt32 count_large_tick_miss;
+    PpppInt32 count_large_tick_hit;
+    PpppInt32 count_slider_tail_hit;
+} PpppNativeScoreInfo;
 
-/// Difficulty attributes for osu!standard mode.
-typedef struct pppp_osu_difficulty_attributes {
-    /// The difficulty corresponding to the aim skill.
-    double aim_difficulty;
-    /// The difficulty corresponding to the speed skill.
-    double speed_difficulty;
-    /// The difficulty corresponding to the reading skill.
-    double reading_difficulty;
-    /// The difficulty corresponding to the flashlight skill.
-    double flashlight_difficulty;
-    /// How much of the aim difficulty is contributed by hitcircles or sliders. A value closer to 1.0
-    /// indicates mostly hitcircles; a value closer to 0.0 indicates mostly sliders.
-    double slider_factor;
-    /// The number of difficult aim strains.
-    double aim_difficult_strain_count;
-    /// The number of difficult speed strains.
-    double speed_difficult_strain_count;
-    /// The number of difficult reading notes.
-    double reading_difficult_note_count;
-    /// The number of sliders weighted by difficulty.
-    double aim_difficult_slider_count;
-    /// How much of the aim difficult strain count is contributed by hitcircles or sliders.
-    double aim_top_weighted_slider_factor;
-    /// How much of the speed difficult strain count is contributed by hitcircles or sliders.
-    double speed_top_weighted_slider_factor;
-    /// The number of clickable objects weighted by difficulty.
-    double speed_note_count;
-    /// The number of hitcircles in the beatmap.
-    pppp_int32 hit_circle_count;
-    /// The number of sliders in the beatmap.
-    pppp_int32 slider_count;
-    /// The number of large ticks in the beatmap.
-    pppp_int32 large_tick_count;
-    /// The number of spinners in the beatmap.
-    pppp_int32 spinner_count;
-    /// The nested score per object.
-    double nested_score_per_object;
-    /// The base multiplier for legacy scoring.
-    double legacy_score_base_multiplier;
-    /// The maximum legacy combo score.
-    double maximum_legacy_combo_score;
-} pppp_osu_difficulty_attributes;
-
-/// Difficulty attributes for osu!taiko mode.
-typedef struct pppp_taiko_difficulty_attributes {
-    /// The difficulty corresponding to the mechanical skills in osu!taiko, combining colour and stamina.
-    double mechanical_difficulty;
-    /// The difficulty corresponding to the rhythm skill.
-    double rhythm_difficulty;
-    /// The difficulty corresponding to the reading skill.
-    double reading_difficulty;
-    /// The difficulty corresponding to the colour skill.
-    double colour_difficulty;
-    /// The difficulty corresponding to the stamina skill.
-    double stamina_difficulty;
-    /// The ratio of stamina difficulty from single-colour streams to total stamina difficulty.
-    double mono_stamina_factor;
-    /// The factor corresponding to the consistency of a map.
-    double consistency_factor;
-    /// The top stamina strains.
-    double stamina_top_strains;
-} pppp_taiko_difficulty_attributes;
-
-/// Performance attributes for osu!standard mode.
-typedef struct pppp_osu_performance_attributes {
-    /// The aim portion of the final performance points.
-    double aim;
-    /// The speed portion of the final performance points.
-    double speed;
-    /// The accuracy portion of the final performance points.
-    double accuracy;
-    /// The flashlight portion of the final performance points.
-    double flashlight;
-    /// The reading portion of the final performance points.
-    double reading;
-    /// Misses including an approximated amount of slider breaks.
-    double effective_miss_count;
-    /// Estimated miss count based on the player's combo.
-    double combo_based_estimated_miss_count;
-    /// Estimated miss count based on the player's score, if available.
-    double score_based_estimated_miss_count;
-    pppp_int32 has_score_based_estimated_miss_count;
-    /// Estimated number of slider breaks that affected the aim portion.
-    double aim_estimated_slider_breaks;
-    /// Estimated number of slider breaks that affected the speed portion.
-    double speed_estimated_slider_breaks;
-    /// Approximated unstable rate, if available.
-    double speed_deviation;
-    pppp_int32 has_speed_deviation;
-} pppp_osu_performance_attributes;
-
-/// Performance attributes for osu!taiko mode.
-typedef struct pppp_taiko_performance_attributes {
-    /// The difficulty portion of the final performance points.
-    double difficulty;
-    /// The accuracy portion of the final performance points.
-    double accuracy;
-    /// Approximated unstable rate, if available.
-    double estimated_unstable_rate;
-    pppp_int32 has_estimated_unstable_rate;
-} pppp_taiko_performance_attributes;
-
-/// Performance attributes for osu!mania mode.
-typedef struct pppp_mania_performance_attributes {
-    /// The difficulty portion of the final performance points.
-    double difficulty;
-} pppp_mania_performance_attributes;
-
-/// Base class for difficulty attributes, as output by the difficulty calculator.
-typedef struct pppp_difficulty_attributes {
-    /// The ruleset of these attributes.
-    pppp_int32 ruleset;
-    /// The combined star rating of all skills.
+typedef struct PpppOsuDifficultyAttributes {
     double star_rating;
-    /// The maximum achievable combo.
-    pppp_int32 max_combo;
-    PPPP_C_EXTENSION union {
-        pppp_osu_difficulty_attributes osu;
-        pppp_taiko_difficulty_attributes taiko;
-    };
-} pppp_difficulty_attributes;
+    PpppInt32 max_combo;
+    double aim_difficulty;
+    double speed_difficulty;
+    double reading_difficulty;
+    double flashlight_difficulty;
+    double slider_factor;
+    double aim_difficult_strain_count;
+    double speed_difficult_strain_count;
+    double reading_difficult_note_count;
+    double aim_difficult_slider_count;
+    double aim_top_weighted_slider_factor;
+    double speed_top_weighted_slider_factor;
+    double speed_note_count;
+    PpppInt32 hit_circle_count;
+    PpppInt32 slider_count;
+    PpppInt32 large_tick_count;
+    PpppInt32 spinner_count;
+    double nested_score_per_object;
+    double legacy_score_base_multiplier;
+    double maximum_legacy_combo_score;
+} PpppOsuDifficultyAttributes;
 
-/// Base class for performance attributes.
-typedef struct pppp_performance_attributes {
-    /// The ruleset of these attributes.
-    pppp_int32 ruleset;
-    /// The final calculated performance points.
+typedef struct PpppTaikoDifficultyAttributes {
+    double star_rating;
+    PpppInt32 max_combo;
+    double mechanical_difficulty;
+    double rhythm_difficulty;
+    double reading_difficulty;
+    double colour_difficulty;
+    double stamina_difficulty;
+    double mono_stamina_factor;
+    double consistency_factor;
+    double stamina_top_strains;
+} PpppTaikoDifficultyAttributes;
+
+typedef struct PpppCatchDifficultyAttributes {
+    double star_rating;
+    PpppInt32 max_combo;
+} PpppCatchDifficultyAttributes;
+
+typedef struct PpppManiaDifficultyAttributes {
+    double star_rating;
+    PpppInt32 max_combo;
+} PpppManiaDifficultyAttributes;
+
+typedef struct PpppOsuPerformanceAttributes {
     double total;
-    PPPP_C_EXTENSION union {
-        pppp_osu_performance_attributes osu;
-        pppp_taiko_performance_attributes taiko;
-        pppp_mania_performance_attributes mania;
-    };
-} pppp_performance_attributes;
-
-/// Wraps a `pppp_difficulty_attributes` and adds a time value for which the attribute is valid.
-/// Output by `pppp_calculate_timed_difficulty`.
-typedef struct pppp_timed_difficulty_attributes {
-    /// The non-clock-adjusted time value at which the attributes take effect.
-    double time;
-
-    /// The attributes.
-    pppp_difficulty_attributes attributes;
-} pppp_timed_difficulty_attributes;
-
-/// The result of `pppp_calculate_timed_difficulty`. Free it with `pppp_timed_difficulty_free`.
-typedef struct pppp_timed_difficulty pppp_timed_difficulty;
-
-/// The result of `pppp_calculate_strains`. Free it with `pppp_strains_free`.
-typedef struct pppp_strains pppp_strains;
-
-/// The series of an osu! strain graph, taken from a `pppp_strains`. An empty series has a null
-/// pointer and a count of 0.
-typedef struct pppp_osu_strains {
-    /// The aim strains.
-    const double* aim;
-    size_t aim_count;
-    /// The aim strains without sliders.
-    const double* aim_no_sliders;
-    size_t aim_no_sliders_count;
-    /// The speed strains.
-    const double* speed;
-    size_t speed_count;
-    /// The reading strains.
-    const double* reading;
-    size_t reading_count;
-    /// The flashlight strains.
-    const double* flashlight;
-    size_t flashlight_count;
-} pppp_osu_strains;
-
-/// The strain series of an osu!taiko map, suitable for plotting difficulty over time.
-typedef struct pppp_taiko_strains {
-    /// The colour strains.
-    const double* colour;
-    size_t colour_count;
-    /// The reading strains.
-    const double* reading;
-    size_t reading_count;
-    /// The rhythm strains.
-    const double* rhythm;
-    size_t rhythm_count;
-    /// The stamina strains.
-    const double* stamina;
-    size_t stamina_count;
-    /// The single-colour stamina strains.
-    const double* single_colour_stamina;
-    size_t single_colour_stamina_count;
-} pppp_taiko_strains;
-
-/// The strain series of an osu!catch map, suitable for plotting difficulty over time.
-typedef struct pppp_catch_strains {
-    /// The movement strains.
-    const double* movement;
-    size_t movement_count;
-} pppp_catch_strains;
-
-/// The strain series of an osu!mania map, suitable for plotting difficulty over time.
-typedef struct pppp_mania_strains {
-    /// The strains.
-    const double* strain;
-    size_t strain_count;
-} pppp_mania_strains;
-
-/// A parsed mod set, made with `pppp_mods_parse` or `pppp_mods_from_legacy` and freed with
-/// `pppp_mods_free`.
-typedef struct pppp_mods pppp_mods;
-
-/// The input of `pppp_calculate_difficulty`. The first field is `version`, set to
-/// `PPPP_DIFFICULTY_OPTIONS_VERSION` (or use `PPPP_DIFFICULTY_OPTIONS_INIT`); zero the rest.
-/// `mods` may be null for no mods.
-typedef struct pppp_difficulty_options {
-    pppp_uint32 version;
-    const pppp_mods* mods;
-    pppp_int32 ruleset;
-    pppp_int32 has_ruleset;
-    double clock_rate;
-    pppp_int32 has_clock_rate;
-} pppp_difficulty_options;
-
-/// The input of `pppp_calculate_performance`. The first field is `version`, set to
-/// `PPPP_PERFORMANCE_OPTIONS_VERSION` (or use `PPPP_PERFORMANCE_OPTIONS_INIT`); zero the rest.
-/// `mods` may be null for no mods, and `score`, `combo`, `accuracy` and `misses` only apply when
-/// their `has_*` field is set.
-/// When `difficulty` is given, `has_difficulty` must be set, the attributes are used as they came
-/// out of `pppp_calculate_difficulty` and the difficulty is not calculated again; the performance
-/// is then calculated for the ruleset those attributes belong to.
-typedef struct pppp_performance_options {
-    pppp_uint32 version;
-    const pppp_mods* mods;
-    pppp_score_info score;
-    pppp_int32 has_score;
-    pppp_int32 combo;
-    pppp_int32 has_combo;
+    double aim;
+    double speed;
     double accuracy;
-    pppp_int32 has_accuracy;
-    pppp_int32 misses;
-    pppp_int32 has_misses;
-    const pppp_difficulty_attributes* difficulty;
-    pppp_int32 has_difficulty;
-} pppp_performance_options;
+    double flashlight;
+    double reading;
+    double effective_miss_count;
+    double combo_based_estimated_miss_count;
+    PpppOptionalDouble score_based_estimated_miss_count;
+    double aim_estimated_slider_breaks;
+    double speed_estimated_slider_breaks;
+    PpppOptionalDouble speed_deviation;
+} PpppOsuPerformanceAttributes;
 
-#define PPPP_DIFFICULTY_OPTIONS_VERSION 1
-#define PPPP_PERFORMANCE_OPTIONS_VERSION 1
-/// The INIT macros set the version and zero every other field.
-#define PPPP_DIFFICULTY_OPTIONS_INIT {PPPP_DIFFICULTY_OPTIONS_VERSION, 0, 0, 0, 0.0, 0}
-#define PPPP_PERFORMANCE_OPTIONS_INIT                                                                        \
-    {PPPP_PERFORMANCE_OPTIONS_VERSION, 0, {{0}, {0}, 0, 0.0, 0, 0}, 0, 0, 0, 0.0, 0, 0, 0, 0, 0}
+typedef struct PpppTaikoPerformanceAttributes {
+    double total;
+    double difficulty;
+    double accuracy;
+    PpppOptionalDouble estimated_unstable_rate;
+} PpppTaikoPerformanceAttributes;
 
-/// A loaded beatmap. Everything it returns belongs to it; free the beatmap with
-/// `pppp_beatmap_free`.
-typedef struct pppp_beatmap pppp_beatmap;
+typedef struct PpppCatchPerformanceAttributes {
+    double total;
+} PpppCatchPerformanceAttributes;
+
+typedef struct PpppManiaPerformanceAttributes {
+    double total;
+    double difficulty;
+} PpppManiaPerformanceAttributes;
+
+typedef struct PpppTimedOsuDifficultyAttributes {
+    double time;
+    PpppOsuDifficultyAttributes attributes;
+} PpppTimedOsuDifficultyAttributes;
+
+typedef struct PpppTimedTaikoDifficultyAttributes {
+    double time;
+    PpppTaikoDifficultyAttributes attributes;
+} PpppTimedTaikoDifficultyAttributes;
+
+typedef struct PpppTimedCatchDifficultyAttributes {
+    double time;
+    PpppCatchDifficultyAttributes attributes;
+} PpppTimedCatchDifficultyAttributes;
+
+typedef struct PpppTimedManiaDifficultyAttributes {
+    double time;
+    PpppManiaDifficultyAttributes attributes;
+} PpppTimedManiaDifficultyAttributes;
+
+typedef struct PpppNativeOsuDifficultyCalculator {
+    PpppOsuDifficultyCalculator* handle;
+} PpppNativeOsuDifficultyCalculator;
+
+typedef struct PpppNativeTaikoDifficultyCalculator {
+    PpppTaikoDifficultyCalculator* handle;
+} PpppNativeTaikoDifficultyCalculator;
+
+typedef struct PpppNativeCatchDifficultyCalculator {
+    PpppCatchDifficultyCalculator* handle;
+} PpppNativeCatchDifficultyCalculator;
+
+typedef struct PpppNativeManiaDifficultyCalculator {
+    PpppManiaDifficultyCalculator* handle;
+} PpppNativeManiaDifficultyCalculator;
+
+typedef struct PpppNativeOsuPerformanceCalculator {
+    PpppOsuPerformanceCalculator* handle;
+} PpppNativeOsuPerformanceCalculator;
+
+typedef struct PpppNativeTaikoPerformanceCalculator {
+    PpppTaikoPerformanceCalculator* handle;
+} PpppNativeTaikoPerformanceCalculator;
+
+typedef struct PpppNativeCatchPerformanceCalculator {
+    PpppCatchPerformanceCalculator* handle;
+} PpppNativeCatchPerformanceCalculator;
+
+typedef struct PpppNativeManiaPerformanceCalculator {
+    PpppManiaPerformanceCalculator* handle;
+} PpppNativeManiaPerformanceCalculator;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/// The version as `major.minor.patch`. The returned string is static; do not free it.
-PPPP_C_API const char* pppp_version(void);
+PPPP_C_API const char* Pppp_Version(void);
+PPPP_C_API PpppUint32 Pppp_VersionNumber(void);
+PPPP_C_API const char* Pppp_Backend(void);
 
-/// The C ABI version. A binding compiled against this header can compare it with the loaded library.
-PPPP_C_API pppp_int32 pppp_abi_version(void);
+PPPP_C_API const char* Pppp_ErrorHandler_GetLastMessage(void);
 
-/// The parsing engine in use: `"scalar"`, `"avx2"` or `"neon"`. The returned string is static; do not
-/// free it.
-PPPP_C_API const char* pppp_backend(void);
+PPPP_C_API PpppErrorCode Pppp_Beatmap_CreateFromFile(const char* path, PpppNativeBeatmap* out);
+PPPP_C_API PpppErrorCode Pppp_Beatmap_CreateFromText(const char* text, PpppNativeBeatmap* out);
+PPPP_C_API PpppErrorCode Pppp_Beatmap_CreateFromBytes(const void* data, size_t size, PpppNativeBeatmap* out);
 
-/// The message of a result, in English. The returned string is static; do not free it.
-PPPP_C_API const char* pppp_result_message(pppp_result result);
+/* Buffer getters follow the same rules. If buffer is NULL, each getter writes the required size
+   to *size and returns Pppp_BufferSizeQuery. Otherwise it copies at most *size elements. String
+   getters truncate and end with a NUL byte. A negative *size returns Pppp_InvalidArgument. */
 
-/// Parse osu!'s own mod specification list (`"HD,DT:speed_change=1.4"`). On success `out`
-/// receives a new mod set that the caller must release with `pppp_mods_free`. On failure `out` is
-/// left untouched.
-PPPP_C_API pppp_result pppp_mods_parse(const char* specification, pppp_mods** out);
+PPPP_C_API PpppErrorCode Pppp_Beatmap_GetTitle(PpppBeatmap* beatmap, char* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Beatmap_GetArtist(PpppBeatmap* beatmap, char* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Beatmap_GetVersion(PpppBeatmap* beatmap, char* buffer, PpppInt32* size);
 
-/// Convert osu!stable's mod bitmask, classic is not added.
-PPPP_C_API pppp_result pppp_mods_from_legacy(pppp_uint32 bits, pppp_int32 ruleset, pppp_mods** out);
+/* Releases your reference to the beatmap. After this, the handle is no longer valid, but the map
+   can stay loaded if a calculator still has it. */
+PPPP_C_API void Pppp_Beatmap_Destroy(PpppBeatmap* beatmap);
 
-/// Add the Classic mod, for scores that osu!stable set and that should calculate the way stable
-/// does. Adding it twice is allowed and does nothing the second time; null fails with
-/// `PPPP_INVALID_ARGUMENT`.
-PPPP_C_API pppp_result pppp_mods_add_classic(pppp_mods* mods);
+PPPP_C_API PpppErrorCode Pppp_Ruleset_CreateFromId(PpppInt32 id, PpppNativeRuleset* out);
 
-/// Release a mod set. Passing null is allowed and does nothing.
-PPPP_C_API void pppp_mods_free(pppp_mods* mods);
+/* Short names are "osu", "taiko", "fruits" (osu!catch) and "mania". An unknown name returns
+   Pppp_RulesetUnavailable. */
+PPPP_C_API PpppErrorCode Pppp_Ruleset_CreateFromShortName(const char* name, PpppNativeRuleset* out);
+PPPP_C_API PpppErrorCode Pppp_Ruleset_GetShortName(PpppRuleset* ruleset, char* buffer, PpppInt32* size);
+PPPP_C_API void Pppp_Ruleset_Destroy(PpppRuleset* ruleset);
 
-/// Load a beatmap from a `.osu` file path. On success `out` receives a new beatmap that the caller
-/// must release with `pppp_beatmap_free`. On failure `out` is left untouched. The loaded beatmap has
-/// no data views yet; call `pppp_beatmap_prepare_data` before reading them. The calculations do not
-/// need it.
-PPPP_C_API pppp_result pppp_beatmap_from_file(const char* path, pppp_beatmap** out);
+PPPP_C_API PpppErrorCode Pppp_Mods_Create(PpppNativeMods* out);
+PPPP_C_API PpppErrorCode Pppp_Mods_Parse(PpppMods* mods, const char* specification);
 
-/// Load a beatmap from the contents of a `.osu` file already in memory, as `pppp_beatmap_from_file`
-/// does from a path. The loaded beatmap has no data views yet; call `pppp_beatmap_prepare_data`
-/// before reading them. The calculations do not need it.
-PPPP_C_API pppp_result pppp_beatmap_from_bytes(const void* data, size_t size, pppp_beatmap** out);
+/* The ruleset id is 0..3. An unknown id returns Pppp_RulesetUnavailable. */
+PPPP_C_API PpppErrorCode Pppp_Mods_FromLegacy(PpppMods* mods, PpppUint32 bits, PpppInt32 ruleset);
+PPPP_C_API PpppErrorCode Pppp_Mods_AddClassic(PpppMods* mods);
+PPPP_C_API PpppErrorCode Pppp_Mods_Contains(PpppMods* mods, const char* acronym, PpppBool* out);
+PPPP_C_API PpppErrorCode Pppp_Mods_GetCount(PpppMods* mods, PpppInt32* out);
+PPPP_C_API PpppErrorCode Pppp_Mods_GetAcronym(PpppMods* mods, PpppInt32 index, char* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Mods_GetClockRate(PpppMods* mods, double* out);
 
-/// Release a beatmap. Passing null is allowed and does nothing.
-PPPP_C_API void pppp_beatmap_free(pppp_beatmap* map);
+/* The ruleset id is 0..3. An unknown id returns Pppp_RulesetUnavailable. */
+PPPP_C_API PpppErrorCode Pppp_Mods_GetLegacyBits(PpppMods* mods, PpppInt32 ruleset, PpppUint32* out);
+PPPP_C_API void Pppp_Mods_Destroy(PpppMods* mods);
 
-/// Build the beatmap's hit objects, sliders, timing points and breaks. Idempotent. Not
-/// thread-safe: call it before sharing the handle. The calculations do not need it.
-PPPP_C_API pppp_result pppp_beatmap_prepare_data(pppp_beatmap* map);
+/* The ruleset handle must match the calculator. Otherwise Create returns
+   Pppp_UnexpectedRuleset. The calculator keeps the beatmap alive. */
 
-PPPP_C_API pppp_int32 pppp_beatmap_format_version(const pppp_beatmap* map);
-PPPP_C_API pppp_int32 pppp_beatmap_mode(const pppp_beatmap* map);
-PPPP_C_API double pppp_beatmap_stack_leniency(const pppp_beatmap* map);
-PPPP_C_API pppp_result pppp_beatmap_get_difficulty(const pppp_beatmap* map, pppp_beatmap_difficulty* out);
+PPPP_C_API PpppErrorCode Pppp_OsuDifficultyCalculator_Create(PpppRuleset* ruleset, PpppBeatmap* beatmap,
+                                                             PpppNativeOsuDifficultyCalculator* out);
+PPPP_C_API PpppErrorCode Pppp_OsuDifficultyCalculator_Calculate(PpppOsuDifficultyCalculator* calculator,
+                                                                PpppMods* mods,
+                                                                PpppOsuDifficultyAttributes* out);
+PPPP_C_API PpppErrorCode Pppp_OsuDifficultyCalculator_CalculateTimed(PpppOsuDifficultyCalculator* calculator,
+                                                                     PpppMods* mods, PpppTimedResult** out);
+PPPP_C_API PpppErrorCode Pppp_OsuDifficultyCalculator_CalculateStrains(
+    PpppOsuDifficultyCalculator* calculator, PpppMods* mods, PpppStrains** out);
+PPPP_C_API PpppErrorCode Pppp_OsuDifficultyCalculator_SetClockRate(PpppOsuDifficultyCalculator* calculator,
+                                                                   double clock_rate);
+PPPP_C_API PpppErrorCode Pppp_OsuDifficultyCalculator_ClearClockRate(PpppOsuDifficultyCalculator* calculator);
+PPPP_C_API void Pppp_OsuDifficultyCalculator_Destroy(PpppOsuDifficultyCalculator* calculator);
 
-/// The map's hit objects, sliders, timing points and breaks. Every returned pointer belongs to the
-/// beatmap and stays valid until `pppp_beatmap_free`; null is written when the map has none of that
-/// kind. Each of the four fails with `PPPP_NOT_PREPARED` if `pppp_beatmap_prepare_data` has not been
-/// called.
-PPPP_C_API pppp_result pppp_beatmap_hit_objects(const pppp_beatmap* map, const pppp_hit_object** out,
-                                                size_t* count);
-PPPP_C_API pppp_result pppp_beatmap_sliders(const pppp_beatmap* map, const pppp_slider** out, size_t* count);
-PPPP_C_API pppp_result pppp_beatmap_timing_points(const pppp_beatmap* map, const pppp_timing_point** out,
-                                                  size_t* count);
-PPPP_C_API pppp_result pppp_beatmap_breaks(const pppp_beatmap* map, const pppp_break_period** out,
-                                           size_t* count);
+PPPP_C_API PpppErrorCode Pppp_TaikoDifficultyCalculator_Create(PpppRuleset* ruleset, PpppBeatmap* beatmap,
+                                                               PpppNativeTaikoDifficultyCalculator* out);
+PPPP_C_API PpppErrorCode Pppp_TaikoDifficultyCalculator_Calculate(PpppTaikoDifficultyCalculator* calculator,
+                                                                  PpppMods* mods,
+                                                                  PpppTaikoDifficultyAttributes* out);
+PPPP_C_API PpppErrorCode Pppp_TaikoDifficultyCalculator_CalculateTimed(
+    PpppTaikoDifficultyCalculator* calculator, PpppMods* mods, PpppTimedResult** out);
+PPPP_C_API PpppErrorCode Pppp_TaikoDifficultyCalculator_CalculateStrains(
+    PpppTaikoDifficultyCalculator* calculator, PpppMods* mods, PpppStrains** out);
+PPPP_C_API PpppErrorCode
+Pppp_TaikoDifficultyCalculator_SetClockRate(PpppTaikoDifficultyCalculator* calculator, double clock_rate);
+PPPP_C_API PpppErrorCode
+Pppp_TaikoDifficultyCalculator_ClearClockRate(PpppTaikoDifficultyCalculator* calculator);
+PPPP_C_API void Pppp_TaikoDifficultyCalculator_Destroy(PpppTaikoDifficultyCalculator* calculator);
 
-/// Perform the difficulty calculation. `options` may be null for no mods, the map's own ruleset and
-/// a clock rate of 1.0.
-PPPP_C_API pppp_result pppp_calculate_difficulty(const pppp_beatmap* map,
-                                                 const pppp_difficulty_options* options,
-                                                 pppp_difficulty_attributes* out);
+PPPP_C_API PpppErrorCode Pppp_CatchDifficultyCalculator_Create(PpppRuleset* ruleset, PpppBeatmap* beatmap,
+                                                               PpppNativeCatchDifficultyCalculator* out);
+PPPP_C_API PpppErrorCode Pppp_CatchDifficultyCalculator_Calculate(PpppCatchDifficultyCalculator* calculator,
+                                                                  PpppMods* mods,
+                                                                  PpppCatchDifficultyAttributes* out);
+PPPP_C_API PpppErrorCode Pppp_CatchDifficultyCalculator_CalculateTimed(
+    PpppCatchDifficultyCalculator* calculator, PpppMods* mods, PpppTimedResult** out);
+PPPP_C_API PpppErrorCode Pppp_CatchDifficultyCalculator_CalculateStrains(
+    PpppCatchDifficultyCalculator* calculator, PpppMods* mods, PpppStrains** out);
+PPPP_C_API PpppErrorCode
+Pppp_CatchDifficultyCalculator_SetClockRate(PpppCatchDifficultyCalculator* calculator, double clock_rate);
+PPPP_C_API PpppErrorCode
+Pppp_CatchDifficultyCalculator_ClearClockRate(PpppCatchDifficultyCalculator* calculator);
+PPPP_C_API void Pppp_CatchDifficultyCalculator_Destroy(PpppCatchDifficultyCalculator* calculator);
 
-/// Perform the performance calculation. `options` may be null for no mods and an empty play.
-PPPP_C_API pppp_result pppp_calculate_performance(const pppp_beatmap* map,
-                                                  const pppp_performance_options* options,
-                                                  pppp_performance_attributes* out);
+PPPP_C_API PpppErrorCode Pppp_ManiaDifficultyCalculator_Create(PpppRuleset* ruleset, PpppBeatmap* beatmap,
+                                                               PpppNativeManiaDifficultyCalculator* out);
+PPPP_C_API PpppErrorCode Pppp_ManiaDifficultyCalculator_Calculate(PpppManiaDifficultyCalculator* calculator,
+                                                                  PpppMods* mods,
+                                                                  PpppManiaDifficultyAttributes* out);
+PPPP_C_API PpppErrorCode Pppp_ManiaDifficultyCalculator_CalculateTimed(
+    PpppManiaDifficultyCalculator* calculator, PpppMods* mods, PpppTimedResult** out);
+PPPP_C_API PpppErrorCode Pppp_ManiaDifficultyCalculator_CalculateStrains(
+    PpppManiaDifficultyCalculator* calculator, PpppMods* mods, PpppStrains** out);
+PPPP_C_API PpppErrorCode
+Pppp_ManiaDifficultyCalculator_SetClockRate(PpppManiaDifficultyCalculator* calculator, double clock_rate);
+PPPP_C_API PpppErrorCode
+Pppp_ManiaDifficultyCalculator_ClearClockRate(PpppManiaDifficultyCalculator* calculator);
+PPPP_C_API void Pppp_ManiaDifficultyCalculator_Destroy(PpppManiaDifficultyCalculator* calculator);
 
-/// Calculates the difficulty of the beatmap using a specific mod combination and returns a set of
-/// TimedDifficultyAttributes representing the difficulty at every relevant time value in the
-/// beatmap. The options are `pppp_calculate_difficulty`'s. On success `out` receives a new result
-/// that the caller must release with `pppp_timed_difficulty_free`. On failure `out` is left
-/// untouched.
-PPPP_C_API pppp_result pppp_calculate_timed_difficulty(const pppp_beatmap* map,
-                                                       const pppp_difficulty_options* options,
-                                                       pppp_timed_difficulty** out);
+PPPP_C_API PpppErrorCode Pppp_OsuPerformanceCalculator_Create(PpppNativeOsuPerformanceCalculator* out);
+PPPP_C_API PpppErrorCode Pppp_OsuPerformanceCalculator_Calculate(
+    PpppOsuPerformanceCalculator* calculator, const PpppNativeScoreInfo* score,
+    const PpppOsuDifficultyAttributes* difficulty, PpppOsuPerformanceAttributes* out);
+PPPP_C_API void Pppp_OsuPerformanceCalculator_Destroy(PpppOsuPerformanceCalculator* calculator);
 
-/// The entries of a timed result. The returned pointer belongs to the result and stays valid until
-/// `pppp_timed_difficulty_free`; null is written when there are none.
-PPPP_C_API pppp_result pppp_timed_difficulty_entries(const pppp_timed_difficulty* timed,
-                                                     const pppp_timed_difficulty_attributes** out,
-                                                     size_t* count);
+PPPP_C_API PpppErrorCode Pppp_TaikoPerformanceCalculator_Create(PpppNativeTaikoPerformanceCalculator* out);
+PPPP_C_API PpppErrorCode Pppp_TaikoPerformanceCalculator_Calculate(
+    PpppTaikoPerformanceCalculator* calculator, const PpppNativeScoreInfo* score,
+    const PpppTaikoDifficultyAttributes* difficulty, PpppTaikoPerformanceAttributes* out);
+PPPP_C_API void Pppp_TaikoPerformanceCalculator_Destroy(PpppTaikoPerformanceCalculator* calculator);
 
-/// Release a timed result. Passing null is allowed and does nothing.
-PPPP_C_API void pppp_timed_difficulty_free(pppp_timed_difficulty* timed);
+PPPP_C_API PpppErrorCode Pppp_CatchPerformanceCalculator_Create(PpppNativeCatchPerformanceCalculator* out);
+PPPP_C_API PpppErrorCode Pppp_CatchPerformanceCalculator_Calculate(
+    PpppCatchPerformanceCalculator* calculator, const PpppNativeScoreInfo* score,
+    const PpppCatchDifficultyAttributes* difficulty, PpppCatchPerformanceAttributes* out);
+PPPP_C_API void Pppp_CatchPerformanceCalculator_Destroy(PpppCatchPerformanceCalculator* calculator);
 
-/// Perform the difficulty calculation but instead of evaluating the skill strains, return them as
-/// is. The options are `pppp_calculate_difficulty`'s. On success `out` receives a new result
-/// that the caller must release with `pppp_strains_free`. On failure `out` is left untouched.
-PPPP_C_API pppp_result pppp_calculate_strains(const pppp_beatmap* map, const pppp_difficulty_options* options,
-                                              pppp_strains** out);
+PPPP_C_API PpppErrorCode Pppp_ManiaPerformanceCalculator_Create(PpppNativeManiaPerformanceCalculator* out);
+PPPP_C_API PpppErrorCode Pppp_ManiaPerformanceCalculator_Calculate(
+    PpppManiaPerformanceCalculator* calculator, const PpppNativeScoreInfo* score,
+    const PpppManiaDifficultyAttributes* difficulty, PpppManiaPerformanceAttributes* out);
+PPPP_C_API void Pppp_ManiaPerformanceCalculator_Destroy(PpppManiaPerformanceCalculator* calculator);
 
-/// The ruleset of a strain graph, the time its first section starts at and the length of each
-/// section, both in milliseconds.
-PPPP_C_API pppp_result pppp_strains_info(const pppp_strains* strains, pppp_int32* ruleset, double* start_time,
-                                         double* section_length);
+PPPP_C_API PpppErrorCode Pppp_TimedResult_GetCount(PpppTimedResult* result, PpppInt32* out);
+PPPP_C_API PpppErrorCode Pppp_TimedResult_GetOsu(PpppTimedResult* result,
+                                                 PpppTimedOsuDifficultyAttributes* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_TimedResult_GetTaiko(PpppTimedResult* result,
+                                                   PpppTimedTaikoDifficultyAttributes* buffer,
+                                                   PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_TimedResult_GetCatch(PpppTimedResult* result,
+                                                   PpppTimedCatchDifficultyAttributes* buffer,
+                                                   PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_TimedResult_GetMania(PpppTimedResult* result,
+                                                   PpppTimedManiaDifficultyAttributes* buffer,
+                                                   PpppInt32* size);
+PPPP_C_API void Pppp_TimedResult_Destroy(PpppTimedResult* result);
 
-/// The series of a strain graph. The pointers belong to the result and stay valid until
-/// `pppp_strains_free`. Each fails with `PPPP_INVALID_ARGUMENT` when the graph is another
-/// ruleset's.
-PPPP_C_API pppp_result pppp_strains_osu(const pppp_strains* strains, pppp_osu_strains* out);
-PPPP_C_API pppp_result pppp_strains_taiko(const pppp_strains* strains, pppp_taiko_strains* out);
-PPPP_C_API pppp_result pppp_strains_catch(const pppp_strains* strains, pppp_catch_strains* out);
-PPPP_C_API pppp_result pppp_strains_mania(const pppp_strains* strains, pppp_mania_strains* out);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetRuleset(PpppStrains* strains, PpppInt32* out);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetStartTime(PpppStrains* strains, double* out);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetSectionLength(PpppStrains* strains, double* out);
 
-/// Release a strain graph. Passing null is allowed and does nothing.
-PPPP_C_API void pppp_strains_free(pppp_strains* strains);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetOsuAim(PpppStrains* strains, double* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetOsuAimNoSliders(PpppStrains* strains, double* buffer,
+                                                         PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetOsuSpeed(PpppStrains* strains, double* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetOsuReading(PpppStrains* strains, double* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetOsuFlashlight(PpppStrains* strains, double* buffer, PpppInt32* size);
+
+PPPP_C_API PpppErrorCode Pppp_Strains_GetTaikoColour(PpppStrains* strains, double* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetTaikoReading(PpppStrains* strains, double* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetTaikoRhythm(PpppStrains* strains, double* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetTaikoStamina(PpppStrains* strains, double* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetTaikoSingleColourStamina(PpppStrains* strains, double* buffer,
+                                                                  PpppInt32* size);
+
+PPPP_C_API PpppErrorCode Pppp_Strains_GetCatchMovement(PpppStrains* strains, double* buffer, PpppInt32* size);
+PPPP_C_API PpppErrorCode Pppp_Strains_GetManiaStrain(PpppStrains* strains, double* buffer, PpppInt32* size);
+
+PPPP_C_API void Pppp_Strains_Destroy(PpppStrains* strains);
 
 #ifdef __cplusplus
-} // extern "C"
+}
 #endif
 
-// NOLINTEND(readability-identifier-naming)
+/* NOLINTEND(readability-identifier-naming) */
 
 #endif

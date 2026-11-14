@@ -1,52 +1,46 @@
 [build-system]
-requires = ["scikit-build-core>=0.10"]
-build-backend = "scikit_build_core.build"
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
 
 [project]
 name = "pppp-py"
 version = "0.0.0"
-description = "osu! difficulty and performance calculation for all four gamemodes in C++98"
+description = "osu! difficulty and performance calculation for all four gamemodes"
 readme = "README.md"
 license = "MIT"
-license-files = ["LICENCE"]
 requires-python = ">=3.10"
-dependencies = ["typing-extensions>=4.6; python_version < '3.11'"]
-classifiers = [
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: Implementation :: CPython",
-  "Programming Language :: C++",
-  "Operating System :: POSIX :: Linux",
-  "Operating System :: MacOS",
-  "Operating System :: Microsoft :: Windows",
-]
 
-[tool.scikit-build]
-cmake.version = ">=3.26"
-cmake.build-type = "Release"
-ninja.make-fallback = true
-wheel.packages = ["python/pppp"]
-wheel.py-api = "py3"
+[tool.hatch.build.targets.wheel]
+packages = ["python/pppp"]
 
-[tool.cibuildwheel]
-build = "cp310-*"
-test-requires = ["pytest>=8"]
-test-command = "python -m pytest {project}/python/tests"
+[tool.hatch.build.targets.wheel.hooks.custom]
+path = "tools/hatch_build.py"
 
 [tool.mypy]
 python_version = "3.10"
-files = ["python/pppp", "python/tests/typing"]
+files = ["python/pppp"]
 mypy_path = "python"
 strict = true
 warn_unreachable = true
-enable_error_code = [
-  "truthy-bool",
-  "truthy-iterable",
-  "ignore-without-code",
-  "redundant-expr",
-  "possibly-undefined",
-  "mutable-override",
-]
 
 [[tool.mypy.overrides]]
-module = ["pppp._native", "pppp.ctypes_preamble", "pppp.ctypes_loader"]
+module = ["pppp._ctypes._native", "pppp._ctypes.ctypes_preamble", "pppp._ctypes.ctypes_loader"]
 ignore_errors = true
+
+[tool.pyright]
+include = ["python"]
+exclude = ["python/pppp/_ctypes", "python/tests"]
+extraPaths = ["python"]
+pythonVersion = "3.10"
+
+# ctypesgen emits runtime ctypes wrappers without type annotations. The generated
+# _ctypes layer is intentionally untyped; the hand-written API above it is checked.
+reportAny = false
+reportExplicitAny = false
+reportUnknownArgumentType = false
+reportUnknownMemberType = false
+reportUnknownParameterType = false
+reportUnknownVariableType = false
+
+[tool.pytest.ini_options]
+pythonpath = ["python"]

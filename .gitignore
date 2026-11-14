@@ -1,31 +1,48 @@
+# vscode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+
+# rider
+.idea/
+*.sln.DotSettings.user
+
+# visual studio
+.vs/
+
+# zed
+.zed/*
+!.zed/tasks.json
+
+# pppp
 build/
 build_*/
-profile-data/
-build-py/
+.xmake/
 compile_commands.json
-CMakeUserPresets.json
 
-.cache/
+# cmake
+CMakeUserPresets.json
+Testing/
+
+# direnv
 .direnv
 
+# local caches
+.cache/
+
+# python
 __pycache__/
 *.pyc
-.pytest_cache/
-.mypy_cache/
 
-dist/
-*.egg-info/
-
-node_modules/
-prebuilds/
-
+# commandcode
 .commandcode/
 
+# .NET
+!csharp/build/
+reference/**/bin/
+reference/**/obj/
 csharp/**/bin/
 csharp/**/obj/
 csharp/native/
-!csharp/build/
 *.nupkg
-reference/**/bin/
-reference/**/obj/
-Testing/
+artifacts/
